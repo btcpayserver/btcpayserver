@@ -1,0 +1,70 @@
+@model PluginSelectedPanelViewModel
+@{
+    var iframeSandbox = Model.UseOpaqueSandbox
+        ? "allow-scripts allow-forms allow-popups"
+        : "allow-same-origin allow-scripts allow-forms allow-popups";
+    var showFacts = Model.InstalledVersion is not null ||
+                    Model.DisabledVersion is not null ||
+                    !string.IsNullOrEmpty(Model.PendingAction);
+    var allowPendingInstallVersionChange = Model.InstalledVersion is null &&
+                                           Model.DisabledVersion is null &&
+                                           string.Equals(Model.PendingAction, "install", StringComparison.OrdinalIgnoreCase);
+    var canInstallFromEmbed = Model.InstallVersion is not null || allowPendingInstallVersionChange;
+}
+
+@if (!string.IsNullOrEmpty(Model.SelectedSlug))
+{
+    @if (showFacts)
+    {
+        <div class="border-top border-bottom">
+            @if (Model.InstalledVersion is not null)
+            {
+                <div class="d-flex align-items-baseline justify-content-between gap-3 py-2">
+                    <span class="text-muted small fw-semibold text-uppercase" text-translate="true">Installed version</span>
+                    <span class="text-end fw-semibold">@Model.InstalledVersion</span>
+                </div>
+            }
+            @if (Model.DisabledVersion is not null)
+            {
+                <div class="d-flex align-items-baseline justify-content-between gap-3 py-2">
+                    <span class="text-muted small fw-semibold text-uppercase" text-translate="true">Disabled version</span>
+                    <span class="text-end fw-semibold">@Model.DisabledVersion</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.PendingAction))
+            {
+                <div class="d-flex align-items-baseline justify-content-between gap-3 py-2">
+                    <span class="text-muted small fw-semibold text-uppercase" text-translate="true">Pending Action</span>
+                    <span class="text-end fw-semibold">
+                        @Model.PendingAction
+                        @if (Model.PendingVersion is not null)
+                        {
+                            <span>@Model.PendingVersion</span>
+                        }
+                    </span>
+                </div>
+            }
+        </div>
+    }
+
+    <iframe class="plugin-manage-panel-details d-block flex-grow-1 w-100 border-0 mt-1"
+            title="@StringLocalizer["{0} details", Model.PluginName]"
+            src="@Model.EmbeddedDetailsUrl"
+            sandbox="@iframeSandbox"
+            data-plugin-identifier="@(canInstallFromEmbed ? Model.PluginIdentifier : null)"
+            data-plugin-name="@(canInstallFromEmbed ? Model.PluginName : null)"
+            data-pending-install="@(allowPendingInstallVersionChange ? "true" : null)"
+            data-pending-install-version="@(allowPendingInstallVersionChange ? Model.PendingVersion : null)"></iframe>
+
+    @if (!string.IsNullOrEmpty(Model.PendingAction))
+    {
+        <div class="pt-3 border-top">
+            <form method="post"
+                  asp-action="CancelPluginCommands"
+                  asp-route-selectedSlug="@Model.SelectedSlug">
+                <input type="hidden" name="plugin" value="@Model.PluginIdentifier" />
+                <button type="submit" class="btn btn-outline-secondary w-100">@StringLocalizer["Cancel pending {0}", $"{Model.PendingAction}{(Model.PendingVersion is null ? string.Empty : $" of {Model.PendingVersion}")}"]</button>
+            </form>
+        </div>
+    }
+}

@@ -5,8 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
-using BTCPayServer.Controllers;
 using BTCPayServer.Plugins;
+using BTCPayServer.Plugins.PluginManagement;
+using BTCPayServer.Plugins.PluginManagement.Controllers;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using Microsoft.AspNetCore.Http;
@@ -19,19 +20,11 @@ namespace BTCPayServer.HostedServices
     {
         private const string Type = "pluginupdate";
 
-        internal class Handler(LinkGenerator linkGenerator, BTCPayServerOptions options, IStringLocalizer stringLocalizer) : NotificationHandler<PluginUpdateNotification>
+        internal class Handler(LinkGenerator linkGenerator, BTCPayServerOptions options, IStringLocalizer StringLocalizer) : NotificationHandler<PluginUpdateNotification>
         {
-            private IStringLocalizer StringLocalizer { get; } = stringLocalizer;
-
             public override string NotificationType => Type;
 
-            public override (string identifier, string name)[] Meta
-            {
-                get
-                {
-                    return new (string identifier, string name)[] {(Type, StringLocalizer["Plugin update"])};
-                }
-            }
+            public override (string identifier, string name)[] Meta => [(Type, StringLocalizer["Plugin update"])];
 
             protected override void FillViewModel(PluginUpdateNotification notification, NotificationViewModel vm)
             {
@@ -41,6 +34,7 @@ namespace BTCPayServer.HostedServices
                 vm.ActionLink = linkGenerator.GetPathByAction(
                     action: nameof(UIPluginManagerController.ListPlugins),
                     controller: "UIPluginManager",
+                    values: new { area = PluginManagerPlugin.Area },
                     pathBase: options.RootPath,
                     fragment: new FragmentString($"#{Uri.EscapeDataString(notification.PluginIdentifier)}"));
             }
@@ -81,36 +75,29 @@ namespace BTCPayServer.HostedServices
             dh.LastVersions = NormalizeVersions(dh.LastVersions);
             var disabledPlugins = NormalizeVersions(pluginService.GetDisabledPlugins());
 
-            var installedPlugins = NormalizeVersions(pluginService.Installed);
+            var installedPlugins = pluginService.Installed;
             var remotePlugins = await pluginService.GetRemotePlugins(null, cancellationToken);
-            //take the latest version of each plugin
-            var remotePluginsByIdentifier = remotePlugins
+            var latestRemotePlugins = remotePlugins
                 .GroupBy(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase)
                 .Select(group => group.OrderByDescending(plugin => plugin.Version).First())
                 .Where(pair => installedPlugins.ContainsKey(pair.Identifier) || disabledPlugins.ContainsKey(pair.Identifier))
-                .ToDictionary(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase);
-            var remotePluginsList = remotePluginsByIdentifier.ToDictionary(plugin => plugin.Key, plugin => plugin.Value.Version, StringComparer.OrdinalIgnoreCase);
-            var notify = new HashSet<string>();
-            foreach (var pair in remotePluginsList)
+                .ToArray();
+            foreach (var plugin in latestRemotePlugins)
             {
-                if (dh.LastVersions.TryGetValue(pair.Key, out var lastVersion) && lastVersion >= pair.Value)
+                if (dh.LastVersions.TryGetValue(plugin.Identifier, out var lastVersion) && lastVersion >= plugin.Version)
                     continue;
-                if (installedPlugins.TryGetValue(pair.Key, out var installedVersion) && installedVersion < pair.Value)
-                {
-                    notify.Add(pair.Key);
-                }
-                else if (disabledPlugins.TryGetValue(pair.Key, out var disabledVersion) && disabledVersion < pair.Value)
-                {
-                    notify.Add(pair.Key);
-                }
+
+                var hasUpdate = installedPlugins.TryGetValue(plugin.Identifier, out var installedVersion)
+                    ? installedVersion < plugin.Version
+                    : disabledPlugins.TryGetValue(plugin.Identifier, out var disabledVersion) && disabledVersion < plugin.Version;
+                if (hasUpdate)
+                    await notificationSender.SendNotification(new AdminScope(), new PluginUpdateNotification(plugin));
             }
 
-            dh.LastVersions = remotePluginsList;
-
-            foreach (var plugin in notify.Select(pluginUpdate => remotePluginsByIdentifier[pluginUpdate]))
-            {
-                await notificationSender.SendNotification(new AdminScope(), new PluginUpdateNotification(plugin));
-            }
+            dh.LastVersions = latestRemotePlugins.ToDictionary(
+                plugin => plugin.Identifier,
+                plugin => plugin.Version,
+                StringComparer.OrdinalIgnoreCase);
 
             await settingsRepository.UpdateSetting(dh);
         }

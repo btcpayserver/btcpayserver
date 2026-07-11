@@ -136,15 +136,9 @@ namespace BTCPayServer.Tests
         }
     }
 
-    internal sealed class TestHttpClientFactory(HttpMessageHandler handler) : IHttpClientFactory
-    {
-        public HttpClient CreateClient(string name) => new(handler, false);
-    }
-
     internal sealed class TestHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> handle = null) : HttpMessageHandler
     {
         private readonly Dictionary<string, Func<HttpResponseMessage>> _responses = new();
-        public Dictionary<string, int> Calls { get; } = new();
 
         public void Register(string url, Func<HttpResponseMessage> responseFactory) => _responses[url] = responseFactory;
 
@@ -158,19 +152,14 @@ namespace BTCPayServer.Tests
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var url = request.RequestUri!.ToString();
-            Calls[url] = Calls.TryGetValue(url, out var existing) ? existing + 1 : 1;
-
             if (handle is not null)
                 return Task.FromResult(handle(request));
 
+            var url = request.RequestUri!.ToString();
             if (_responses.TryGetValue(url, out var responseFactory))
                 return Task.FromResult(responseFactory());
 
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)
-            {
-                Content = new StringContent("Not Found", Encoding.UTF8, "text/plain")
-            });
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
         }
     }
 }

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace BTCPayServer.Models.ServerViewModels
+namespace BTCPayServer.Plugins.PluginManagement.Models
 {
     public class InstalledPluginsViewModel
     {
@@ -12,35 +12,31 @@ namespace BTCPayServer.Models.ServerViewModels
 
     public class PluginDirectoryViewModel
     {
-        public string SelectedPluginSlug { get; set; }
         public string DirectoryIframeUrl { get; set; }
-        public string DirectoryOrigin { get; set; }
-        public string PanelUrl { get; set; }
         public string[] HiddenPluginIdentifiers { get; set; } = [];
-        public List<PendingPluginActionViewModel> PendingActions { get; set; } = [];
+        public bool HasPendingActions { get; set; }
         public PluginSelectedPanelViewModel SelectedPluginPanel { get; set; } = new();
     }
 
     public class PluginSelectedPanelViewModel
     {
-        public bool HasSelection { get; set; }
-        public string SelectedIdentifier { get; set; }
         public string SelectedSlug { get; set; }
         public string EmbeddedDetailsUrl { get; set; }
-        public PluginInfoViewModel Plugin { get; set; }
+        public bool UseOpaqueSandbox { get; set; } = true;
+        public string PluginIdentifier { get; set; }
+        public string PluginName { get; set; }
         public Version InstalledVersion { get; set; }
-        public Version BestAvailableVersion { get; set; }
         public Version DisabledVersion { get; set; }
         public string PendingAction { get; set; }
         public Version PendingVersion { get; set; }
-        public List<PluginActionViewModel> Actions { get; set; } = [];
+        public string InstallVersion { get; set; }
     }
 
     public class PluginDisabledViewModel
     {
         public string Identifier { get; set; }
         public Version DisabledVersion { get; set; }
-        public PluginInfoViewModel RecommendedUpdate { get; set; }
+        public Version RecommendedUpdateVersion { get; set; }
         public List<PluginActionViewModel> Actions { get; set; } = [];
     }
 
@@ -61,7 +57,6 @@ namespace BTCPayServer.Models.ServerViewModels
     public class PluginInfoViewModel
     {
         public string Identifier { get; set; }
-        public string CatalogSlug { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public Version Version { get; set; }
@@ -69,7 +64,6 @@ namespace BTCPayServer.Models.ServerViewModels
         public string Source { get; set; }
         public string Author { get; set; }
         public string AuthorLink { get; set; }
-        public bool DependenciesMet { get; set; }
         public List<PluginDependencyViewModel> Dependencies { get; set; } = [];
     }
 
@@ -84,9 +78,7 @@ namespace BTCPayServer.Models.ServerViewModels
         public string FormAction { get; set; }
         public string Label { get; set; }
         public string CssClass { get; set; }
-        public string Plugin { get; set; }
         public string Version { get; set; }
         public string Tooltip { get; set; }
-        public bool Disabled { get; set; }
     }
 }

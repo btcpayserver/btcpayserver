@@ -1,11 +1,9 @@
-@using System.Linq
 @model PluginDirectoryViewModel
 @{
-    Layout = "_Layout";
-    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Plugins), StringLocalizer["Plugin Directory"])
-    {
-        SubMenuItemId = "PluginDirectory"
-    });
+    ViewData.SetTitle(StringLocalizer["Plugin Directory"]);
+    var iframeSandbox = Model.SelectedPluginPanel.UseOpaqueSandbox
+        ? "allow-scripts allow-forms allow-popups"
+        : "allow-same-origin allow-scripts allow-forms allow-popups";
 }
 
 <style>
@@ -20,9 +18,6 @@
     }
 
     #selected-plugin-panel,
-    .plugin-manage-panel,
-    .plugin-manage-panel-body,
-    .plugin-manage-panel-details-section,
     .plugin-manage-panel-details {
         min-height: 0;
     }
@@ -41,11 +36,11 @@
 
 <partial name="_StatusMessage" />
 
-@if (Model.PendingActions.Any())
+@if (Model.HasPendingActions)
 {
     <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
         <span text-translate="true">You need to restart BTCPay Server in order to update your active plugins.</span>
-        <form method="post" asp-controller="UIServer" asp-action="Maintenance" class="mt-2">
+        <form method="post" asp-area="" asp-controller="UIServer" asp-action="Maintenance" class="mt-2">
             <button type="submit" name="command" value="soft-restart" class="btn btn-info" text-translate="true">Restart now</button>
         </form>
     </div>
@@ -69,7 +64,7 @@
     </div>
 </div>
 
-<section class="m-0">
+<section>
     <div class="mb-4">
         <h3 class="mb-2" text-translate="true">Available Plugins</h3>
         <p class="text-muted mb-0" text-translate="true">Browse the public plugin directory here and install new plugins.</p>
@@ -82,23 +77,20 @@
         </div>
     </div>
     <div id="plugins-embed-shell"
-         class="pb-5"
-         data-origin="@Model.DirectoryOrigin"
          data-iframe-url="@Model.DirectoryIframeUrl"
-         data-panel-url="@Model.PanelUrl"
-         data-selected-slug="@Model.SelectedPluginSlug"
+         data-panel-url="@Url.Action("SelectedPluginPanel")"
+         data-selected-slug="@Model.SelectedPluginPanel.SelectedSlug"
          data-panel-error-message="@StringLocalizer["BTCPay Server could not load the plugin panel."]"
-         data-panel-retry-label="@StringLocalizer["Retry"]">
+         data-panel-loading-message="@StringLocalizer["Loading..."]">
         <script type="application/json" id="plugins-embed-hidden-plugin-identifiers">@Safe.Json(Model.HiddenPluginIdentifiers)</script>
         <iframe id="plugins-directory-iframe"
-                title="@StringLocalizer["Plugin directory"]"
+                title="@StringLocalizer["Plugin Directory"]"
                 class="plugin-manage-frame d-block w-100 border-0"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
+                sandbox="@iframeSandbox"></iframe>
     </div>
     <div class="offcanvas offcanvas-end shadow plugin-manage-offcanvas"
          tabindex="-1"
          id="selected-plugin-offcanvas"
-         data-bs-backdrop="true"
          data-bs-scroll="true"
          aria-labelledby="selected-plugin-offcanvas-label">
         <div class="offcanvas-header justify-content-end px-3 pt-3 pb-0">
@@ -106,15 +98,14 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="@StringLocalizer["Close"]"></button>
         </div>
         <div class="offcanvas-body d-flex flex-column overflow-hidden px-4 pt-0 pb-4">
-            <div id="selected-plugin-panel" class="d-flex flex-grow-1">
-                <partial name="~/Views/UIServer/_SelectedPluginPanel.cshtml" model="Model.SelectedPluginPanel" />
+            <div id="selected-plugin-panel" class="d-flex flex-column flex-grow-1 gap-3 overflow-hidden">
+                <partial name="_SelectedPluginPanel" model="Model.SelectedPluginPanel" />
             </div>
         </div>
     </div>
     <div class="modal fade" id="plugin-install-confirm-modal" tabindex="-1" aria-labelledby="plugin-install-confirm-title" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <form method="post" id="plugin-install-confirm-form" class="modal-content">
-                @Html.AntiForgeryToken()
+            <form method="post" asp-action="InstallPlugin" class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="plugin-install-confirm-title" text-translate="true">Install plugin</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]"></button>
@@ -138,6 +129,7 @@
                     </p>
                     <input type="hidden" name="plugin" />
                     <input type="hidden" name="version" />
+                    <input type="hidden" name="returnTo" value="directory" />
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" text-translate="true">Cancel</button>
@@ -146,5 +138,8 @@
             </form>
         </div>
     </div>
-    <script src="~/js/server/plugins-embed.js" asp-append-version="true"></script>
 </section>
+
+@section PageFootContent {
+    <script src="~/plugins/PluginManager/plugins-embed.js" asp-append-version="true"></script>
+}

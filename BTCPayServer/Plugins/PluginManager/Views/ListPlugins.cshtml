@@ -1,12 +1,6 @@
-@using System.Linq
 @model InstalledPluginsViewModel
 @{
-    Layout = "_Layout";
-    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Plugins), StringLocalizer["Installed Plugins"])
-    {
-        SubMenuItemId = "InstalledPlugins"
-    });
-
+    ViewData.SetTitle(StringLocalizer["Installed Plugins"]);
 }
 
 <style>
@@ -20,7 +14,7 @@
 {
     <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
         <span text-translate="true">You need to restart BTCPay Server in order to update your active plugins.</span>
-        <form method="post" asp-controller="UIServer" asp-action="Maintenance" class="mt-2">
+        <form method="post" asp-area="" asp-controller="UIServer" asp-action="Maintenance" class="mt-2">
             <button type="submit" name="command" value="soft-restart" class="btn btn-info" text-translate="true">Restart now</button>
         </form>
     </div>
@@ -39,7 +33,7 @@
 <div class="d-flex flex-column gap-5">
 @if (Model.DisabledPlugins.Any())
 {
-    <section class="m-0 order-1">
+    <section>
         <h3 class="mb-4" text-translate="true">Disabled Plugins</h3>
         <ul class="list-group list-group-flush d-inline-block">
             @foreach (var plugin in Model.DisabledPlugins)
@@ -52,22 +46,22 @@
                             {
                                 <span>(@plugin.DisabledVersion)</span>
                             }
-                            @if (plugin.RecommendedUpdate?.Version is not null)
+                            @if (plugin.RecommendedUpdateVersion is not null)
                             {
-                                <span class="badge bg-info ms-2">@plugin.RecommendedUpdate.Version <span text-translate="true">available</span></span>
+                                <span class="badge bg-info ms-2">@plugin.RecommendedUpdateVersion <span text-translate="true">available</span></span>
                             }
                         </span>
                         <div class="d-flex flex-wrap gap-2">
                             @foreach (var action in plugin.Actions)
                             {
-                                if (action.Disabled || string.IsNullOrEmpty(action.FormAction))
+                                if (string.IsNullOrEmpty(action.FormAction))
                                 {
                                     <button type="button" class="@action.CssClass" disabled title="@(string.IsNullOrEmpty(action.Tooltip) ? null : StringLocalizer[action.Tooltip].Value)">@StringLocalizer[action.Label]</button>
                                 }
                                 else
                                 {
                                     <form method="post" asp-action="@action.FormAction">
-                                        <input type="hidden" name="plugin" value="@action.Plugin" />
+                                        <input type="hidden" name="plugin" value="@plugin.Identifier" />
                                         @if (!string.IsNullOrEmpty(action.Version))
                                         {
                                             <input type="hidden" name="version" value="@action.Version" />
@@ -86,14 +80,14 @@
 
 @if (Model.InstalledPlugins.Any())
 {
-    <section id="plugins-installed" class="m-0 order-2">
+    <section>
         <h3 class="mb-4" text-translate="true">Installed Plugins</h3>
         <div class="row mb-4">
             @foreach (var plugin in Model.InstalledPlugins)
             {
                 var updateAvailable = plugin.Update is not null;
                 var tabId = plugin.Current.Identifier.ToLowerInvariant().Replace(".", "_");
-                <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
+                <div class="col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                     <div class="card h-100" id="@plugin.Current.Identifier">
                         <div class="card-body">
                             <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
@@ -126,7 +120,7 @@
                                 @if (updateAvailable)
                                 {
                                     <span class="nav version-switch mt-n1" role="tablist">
-                                        <a data-bs-toggle="tab" href="#@tabId-current" class="nav-link text-info p-0 show active" text-translate="true">Show current info</a>
+                                        <a data-bs-toggle="tab" href="#@tabId-current" class="nav-link text-info p-0 active" text-translate="true">Show current info</a>
                                         <a data-bs-toggle="tab" href="#@tabId-update" class="nav-link text-info p-0" text-translate="true">Show update info</a>
                                     </span>
                                 }
@@ -219,14 +213,14 @@
                         <div class="card-footer border-0 pb-3 d-flex flex-wrap gap-2">
                             @foreach (var action in plugin.Actions)
                             {
-                                if (action.Disabled || string.IsNullOrEmpty(action.FormAction))
+                                if (string.IsNullOrEmpty(action.FormAction))
                                 {
                                     <button type="button" class="@action.CssClass" disabled title="@(string.IsNullOrEmpty(action.Tooltip) ? null : StringLocalizer[action.Tooltip].Value)">@StringLocalizer[action.Label]</button>
                                 }
                                 else
                                 {
                                     <form method="post" asp-action="@action.FormAction">
-                                        <input type="hidden" name="plugin" value="@action.Plugin" />
+                                        <input type="hidden" name="plugin" value="@plugin.Current.Identifier" />
                                         @if (!string.IsNullOrEmpty(action.Version))
                                         {
                                             <input type="hidden" name="version" value="@action.Version" />
@@ -272,7 +266,7 @@
         <h3 class="mb-4" text-translate="true">Pending Action</h3>
         <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#pending-actions" text-translate="true">Pending Actions</button>
         <div class="row collapse" id="pending-actions">
-            <div class="col col-12 col-lg-6 mb-4">
+            <div class="col-12 col-lg-6 mb-4">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title" text-translate="true">Pending actions</h4>

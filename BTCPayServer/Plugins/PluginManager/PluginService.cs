@@ -43,17 +43,23 @@ namespace BTCPayServer.Plugins
         public IEnumerable<IBTCPayServerPlugin> LoadedPlugins { get; }
         public BTCPayServerEnvironment Env { get; }
 
-        public Version GetVersionOfPendingInstall(string plugin)
+        internal AvailablePlugin GetPendingPluginManifest(string command, string plugin)
         {
-            var dirName = Path.Combine(_dataDirectories.Value.PluginDir, plugin);
-            var manifestFileName = dirName + ".json";
-            if (!File.Exists(manifestFileName)) return null;
-            var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<AvailablePlugin>();
-            return pluginManifest.Version;
+            if (string.IsNullOrEmpty(plugin)) return null;
+
+            var pluginPath = Path.Combine(_dataDirectories.Value.PluginDir, plugin);
+            var manifestFileName = command switch
+            {
+                "install" => pluginPath + ".json",
+                "enable" => Path.Combine(pluginPath, plugin + ".json"),
+                _ => null
+            };
+            if (manifestFileName is null || !File.Exists(manifestFileName)) return null;
+            return JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<AvailablePlugin>();
         }
 
-        public string GetShortBtcpayVersion() => Env.Version.TrimStart('v').Split('+')[0];
-        public Uri GetPluginSourceBaseUri() => _pluginBuilderClient.HttpClient.BaseAddress;
+        internal string GetShortBtcpayVersion() => Env.Version.TrimStart('v').Split('+')[0];
+        internal Uri GetPluginSourceBaseUri() => _pluginBuilderClient.HttpClient.BaseAddress;
 
         public async Task<AvailablePlugin[]> GetRemotePlugins(string searchPluginName, CancellationToken cancellationToken = default)
         {
@@ -96,7 +102,7 @@ namespace BTCPayServer.Plugins
         }
 
 #nullable enable
-        private AvailablePlugin? MapToAvailablePlugin(PublishedVersion publishedVersion)
+        private static AvailablePlugin? MapToAvailablePlugin(PublishedVersion publishedVersion)
         {
             if (publishedVersion.ManifestInfo is null)
                 return null;
@@ -126,9 +132,7 @@ namespace BTCPayServer.Plugins
             var versions = await _pluginBuilderClient.GetPluginVersionsForDownload(pluginIdentifier,
                 btcpayVersion, _policiesSettings.PluginPreReleases, includeAllVersions: true);
             var compatiblePlugins = versions
-                .Select(v => v.ManifestInfo?.ToObject<AvailablePlugin>())
-                .Where(v => v is not null)
-                .ToArray();
+                .Select(v => v.ManifestInfo?.ToObject<AvailablePlugin>());
             var selectedVersion = SelectCompatiblePluginVersion(pluginIdentifier, version, condition, compatiblePlugins);
 
             var dest = _dataDirectories.Value.PluginDir;
@@ -149,7 +153,6 @@ namespace BTCPayServer.Plugins
                 throw new InvalidDataException($"Plugin manifest identifier {manifest.Identifier} does not match requested plugin {pluginIdentifier}.");
             if (!selectedVersion.Equals(manifest.Version))
                 throw new InvalidDataException($"Plugin manifest version {manifest.Version} does not match requested version {selectedVersion}.");
-            manifest.CatalogSlug = publishedVersion.ProjectSlug;
             using var resp2 = await _pluginBuilderClient.HttpClient.GetAsync(url);
             resp2.EnsureSuccessStatusCode();
             await using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);

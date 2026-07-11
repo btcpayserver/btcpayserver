@@ -8,9 +8,8 @@
     const hiddenPluginIdentifiersScript = document.getElementById("plugins-embed-hidden-plugin-identifiers");
     const darkThemeLink = document.getElementById("DarkThemeLinkTag");
     const installConfirmModal = document.getElementById("plugin-install-confirm-modal");
-    const installConfirmForm = document.getElementById("plugin-install-confirm-form");
-    const installConfirmPluginInput = installConfirmForm?.querySelector("input[name='plugin']");
-    const installConfirmVersionInput = installConfirmForm?.querySelector("input[name='version']");
+    const installConfirmPluginInput = installConfirmModal.querySelector("input[name='plugin']");
+    const installConfirmVersionInput = installConfirmModal.querySelector("input[name='version']");
     const installConfirmName = document.getElementById("plugin-install-confirm-name");
     const installConfirmIdentifier = document.getElementById("plugin-install-confirm-identifier");
     const installConfirmVersion = document.getElementById("plugin-install-confirm-version");
@@ -18,54 +17,30 @@
     const installConfirmPendingVersion = document.getElementById("plugin-install-confirm-pending-version");
     const installConfirmPendingRequestedVersion = document.getElementById("plugin-install-confirm-pending-requested-version");
 
-    if (!directoryShell || !directoryFrame || !selectedPluginPanel || !selectedPluginOffcanvas) {
-        return;
-    }
-
-    const pluginBuilderOrigin = directoryShell.dataset.origin;
     const pluginDirectoryUrl = directoryShell.dataset.iframeUrl;
     const selectedPluginPanelUrl = directoryShell.dataset.panelUrl;
-    const selectedPluginPanelErrorMessage = directoryShell.dataset.panelErrorMessage || "BTCPay Server could not load the plugin panel.";
-    const selectedPluginPanelRetryLabel = directoryShell.dataset.panelRetryLabel || "Retry";
+    const selectedPluginPanelErrorMessage = directoryShell.dataset.panelErrorMessage;
+    const selectedPluginPanelLoadingMessage = directoryShell.dataset.panelLoadingMessage;
+    const hiddenPluginIdentifiers = JSON.parse(hiddenPluginIdentifiersScript.textContent);
     const directoryReadyTimeoutMs = 8000;
-    const directoryHandshakeIntervalMs = 250;
-    let hiddenPluginIdentifiers = [];
     let selectedSlug = directoryShell.dataset.selectedSlug || "";
     let directoryReady = false;
     let directoryFailed = false;
     let selectedPluginPanelRequestId = 0;
-    let selectedPluginOffcanvasInstance = null;
     let directoryReadyTimeoutId = null;
-    let directoryHandshakeIntervalId = null;
     let isInstallConfirmModalOpen = false;
 
-    if (!pluginBuilderOrigin || !pluginDirectoryUrl || !selectedPluginPanelUrl) {
-        if (directoryRetryButton) {
-            directoryRetryButton.classList.add("d-none");
-        }
+    if (!pluginDirectoryUrl || !selectedPluginPanelUrl) {
+        directoryRetryButton.classList.add("d-none");
         showDirectoryError();
         return;
     }
-
-    if (hiddenPluginIdentifiersScript && hiddenPluginIdentifiersScript.textContent) {
-        try {
-            const parsedIdentifiers = JSON.parse(hiddenPluginIdentifiersScript.textContent);
-            if (Array.isArray(parsedIdentifiers)) {
-                hiddenPluginIdentifiers = parsedIdentifiers.filter(function (identifier) {
-                    return typeof identifier === "string" && identifier.length > 0;
-                });
-            }
-        } catch {
-            hiddenPluginIdentifiers = [];
-        }
-    }
+    const pluginBuilderOrigin = new URL(pluginDirectoryUrl).origin;
 
     function startDirectory() {
         directoryReady = false;
         directoryFailed = false;
-        if (directoryErrorAlert) {
-            directoryErrorAlert.classList.add("d-none");
-        }
+        directoryErrorAlert.classList.add("d-none");
         directoryShell.classList.remove("d-none");
 
         window.clearTimeout(directoryReadyTimeoutId);
@@ -74,11 +49,6 @@
                 showDirectoryError();
             }
         }, directoryReadyTimeoutMs);
-
-        window.clearInterval(directoryHandshakeIntervalId);
-        directoryHandshakeIntervalId = window.setInterval(function () {
-            postHostContextTo(directoryFrame);
-        }, directoryHandshakeIntervalMs);
 
         directoryFrame.src = pluginDirectoryUrl;
     }
@@ -90,40 +60,18 @@
 
         directoryFailed = true;
         window.clearTimeout(directoryReadyTimeoutId);
-        window.clearInterval(directoryHandshakeIntervalId);
-        const offcanvas = getOffcanvas();
-        if (offcanvas) {
-            offcanvas.hide();
-        }
+        getOffcanvas().hide();
         directoryShell.classList.add("d-none");
-        if (directoryErrorAlert) {
-            directoryErrorAlert.classList.remove("d-none");
-        }
+        directoryErrorAlert.classList.remove("d-none");
     }
 
     function markReady() {
         directoryReady = true;
         window.clearTimeout(directoryReadyTimeoutId);
-        window.clearInterval(directoryHandshakeIntervalId);
     }
 
     function getOffcanvas() {
-        if (!window.bootstrap || !window.bootstrap.Offcanvas) {
-            return null;
-        }
-
-        if (!selectedPluginOffcanvasInstance) {
-            selectedPluginOffcanvasInstance = window.bootstrap.Offcanvas.getOrCreateInstance(selectedPluginOffcanvas);
-        }
-
-        return selectedPluginOffcanvasInstance;
-    }
-
-    function showOffcanvas() {
-        const offcanvas = getOffcanvas();
-        if (offcanvas) {
-            offcanvas.show();
-        }
+        return window.bootstrap.Offcanvas.getOrCreateInstance(selectedPluginOffcanvas);
     }
 
     function isObject(value) {
@@ -180,6 +128,10 @@
         return detailsFrame?.contentWindow === sourceWindow ? detailsFrame : null;
     }
 
+    function usesOpaqueOrigin(frame) {
+        return !frame.sandbox.contains("allow-same-origin");
+    }
+
     function syncSelectedSlugUrl(slug) {
         const url = new URL(window.location.href);
         if (slug) {
@@ -189,39 +141,35 @@
         }
 
         window.history.replaceState(window.history.state, "", url);
-        directoryShell.dataset.selectedSlug = slug || "";
+    }
+
+    function renderSelectedPluginPanelLoading() {
+        selectedPluginPanel.setAttribute("aria-busy", "true");
+        selectedPluginPanel.innerHTML = '<div class="d-flex align-items-center gap-2 py-3 text-muted" role="status"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span data-plugin-panel-loading-message></span></div>';
+        selectedPluginPanel.querySelector("[data-plugin-panel-loading-message]").textContent = selectedPluginPanelLoadingMessage;
     }
 
     function renderSelectedPluginPanelError(slug) {
-        selectedPluginPanel.innerHTML = '<div class="plugin-manage-panel d-flex flex-column flex-grow-1"><div class="border rounded p-3" role="alert"><div class="d-flex flex-wrap align-items-center gap-2"><span class="small text-muted me-auto"></span><button type="button" class="btn btn-secondary btn-sm flex-shrink-0"></button></div></div></div>';
+        selectedPluginPanel.innerHTML = '<div class="border rounded p-3" role="alert"><div class="d-flex flex-wrap align-items-center gap-2"><span class="small text-muted me-auto"></span><button type="button" class="btn btn-secondary btn-sm flex-shrink-0"></button></div></div>';
         const alertMessage = selectedPluginPanel.querySelector("span");
-        if (alertMessage) {
-            alertMessage.textContent = selectedPluginPanelErrorMessage;
-        }
+        alertMessage.textContent = selectedPluginPanelErrorMessage;
 
         const selectedPluginPanelRetryButton = selectedPluginPanel.querySelector("button");
-        if (selectedPluginPanelRetryButton) {
-            selectedPluginPanelRetryButton.textContent = selectedPluginPanelRetryLabel;
-            selectedPluginPanelRetryButton.addEventListener("click", function () {
-                reloadSelectedPluginPanel(slug);
-            });
-        }
+        selectedPluginPanelRetryButton.textContent = directoryRetryButton.textContent;
+        selectedPluginPanelRetryButton.addEventListener("click", function () {
+            reloadSelectedPluginPanel(slug);
+        });
     }
 
     async function reloadSelectedPluginPanel(slug) {
         const requestId = ++selectedPluginPanelRequestId;
+        renderSelectedPluginPanelLoading();
 
         try {
             const url = new URL(selectedPluginPanelUrl, window.location.origin);
-            if (slug) {
-                url.searchParams.set("slug", slug);
-            }
+            url.searchParams.set("slug", slug);
 
-            const response = await window.fetch(url.toString(), {
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest"
-                }
-            });
+            const response = await window.fetch(url.toString());
             if (!response.ok) {
                 throw new Error("Panel request failed");
             }
@@ -233,13 +181,16 @@
 
             selectedPluginPanel.innerHTML = html;
             bindPluginDetailsFrame();
-            postHostContextTo(getPluginDetailsFrame());
         } catch {
             if (requestId !== selectedPluginPanelRequestId) {
                 return;
             }
 
             renderSelectedPluginPanelError(slug);
+        } finally {
+            if (requestId === selectedPluginPanelRequestId) {
+                selectedPluginPanel.removeAttribute("aria-busy");
+            }
         }
     }
 
@@ -251,13 +202,12 @@
         frame.contentWindow.postMessage({
             type: "btcpay:host-context",
             hiddenPluginIdentifiers: hiddenPluginIdentifiers,
-            selectedSlug: frame === directoryFrame ? selectedSlug : "",
             colorMode: getHostColorMode()
-        }, pluginBuilderOrigin);
+        }, usesOpaqueOrigin(frame) ? "*" : pluginBuilderOrigin);
     }
 
     function postHostContext() {
-        if (!directoryReady || directoryFailed) {
+        if (!directoryReady) {
             return;
         }
 
@@ -267,84 +217,58 @@
 
     function bindPluginDetailsFrame() {
         const detailsFrame = getPluginDetailsFrame();
-        if (!detailsFrame || detailsFrame.dataset.hostContextBound === "true") {
+        if (!detailsFrame) {
             return;
         }
 
-        detailsFrame.dataset.hostContextBound = "true";
         detailsFrame.addEventListener("load", function () {
             postHostContextTo(detailsFrame);
         });
     }
 
-    function confirmInstallFromEmbed(data) {
-        const form = selectedPluginPanel.querySelector("[data-plugin-install-form='true']");
-        const Modal = window.bootstrap?.Modal;
-        if (!form || isInstallConfirmModalOpen || !Modal || !installConfirmModal || !installConfirmForm || !installConfirmPluginInput || !installConfirmVersionInput || !installConfirmName || !installConfirmIdentifier || !installConfirmVersion || !installConfirmPending || !installConfirmPendingVersion || !installConfirmPendingRequestedVersion) {
+    function confirmInstallFromEmbed(data, sourceFrame) {
+        if (!selectedSlug || isInstallConfirmModalOpen) {
             return;
         }
 
-        const formSelectedSlug = form.dataset.selectedSlug || "";
-        if (!selectedSlug || formSelectedSlug.toLowerCase() !== selectedSlug.toLowerCase()) {
-            return;
-        }
-
-        const pluginIdentifier = form.querySelector("input[name='plugin']")?.value;
+        const pluginIdentifier = sourceFrame.dataset.pluginIdentifier;
         if (!pluginIdentifier || pluginIdentifier.toLowerCase() !== data.identifier.toLowerCase()) {
             return;
         }
 
-        installConfirmForm.action = form.action;
         installConfirmPluginInput.value = pluginIdentifier;
         installConfirmVersionInput.value = data.version;
 
-        const pluginName = form.dataset.pluginName || pluginIdentifier;
-        const hasPendingInstall = form.dataset.pendingInstall === "true";
+        const pluginName = sourceFrame.dataset.pluginName || pluginIdentifier;
+        const hasPendingInstall = sourceFrame.dataset.pendingInstall === "true";
         installConfirmName.textContent = pluginName;
         installConfirmIdentifier.textContent = pluginIdentifier;
         installConfirmVersion.textContent = data.version;
         installConfirmPending.classList.toggle("d-none", !hasPendingInstall);
-        installConfirmPendingVersion.textContent = hasPendingInstall ? form.dataset.pendingInstallVersion || "" : "";
+        installConfirmPendingVersion.textContent = hasPendingInstall ? sourceFrame.dataset.pendingInstallVersion || "" : "";
         installConfirmPendingRequestedVersion.textContent = hasPendingInstall ? data.version : "";
 
         isInstallConfirmModalOpen = true;
-        Modal.getOrCreateInstance(installConfirmModal).show();
+        window.bootstrap.Modal.getOrCreateInstance(installConfirmModal).show();
     }
 
-    if (installConfirmForm && installConfirmPluginInput && installConfirmVersionInput) {
-        installConfirmForm.addEventListener("submit", function (event) {
-            if (!isInstallConfirmModalOpen || !installConfirmPluginInput.value || !installConfirmVersionInput.value) {
-                event.preventDefault();
-            }
-        });
-    }
-
-    if (installConfirmModal && installConfirmForm) {
-        installConfirmModal.addEventListener("hidden.bs.modal", function () {
-            isInstallConfirmModalOpen = false;
-            installConfirmForm.removeAttribute("action");
-
-            [installConfirmPluginInput, installConfirmVersionInput].forEach(function (input) {
-                if (input) input.value = "";
-            });
-
-            [installConfirmName, installConfirmIdentifier, installConfirmVersion, installConfirmPendingVersion, installConfirmPendingRequestedVersion].forEach(function (element) {
-                if (element) element.textContent = "";
-            });
-
-            if (installConfirmPending) {
-                installConfirmPending.classList.add("d-none");
-            }
-        });
-    }
+    installConfirmModal.addEventListener("hidden.bs.modal", function () {
+        isInstallConfirmModalOpen = false;
+    });
 
     window.addEventListener("message", function (event) {
-        if (directoryFailed || event.origin !== pluginBuilderOrigin) {
+        if (directoryFailed) {
             return;
         }
 
         const sourceFrame = getFrameByWindow(event.source);
         if (!sourceFrame) {
+            return;
+        }
+
+        // Frames without allow-same-origin have an opaque origin serialized as "null".
+        const expectedOrigin = usesOpaqueOrigin(sourceFrame) ? "null" : pluginBuilderOrigin;
+        if (event.origin !== expectedOrigin) {
             return;
         }
 
@@ -356,7 +280,7 @@
             }
 
             if (isInstallRequestMessage(data)) {
-                confirmInstallFromEmbed(data);
+                confirmInstallFromEmbed(data, sourceFrame);
             }
             return;
         }
@@ -369,7 +293,7 @@
 
         if (isHeightMessage(data)) {
             markReady();
-            directoryFrame.style.height = Math.max(Math.ceil(data.height), 360) + "px";
+            directoryFrame.style.height = Math.ceil(data.height) + "px";
             return;
         }
 
@@ -379,36 +303,26 @@
 
         markReady();
         if (data.slug === selectedSlug) {
-            showOffcanvas();
+            getOffcanvas().show();
             return;
         }
 
         selectedSlug = data.slug;
         syncSelectedSlugUrl(selectedSlug);
-        showOffcanvas();
+        getOffcanvas().show();
         reloadSelectedPluginPanel(selectedSlug);
-        postHostContext();
     });
 
     directoryFrame.addEventListener("load", function () {
-        if (directoryFailed) {
-            return;
-        }
-
         postHostContextTo(directoryFrame);
     });
 
-    if (directoryRetryButton) {
-        directoryRetryButton.addEventListener("click", function () {
-            startDirectory();
-        });
-    }
+    directoryRetryButton.addEventListener("click", startDirectory);
 
-    if (window.MutationObserver) {
-        const themeObserver = new window.MutationObserver(postHostContext);
-        if (darkThemeLink) {
-            themeObserver.observe(darkThemeLink, { attributes: true, attributeFilter: ["rel"] });
-        }
+    const themeObserver = new window.MutationObserver(postHostContext);
+    if (darkThemeLink) {
+        themeObserver.observe(darkThemeLink, { attributes: true, attributeFilter: ["rel"] });
+    } else {
         themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-btcpay-theme"] });
     }
 
@@ -419,11 +333,10 @@
 
         selectedSlug = "";
         syncSelectedSlugUrl("");
-        postHostContext();
     });
 
     if (selectedSlug) {
-        showOffcanvas();
+        getOffcanvas().show();
     }
 
     bindPluginDetailsFrame();

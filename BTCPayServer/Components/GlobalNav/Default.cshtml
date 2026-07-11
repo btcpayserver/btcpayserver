@@ -2,6 +2,7 @@
 @using BTCPayServer.Views.Manage
 @using BTCPayServer.Client
 @using BTCPayServer.Plugins
+@using BTCPayServer.Plugins.PluginManagement
 @using BTCPayServer.Services
 @using BTCPayServer.Plugins.Emails
 @using BTCPayServer.Plugins.Translations
@@ -12,7 +13,6 @@
 @model BTCPayServer.Components.GlobalNav.GlobalNavViewModel
 
 @{
-    var pluginsUrl = Url.Action("ListPlugins", "UIPluginManager");
     var loginName = User.Identity?.Name;
     var activePage = ViewData["ActivePage"]?.ToString();
     var serverEmailsPage = $"Server-{nameof(ServerNavPages.Emails)}";
@@ -47,15 +47,12 @@
                 }
             </button>
             <ul id="globalNavPluginsMenu" class="dropdown-menu dropdown-menu-end">
-                @if (!string.IsNullOrEmpty(pluginsUrl))
-                {
-                    <li class="py-1 px-3">
-                        <a class="dropdown-item nav-link" asp-area="" asp-controller="UIPluginManager" asp-action="ListPlugins" text-translate="true">Installed Plugins</a>
-                    </li>
-                    <li class="py-1 px-3">
-                        <a class="dropdown-item nav-link" asp-area="" asp-controller="UIPluginManager" asp-action="PluginDirectory" text-translate="true">Plugin Directory</a>
-                    </li>
-                }
+                <li>
+                    <a class="dropdown-item" asp-area="@PluginManagerPlugin.Area" asp-controller="UIPluginManager" asp-action="ListPlugins" text-translate="true">Installed Plugins</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-area="@PluginManagerPlugin.Area" asp-controller="UIPluginManager" asp-action="PluginDirectory" text-translate="true">Plugin Directory</a>
+                </li>
             </ul>
         </div>
 

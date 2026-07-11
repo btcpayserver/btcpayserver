@@ -50,14 +50,18 @@ namespace BTCPayServer.Plugins
 
     public record InstalledPluginRequest(string Identifier, string Version);
 
-    public class PluginBuilderClient
+    public class PluginBuilderClient(HttpClient httpClient)
     {
-        private readonly HttpClient _httpClient;
-        public HttpClient HttpClient => _httpClient;
-        public PluginBuilderClient(HttpClient httpClient)
+        public HttpClient HttpClient { get; } = httpClient;
+
+        internal static Uri NormalizeBaseAddress(Uri baseAddress)
         {
-            _httpClient = httpClient;
+            var baseUrl = baseAddress.GetLeftPart(UriPartial.Path);
+            return new Uri(
+                baseUrl.EndsWith("/", StringComparison.Ordinal) ? baseUrl : baseUrl + '/',
+                UriKind.Absolute);
         }
+
         static JsonSerializerSettings serializerSettings = new() { ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver() };
         public async Task<PublishedVersion[]> GetPublishedVersions(string btcpayVersion, bool includePreRelease, string searchPluginName = null, bool? includeAllVersions = null, CancellationToken cancellationToken = default)
         {
@@ -68,14 +72,14 @@ namespace BTCPayServer.Plugins
                 queryString += $"&searchPluginName={Uri.EscapeDataString(searchPluginName)}";
             if (includeAllVersions is not null)
                 queryString += $"&includeAllVersions={includeAllVersions}";
-            var result = await _httpClient.GetStringAsync($"api/v1/plugins{queryString}", cancellationToken);
+            var result = await HttpClient.GetStringAsync($"api/v1/plugins{queryString}", cancellationToken);
             return JsonConvert.DeserializeObject<PublishedVersion[]>(result, serializerSettings) ?? throw new InvalidOperationException();
         }
         public async Task<PublishedVersion> GetPlugin(string pluginSlug, string version)
         {
             try
             {
-                var result = await _httpClient.GetStringAsync($"api/v1/plugins/{pluginSlug}/versions/{version}");
+                var result = await HttpClient.GetStringAsync($"api/v1/plugins/{pluginSlug}/versions/{version}");
                 return JsonConvert.DeserializeObject<PublishedVersion>(result, serializerSettings);
             }
             catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -89,7 +93,7 @@ namespace BTCPayServer.Plugins
             var queryString = $"?btcpayVersion={btcpayVersion}&includePreRelease={includePreRelease}&includeAllVersions={includeAllVersions}";
             var url = $"api/v1/plugins/{Uri.EscapeDataString(identifier)}{queryString}";
 
-            var result = await _httpClient.GetStringAsync(url);
+            var result = await HttpClient.GetStringAsync(url);
             return JsonConvert.DeserializeObject<PublishedVersion[]>(result, serializerSettings)
                    ?? throw new InvalidOperationException();
         }
@@ -107,7 +111,7 @@ namespace BTCPayServer.Plugins
             var json = JsonConvert.SerializeObject(plugins, serializerSettings);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            using var resp = await _httpClient.PostAsync($"api/v1/plugins/updates{queryString}", content, cancellationToken);
+            using var resp = await HttpClient.PostAsync($"api/v1/plugins/updates{queryString}", content, cancellationToken);
             resp.EnsureSuccessStatusCode();
 
             var body = await resp.Content.ReadAsStringAsync(cancellationToken);

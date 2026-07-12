@@ -195,6 +195,10 @@ h2 .icon.icon-info {
 #mainContent section p {
     max-width: 46em;
 }
+/* Header subtitle spans its column; a button (when present) constrains it, not a fixed cap */
+#mainContent .sticky-header p {
+    max-width: none;
+}
 
 /* Invoices */
 .invoice-details-row {
@@ -313,6 +317,36 @@ h2 .icon.icon-info {
     .sticky-header > .btn:last-child {
         display: none;
     }
+}
+
+/* Settings section containers (see issue #6901) */
+.settings-section-heading {
+    margin-top: var(--btcpay-space-l);
+    margin-bottom: var(--btcpay-space-m);
+    scroll-margin-top: calc(var(--sticky-header-height) + var(--btcpay-space-s));
+}
+/* The first heading sits tighter under the page's sticky header */
+.settings-section-heading:first-of-type {
+    margin-top: var(--btcpay-space-s);
+}
+/* …unless it follows a headingless section, then keep the full top margin */
+.settings-section-heading.settings-section-heading-spaced {
+    margin-top: var(--btcpay-space-l);
+}
+.settings-section {
+    border-radius: var(--btcpay-border-radius-l);
+    background: var(--btcpay-bg-tile);
+    padding: var(--btcpay-space-l);
+}
+/* Sub-heading inside a section: one ladder step below the section heading */
+.settings-section-subheading {
+    font-size: var(--btcpay-font-size-l);
+}
+/* A table trims the section's extra vertical padding to half.
+   Scoped under .settings-section to out-specify `main [class*='table-responsive']`. */
+.settings-section .settings-section-table {
+    margin-top: calc(-0.5 * var(--btcpay-space-l));
+    margin-bottom: calc(-0.5 * var(--btcpay-space-l));
 }
 
 /* Richtext editor */

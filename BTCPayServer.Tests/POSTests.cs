@@ -697,6 +697,50 @@ goodies:
             Assert.False(await s.Page.IsVisibleAsync("#RecentTransactionsToggle"));
         }
 
+        [Fact]
+        [Trait("Playwright", "Playwright-2")]
+        public async Task CanUsePOSDefaultDiscount()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.GoToStore();
+            await s.AddDerivationScheme();
+
+            // Setup POS with a default discount of 10%
+            await s.CreateApp("PointOfSale");
+            await s.Page.ClickAsync("label[for='DefaultView_Cart']");
+            await s.Page.FillAsync("#Currency", "EUR");
+            await s.Page.ClickAsync("#ShowDiscount");
+            await s.Page.FillAsync("#DefaultDiscount", "10");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "App updated");
+
+            // The discount is pre-filled and applied to the total
+            await ViewApp(s);
+            await s.Page.WaitForSelectorAsync("#PosItems");
+            await s.Page.ClickAsync("#card_black-tea button");
+            await Expect(s.Page.Locator("#Discount")).ToHaveValueAsync("10");
+            await AssertCartSummary(s, new()
+            {
+                ItemsTotal = "1,00 €",
+                Discount = "0,10 € (10%)",
+                Total = "0,90 €"
+            });
+
+            // Emptying the cart keeps the default discount for the next customer
+            await s.Page.ClickAsync("#CartClear");
+            await s.Page.ClickAsync("#card_black-tea button");
+            await Expect(s.Page.Locator("#Discount")).ToHaveValueAsync("10");
+            await AssertCartSummary(s, new()
+            {
+                ItemsTotal = "1,00 €",
+                Discount = "0,10 € (10%)",
+                Total = "0,90 €"
+            });
+        }
+
         public static Task<IAsyncDisposable> ViewApp(PlaywrightTester s)
             => s.SwitchPage(async () =>
             {

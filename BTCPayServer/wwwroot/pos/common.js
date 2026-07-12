@@ -374,7 +374,8 @@ const posCommon = {
         clear() {
             this.cart = [];
             this.amounts = [null];
-            this.tip = this.discount = this.tipPercent = this.discountPercent = null;
+            this.tip = this.discount = this.tipPercent = null;
+            this.discountPercent = this.defaultDiscount ?? null;
         },
         forEachItem(callback) {
             if (this.$refs.posItems) {

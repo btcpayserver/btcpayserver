@@ -743,10 +743,9 @@
                                 "nullable": true
                             },
                             "defaultDiscount": {
-                                "type": "string",
-                                "format": "decimal",
+                                "type": "integer",
                                 "description": "The discount percentage (0-100) the discount field is pre-filled with. Only applies when showDiscount is enabled.",
-                                "example": "10",
+                                "example": 10,
                                 "nullable": true
                             },
                             "showSearch": {

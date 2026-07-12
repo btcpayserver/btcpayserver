@@ -12,7 +12,7 @@ public abstract class PointOfSaleBaseData : AppBaseData
     public bool? ShowItems { get; set; }
     public bool? ShowCustomAmount { get; set; }
     public bool? ShowDiscount { get; set; }
-    public decimal? DefaultDiscount { get; set; }
+    public int? DefaultDiscount { get; set; }
     public bool? ShowSearch { get; set; }
     public bool? ShowCategories { get; set; }
     public bool? EnableTips { get; set; }

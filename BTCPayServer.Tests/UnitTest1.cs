@@ -549,7 +549,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(comment, listedInvoice.Comment);
 
             // The comment should be included in the invoices export/report
-            var invoicesReport = await GetReport(acc, new() { ViewName = "Invoices" });
+            var invoicesReport = await GetReport(acc, viewName: "Invoices");
             var reportInvoiceIdIndex = invoicesReport.GetIndex("InvoiceId");
             var reportCommentIndex = invoicesReport.GetIndex("InvoiceComment");
             Assert.Contains(invoicesReport.Data, d =>

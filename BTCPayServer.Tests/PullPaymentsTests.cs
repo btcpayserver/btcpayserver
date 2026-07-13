@@ -748,7 +748,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         }));
 
         TestLogs.LogInformation("Can archive payout");
-        await client.CancelPayout(storeId, payout.Id);
+        await client.CancelPayout(payout.Id);
         payouts = await unauthenticated.GetPayouts(pps[0].Id);
         Assert.Empty(payouts);
 
@@ -824,22 +824,22 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Destination = destination,
             PayoutMethodId = "BTC"
         });
-        await AssertEx.AssertApiError("old-revision", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
+        await AssertEx.AssertApiError("old-revision", async () => await client.ApprovePayout(payout.Id, new ApprovePayoutRequest()
         {
             Revision = -1
         }));
-        await AssertEx.AssertApiError("rate-unavailable", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
+        await AssertEx.AssertApiError("rate-unavailable", async () => await client.ApprovePayout(payout.Id, new ApprovePayoutRequest()
         {
             RateRule = "DONOTEXIST(BTC_USD)"
         }));
-        payout = await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
+        payout = await client.ApprovePayout(payout.Id, new ApprovePayoutRequest()
         {
             Revision = payout.Revision
         });
         Assert.Equal(PayoutState.AwaitingPayment, payout.State);
         Assert.NotNull(payout.PayoutAmount);
         Assert.Equal(1.0m, payout.PayoutAmount); // 1 BTC == 5000 USD in tests
-        await AssertEx.AssertApiError("invalid-state", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
+        await AssertEx.AssertApiError("invalid-state", async () => await client.ApprovePayout(payout.Id, new ApprovePayoutRequest()
         {
             Revision = payout.Revision
         }));
@@ -858,15 +858,15 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Destination = destination,
             PayoutMethodId = "BTC"
         });
-        payout = await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest());
+        payout = await client.ApprovePayout(payout.Id, new ApprovePayoutRequest());
         // The payout should round the value of the payment down to the network of the payment method
         Assert.Equal(12.30322814m, payout.PayoutAmount);
         Assert.Equal(12.303228134m, payout.OriginalAmount);
 
-        await client.MarkPayoutPaid(storeId, payout.Id);
+        await client.MarkPayoutPaid(payout.Id);
         payout = (await client.GetPayouts(payout.PullPaymentId)).First(data => data.Id == payout.Id);
         Assert.Equal(PayoutState.Completed, payout.State);
-        await AssertEx.AssertApiError("invalid-state", async () => await client.MarkPayoutPaid(storeId, payout.Id));
+        await AssertEx.AssertApiError("invalid-state", async () => await client.MarkPayoutPaid(payout.Id));
 
         // Test LNURL values
         var test4 = await client.CreatePullPayment(storeId, new CreatePullPaymentRequest()

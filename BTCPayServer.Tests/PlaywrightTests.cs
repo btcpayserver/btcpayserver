@@ -1215,6 +1215,14 @@ namespace BTCPayServer.Tests
             var invId = await s.CreateInvoice(storeId: s.StoreId, amount: 10_000);
             await s.GoToInvoiceCheckout(invId);
             await s.PayInvoice();
+
+            // We can leave a comment on the invoice, and it should be included in the export
+            await s.GoToInvoice(invId);
+            await s.Page.FillAsync("#InvoiceComment", "refunded manually from cashier wallet");
+            await s.Page.ClickAsync("#SaveComment");
+            await s.FindAlertMessage(partialText: "The comment has been saved.");
+            await Expect(s.Page.Locator("#InvoiceComment")).ToHaveValueAsync("refunded manually from cashier wallet");
+
             await s.GoToInvoices(s.StoreId);
             await s.ClickViewReport();
 
@@ -1224,6 +1232,7 @@ namespace BTCPayServer.Tests
             csvInvTester
                 .ForInvoice(invId)
                 .AssertValues(
+                    ("InvoiceComment", "refunded manually from cashier wallet"),
                     ("Rate (BTC_CAD)", "4500"),
                     ("Rate (BTC_JPY)", "700000"),
                     ("Rate (BTC_EUR)", "4000"),

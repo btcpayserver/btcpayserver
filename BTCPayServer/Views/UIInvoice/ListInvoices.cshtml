@@ -28,6 +28,14 @@
             min-width: 200px;
             max-width: 300px;
         }
+        /* Keep the invoice comment popover above adjacent rows */
+        #invoices .dropup .dropdown-menu {
+            z-index: 1080;
+        }
+        #invoices tr:has(.dropup .dropdown-menu.show) {
+            position: relative;
+            z-index: 1080;
+        }
         @@media (max-width: 568px) {
             #SearchText {
                 width: 100%;
@@ -160,14 +168,17 @@
 
 @if (Model.Invoices.Any())
 {
-    <form method="post" asp-action="MassAction" asp-route-storeId="@Model.StoreId">
+    @* Standalone mass-action form: its controls reference it via the form="mass-action-form" attribute
+       so the per-row comment forms below are not nested inside it (nested forms are invalid HTML). *@
+    <form id="mass-action-form" method="post" asp-action="MassAction" asp-route-storeId="@Model.StoreId">
         <input type="hidden" name="storeId" value="@Model.StoreId" />
-        <div class="table-responsive">
+    </form>
+    <div class="table-responsive-md">
             <table id="invoices" class="table table-hover mass-action">
                 <thead class="mass-action-head">
                     <tr>
                         <th class="mass-action-select-col only-for-js">
-                            <input type="checkbox" class="form-check-input mass-action-select-all" />
+                            <input type="checkbox" class="form-check-input mass-action-select-all" form="mass-action-form" />
                         </th>
                         <vc:date-column></vc:date-column>
                         <th text-translate="true" class="text-nowrap">Invoice Id</th>
@@ -180,7 +191,7 @@
                 <thead class="mass-action-actions">
                     <tr>
                         <th class="mass-action-select-col only-for-js">
-                            <input type="checkbox" class="form-check-input mass-action-select-all" />
+                            <input type="checkbox" class="form-check-input mass-action-select-all" form="mass-action-form" />
                         </th>
                         <th colspan="6">
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
@@ -189,18 +200,18 @@
                                     <span text-translate="true">selected</span>
                                 </div>
                                 <div class="d-inline-flex align-items-center gap-3">
-                                    <button type="submit" name="command" value="archive" id="ArchiveSelected" class="btn btn-link">
+                                    <button type="submit" name="command" value="archive" id="ArchiveSelected" class="btn btn-link" form="mass-action-form">
                                         <vc:icon symbol="actions-archive" />
                                         <span text-translate="true">Archive</span>
                                     </button>
                                     @if (Model.Search.HasBooleanFilter("includearchived"))
                                     {
-                                        <button type="submit" name="command" value="unarchive" id="UnarchiveSelected" class="btn btn-link">
+                                        <button type="submit" name="command" value="unarchive" id="UnarchiveSelected" class="btn btn-link" form="mass-action-form">
                                             <vc:icon symbol="actions-archive" />
                                             <span text-translate="true">Unarchive</span>
                                         </button>
                                     }
-                                    <button type="submit" name="command" value="cpfp" id="BumpFee" class="btn btn-link">
+                                    <button type="submit" name="command" value="cpfp" id="BumpFee" class="btn btn-link" form="mass-action-form">
                                         <vc:icon symbol="actions-send" />
                                         <span text-translate="true">Bump fee</span>
                                     </button>
@@ -215,7 +226,7 @@
                         var detailsId = $"invoice_details_{invoice.InvoiceId}";
                         <tr id="invoice_@invoice.InvoiceId" class="mass-action-row">
                             <td class="only-for-js align-middle">
-                                <input name="selectedItems" type="checkbox" class="form-check-input mass-action-select" value="@invoice.InvoiceId" />
+                                <input name="selectedItems" type="checkbox" class="form-check-input mass-action-select" value="@invoice.InvoiceId" form="mass-action-form" />
                             </td>
                             <td class="align-middle date-col">@invoice.Date.ToBrowserDate()</td>
                             <td class="text-break align-middle invoiceId-col">
@@ -239,9 +250,24 @@
                             <td class="align-middle amount-col">
                                 <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>
                             </td>
-                            <td class="align-middle text-end">
-                                <div class="d-inline-flex align-items-center gap-2">
-                                    <button class="accordion-button collapsed only-for-js ms-0 d-inline-block" type="button" data-bs-toggle="collapse" data-bs-target="#@detailsId" aria-expanded="false" aria-controls="@detailsId">
+                            <td class="align-middle text-end text-nowrap" style="width:1px">
+                                <div class="d-inline-flex align-items-center" style="gap:16px;padding-left:24px">
+                                    <span class="dropup">
+                                        <button class="btn btn-link p-0 @(!string.IsNullOrEmpty(invoice.Comment) ? "text-primary" : "text-secondary")" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false" title="@(!string.IsNullOrEmpty(invoice.Comment) ? invoice.Comment : StringLocalizer["Add a comment"])">
+                                            <vc:icon symbol="actions-comment" />
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-end">
+                                            <form asp-action="Comment" asp-route-invoiceId="@invoice.InvoiceId" asp-route-returnUrl="@Context.Request.GetCurrentPathWithQueryString()" method="post">
+                                                <div class="input-group p-2">
+                                                    <textarea name="comment" rows="3" cols="20" class="form-control form-control-sm p-1" placeholder="@StringLocalizer["Add a note or comment for this invoice"]">@invoice.Comment</textarea>
+                                                </div>
+                                                <div class="p-2">
+                                                    <button type="submit" class="btn btn-primary btn-sm w-100" text-translate="true">Save comment</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </span>
+                                    <button class="accordion-button collapsed only-for-js ms-0 d-inline-block" style="width:auto" type="button" data-bs-toggle="collapse" data-bs-target="#@detailsId" aria-expanded="false" aria-controls="@detailsId">
                                         <vc:icon symbol="caret-down" />
                                     </button>
                                 </div>
@@ -258,8 +284,7 @@
             </table>
         </div>
 
-        <vc:pager view-model="Model" />
-    </form>
+    <vc:pager view-model="Model" />
 }
 else
 {

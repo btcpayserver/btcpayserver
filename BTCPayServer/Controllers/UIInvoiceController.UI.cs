@@ -151,6 +151,7 @@ namespace BTCPayServer.Controllers
                 Events = await _InvoiceRepository.GetInvoiceLogs(invoice.Id),
                 Metadata = metaData,
                 Archived = invoice.Archived,
+                Comment = invoice.Comment,
                 HasRefund = invoice.Refunds.Any(),
                 CanRefund = invoiceState.CanRefund(),
                 Refunds = invoice.Refunds,
@@ -600,6 +601,33 @@ namespace BTCPayServer.Controllers
                     ? StringLocalizer["The invoice has been archived and will no longer appear in the invoice list by default."].Value
                     : StringLocalizer["The invoice has been unarchived and will appear in the invoice list by default again."].Value
             });
+            return RedirectToAction(nameof(Invoice), new { invoiceId });
+        }
+
+        [HttpPost("invoices/{invoiceId}/comment")]
+        [HttpPost("/stores/{storeId}/invoices/{invoiceId}/comment")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
+        public async Task<IActionResult> Comment(string invoiceId, string comment, string? returnUrl = null)
+        {
+            var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery
+            {
+                InvoiceId = [invoiceId],
+                StoreId = [HttpContext.GetStoreData().Id],
+                UserId = GetUserIdForInvoiceQuery()
+            })).FirstOrDefault();
+            if (invoice is null)
+                return NotFound();
+
+            await _InvoiceRepository.UpdateInvoiceComment(invoiceId, comment);
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Severity = StatusMessageModel.StatusSeverity.Success,
+                Message = string.IsNullOrWhiteSpace(comment)
+                    ? StringLocalizer["The comment has been removed."].Value
+                    : StringLocalizer["The comment has been saved."].Value
+            });
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
             return RedirectToAction(nameof(Invoice), new { invoiceId });
         }
 
@@ -1096,6 +1124,7 @@ namespace BTCPayServer.Controllers
                     RedirectUrl = invoice.RedirectURL?.AbsoluteUri ?? string.Empty,
                     Amount = invoice.Price,
                     Currency = invoice.Currency,
+                    Comment = invoice.Comment,
                     CanMarkInvalid = state.CanMarkInvalid(),
                     CanMarkSettled = state.CanMarkComplete(),
                     Details = InvoicePopulatePayments(invoice),

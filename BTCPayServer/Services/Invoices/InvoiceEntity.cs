@@ -762,6 +762,8 @@ namespace BTCPayServer.Services.Invoices
         [JsonIgnore]
         public bool DisableAccounting { get; set; }
 
+        public string Comment { get; set; }
+
         public RequestBaseUrl GetRequestBaseUrl() => RequestBaseUrl.FromUrl(ServerUrl);
     }
 

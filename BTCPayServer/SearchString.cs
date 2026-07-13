@@ -167,7 +167,7 @@ namespace BTCPayServer
             {
                 return localDateTime.Kind switch
                 {
-                    DateTimeKind.Local => new DateTimeOffset(localDateTime, TimeZoneInfo.Local.GetUtcOffset(localDateTime)),
+                    DateTimeKind.Local => new DateTimeOffset(localDateTime, TimeZoneInfo.Local.GetUtcOffset(localDateTime)).ToUniversalTime(),
                     DateTimeKind.Utc => new DateTimeOffset(localDateTime, TimeSpan.Zero),
                     DateTimeKind.Unspecified when tz is not null => new DateTimeOffset(localDateTime, tz.GetUtcOffset(localDateTime)).ToUniversalTime(),
                     DateTimeKind.Unspecified when tz is null => null,

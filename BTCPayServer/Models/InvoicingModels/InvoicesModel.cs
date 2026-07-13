@@ -27,6 +27,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool ShowCheckout { get; set; }
         public decimal Amount { get; set; }
         public string Currency { get; set; }
+        public string Comment { get; set; }
         public InvoiceDetailsModel Details { get; set; }
         public bool HasRefund { get; set; }
     }

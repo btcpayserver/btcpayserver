@@ -1207,7 +1207,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var urlAfterClearAll = new Uri(s.Page.Url);
         var qsAfterClearAll = HttpUtility.ParseQueryString(urlAfterClearAll.Query);
         Assert.True(string.IsNullOrEmpty(qsAfterClearAll["SearchText"]));
-        Assert.Equal(qsAfterClearAll["SearchTerm"], $"timezone:{selectedTimeZone}");
+        Assert.Equal($"timezone:{selectedTimeZone}", qsAfterClearAll["SearchTerm"]);
 
         await s.GoToInvoices(s.StoreId);
         await s.Page.ClickAsync("#DateRangeSelector");

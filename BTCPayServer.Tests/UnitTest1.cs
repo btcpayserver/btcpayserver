@@ -539,9 +539,26 @@ namespace BTCPayServer.Tests
             AssertSearchInvoice(acc, true, invoice.Id, "status:settled,exceptionstatus:paidPartial");
             AssertSearchInvoice(acc, true, invoice.Id, "status:settled,status:invalid,exceptionstatus:paidPartial,exceptionstatus:paidOver");
 
+            var invoiceController = acc.GetController<UIInvoiceController>();
+            var comment = "refunded manually from cashier wallet";
+            await invoiceController.Comment(invoice.Id, comment);
+
+            var listResult = await invoiceController.ListInvoices(new InvoicesModel { StoreId = acc.StoreId });
+            var listModel = (InvoicesModel)((ViewResult)listResult).Model;
+            var listedInvoice = Assert.Single(listModel.Invoices, i => i.InvoiceId == invoice.Id);
+            Assert.Equal(comment, listedInvoice.Comment);
+
+            // The comment should be included in the invoices export/report
+            var invoicesReport = await GetReport(acc, new() { ViewName = "Invoices" });
+            var reportInvoiceIdIndex = invoicesReport.GetIndex("InvoiceId");
+            var reportCommentIndex = invoicesReport.GetIndex("InvoiceComment");
+            Assert.Contains(invoicesReport.Data, d =>
+                d[reportInvoiceIdIndex].Value<string>() == invoice.Id &&
+                d[reportCommentIndex]?.Value<string>() == comment);
+
             var time = invoice.InvoiceTime;
             AssertSearchInvoice(acc, true, invoice.Id, $"startdate:{time.ToString("yyyy-MM-dd HH:mm:ss")}");
-            AssertSearchInvoice(acc, true, invoice.Id, $"enddate:{time.ToString().ToLowerInvariant()}");
+            AssertSearchInvoice(acc, true, invoice.Id, $"enddate:{time.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()}");
             AssertSearchInvoice(acc, false, invoice.Id,
                 $"startdate:{time.AddSeconds(1).ToString("yyyy-MM-dd HH:mm:ss")}");
             AssertSearchInvoice(acc, false, invoice.Id,
@@ -1624,11 +1641,35 @@ namespace BTCPayServer.Tests
             {
                 Amount = 50.513m,
                 Currency = "USD",
+                Comment = "  API comment  ",
                 Metadata = new JObject() { new JProperty("taxIncluded", 50.516m), new JProperty("orderId", "000000161") }
             });
             Assert.Equal(50.51m, invoice5g.Amount);
             Assert.Equal(50.51m, (decimal)invoice5g.Metadata["taxIncluded"]);
             Assert.Equal("000000161", (string)invoice5g.Metadata["orderId"]);
+            Assert.Equal("API comment", invoice5g.Comment);
+
+            invoice5g = await greenfield.GetInvoice(invoice5g.Id);
+            Assert.Equal("API comment", invoice5g.Comment);
+
+            invoice5g = await greenfield.UpdateInvoice(invoice5g.Id, new UpdateInvoiceRequest
+            {
+                Comment = "  Updated API comment  "
+            });
+            Assert.Equal("Updated API comment", invoice5g.Comment);
+
+            invoice5g = await greenfield.UpdateInvoice(invoice5g.Id, new UpdateInvoiceRequest
+            {
+                Metadata = new JObject { new JProperty("orderId", "000000162") }
+            });
+            Assert.Equal("Updated API comment", invoice5g.Comment);
+            Assert.Equal("000000162", (string)invoice5g.Metadata["orderId"]);
+
+            invoice5g = await greenfield.UpdateInvoice(invoice5g.Id, new UpdateInvoiceRequest
+            {
+                Comment = ""
+            });
+            Assert.Equal("", invoice5g.Comment);
 
             var zeroInvoice = await greenfield.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
             {

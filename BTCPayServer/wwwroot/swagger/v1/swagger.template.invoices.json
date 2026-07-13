@@ -754,6 +754,11 @@
                     "metadata": {
                         "$ref": "#/components/schemas/InvoiceMetadata"
                     },
+                    "comment": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "A private comment on the invoice, visible to store users."
+                    },
                     "checkout": {
                         "type": "object",
                         "nullable": true,
@@ -1077,6 +1082,11 @@
                 "properties": {
                     "metadata": {
                         "$ref": "#/components/schemas/InvoiceMetadata"
+                    },
+                    "comment": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "A private comment on the invoice, visible to store users."
                     }
                 }
             },

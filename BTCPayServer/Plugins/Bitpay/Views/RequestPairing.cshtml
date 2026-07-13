@@ -3,7 +3,7 @@
 @{
     var store = Context.GetStoreDataOrNull();
     Layout = store is null ? "_LayoutWizard" : "_Layout";
-    ViewData.SetLayoutModel(new(nameof(StoreNavPages.Tokens), StringLocalizer["Pairing Permission"]));
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Tokens), StringLocalizer["Pairing Permission"]).SetCategory(WellKnownCategories.Store));
 }
 
 @if (store is null)

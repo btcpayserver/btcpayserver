@@ -159,7 +159,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Offering created successfully.",
                         "content": {
                             "application/json": {
@@ -211,7 +211,7 @@
                     }
                 },
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Plan created successfully.",
                         "content": {
                             "application/json": {

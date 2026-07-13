@@ -234,9 +234,7 @@ public class InvoicesReportProvider : ReportProvider
             // When we have this field to non-zero, then the invoice has a taxIncluded metadata
             is ["posData", "tax"]
             // Verbose data
-            or ["itemDesc"]
-            // Exported explicitly as the InvoiceComment column
-            or ["comment"])
+            or ["itemDesc"])
             return;
         switch (obj)
         {

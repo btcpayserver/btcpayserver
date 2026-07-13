@@ -54,7 +54,7 @@ namespace BTCPayServer.Tests
             var headless = conf["PLAYWRIGHT_HEADLESS"];
             Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                Headless = string.IsNullOrEmpty(headless) || bool.Parse(headless),
+                Headless = !string.IsNullOrEmpty(headless) && bool.Parse(headless),
                 ExecutablePath = conf["PLAYWRIGHT_EXECUTABLE"],
                 SlowMo = 0, // 50 if you want to slow down
                 Args = ["--disable-frame-rate-limit"] // Fix slowness on linux (https://github.com/microsoft/playwright/issues/34625#issuecomment-2822015672)
@@ -1007,7 +1007,10 @@ namespace BTCPayServer.Tests
 
         public async Task WaitLoggedIn()
         {
-            await Page.WaitForURLAsync(ServerUri.AbsoluteUri + $"stores/{StoreId}");
+            if (StoreId is null)
+                await Page.WaitForURLAsync(ServerUri.AbsoluteUri + $"stores/create");
+            else
+                await Page.WaitForURLAsync(ServerUri.AbsoluteUri + $"stores/{StoreId}");
         }
     }
 }

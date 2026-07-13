@@ -182,7 +182,7 @@ public class InvoicesReportProvider : ReportProvider
         data.Add(invoiceEntity?.GetInvoiceState().ToString());
         data.Add(invoiceEntity?.Status.ToString());
         data.Add(invoiceEntity?.ExceptionStatus is null or InvoiceExceptionStatus.None ? "" : invoiceEntity.ExceptionStatus.ToString());
-        data.Add(invoiceEntity?.Metadata.Comment);
+        data.Add(invoiceEntity?.Comment);
 
 
         data.Add(payment?.ReceivedTime);

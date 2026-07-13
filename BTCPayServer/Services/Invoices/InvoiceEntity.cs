@@ -146,16 +146,6 @@ namespace BTCPayServer.Services.Invoices
             get => this.GetAdditionalData<decimal?>("taxOnTip");
             set => this.SetAdditionalData("taxOnTip", value);
         }
-        /// <summary>
-        /// A free-text comment that merchants/admins can use to add context to an invoice
-        /// (e.g. why it was refunded manually). It is editable after creation and included in exports.
-        /// </summary>
-        [JsonIgnore]
-        public string Comment
-        {
-            get => this.GetAdditionalData<string>("comment");
-            set => this.SetAdditionalData("comment", value);
-        }
 
         /// <summary>
         /// posData is a field that may be treated differently for presentation and in some legacy API
@@ -771,6 +761,8 @@ namespace BTCPayServer.Services.Invoices
         public decimal NetSettled { get; private set; }
         [JsonIgnore]
         public bool DisableAccounting { get; set; }
+
+        public string Comment { get; set; }
 
         public RequestBaseUrl GetRequestBaseUrl() => RequestBaseUrl.FromUrl(ServerUrl);
     }

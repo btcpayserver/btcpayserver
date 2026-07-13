@@ -151,7 +151,7 @@ namespace BTCPayServer.Controllers
                 Events = await _InvoiceRepository.GetInvoiceLogs(invoice.Id),
                 Metadata = metaData,
                 Archived = invoice.Archived,
-                Comment = invoice.Metadata.Comment,
+                Comment = invoice.Comment,
                 HasRefund = invoice.Refunds.Any(),
                 CanRefund = invoiceState.CanRefund(),
                 Refunds = invoice.Refunds,
@@ -607,7 +607,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("invoices/{invoiceId}/comment")]
         [HttpPost("/stores/{storeId}/invoices/{invoiceId}/comment")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
-        public async Task<IActionResult> Comment(string invoiceId, string comment, string returnUrl = null)
+        public async Task<IActionResult> Comment(string invoiceId, string comment, string? returnUrl = null)
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery
             {
@@ -618,9 +618,7 @@ namespace BTCPayServer.Controllers
             if (invoice is null)
                 return NotFound();
 
-            var updated = await _InvoiceRepository.UpdateInvoiceComment(invoiceId, invoice.StoreId, comment);
-            if (updated is null)
-                return NotFound();
+            await _InvoiceRepository.UpdateInvoiceComment(invoiceId, comment);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
@@ -1126,7 +1124,7 @@ namespace BTCPayServer.Controllers
                     RedirectUrl = invoice.RedirectURL?.AbsoluteUri ?? string.Empty,
                     Amount = invoice.Price,
                     Currency = invoice.Currency,
-                    Comment = invoice.Metadata.Comment,
+                    Comment = invoice.Comment,
                     CanMarkInvalid = state.CanMarkInvalid(),
                     CanMarkSettled = state.CanMarkComplete(),
                     Details = InvoicePopulatePayments(invoice),

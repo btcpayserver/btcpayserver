@@ -28,6 +28,7 @@ services:
       TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=unix://etc/customer_lightningd_datadir/lightning-rpc"
       TEST_MERCHANTLND: "http://merchant_lnd:8080/"
       TESTS_INCONTAINER: "true"
+      PLAYWRIGHT_HEADLESS: "true"
       TESTS_SSHCONNECTION: "root@sshd:22"
       TESTS_SSHPASSWORD: ""
       TESTS_SSHKEYFILE: ""

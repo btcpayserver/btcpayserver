@@ -17,8 +17,31 @@
         ViewData.SetBreadcrumbs([new(StringLocalizer["Emails"], Action: nameof(BTCPayServer.Plugins.Emails.Controllers.UIStoresEmailController.StoreEmailSettings), Controller: nameof(BTCPayServer.Plugins.Emails.Controllers.UIStoresEmailController), RouteValues: new { storeId })]);
     }
 }
-<div class="sticky-header">
-        <vc:title-header />
+<div class="sticky-header align-items-start">
+        <nav aria-label="breadcrumb" class="flex-grow-1">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    @if (storeId is not null)
+                    {
+                        <a asp-controller="UIStoresEmail" asp-action="StoreEmailSettings" asp-route-storeId="@storeId" text-translate="true">Emails</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="UIServerEmail" asp-action="ServerEmailSettings" text-translate="true">Server Emails</a>
+                    }
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData.GetTitle()</li>
+            </ol>
+            <h2 class="mb-0">@ViewData.GetTitle()</h2>
+            @if (storeId is not null)
+            {
+                <p class="text-secondary mb-0 mt-1" text-translate="true">Email rules allow BTCPay Server to send customized emails from your store based on events.</p>
+            }
+            else
+            {
+                <p class="text-secondary mb-0 mt-1" text-translate="true">Email rules allow BTCPay Server to send customized emails from your server based on events.</p>
+            }
+        </nav>
         @if (storeId is not null)
         {
             <a id="CreateEmailRule" permission="@Model.ModifyPermission" asp-action="StoreEmailRulesCreate" asp-route-storeId="@storeId"
@@ -36,23 +59,14 @@
 </div>
 
 <partial name="_StatusMessage" />
-@if (storeId is not null)
-{
-    <p text-translate="true">
-        Email rules allow BTCPay Server to send customized emails from your store based on events.
-    </p>
-}
-else
-{
-    <p text-translate="true">
-        Email rules allow BTCPay Server to send customized emails from your server based on events.
-    </p>
-}
 
-@if (Model.Rules.Any())
-{
-    <div class="table-responsive">
-        <table class="table table-hover">
+<div class="row">
+    <div class="col-xxl-constrain col-xl-8">
+        <div class="settings-section">
+        @if (Model.Rules.Any())
+        {
+            <div class="table-responsive settings-section-table">
+                <table class="table table-hover mb-0">
             <thead>
             <tr>
                 <th text-translate="true">Trigger</th>
@@ -96,12 +110,15 @@ else
             </tbody>
         </table>
     </div>
-}
-else
-{
-    <p class="text-secondary" text-translate="true">
-        There are no rules yet.
-    </p>
-}
+        }
+        else
+        {
+            <p class="text-secondary mb-0" text-translate="true">
+                There are no rules yet.
+            </p>
+        }
+        </div>
+    </div>
+</div>
 
 <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Remove email rule"], StringLocalizer["This action will remove this rule. Are you sure?"], StringLocalizer["Delete"]))" permission="@Model.ModifyPermission" />

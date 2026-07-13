@@ -38,6 +38,9 @@
     </div>
     <partial name="_StatusMessage" />
 
+    <div class="row">
+        <div class="col-xxl-constrain col-xl-8">
+            <div class="settings-section">
     <input type="hidden" asp-for="OfferingId"></input>
     <input type="hidden" asp-for="RedirectUrl"></input>
     <div class="form-group">
@@ -106,7 +109,7 @@
         <span asp-validation-for="Subject" class="text-danger"></span>
     </div>
 
-    <div class="form-group">
+    <div class="form-group mb-0">
         <label asp-for="Body" class="form-label" data-required></label>
         <textarea asp-for="Body" class="form-control richtext email-rule-body" rows="4"></textarea>
         <span asp-validation-for="Body" class="text-danger"></span>
@@ -115,6 +118,9 @@
             <table id="placeholders" class="table">
             </table>
             <span>* These fields are JSON objects. You can access properties within them using <a href="https://www.newtonsoft.com/json/help/html/SelectToken.htm#SelectTokenJSONPath" rel="noreferrer noopener" target="_blank">this syntax</a>. For example <code>{Invoice.Metadata.itemCode}</code> or <code>{Subscriber.Metadata.accessKey}</code></span>
+        </div>
+    </div>
+            </div>
         </div>
     </div>
 

@@ -586,7 +586,7 @@ retry:
         public async Task UpdateInvoiceComment(string invoiceId, string comment)
         {
             await using var context = _applicationDbContextFactory.CreateContext();
-            var newComment = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim();
+            var newComment = string.IsNullOrWhiteSpace(comment?.Trim()) ? null : comment.Trim();
             var sql = newComment is null
                 ? """
                   UPDATE "Invoices"

@@ -158,7 +158,13 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             if (HttpContext.GetInvoiceDataOrNull() is null)
                 return InvoiceNotFound();
-            var invoice = await _invoiceRepository.UpdateInvoiceMetadata(invoiceId, request.Metadata);
+            if (request.Metadata is not null)
+                await _invoiceRepository.UpdateInvoiceMetadata(invoiceId, request.Metadata);
+            if (request.Comment is not null)
+                await _invoiceRepository.UpdateInvoiceComment(invoiceId, request.Comment);
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId);
+            if (invoice is null)
+                return InvoiceNotFound();
             return Ok(ToModel(invoice));
         }
 
@@ -692,6 +698,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.Currency,
                 Archived = entity.Archived,
+                Comment = string.IsNullOrWhiteSpace(entity.Comment) ? "" : entity.Comment,
                 Metadata = entity.Metadata.ToJObject(),
                 AvailableStatusesForManualMarking = statuses.ToArray(),
                 Checkout = new InvoiceDataBase.CheckoutOptions

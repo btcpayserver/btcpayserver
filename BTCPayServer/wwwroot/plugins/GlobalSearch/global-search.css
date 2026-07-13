@@ -19,7 +19,8 @@
     padding: 0 var(--btcpay-space-m);
     border: 1px solid var(--btcpay-body-border-light);
     border-radius: var(--btcpay-border-radius-l);
-    background: var(--btcpay-body-bg);
+    /* Darkest surface shade on dark theme (#0d1117), white on light theme */
+    background: var(--btcpay-bg-tile);
     transition: border-color var(--btcpay-transition-duration-fast), box-shadow var(--btcpay-transition-duration-fast);
 }
 
@@ -126,7 +127,8 @@
     overflow-y: auto;
     border: 1px solid var(--btcpay-body-border-medium);
     border-radius: var(--btcpay-border-radius-l);
-    background: var(--btcpay-body-bg);
+    /* Match the search bar surface: white on light theme, darkest shade on dark theme */
+    background: var(--btcpay-bg-tile);
     box-shadow: 0 12px 32px rgba(0, 0, 0, .16);
     padding: var(--btcpay-space-s);
 }
@@ -180,7 +182,7 @@
 #globalNav .globalSearch-item {
     display: block;
     width: 100%;
-    border-radius: var(--btcpay-border-radius-m);
+    border-radius: var(--btcpay-border-radius);
     color: var(--btcpay-body-link);
     padding: var(--btcpay-space-s);
     text-decoration: none;
@@ -195,7 +197,7 @@
 
 #globalNav .globalSearch-item:hover {
     color: var(--btcpay-body-text);
-    background-color: var(--btcpay-body-bg-hover);
+    background-color: var(--btcpay-body-bg);
 }
 
 #globalNav .globalSearch-item:hover .globalSearch-item-title {

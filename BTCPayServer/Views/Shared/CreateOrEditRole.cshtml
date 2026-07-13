@@ -33,37 +33,38 @@
             {
                 <div asp-validation-summary="ModelOnly"></div>
             }
-            <div class="form-group" style="max-width:320px">
-                <label asp-for="Role" class="form-label"></label>
-                @if (role == null)
-                {
-                    <input asp-for="Role" required="required" class="form-control" />
-                }
-                else
-                {
-                    <input type="hidden" asp-for="Role" />
-                    <input required="required" class="form-control" disabled value="@Model.Role" />
-                }
-                <span asp-validation-for="Role" class="text-danger"></span>
-            </div>
-
-            <h4 class="mt-4 mb-3">Permissions</h4>
-            <select multiple="multiple" asp-for="Permissions" class="form-select hide-when-js">
-                @foreach (var policy in storePolicies)
-                {
-                    <option value="@policy" class="text-truncate" asp-selected="@Model.Permissions.Contains(policy)">@policy</option>
-                }
-            </select>
-            <div class="list-group mb-2">
-                @{
-                    var topMostPolicies = PermissionService.UnrestrictedPermissionNode.Children.Where(pair => pair.Definition.Type is PolicyType.Store);
-                    @foreach (var policy in topMostPolicies)
+            <div class="settings-section">
+                <div class="form-group" style="max-width:320px">
+                    <label asp-for="Role" class="form-label"></label>
+                    @if (role == null)
                     {
-                        RenderTree(policy, Model.Permissions.Contains(policy.Definition.Policy));
+                        <input asp-for="Role" required="required" class="form-control" />
                     }
-                }
+                    else
+                    {
+                        <input type="hidden" asp-for="Role" />
+                        <input required="required" class="form-control" disabled value="@Model.Role" />
+                    }
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+                <h3 class="settings-section-subheading mt-2 mb-3" text-translate="true">Permissions</h3>
+                <select multiple="multiple" asp-for="Permissions" class="form-select hide-when-js">
+                    @foreach (var policy in storePolicies)
+                    {
+                        <option value="@policy" class="text-truncate">@policy</option>
+                    }
+                </select>
+                <div class="list-group mb-0">
+                    @{
+                        var topMostPolicies = PermissionService.UnrestrictedPermissionNode.Children.Where(pair => pair.Definition.Type is PolicyType.Store);
+                        @foreach (var policy in topMostPolicies)
+                        {
+                            RenderTree(policy, Model.Permissions.Contains(policy.Definition.Policy));
+                        }
+                    }
+                </div>
+                <span asp-validation-for="Permissions" class="text-danger"></span>
             </div>
-            <span asp-validation-for="Permissions" class="text-danger"></span>
         </div>
     </div>
 </form>

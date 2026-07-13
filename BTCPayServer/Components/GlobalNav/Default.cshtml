@@ -27,18 +27,19 @@
     <vc:ui-extension-point location="global-nav" model="Model"></vc:ui-extension-point>
     <div id="mainNavSettings" class="d-flex align-items-center gap-1">
         <vc:ui-extension-point location="global-nav-icons" model="Model"></vc:ui-extension-point>
-        <component type="typeof(BTCPayServer.Blazor.NotificationsDropDown)" render-mode="ServerPrerendered" />
+        <div data-global-nav-tooltip>
+            <component type="typeof(BTCPayServer.Blazor.NotificationsDropDown)" render-mode="ServerPrerendered" />
+        </div>
 
-        <div class="dropdown" permission="@Policies.CanModifyServerSettings">
+        <div class="dropdown"
+             permission="@Policies.CanModifyServerSettings"
+             data-global-nav-tooltip>
             <button id="globalNavPluginsToggle"
                     class="globalNav-btn"
                     type="button"
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
-                    title="@StringLocalizer["Plugins"]"
-                    data-bs-trigger="hover"
-                    data-bs-placement="bottom"
-                    data-global-nav-tooltip="1">
+                    aria-label="@StringLocalizer["Plugins"]">
                 <vc:icon symbol="nav-plugin" />
                 @if (PluginService.GetDisabledPlugins().Any())
                 {
@@ -61,16 +62,15 @@
             </ul>
         </div>
 
-        <div class="dropdown" permission="@Policies.CanModifyServerSettings">
+        <div class="dropdown"
+             permission="@Policies.CanModifyServerSettings"
+             data-global-nav-tooltip>
             <button id="globalNavServerToggle"
                     class="globalNav-btn"
                     type="button"
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
-                    title="@StringLocalizer["Server Settings"]"
-                    data-bs-trigger="hover"
-                    data-bs-placement="bottom"
-                    data-global-nav-tooltip="1">
+                    aria-label="@StringLocalizer["Server Settings"]">
                 <vc:icon symbol="nav-server-settings" />
             </button>
             <ul id="globalNavServerMenu" class="dropdown-menu dropdown-menu-end">
@@ -111,17 +111,14 @@
             </ul>
         </div>
 
-        <div class="dropdown">
+        <div class="dropdown" data-global-nav-tooltip>
             <button id="menu-item-Account"
                     class="globalNav-btn menu-item nav-link"
                     type="button"
                     data-bs-toggle="dropdown"
                     data-bs-auto-close="outside"
                     aria-expanded="false"
-                    title="@StringLocalizer["Account"]"
-                    data-bs-trigger="hover"
-                    data-bs-placement="bottom"
-                    data-global-nav-tooltip="1">
+                    aria-label="@StringLocalizer["Account"]">
                 @if (!string.IsNullOrEmpty(Model.UserImageUrl))
                 {
                     <img src="@Model.UserImageUrl" alt="Profile picture" class="profile-picture" style="--profile-picture-size:1.5rem" />

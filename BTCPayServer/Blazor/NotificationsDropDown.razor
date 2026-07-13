@@ -15,14 +15,11 @@
 <div id="Notifications" class="dropdown @(!_JSRuntime.IsPreRendering() ? "rendered" : "")">
 	<button id="NotificationsHandle"
             class="mainMenuButton globalNav-btn dropdown-toggle"
-            title="@StringLocalizer["Notifications"]"
             type="button"
             data-bs-toggle="dropdown"
             data-bs-display="static"
             data-bs-auto-close="outside"
-            data-bs-trigger="hover"
-            data-bs-placement="bottom"
-            data-global-nav-tooltip="1"
+            aria-label="@StringLocalizer["Notifications"]"
             aria-expanded="false">
 		<Icon Symbol="nav-notifications" />
 		@if (HasUnseenNotifications)

@@ -279,12 +279,17 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         }
         await s.GoToStore(s.StoreId);
         await s.GoToStore(s.StoreId, StoreNavPages.Reporting);
-        await s.Page.ClickAsync("a[data-view='Subscribers']");
-        await s.Page.ClickAsync("#searchBtn");
+
+        await Expect(s.Page.Locator("#ReportViewOptionsToggle")).ToHaveTextAsync("Report: Invoices");
+        await s.Page.ClickAsync("#ReportViewOptionsToggle");
+        await s.Page.ClickAsync("#ReportViewDropdown button:has-text('Subscribers')");
+
+        await Expect(s.Page.Locator("#ReportViewOptionsToggle")).ToHaveTextAsync("Report: Subscribers");
         await s.Page.WaitForSelectorAsync("#raw-data-table table");
 
-        await s.Page.ClickAsync("a[data-view='Credit History']");
-        await s.Page.ClickAsync("#searchBtn");
+        await s.Page.ClickAsync("#ReportViewOptionsToggle");
+        await s.Page.ClickAsync("#ReportViewDropdown button:has-text('Credit History')");
+        await Expect(s.Page.Locator("#ReportViewOptionsToggle")).ToHaveTextAsync("Report: Credit History");
         await s.Page.WaitForSelectorAsync("#raw-data-table table");
     }
 

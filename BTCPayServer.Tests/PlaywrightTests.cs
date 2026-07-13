@@ -1444,15 +1444,9 @@ namespace BTCPayServer.Tests
 
             // Report
             await s.Page.ClickAsync("#view-report");
-            await s.Page.WaitForLoadStateAsync();
-            Assert.Contains("/reports", s.Page.Url);
-            var requestsTabClasses = await s.Page.GetAttributeAsync("#SectionNav a[data-view='Requests']", "class");
-            Assert.NotNull(requestsTabClasses);
-            Assert.Contains("active", requestsTabClasses);
-            await Expect(s.Page.Locator("#fromDate")).ToBeVisibleAsync();
-            await Expect(s.Page.Locator("#toDate")).ToBeVisibleAsync();
-            var reportHtml = await s.Page.ContentAsync();
-            Assert.Contains("\"viewName\":\"Requests\"", reportHtml);
+            await Expect(s.Page.Locator("#ReportViewOptionsToggle")).ToContainTextAsync("Requests");
+            await Expect(s.Page.Locator("#DateRangeSelector")).ToContainTextAsync("This month");
+            await Expect(s.Page.Locator("#ReportViewOptionsToggle")).ToContainTextAsync("Requests");
             await s.Page.WaitForSelectorAsync("#app table tbody tr");
             await Expect(s.Page.Locator("#app table tbody tr").Filter(new LocatorFilterOptions { HasText = "Payment Request" })).ToHaveCountAsync(2);
         }

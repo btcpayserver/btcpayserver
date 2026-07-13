@@ -72,8 +72,11 @@
             </datalist>
         </div>
         <hr class="dropdown-divider" />
-        <button type="submit" name="FilterCommand" value="alltime" class="dropdown-item @(!Model.HasDateFilter ? "custom-active" : string.Empty)" text-translate="true">All Time</button>
-        <hr class="dropdown-divider" />
+        @if (Model.ShowAllTime)
+        {
+            <button type="submit" name="FilterCommand" value="alltime" class="dropdown-item @(!Model.HasDateFilter ? "custom-active" : string.Empty)" text-translate="true">All Time</button>
+            <hr class="dropdown-divider" />
+        }
         @foreach (var filter in filters)
         {
             <button type="submit" name="FilterCommand" value="set-daterange:@filter.DateRange" class="dropdown-item @(Model.HasDateRange(@filter.DateRange) ? "custom-active" : string.Empty)" text-translate="true">@filter.Label</button>
@@ -149,6 +152,20 @@
          {
              dateRangeTimeZone.value = defaultOption.value;
          }
+
+         // Show all timezone options on focus instead of filtering by the current value.
+         // Keep the current value as a placeholder and restore it if no change is made.
+         dateRangeTimeZone.addEventListener('focus', function () {
+             this.placeholder = this.value;
+             this.value = '';
+         });
+
+         dateRangeTimeZone.addEventListener('blur', function () {
+             if (!this.value) {
+                 this.value = this.placeholder;
+             }
+             this.removeAttribute('placeholder');
+         });
 
          function updateTimeZone() {
              if (dateRangeTimeZone.value === defaultValue || dateRangeTimeZone.value === "") {

@@ -657,14 +657,22 @@ namespace BTCPayServer.Services
         public async Task AddWalletObjectLabels(WalletObjectId id, params string[] labels)
         {
             ArgumentNullException.ThrowIfNull(id);
+            await AddWalletObjectLabels(new[] { (id, labels) });
+        }
+
+        public async Task AddWalletObjectLabels((WalletObjectId id, string[] labels)[] reqs)
+        {
             var objs = new List<WalletObjectData>();
             var links = new List<WalletObjectLinkData>();
-            objs.Add(NewWalletObjectData(id));
-            foreach (var l in labels.Select(l => l.Trim().Truncate(MaxLabelSize)))
+            foreach (var (id, labels) in reqs)
             {
-                var label = CreateLabel(id.WalletId, l);
-                objs.Add(label.ObjectData);
-                links.Add(NewWalletObjectLinkData(label.Id, id));
+                objs.Add(NewWalletObjectData(id));
+                foreach (var l in labels.Select(l => l.Trim().Truncate(MaxLabelSize)))
+                {
+                    var label = CreateLabel(id.WalletId, l);
+                    objs.Add(label.ObjectData);
+                    links.Add(NewWalletObjectLinkData(label.Id, id));
+                }
             }
             await EnsureCreated(objs, links);
         }

@@ -29,6 +29,7 @@ using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
+using BTCPayServer.Services.Wallets.Import;
 using BTCPayServer.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
@@ -224,6 +225,36 @@ namespace BTCPayServer.Tests
             Assert.False(blob.ReceiptOptions.Enabled);
             blob = JsonConvert.DeserializeObject<StoreBlob>(JsonConvert.SerializeObject(blob));
             Assert.False(blob.ReceiptOptions.Enabled);
+        }
+
+        [Fact]
+        public async Task CanParseBip329LabelsImport()
+        {
+            var network = Network.RegTest;
+            var txId = "aecb52b892f5e12454b3ee1ad554ffe28c1cca35ffdfaa441c74a30cf7a279f0";
+            var address = new Key().PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
+            var mainnetAddress = new Key().PubKey.GetAddress(ScriptPubKeyType.Segwit, Network.Main).ToString();
+            var input =
+                $"{{\"type\":\"tx\",\"ref\":\"{txId.ToUpperInvariant()}\",\"label\":\" fee reimbursement \"}}\n" +
+                $"{{\"type\":\"addr\",\"ref\":\"{address}\",\"label\":\"donations\"}}\n" +
+                $"{{\"type\":\"output\",\"ref\":\"{txId}:1\",\"label\":\"change\"}}\n" +
+                "\n" +
+                $"{{\"type\":\"tx\",\"ref\":\"{txId.ToUpperInvariant()}\",\"label\":\" fee reimbursement \"}}\n" +
+                $"{{\"type\":\"addr\",\"ref\":\"{mainnetAddress}\",\"label\":\"wrong network\"}}\n" +
+                $"{{\"type\":\"xpub\",\"ref\":\"xpub-ref\",\"label\":\"unsupported type\"}}\n" +
+                $"{{\"type\":\"tx\",\"ref\":\"not-a-txid\",\"label\":\"bad ref\"}}\n" +
+                $"{{\"type\":\"tx\",\"ref\":\"{txId}\",\"label\":\"\"}}\n" +
+                $"{{\"type\":\"tx\",\"ref\":\"{txId}\"}}\n" +
+                "not json\n";
+
+            var result = await Bip329Import.Parse(new StringReader(input), network);
+
+            Assert.Equal(3, result.Labels.Count);
+            // duplicate line deduped, invalid lines skipped, blank line ignored
+            Assert.Equal(6, result.SkippedLines);
+            Assert.Contains(result.Labels, l => l is { ObjectType: WalletObjectData.Types.Tx, Label: "fee reimbursement" } && l.ObjectId == txId);
+            Assert.Contains(result.Labels, l => l is { ObjectType: WalletObjectData.Types.Address, Label: "donations" } && l.ObjectId == address);
+            Assert.Contains(result.Labels, l => l is { ObjectType: WalletObjectData.Types.Utxo, Label: "change" } && l.ObjectId == OutPoint.Parse($"{txId}-1").ToString());
         }
 
         [Fact]

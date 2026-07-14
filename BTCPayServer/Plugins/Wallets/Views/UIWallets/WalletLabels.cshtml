@@ -40,6 +40,12 @@
 
 <partial name="_StatusMessage" />
 
+<form method="post" enctype="multipart/form-data" asp-action="ImportWalletLabels" asp-route-walletId="@Model.WalletId"
+      class="wallet-labels__import d-flex flex-wrap align-items-center gap-2 mb-4" permission="@WalletPolicies.CanManageWalletTransactions">
+    <input type="file" name="file" class="form-control wallet-labels__import-file w-auto" accept=".jsonl,.json,.txt" required />
+    <button type="submit" class="btn btn-secondary wallet-labels__import-button" text-translate="true">Import BIP-329 labels</button>
+</form>
+
 @if (Model.Labels.Any())
 {
     <div class="table-responsive-md">

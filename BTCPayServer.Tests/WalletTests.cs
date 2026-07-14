@@ -783,6 +783,20 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.ClickAsync("#LabelSelectorMenu a:has-text('Manage Labels')");
         var walletId = new WalletId(s.StoreId , "BTC");
         await s.Page.WaitForURLAsync(s.ServerUri + $"wallets/{walletId}/labels");
+
+        // Import BIP-329 labels from the wallet labels page (#6663)
+        const string importedLabel = "bip329-imported";
+        var importedTxId = transactions[0].TransactionHash.ToString();
+        var importFile = Path.Combine(Path.GetTempPath(), $"bip329-{Guid.NewGuid():N}.jsonl");
+        await File.WriteAllTextAsync(importFile,
+            $"{{\"type\":\"tx\",\"ref\":\"{importedTxId}\",\"label\":\"{importedLabel}\"}}\n" +
+            "not json\n");
+        await s.Page.SetInputFilesAsync(".wallet-labels__import-file", importFile);
+        await s.Page.ClickAsync(".wallet-labels__import-button");
+        await s.FindAlertMessage(partialText: "Imported 1 label(s), skipped 1 line(s).");
+        Assert.True(await s.Page.Locator($".transaction-label:has-text('{importedLabel}')").IsVisibleAsync());
+        var importedTx = await client.GetOnChainWalletTransaction(s.StoreId, "BTC", importedTxId);
+        Assert.Contains(importedLabel, importedTx.Labels.Keys);
     }
 
     [Fact]

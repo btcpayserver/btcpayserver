@@ -39,7 +39,7 @@
             }
         }
 
-        #SearchText {
+        .search-string-input__text {
             flex-shrink: 0;
             min-width: 200px;
             max-width: 320px;
@@ -76,7 +76,7 @@
         }
 
         @@media (max-width: 568px) {
-            #SearchText {
+            .search-string-input__text {
                 width: 100%;
             }
         }
@@ -205,8 +205,8 @@
     <input id="Count" name="Count" type="hidden" value="@Model.Count" />
     <vc:search-string-input search-string="Model.Search" placeholder="@StringLocalizer["Search transactions..."]"></vc:search-string-input>
 
-    <div class="dropdown" id="DirectionDropdown">
-        <button id="DirectionOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <div class="dropdown wallet-transactions__direction" id="DirectionDropdown">
+        <button id="wallet-transactions__direction-toggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret wallet-transactions__direction-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (hasIncomingOnlyFilter)
             {
                 <span text-translate="true">Incoming</span>
@@ -220,10 +220,10 @@
                 <span text-translate="true">All Directions</span>
             }
         </button>
-        <div class="dropdown-menu" aria-labelledby="DirectionOptionsToggle">
-            <button type="submit" name="FilterCommand" value="unset:direction" class="dropdown-item @((!hasIncomingOnlyFilter && !hasOutgoingOnlyFilter) ? "custom-active" : string.Empty)" text-translate="true">All Directions</button>
-            <button type="submit" name="FilterCommand" value="set:direction=in" class="dropdown-item @(hasIncomingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Incoming</button>
-            <button type="submit" name="FilterCommand" value="set:direction=out" class="dropdown-item @(hasOutgoingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Outgoing</button>
+        <div class="dropdown-menu wallet-transactions__direction-menu" aria-labelledby="wallet-transactions__direction-toggle">
+            <button type="submit" name="FilterCommand" value="unset:direction" class="dropdown-item wallet-transactions__direction-option @((!hasIncomingOnlyFilter && !hasOutgoingOnlyFilter) ? "custom-active" : string.Empty)" text-translate="true">All Directions</button>
+            <button type="submit" name="FilterCommand" value="set:direction=in" class="dropdown-item wallet-transactions__direction-option @(hasIncomingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Incoming</button>
+            <button type="submit" name="FilterCommand" value="set:direction=out" class="dropdown-item wallet-transactions__direction-option @(hasOutgoingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Outgoing</button>
         </div>
     </div>
     <vc:label-selector labels="Model.Labels" search="Model.Search" allow-no-label-filter="true" manage-label-link="@walletLabelsLink"></vc:label-selector>

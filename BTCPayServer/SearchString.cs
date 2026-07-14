@@ -283,5 +283,15 @@ namespace BTCPayServer
         }
 
         public string? GetExplicitTimeZone() => GetFilterString("timezone");
+
+        public void RemoveDups(string filter)
+        {
+            filter = NormalizeKey(filter);
+            if (Filters.TryGetValue(filter, out var c) && c.Count > 1)
+            {
+                Filters.Remove(filter);
+                Filters.Add(filter, c.First());
+            }
+        }
     }
 }

@@ -36,8 +36,8 @@
         }
     </style>
 
-    <div class="dropdown" id="LabelSelector">
-        <button id="LabelSelectorToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <div class="dropdown label-selector" id="LabelSelector">
+        <button id="label-selector__toggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret label-selector__toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (Model.LabelFilterCount > 1)
             {
                 <span>@StringLocalizer["{0} Labels", Model.LabelFilterCount]</span>
@@ -56,7 +56,7 @@
                 <span text-translate="true">All Labels</span>
             }
         </button>
-        <ul class="dropdown-menu" id="LabelSelectorMenu" aria-labelledby="LabelSelectorToggle" style="min-width:280px">
+        <ul class="dropdown-menu label-selector__menu" id="LabelSelectorMenu" aria-labelledby="label-selector__toggle" style="min-width:280px">
             <li class="px-3 py-2 pb-2@(Model.Labels.Count > LabelSelector.MaxVisibleLabels ? string.Empty : " d-none")" id="LabelSearchContainer">
                 <div class="input-group border rounded">
                     <span class="input-group-text border-0 text-muted px-2" style="background:transparent">
@@ -72,15 +72,15 @@
             @if (Model.AllowNoLabelFilter)
             {
                 <li>
-                    <button type="submit" name="FilterCommand" value="nolabel" class="dropdown-item @(Model.HasNoLabelFilter ? "custom-active" : string.Empty)" text-translate="true">No Label</button>
+                    <button type="submit" name="FilterCommand" value="nolabel" class="dropdown-item label-selector__no-label @(Model.HasNoLabelFilter ? "custom-active" : string.Empty)" text-translate="true">No Label</button>
                 </li>
             }
             <li><hr class="dropdown-divider"></li>
             <li id="LabelFilterResultsAnchor" class="d-none"></li>
             @foreach (var label in Model.InitialLabels)
             {
-                <li class="label-filter-item">
-                    <button type="submit" name="FilterCommand" value="addlabel:@label.Text" class="dropdown-item transaction-label-text label-filter-link@(Model.ActiveLabels.Any(value => value.Equals(label.Text, StringComparison.OrdinalIgnoreCase)) ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">
+                <li class="label-filter-item label-selector__item">
+                    <button type="submit" name="FilterCommand" value="addlabel:@label.Text" class="dropdown-item transaction-label-text label-filter-link label-selector__item-link@(Model.ActiveLabels.Any(value => value.Equals(label.Text, StringComparison.OrdinalIgnoreCase)) ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">
                         <span class="label-filter-text">@label.Text</span>
                         <small class="label-filter-count@(label.UsageCount > 0 ? string.Empty : " d-none")">@label.UsageCount</small>
                     </button>
@@ -95,8 +95,8 @@
             }
         </ul>
         <template id="label-filter-item-template">
-            <li class="label-filter-item">
-                <button type="submit" name="FilterCommand" class="dropdown-item transaction-label-text label-filter-link">
+            <li class="label-filter-item label-selector__item">
+                <button type="submit" name="FilterCommand" class="dropdown-item transaction-label-text label-filter-link label-selector__item-link">
                     <span class="label-filter-text"></span>
                     <small class="label-filter-count d-none"></small>
                 </button>

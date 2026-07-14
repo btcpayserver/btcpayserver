@@ -27,7 +27,7 @@
 }
 
 <div class="sticky-header">
-    <h2>@ViewData["Title"]</h2>
+    <vc:title-header />
     <div>
         <a class="btn btn-secondary" asp-action="ConfigureOffering" asp-route-storeId="@storeId" asp-route-offeringId="@offeringId" permission="@SubscriptionsPolicies.CanModifyOfferings" text-translate="true">Configure</a>
     </div>

@@ -1,0 +1,36 @@
+@model BTCPayServer.Components.Breadcrumb.BreadcrumbViewModel
+
+<nav aria-label="breadcrumb" class="title-header-nav">
+    @if (Model.Items.Any())
+    {
+        <ol class="breadcrumb title-header-nav__items">
+            @foreach (var item in Model.Items)
+            {
+                if (item.Active)
+                {
+                    <li class="breadcrumb-item title-header-nav__item active" aria-current="page">@item.Text</li>
+                }
+                else
+                {
+                    <li class="breadcrumb-item title-header-nav__item">
+                        <a href="@item.Url" data-testid="@item.TestId">@item.Text</a>
+                    </li>
+                }
+            }
+        </ol>
+    }
+    @if (Model.Title is not null)
+    {
+        <h2 class="title-header-nav__title">
+            <span>@Model.Title</span>
+            @if (Model.DocumentationUrl is not null)
+            {
+                <small>
+                    <a href="@Model.DocumentationUrl" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
+                        <vc:icon symbol="info"/>
+                    </a>
+                </small>
+            }
+        </h2>
+    }
+</nav>

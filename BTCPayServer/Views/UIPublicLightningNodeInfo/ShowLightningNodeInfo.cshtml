@@ -2,7 +2,7 @@
 @model BTCPayServer.Controllers.ShowLightningNodeInfoViewModel
 @{
     Layout = null;
-    ViewData["Title"] = $"{Model.StoreName} – {StringLocalizer["{0} Lightning Node", Model.CryptoCode]}";
+    ViewData.SetTitle($"{Model.StoreName} – {StringLocalizer["{0} Lightning Node", Model.CryptoCode]}");
     ViewData["StoreBranding"] = Model.StoreBranding;
 }
 <!DOCTYPE html>

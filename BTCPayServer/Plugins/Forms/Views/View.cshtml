@@ -2,7 +2,7 @@
 @model BTCPayServer.Forms.Models.FormViewModel
 @{
     Layout = null;
-    ViewData["Title"] = Model.FormName;
+    ViewData.SetTitle(Model.FormName);
     ViewData["StoreBranding"] = Model.StoreBranding;
 }
 <!DOCTYPE html>

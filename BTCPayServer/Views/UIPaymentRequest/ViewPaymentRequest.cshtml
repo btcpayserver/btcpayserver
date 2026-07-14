@@ -5,7 +5,7 @@
 @inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @{
-	ViewData["Title"] = Model.Title;
+	ViewData.SetTitle(Model.Title);
     ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
 	Layout = null;

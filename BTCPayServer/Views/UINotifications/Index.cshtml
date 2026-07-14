@@ -1,6 +1,6 @@
 @model BTCPayServer.Models.NotificationViewModels.NotificationIndexViewModel
 @{
-    ViewData["Title"] = ViewLocalizer["Notifications"];
+    ViewData.SetTitle(StringLocalizer["Notifications"]);
     var showAll = Model.Search.GetFilterBool("all") is true;
     var statusFilterCount = Model.Search.CountArrayFilter("type");
     var storesFilterCount = Model.Search.CountArrayFilter("storeid");

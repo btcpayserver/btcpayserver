@@ -18,7 +18,7 @@
     }
 }
 <div class="sticky-header">
-        <vc:breadcrumb />
+        <vc:title-header />
         @if (storeId is not null)
         {
             <a id="CreateEmailRule" permission="@Model.ModifyPermission" asp-action="StoreEmailRulesCreate" asp-route-storeId="@storeId"

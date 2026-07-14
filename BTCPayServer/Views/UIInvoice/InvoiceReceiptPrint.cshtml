@@ -4,7 +4,7 @@
 @inject DisplayFormatter DisplayFormatter
 @{
     Layout = null;
-    ViewData["Title"] = $"Receipt from {Model.StoreName}";
+    ViewData.SetTitle($"Receipt from {Model.StoreName}");
     var isProcessing = Model.Status == InvoiceStatus.Processing;
     var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.Amount == 0);
     var isSettled = Model.Status == InvoiceStatus.Settled;

@@ -66,6 +66,7 @@ namespace BTCPayServer.Data
         public DbSet<CustomerData> Customers { get; set; }
 
         public DbSet<EmailRuleData> EmailRules { get; set; }
+        public DbSet<EmailLogData> EmailLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -77,6 +78,7 @@ namespace BTCPayServer.Data
             CustomerData.OnModelCreating(builder, Database);
             CustomerIdentityData.OnModelCreating(builder, Database);
             EmailRuleData.OnModelCreating(builder, Database);
+            EmailLogData.OnModelCreating(builder, Database);
             ApplicationUser.OnModelCreating(builder, Database);
             AddressInvoiceData.OnModelCreating(builder);
             APIKeyData.OnModelCreating(builder, Database);

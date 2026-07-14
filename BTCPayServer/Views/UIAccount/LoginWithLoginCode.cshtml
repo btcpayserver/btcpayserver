@@ -3,7 +3,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
 @{
-	ViewData["Title"] = ViewLocalizer["Sign in with login code"];
+	ViewData.SetTitle(StringLocalizer["Sign in with login code"]);
 	Layout = "_LayoutSignedOut";
 	Csp.UnsafeEval();
 }

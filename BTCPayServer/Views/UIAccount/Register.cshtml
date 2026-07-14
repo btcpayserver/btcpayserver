@@ -1,7 +1,7 @@
 @model RegisterViewModel
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @{
-    ViewData["Title"] = ViewLocalizer["Create account"];
+    ViewData.SetTitle(StringLocalizer["Create account"]);
     ViewBag.ShowLeadText = true;
     Layout = "_LayoutSignedOut";
 }

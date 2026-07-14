@@ -1,7 +1,7 @@
 @model MultisigSignerKeyViewModel
 @{
     Layout = "~/Views/Shared/_LayoutSimple.cshtml";
-    ViewData["Title"] = StringLocalizer["Submit multisig signer key"];
+    ViewData.SetTitle(StringLocalizer["Submit multisig signer key"]);
     var inputMethod = Model.InputMethod?.ToLowerInvariant();
     var useHardware = inputMethod == "hardware";
     var useManual = inputMethod == "manual";

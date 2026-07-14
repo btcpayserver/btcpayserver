@@ -5,6 +5,7 @@ using System.Linq;
 using BTCPayServer.Abstractions.Models;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Abstractions.Extensions
 {
@@ -38,12 +39,13 @@ namespace BTCPayServer.Abstractions.Extensions
         }
 
         public static void SetTitle(this ViewDataDictionary viewData, string title) => viewData["Title"] = title;
+        public static void SetTitle(this ViewDataDictionary viewData, LocalizedString title) => viewData["Title"] = title.Value;
         public static string GetTitle(this ViewDataDictionary viewData) => viewData["Title"]?.ToString();
 
         public static void SetLayoutModel(this ViewDataDictionary viewData, LayoutModel model)
         {
             // Page Title
-            viewData["Title"] = model.Title ?? model.MenuItemId;
+            viewData.SetTitle(model.Title ?? model.MenuItemId);
             // Navigation
             viewData[ACTIVE_PAGE_KEY] = model.MenuItemId;
             viewData[ACTIVE_ID_KEY] = model.SubMenuItemId;

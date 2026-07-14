@@ -5,7 +5,7 @@
 @inject DisplayFormatter DisplayFormatter
 @model BTCPayServer.Models.ViewPullPaymentModel
 @{
-	ViewData["Title"] = Model.Title;
+	ViewData.SetTitle(Model.Title);
     ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
 	Layout = null;

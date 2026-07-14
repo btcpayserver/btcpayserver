@@ -1,6 +1,6 @@
 ﻿@model PlanCheckoutDefaultRedirectViewModel
 @{
-    ViewData["Title"] = Model.Title;
+    ViewData.SetTitle(Model.Title);
     ViewData["StoreBranding"] = Model.StoreBranding;
     Layout = null;
     ViewData.SetBlazorAllowed(false);

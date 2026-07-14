@@ -15,7 +15,7 @@
         delegate('click', '.btn-delete', event => {
             event.preventDefault()
         })
-        
+
         delegate('click', '.btn-edit', event => {
             const button = event.target.closest('.btn-edit')
             const label = button.dataset.label
@@ -24,18 +24,18 @@
             const form = modal.querySelector('form')
             const oldLabelInput = modal.querySelector('#OldLabel')
             const walletId = '@walletId'
-            
+
             input.value = label
             oldLabelInput.value = label
             form.action = `/wallets/${walletId}/labels/${encodeURIComponent(label)}/edit`
-            
+
             new bootstrap.Modal(modal).show()
         })
     </script>
 }
 
 <div class="sticky-header">
-    <vc:breadcrumb />
+    <vc:title-header />
 </div>
 
 <partial name="_StatusMessage" />
@@ -81,7 +81,7 @@
     <partial name="_Confirm"
              model="@(new ConfirmModel(StringLocalizer["Delete label"],
     StringLocalizer["This label will be deleted from this wallet and its associated transactions."], StringLocalizer["Delete"]))" />
-    
+
     <div class="modal fade" id="EditLabelModal" tabindex="-1" aria-labelledby="EditLabelModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <form method="post" asp-action="EditWalletLabel" asp-route-walletId="@Model.WalletId">

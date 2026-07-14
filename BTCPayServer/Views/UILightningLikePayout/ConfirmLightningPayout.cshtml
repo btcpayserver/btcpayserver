@@ -1,7 +1,7 @@
 @model System.Collections.Generic.List<BTCPayServer.Data.Payouts.LightningLike.UILightningLikePayoutController.ConfirmVM>
 @{
     Layout = "../Shared/_Layout.cshtml";
-    ViewData["Title"] = StringLocalizer["Confirm Lightning Payout"];
+    ViewData.SetTitle(StringLocalizer["Confirm Lightning Payout"]);
     var cryptoCode = Context.GetRouteValue("cryptoCode");
 }
 

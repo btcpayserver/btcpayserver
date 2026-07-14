@@ -3,7 +3,7 @@
 @inject SettingsRepository SettingsRepository
 @{
     var settings = await SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
-    ViewData["Title"] = string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName;
+    ViewData.SetTitle(string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName);
 }
 
 <partial name="_StatusMessage" />

@@ -5,7 +5,7 @@
 @model CheckoutModel
 @{
 	Layout = null;
-	ViewData["Title"] = Model.HtmlTitle;
+	ViewData.SetTitle(Model.HtmlTitle);
     ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
 }

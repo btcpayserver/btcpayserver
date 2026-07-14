@@ -1,6 +1,10 @@
 @model BTCPayServer.Models.PaymentRequestViewModels.PaymentRequestLabelsViewModel
 @{
     ViewData.SetLayoutModel(new LayoutModel("PaymentRequests", StringLocalizer["Payment Request Labels"]));
+    ViewData.SetBreadcrumbs([
+        new(StringLocalizer["Payment Requests"], Action: nameof(BTCPayServer.Controllers.UIPaymentRequestController.GetPaymentRequests), Controller: nameof(BTCPayServer.Controllers.UIPaymentRequestController), RouteValues: new { Model.StoreId }),
+        new(StringLocalizer["Labels"], Active: true)
+    ]);
 }
 
 @section PageFootContent {
@@ -28,15 +32,7 @@
 }
 
 <div class="sticky-header">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a asp-action="GetPaymentRequests" asp-controller="UIPaymentRequest" asp-route-storeId="@Model.StoreId" text-translate="true">Payment Requests</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">Labels</li>
-        </ol>
-        <h2>@ViewData["Title"]</h2>
-    </nav>
+    <vc:breadcrumb />
 </div>
 
 <partial name="_StatusMessage" />

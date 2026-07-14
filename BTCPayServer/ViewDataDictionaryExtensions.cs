@@ -1,10 +1,22 @@
 #nullable enable
+using System.Collections.Generic;
+using BTCPayServer.Components.Breadcrumb;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace BTCPayServer;
 
 public static class ViewDataDictionaryExtensions
 {
+    private const string BreadcrumbsKey = "Breadcrumbs";
+
+    public static void SetBreadcrumbs(this ViewDataDictionary viewData, params BreadcrumbItem[] breadcrumbs)
+        => viewData[BreadcrumbsKey] = breadcrumbs;
+
+    public static IReadOnlyList<BreadcrumbItem> GetBreadcrumbs(this ViewDataDictionary viewData)
+        => viewData.TryGetValue(BreadcrumbsKey, out var value) && value is IReadOnlyList<BreadcrumbItem> breadcrumbs
+            ? breadcrumbs
+            : [];
+
     public static string? GetPageTimeZone(this ViewDataDictionary viewData)
         => viewData["timezone"] as string;
     /// <summary>

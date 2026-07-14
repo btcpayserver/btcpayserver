@@ -3,6 +3,7 @@
 @{
     var storeId = Context.GetStoreData().Id;
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Webhooks), StringLocalizer["Webhooks"]).SetCategory(WellKnownCategories.Store));
+    ViewData.SetBreadcrumbs([new(StringLocalizer["Webhooks"], Action: nameof(BTCPayServer.Plugins.Webhooks.Controllers.UIStoreWebhooksController.Webhooks), RouteValues: new { storeId })]);
 }
 
 @section PageHeadContent {
@@ -14,15 +15,7 @@
 
 <form method="post">
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a asp-action="Webhooks" asp-route-storeId="@storeId" text-translate="true">Webhooks</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-            </ol>
-            <h2>@ViewData["Title"]</h2>
-        </nav>
+        <vc:breadcrumb />
         @if (Model.IsNew)
         {
             <button id="page-primary" name="add" type="submit" class="btn btn-primary" value="New" text-translate="true">Add Webhook</button>

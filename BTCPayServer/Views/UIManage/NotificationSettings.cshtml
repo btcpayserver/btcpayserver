@@ -2,19 +2,12 @@
 @{
     ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.Notifications), StringLocalizer["Notification Settings"])
         .SetCategory(nameof(ManageNavPages)));
+    ViewData.SetBreadcrumbs([new(StringLocalizer["Notifications"], Action: nameof(BTCPayServer.Controllers.UINotificationsController.Index), Controller: nameof(BTCPayServer.Controllers.UINotificationsController))]);
 }
 
 <form method="post" asp-action="NotificationSettings">
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a asp-controller="UINotifications" asp-action="Index" text-translate="true">Notifications</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-            </ol>
-            <h2>@ViewData["Title"]</h2>
-        </nav>
+		<vc:breadcrumb />
 		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="update" text-translate="true">Save</button>
     </div>
     <partial name="_StatusMessage" />
@@ -58,4 +51,3 @@
         label.textContent = isChecked ? 'Disable All' : 'Enable All';
     }
 </script>
-

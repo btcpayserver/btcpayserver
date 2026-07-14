@@ -8,6 +8,7 @@
     string offeringId = (string)this.Context.GetRouteValue("offeringId");
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(SubscriptionsPlugin)}-{offeringId}", StringLocalizer["Configure offering"]));
     string storeId = (string)this.Context.GetRouteValue("storeId");
+    ViewData.SetBreadcrumbs([new(StringLocalizer["Offering ({0})", Model.Name], Action: nameof(BTCPayServer.Plugins.Subscriptions.Controllers.UIOfferingController.Offering), RouteValues: new { storeId, offeringId, section = "Plans" })]);
     var deleteModal = new ConfirmModel(StringLocalizer["Delete offering"], StringLocalizer["This offering will be removed from this store."], StringLocalizer["Delete"])
     {
         ControllerName = "UIApps",
@@ -21,18 +22,7 @@
 <form method="post">
     <input type="hidden" asp-for="OriginalName" />
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a asp-action="Offering"
-                       asp-route-storeId="@storeId"
-                       asp-route-offeringId="@offeringId"
-                       asp-route-section="Plans">@StringLocalizer["Offering ({0})", Model.Name]</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-            </ol>
-            <h2>@ViewData["Title"]</h2>
-        </nav>
+        <vc:breadcrumb />
         <input id="page-primary" type="submit" value="Save" class="btn btn-primary" />
     </div>
     <partial name="_StatusMessage" />

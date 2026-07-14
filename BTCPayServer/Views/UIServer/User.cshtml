@@ -3,20 +3,16 @@
 @inject IFileService FileService
 @{
     ViewData.SetLayoutModel(new(nameof(ServerNavPages.Users), Model.Email));
+    ViewData.SetBreadcrumbs([
+        new(StringLocalizer["Users"], Action: nameof(BTCPayServer.Controllers.UIServerController.ListUsers)),
+        new(StringLocalizer["User"], Active: true)
+    ]);
     var canUpload = await FileService.IsAvailable();
 }
 
 <form method="post" enctype="multipart/form-data">
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a asp-action="ListUsers" text-translate="true">Users</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page" text-translate="true">User</li>
-            </ol>
-            <h2>@ViewData["Title"]</h2>
-        </nav>
+		<vc:breadcrumb />
 		<button id="page-primary" name="command" type="submit" class="btn btn-primary" value="Save" text-translate="true">Save</button>
     </div>
     <partial name="_StatusMessage" />

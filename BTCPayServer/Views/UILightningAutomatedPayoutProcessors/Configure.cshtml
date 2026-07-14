@@ -4,19 +4,12 @@
 @{
     var storeId = Context.GetStoreData().Id;
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.PayoutProcessors), StringLocalizer["Lightning Payout Processor"]).SetCategory(WellKnownCategories.Store));
+    ViewData.SetBreadcrumbs([new(StringLocalizer["Payout Processors"], Action: nameof(BTCPayServer.PayoutProcessors.UIPayoutProcessorsController.ConfigureStorePayoutProcessors), Controller: nameof(BTCPayServer.PayoutProcessors.UIPayoutProcessorsController), RouteValues: new { storeId })]);
 }
 
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a asp-controller="UIPayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-route-storeId="@storeId" text-translate="true">Payout Processors</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-            </ol>
-            <h2>@ViewData["Title"]</h2>
-        </nav>
+		<vc:breadcrumb />
 		<button id="page-primary" name="command" type="submit" class="btn btn-primary" value="Save" text-translate="true">Save</button>
     </div>
     <partial name="_StatusMessage" />

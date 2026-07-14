@@ -7,6 +7,7 @@
     var formId = Context.GetRouteValue("id");
     var isNew = formId is null;
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Forms), isNew ? StringLocalizer["Create Form"] : StringLocalizer["Edit Form"]).SetCategory(WellKnownCategories.Store));
+    ViewData.SetBreadcrumbs([new(StringLocalizer["Forms"], Action: nameof(BTCPayServer.Forms.UIFormsController.FormsList), Controller: nameof(BTCPayServer.Forms.UIFormsController), RouteValues: new { storeId })]);
     Layout = "_Layout";
 }
 
@@ -198,20 +199,7 @@
 
 <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a asp-controller="UIForms" asp-action="FormsList" asp-route-storeId="@storeId" text-translate="true">Forms</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-            </ol>
-            <h2>
-                @ViewData["Title"]
-                <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
-                    <vc:icon symbol="info" />
-                </a>
-            </h2>
-        </nav>
+        <vc:breadcrumb documentation-url="https://docs.btcpayserver.org/Forms" />
         <div>
             <button id="page-primary" type="submit" class="btn btn-primary order-sm-1" text-translate="true">Save</button>
             @if (!isNew)

@@ -4,6 +4,11 @@
     var store = Context.GetStoreDataOrNull();
     Layout = store is null ? "_LayoutWizard" : "_Layout";
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Tokens), StringLocalizer["Pairing Permission"]).SetCategory(WellKnownCategories.Store));
+    if (store is not null)
+        ViewData.SetBreadcrumbs([
+            new(StringLocalizer["Access Tokens"], Action: nameof(BTCPayServer.Plugins.Bitpay.Controllers.UIStoresTokenController.ListTokens), RouteValues: new { storeId = store.Id }),
+            new(StringLocalizer["Create Token"], Action: nameof(BTCPayServer.Plugins.Bitpay.Controllers.UIStoresTokenController.CreateToken), RouteValues: new { storeId = store.Id })
+        ]);
 }
 
 @if (store is null)
@@ -18,18 +23,7 @@
     <div class="sticky-header">
         @if (store != null)
         {
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item">
-                        <a asp-action="ListTokens" asp-route-storeId="@store.Id" text-translate="true">Access Tokens</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <a asp-action="CreateToken" asp-route-storeId="@store.Id" text-translate="true">Create Token</a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-                </ol>
-                <h2>@ViewData["Title"]</h2>
-            </nav>
+            <vc:breadcrumb />
         }
         else
         {

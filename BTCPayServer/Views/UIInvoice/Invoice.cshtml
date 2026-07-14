@@ -2,6 +2,10 @@
 @model InvoiceDetailsModel
 @{
     ViewData.SetLayoutModel(new("Invoices", StringLocalizer["Invoice {0}", Model.Id]));
+    ViewData.SetBreadcrumbs([
+        new(StringLocalizer["Invoices"], Action: nameof(BTCPayServer.Controllers.UIInvoiceController.ListInvoices), RouteValues: new { Model.StoreId }),
+        new(Model.Id, Active: true)
+    ]);
 }
 
 @section PageHeadContent {
@@ -168,15 +172,7 @@
 }
 
 <div class="sticky-header">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId">Invoices</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">Invoice</li>
-        </ol>
-        <h2>@ViewData["Title"]</h2>
-    </nav>
+    <vc:breadcrumb />
     <div>
         @if (Model.ShowCheckout)
         {
@@ -321,7 +317,7 @@
             {
                 <div>
                     <h3 class="mb-3">
-                        <span>Product Information</span>
+                        <span text-translate="true">Product Information</span>
                         <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
                             <vc:icon symbol="info" />
                         </a>

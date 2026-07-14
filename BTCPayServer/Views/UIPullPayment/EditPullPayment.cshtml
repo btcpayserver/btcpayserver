@@ -3,6 +3,7 @@
 @{
     var storeId = Context.GetStoreData().Id;
     ViewData.SetLayoutModel(new(nameof(StoreNavPages.Create), StringLocalizer["Edit Pull Payment"]));
+    ViewData.SetBreadcrumbs([new(StringLocalizer["Pull Payments"], Action: nameof(BTCPayServer.Controllers.UIStorePullPaymentsController.PullPayments), Controller: nameof(BTCPayServer.Controllers.UIStorePullPaymentsController), RouteValues: new { storeId })]);
 }
 
 @section PageHeadContent {
@@ -16,15 +17,7 @@
 
 <form method="post" asp-action="EditPullPayment" asp-route-pullPaymentId="@Model.Id">
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a asp-controller="UIStorePullPayments" asp-action="PullPayments" asp-route-storeId="@storeId" text-translate="true">Pull Payments</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-            </ol>
-            <h2>@ViewData["Title"]</h2>
-        </nav>
+        <vc:breadcrumb />
         <div>
             @if (string.IsNullOrEmpty(Model.Id))
             {

@@ -4,6 +4,7 @@
 @{
     var storeId = Context.GetStoreData().Id;
     ViewData.SetLayoutModel(new(nameof(StoreNavPages.PullPayments), StringLocalizer["Create Pull Payment"]));
+    ViewData.SetBreadcrumbs([new(StringLocalizer["Pull Payments"], Action: nameof(BTCPayServer.Controllers.UIStorePullPaymentsController.PullPayments), RouteValues: new { storeId })]);
 }
 
 @section PageHeadContent {
@@ -17,15 +18,7 @@
 
 <form method="post" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-action="NewPullPayment">
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a asp-action="PullPayments" asp-route-storeId="@storeId" text-translate="true">Pull Payments</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-            </ol>
-            <h2>@ViewData["Title"]</h2>
-        </nav>
+		<vc:breadcrumb />
 		<input id="page-primary" type="submit" value="Create" class="btn btn-primary"/>
     </div>
 

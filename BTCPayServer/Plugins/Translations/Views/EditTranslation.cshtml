@@ -3,19 +3,12 @@
 @{
 	ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Translations), Context.GetRouteValue("translation") as string)
         .SetCategory(WellKnownCategories.Server));
+    ViewData.SetBreadcrumbs([new(StringLocalizer["Translations"], Action: nameof(BTCPayServer.Plugins.Translations.Controllers.UITranslationController.ListTranslations))]);
 }
 
 <form method="post" class="d-flex flex-column">
 	<div class="sticky-header">
-		<nav aria-label="breadcrumb">
-			<ol class="breadcrumb">
-				<li class="breadcrumb-item">
-					<a asp-action="ListTranslations" text-translate="true">Translations</a>
-				</li>
-				<li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
-			</ol>
-			<h2>@ViewData["Title"]</h2>
-		</nav>
+		<vc:breadcrumb />
 		<div>
 			<button cheat-mode="true" class="btn btn-outline-info" name="command" value="Fake" text-translate="true">Fill fake</button>
 			<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save" text-translate="true">Save</button>

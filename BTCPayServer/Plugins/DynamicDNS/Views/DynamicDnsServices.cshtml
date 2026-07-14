@@ -2,24 +2,10 @@
 @{
     ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Services), StringLocalizer["Dynamic DNS Settings"])
         .SetCategory(WellKnownCategories.Server));
+    ViewData.SetBreadcrumbs([new(StringLocalizer["Services"], Action: nameof(BTCPayServer.Controllers.UIServerController.Services), Controller: nameof(BTCPayServer.Controllers.UIServerController), RouteValues: new { area = "" })]);
 }
 <div class="sticky-header">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a asp-area="" asp-controller="UIServer" asp-action="Services" text-translate="true">Services</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-        </ol>
-        <h2>
-            <span>@ViewData["Title"]</span>
-            <small>
-                <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
-                    <vc:icon symbol="info" />
-                </a>
-            </small>
-        </h2>
-    </nav>
+    <vc:breadcrumb documentation-url="https://docs.btcpayserver.org/Apps/" />
     <div>
         <form method="post" asp-action="DynamicDnsService">
             <button id="page-primary" class="btn btn-primary mt-2" type="submit" text-translate="true">Add Service</button>

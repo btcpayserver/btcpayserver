@@ -8,11 +8,19 @@
     {
         ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"])
             .SetCategory(WellKnownCategories.Store));
+        ViewData.SetBreadcrumbs([
+            new(StringLocalizer["Emails"], Action: nameof(BTCPayServer.Plugins.Emails.Controllers.UIStoresEmailController.StoreEmailSettings), Controller: nameof(BTCPayServer.Plugins.Emails.Controllers.UIStoresEmailController), RouteValues: new { storeId }),
+            new(StringLocalizer["Email Rules"], Action: nameof(BTCPayServer.Plugins.Emails.Controllers.UIStoreEmailRulesController.StoreEmailRulesList), Controller: nameof(BTCPayServer.Plugins.Emails.Controllers.UIStoreEmailRulesController), RouteValues: new { storeId })
+        ]);
     }
     else
     {
         ViewData.SetLayoutModel(new LayoutModel("Server-" + nameof(ServerNavPages.Emails), StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"])
             .SetCategory(WellKnownCategories.Server));
+        ViewData.SetBreadcrumbs([
+            new(StringLocalizer["Server Emails"], Action: nameof(BTCPayServer.Plugins.Emails.Controllers.UIServerEmailController.ServerEmailSettings), Controller: nameof(BTCPayServer.Plugins.Emails.Controllers.UIServerEmailController)),
+            new(StringLocalizer["Email Rules"], Action: nameof(BTCPayServer.Plugins.Emails.Controllers.UIServerEmailRulesController.ServerEmailRulesList), Controller: nameof(BTCPayServer.Plugins.Emails.Controllers.UIServerEmailRulesController))
+        ]);
     }
 }
 
@@ -22,32 +30,7 @@
 
 <form id="save-form" method="post">
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    @if (storeId is not null)
-                    {
-                        <a asp-controller="UIStoresEmail" asp-action="StoreEmailSettings" asp-route-storeId="@storeId" text-translate="true">Emails</a>
-                    }
-                    else
-                    {
-                        <a asp-controller="UIServerEmail" asp-action="ServerEmailSettings" text-translate="true">Server Emails</a>
-                    }
-                </li>
-                <li class="breadcrumb-item">
-                    @if (storeId is not null)
-                    {
-                        <a asp-action="StoreEmailRulesList" asp-route-storeId="@storeId" text-translate="true">Email Rules</a>
-                    }
-                    else
-                    {
-                        <a asp-action="ServerEmailRulesList" text-translate="true">Email Rules</a>
-                    }
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData.GetTitle()</li>
-            </ol>
-            <h2>@ViewData.GetTitle()</h2>
-        </nav>
+        <vc:breadcrumb />
         <div>
             <button id="page-primary" type="submit" class="btn btn-primary" text-translate="true">Save</button>
             <a asp-action="StoreEmailRulesList" asp-route-storeId="@storeId" class="btn btn-secondary" text-translate="true">Cancel</a>

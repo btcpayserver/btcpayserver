@@ -1,19 +1,12 @@
 ﻿@model LightningWalletServices
 @{
     ViewData.SetLayoutModel(new(nameof(ServerNavPages.Services), StringLocalizer["BTCPay Server Configurator"]));
+    ViewData.SetBreadcrumbs([new(StringLocalizer["Services"], Action: nameof(BTCPayServer.Controllers.UIServerController.Services))]);
 }
 
 
 <div class="sticky-header">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a asp-action="Services" text-translate="true">Services</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-        </ol>
-        <h2>@ViewData["Title"]</h2>
-    </nav>
+    <vc:breadcrumb />
 </div>
 <partial name="_StatusMessage" />
 

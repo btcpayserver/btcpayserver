@@ -2,21 +2,15 @@
 @{
     ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Files), StringLocalizer["Azure Blob Storage"])
         .SetCategory(WellKnownCategories.Server));
+    ViewData.SetBreadcrumbs([
+        new(StringLocalizer["Files"], Action: nameof(BTCPayServer.Controllers.UIServerController.Files)),
+        new(StringLocalizer["Storage Provider"], Action: nameof(BTCPayServer.Controllers.UIServerController.Storage)),
+        new(StringLocalizer["Provider"], Active: true)
+    ]);
 }
 
 <div class="sticky-header">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a asp-action="Files" text-translate="true">Files</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a asp-action="Storage" text-translate="true">Storage Provider</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page" text-translate="true">Provider</li>
-        </ol>
-        <h2>@ViewData["Title"]</h2>
-    </nav>
+    <vc:breadcrumb />
 </div>
 <partial name="_StatusMessage" />
 

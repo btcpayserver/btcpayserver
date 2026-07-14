@@ -3,25 +3,16 @@
 @{
     var pageTitle = Model.IsPasskey ? StringLocalizer["Register your passkey"] : StringLocalizer["Register your security device"];
     ViewData.SetLayoutModel(new(Model.IsPasskey ? nameof(ManageNavPages.Passkeys) : nameof(ManageNavPages.TwoFactorAuthentication), pageTitle));
+    ViewData.SetBreadcrumbs([
+        Model.IsPasskey
+            ? new(StringLocalizer["Passkeys"], Action: nameof(BTCPayServer.Controllers.UIManageController.Passkeys), Controller: nameof(BTCPayServer.Controllers.UIManageController))
+            : new(StringLocalizer["Two Factor Authentication"], Action: nameof(BTCPayServer.Controllers.UIManageController.TwoFactorAuthentication), Controller: nameof(BTCPayServer.Controllers.UIManageController)),
+        new(Model.IsPasskey ? StringLocalizer["Register Passkey"] : StringLocalizer["Register Device"], Active: true)
+    ]);
 }
 
 <div class="sticky-header">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                @if (Model.IsPasskey)
-                {
-                    <a asp-controller="UIManage" asp-action="Passkeys" text-translate="true">Passkeys</a>
-                }
-                else
-                {
-                    <a asp-controller="UIManage" asp-action="TwoFactorAuthentication" text-translate="true">Two Factor Authentication</a>
-                }
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">@(Model.IsPasskey ? StringLocalizer["Register Passkey"] : StringLocalizer["Register Device"])</li>
-        </ol>
-        <h2>@ViewData["Title"]</h2>
-    </nav>
+    <vc:breadcrumb />
 </div>
 <partial name="_StatusMessage" />
 

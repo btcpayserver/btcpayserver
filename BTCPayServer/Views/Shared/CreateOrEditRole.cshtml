@@ -13,20 +13,17 @@
     var title = role is null ? StringLocalizer["Create role"] : StringLocalizer["Update Role"];
     var category = storeId is null ? WellKnownCategories.Server : WellKnownCategories.Store;
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Roles), title).SetCategory(category));
+    ViewData.SetBreadcrumbs([new(
+        StringLocalizer["Roles"],
+        Action: storeId is null ? nameof(BTCPayServer.Controllers.UIServerController.ListRoles) : nameof(BTCPayServer.Controllers.UIStoresController.ListRoles),
+        Controller: storeId is null ? nameof(BTCPayServer.Controllers.UIServerController) : nameof(BTCPayServer.Controllers.UIStoresController),
+        RouteValues: new { storeId })]);
     var storePolicies = PermissionService.Definitions.Values.Where(p => p.Type is PolicyType.Store).Select(s => s.Policy.ToString()).ToArray();
 }
 
 <form method="post">
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a asp-action="ListRoles" asp-route-storeId="@storeId">Roles</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-            </ol>
-            <h2>@ViewData["Title"]</h2>
-        </nav>
+        <vc:breadcrumb />
         <button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save" text-translate="true">Save</button>
     </div>
 

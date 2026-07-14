@@ -18,22 +18,48 @@
         <div class="d-flex justify-content-end">
             <button cheat-mode="true" id="mailpit" type="submit" class="btn btn-info" name="command" value="mailpit">Use mailpit</button>
             @if (Model.StoreId is null)
-            {
-                <a id="ConfigureEmailRules" class="btn btn-secondary" asp-area="@EmailsPlugin.Area" asp-controller="UIServerEmailRules"
-                   asp-action="ServerEmailRulesList"
-                   permission="@Model.ModifyPermission" text-translate="true">
-                    Go to email rules
-                </a>
-            }
+			{
+				<div class="btn-group">
+					<a id="ConfigureEmailRules" class="btn btn-secondary" asp-area="@EmailsPlugin.Area" asp-controller="UIServerEmailRules"
+					   asp-action="ServerEmailRulesList"
+					   permission="@Model.ModifyPermission" text-translate="true">
+						Go to email rules
+					</a>
+					<button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+						<span class="visually-hidden">Toggle Dropdown</span>
+					</button>
+					<ul class="dropdown-menu dropdown-menu-end" style="min-width: auto;">
+						<li>
+							<a id="ViewSentEmails" class="dropdown-item px-3 py-2" asp-area="@EmailsPlugin.Area" asp-controller="UIServerEmailLogs"
+							   asp-action="ServerEmailLogsList" permission="@Model.ModifyPermission" text-translate="true">
+								View email logs
+							</a>
+						</li>
+					</ul>
+				</div>
+			}
             else
-            {
-                <a id="ConfigureEmailRules" class="btn btn-secondary" asp-area="@EmailsPlugin.Area" asp-controller="UIStoreEmailRules"
-                   asp-action="StoreEmailRulesList"
-                   asp-route-storeId="@Model.StoreId"
-                   permission="@Model.ViewPermission" text-translate="true">
-                    Go to email rules
-                </a>
-            }
+			{
+				<div class="btn-group">
+					<a id="ConfigureEmailRules" class="btn btn-secondary" asp-area="@EmailsPlugin.Area" asp-controller="UIStoreEmailRules"
+					   asp-action="StoreEmailRulesList"
+					   asp-route-storeId="@Model.StoreId"
+					   permission="@Model.ViewPermission" text-translate="true">
+						Go to email rules
+					</a>
+					<button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+						<span class="visually-hidden">Toggle Dropdown</span>
+					</button>
+					<ul class="dropdown-menu dropdown-menu-end" style="min-width: auto;">
+						<li>
+							<a id="ViewSentEmails" class="dropdown-item px-3 py-2" asp-area="@EmailsPlugin.Area" asp-controller="UIStoreEmailLogs"
+							   asp-action="StoreEmailLogsList" asp-route-storeId="@Model.StoreId" permission="@Model.ViewPermission" text-translate="true">
+								View email logs
+							</a>
+						</li>
+					</ul>
+				</div>
+			}
             <button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save" permission="@Model.ModifyPermission" text-translate="true">Save</button>
         </div>
     </div>

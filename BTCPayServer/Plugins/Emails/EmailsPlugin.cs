@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
@@ -45,6 +46,7 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
 
         services.AddSingleton<IEmailTriggerViewModelTransformer, StoreTransformer>();
         services.AddSingleton<IEmailTriggerEventTransformer, StoreTransformer>();
+        services.AddScheduledTask<CleanupEmailLogsTask>(TimeSpan.FromHours(12.0));
         services.AddDefaultTranslations(StoreTransformer.TranslatedStrings);
 
 

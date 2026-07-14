@@ -24,6 +24,7 @@ using BTCPayServer.Payouts;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Plugins.Webhooks;
+using BTCPayServer.Plugins.Webhooks.HostedServices;
 using BTCPayServer.Plugins.Webhooks.TriggerProviders;
 using BTCPayServer.Plugins.Webhooks.Views;
 using BTCPayServer.Rating;
@@ -231,22 +232,14 @@ namespace BTCPayServer.Controllers
 
             var model = new JObject { ["Store"] = new JObject { ["Id"] = invoice.StoreId, ["Name"] = store.StoreName } };
             InvoiceTriggerProvider.AddInvoiceToModel(model, invoice, _linkGenerator);
-            _EventAggregator.Publish(new TriggerEvent(invoice.StoreId, trigger, model, new ResendTriggerOwner(invoice)));
+
+            var invoiceEvent = new Events.InvoiceEvent(invoice, Events.InvoiceEvent.Created);
+            var webhookEvent = new WebhookInvoiceEvent(WebhookEventType.InvoiceCreated, invoice.StoreId);
+            var ctx = new WebhookTriggerContext<Events.InvoiceEvent>(store, invoiceEvent, webhookEvent);
+            _EventAggregator.Publish(new TriggerEvent(invoice.StoreId, trigger, model, new WebhookProviderHostedService.WebhookTriggerOwner(_invoiceTriggerProvider, ctx)));
 
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email resent."].Value;
             return RedirectToAction(nameof(Invoice), new { invoiceId });
-        }
-
-        private class ResendTriggerOwner(InvoiceEntity invoice) : ITriggerOwner
-        {
-            public Task BeforeSending(EmailRuleMatchContext context)
-            {
-                if (InvoiceTriggerProvider.GetMailboxAddress(invoice.Metadata) is { } mb && context.MatchedRule.GetBTCPayAdditionalData()?.CustomerEmail is true)
-                {
-                    context.To.Insert(0, mb);
-                }
-                return Task.CompletedTask;
-            }
         }
 
         [XFrameOptions(null)]

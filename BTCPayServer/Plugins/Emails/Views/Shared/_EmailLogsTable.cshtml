@@ -1,0 +1,42 @@
+@using BTCPayServer.Data
+@using BTCPayServer.Plugins.Emails.Controllers
+@model EmailLogsViewModel
+
+<div class="table-responsive">
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				<th style="width:1%"><input type="checkbox" id="SelectAll" class="form-check-input" /></th>
+				<th text-translate="true">Status</th>
+				<th text-translate="true">Trigger</th>
+				<th text-translate="true">To</th>
+				<th text-translate="true">Subject</th>
+				<th text-translate="true">Date</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var log in Model.Logs)
+			{
+				var blob = log.GetBlob();
+				if (blob is null) { continue; }
+				<tr>
+					<td><input type="checkbox" name="ids" value="@log.Id" class="form-check-input row-checkbox" /></td>
+					<td>
+						@if (blob.Status == EmailLogStatus.Sent)
+						{
+							<span class="badge bg-success" text-translate="true">Sent</span>
+						}
+						else
+						{
+							<span class="badge bg-danger" data-bs-toggle="tooltip" title="@blob.Error" text-translate="true">Failed</span>
+						}
+					</td>
+					<td>@blob.Trigger</td>
+					<td>@string.Join(", ", blob.To)</td>
+					<td>@blob.Subject</td>
+					<td>@log.Timestamp.ToBrowserDate()</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>

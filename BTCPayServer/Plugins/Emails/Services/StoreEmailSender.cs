@@ -5,6 +5,9 @@ using BTCPayServer.Data;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
+using MimeKit;
+using static BTCPayServer.Plugins.Monetization.Views.SelectExistingOfferingModalViewModel;
+using static QRCoder.PayloadGenerator;
 
 namespace BTCPayServer.Plugins.Emails.Services;
 
@@ -13,13 +16,16 @@ class StoreEmailSender(
     EmailSender? fallback,
     IBackgroundJobClient backgroundJobClient,
     EventAggregator eventAggregator,
+    ApplicationDbContextFactory dbContextFactory,
     string storeId,
     Logs logs)
-    : EmailSender(backgroundJobClient, eventAggregator, logs)
+    : EmailSender(backgroundJobClient, eventAggregator, dbContextFactory, logs)
 {
     public StoreRepository StoreRepository { get; } = storeRepository;
     public EmailSender? FallbackSender { get; } = fallback;
     public string StoreId { get; } = storeId ?? throw new ArgumentNullException(nameof(storeId));
+
+    public override void SendEmail(MailboxAddress[] email, MailboxAddress[] cc, MailboxAddress[] bcc, string subject, string message) => SendEmail(email, cc, bcc, subject, message, StoreId, null);
 
     public override async Task<EmailSettings?> GetEmailSettings()
     {

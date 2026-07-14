@@ -47,7 +47,7 @@
     <div class="col-xl-8 col-xxl-constrain">
         <form id="StoreReportsSearch" class="d-flex flex-wrap align-items-center gap-3 mb-4" asp-action="StoreReports" method="get">
             <button id="StoreReportsSearchSubmit" type="submit" name="FilterCommand" class="d-none"></button>
-            <input id="SearchTerm" name="SearchTerm" type="hidden" value="@Model.SearchTerm" />
+            <input id="SearchTerm" name="SearchTerm" class="search-string-input__term" type="hidden" value="@Model.SearchTerm" />
             <input name="SearchText" type="hidden" value="@Model.SearchText" />
             <div class="dropdown" id="ReportViewDropdown">
                 <button id="ReportViewOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">

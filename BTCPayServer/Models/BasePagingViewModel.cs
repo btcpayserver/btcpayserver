@@ -42,6 +42,7 @@ namespace BTCPayServer.Models
         public SearchString GetSearch()
         {
             var search = SearchString.Combine([SearchTerm, SearchText]);
+            search.RemoveDups("daterange");
             if (FilterCommand is not null)
                 RunFilterCommand(search);
             AddUIFilters(search);

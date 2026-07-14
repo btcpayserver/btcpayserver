@@ -667,7 +667,15 @@ namespace BTCPayServer.Tests
 
             await Server.ExplorerNode.GenerateAsync(1);
             await Page.ReloadAsync();
-            await Page.Locator("#CancelWizard").ClickAsync();
+            try
+            {
+                await Page.Locator("#CancelWizard").ClickAsync();
+            }
+            catch
+            {
+                await TakeScreenshot("flaky-FundStoreWallet.png");
+                throw;
+            }
             return addressStr;
         }
 
@@ -1004,6 +1012,8 @@ namespace BTCPayServer.Tests
             => Expect(Page.Locator(selector)).ToHaveCountAsync(0);
 
         public GlobalSearchPMO GlobalSearch => new GlobalSearchPMO(this);
+
+        public SearchFiltersPMO SearchFilters => new SearchFiltersPMO(this);
 
         public async Task WaitLoggedIn()
         {

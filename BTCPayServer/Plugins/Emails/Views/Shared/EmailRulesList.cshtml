@@ -8,30 +8,17 @@
     {
         ViewData.SetLayoutModel(new LayoutModel("Server-" + nameof(ServerNavPages.Emails), StringLocalizer["Email Rules"])
             .SetCategory(WellKnownCategories.Server));
+        ViewData.SetBreadcrumbs([new(StringLocalizer["Server Emails"], Action: nameof(BTCPayServer.Plugins.Emails.Controllers.UIServerEmailController.ServerEmailSettings), Controller: nameof(BTCPayServer.Plugins.Emails.Controllers.UIServerEmailController))]);
     }
     else
     {
         ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer["Email Rules"])
             .SetCategory(WellKnownCategories.Store));
+        ViewData.SetBreadcrumbs([new(StringLocalizer["Emails"], Action: nameof(BTCPayServer.Plugins.Emails.Controllers.UIStoresEmailController.StoreEmailSettings), Controller: nameof(BTCPayServer.Plugins.Emails.Controllers.UIStoresEmailController), RouteValues: new { storeId })]);
     }
 }
 <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    @if (storeId is not null)
-                    {
-                        <a asp-controller="UIStoresEmail" asp-action="StoreEmailSettings" asp-route-storeId="@storeId" text-translate="true">Emails</a>
-                    }
-                    else
-                    {
-                        <a asp-controller="UIServerEmail" asp-action="ServerEmailSettings" text-translate="true">Server Emails</a>
-                    }
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData.GetTitle()</li>
-            </ol>
-            <h2>@ViewData.GetTitle()</h2>
-        </nav>
+        <vc:breadcrumb />
         @if (storeId is not null)
         {
             <a id="CreateEmailRule" permission="@Model.ModifyPermission" asp-action="StoreEmailRulesCreate" asp-route-storeId="@storeId"

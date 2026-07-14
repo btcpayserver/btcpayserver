@@ -129,12 +129,12 @@ namespace BTCPayServer.Controllers.Greenfield
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/invoices/{invoiceId}")]
         [HttpGet("~/api/v1/invoices/{invoiceId}")]
-        public async Task<IActionResult> GetInvoice(string? storeId, string invoiceId)
+        public async Task<IActionResult> GetInvoice(string? storeId, string invoiceId, [FromQuery] bool includePaymentMethods = false)
         {
             var invoice = HttpContext.GetInvoiceDataOrNull();
             if (invoice is null)
                 return InvoiceNotFound();
-            return Ok(ToModel(invoice));
+            return Ok(ToModel(invoice, includePaymentMethods));
         }
 
         [Authorize(Policy = Policies.CanModifyInvoices,
@@ -158,7 +158,13 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             if (HttpContext.GetInvoiceDataOrNull() is null)
                 return InvoiceNotFound();
-            var invoice = await _invoiceRepository.UpdateInvoiceMetadata(invoiceId, storeId ?? HttpContext.GetStoreData().Id, request.Metadata);
+            if (request.Metadata is not null)
+                await _invoiceRepository.UpdateInvoiceMetadata(invoiceId, request.Metadata);
+            if (request.Comment is not null)
+                await _invoiceRepository.UpdateInvoiceComment(invoiceId, request.Comment);
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId);
+            if (invoice is null)
+                return InvoiceNotFound();
             return Ok(ToModel(invoice));
         }
 
@@ -501,16 +507,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             createPullPayment.AutoApproveClaims = createPullPayment.AutoApproveClaims && (await _authorizationService.AuthorizeAsync(User, storeId ,Policies.CanCreatePullPayments)).Succeeded;
-            var ppId = await _pullPaymentService.CreatePullPayment(store, createPullPayment);
-
-            await using var ctx = _dbContextFactory.CreateContext();
-
-            ctx.Refunds.Add(new RefundData
-            {
-                InvoiceDataId = invoice.Id,
-                PullPaymentDataId = ppId
-            });
-            await ctx.SaveChangesAsync(cancellationToken);
+            var ppId = await _pullPaymentService.CreateRefundPullPayment(store, createPullPayment, invoice.Id);
 
             var pp = await _pullPaymentService.GetPullPayment(ppId, false);
             return this.Ok(CreatePullPaymentData(pp));
@@ -701,6 +698,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.Currency,
                 Archived = entity.Archived,
+                Comment = string.IsNullOrWhiteSpace(entity.Comment) ? "" : entity.Comment,
                 Metadata = entity.Metadata.ToJObject(),
                 AvailableStatusesForManualMarking = statuses.ToArray(),
                 Checkout = new InvoiceDataBase.CheckoutOptions

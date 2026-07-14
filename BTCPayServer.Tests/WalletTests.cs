@@ -18,6 +18,7 @@ using NBitcoin;
 using NBitcoin.Payment;
 using NBXplorer.Models;
 using Xunit;
+using static Microsoft.Playwright.Assertions;
 
 namespace BTCPayServer.Tests;
 
@@ -740,23 +741,23 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         }
 
         await s.GoToWalletTransactions(s.WalletId);
-        await s.Page.ClickAsync("#LabelOptionsToggle");
-        await s.Page.Locator("#LabelDropdownMenu").WaitForAsync();
+        await s.SearchFilters.LabelSelectorToggle.ClickAsync();
+        await s.Page.Locator("#LabelSelectorMenu").WaitForAsync();
         await s.Page.Locator("#LabelSearch").WaitForAsync();
 
         await TestUtils.EventuallyAsync(async () =>
         {
-            Assert.Equal(20, await s.Page.Locator("#LabelDropdownMenu .label-filter-item").CountAsync());
-            Assert.True(await s.Page.Locator($"#LabelDropdownMenu .label-filter-item a:has-text('{targetLabel}')").IsVisibleAsync());
+            Assert.Equal(20, await s.Page.Locator("#LabelSelectorMenu .label-filter-item").CountAsync());
+            Assert.True(await s.Page.Locator($"#LabelSelectorMenu .label-filter-item span:has-text('{targetLabel}')").IsVisibleAsync());
 
             var targetItem = s.Page
-                .Locator("#LabelDropdownMenu .label-filter-item")
+                .Locator("#LabelSelectorMenu .label-filter-item")
                 .Filter(new() { Has = s.Page.Locator($".label-filter-text:text-is('{targetLabel}')") });
             Assert.Equal("2", (await targetItem.Locator(".label-filter-count").InnerTextAsync()).Trim());
 
             var singleUseLabel = labels[0];
             var singleUseItem = s.Page
-                .Locator("#LabelDropdownMenu .label-filter-item")
+                .Locator("#LabelSelectorMenu .label-filter-item")
                 .Filter(new() { Has = s.Page.Locator($".label-filter-text:text-is('{singleUseLabel}')") });
             Assert.Equal("1", (await singleUseItem.Locator(".label-filter-count").InnerTextAsync()).Trim());
         });
@@ -764,12 +765,12 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.FillAsync("#LabelSearch", "target");
         await TestUtils.EventuallyAsync(async () =>
         {
-            var items = await s.Page.Locator("#LabelDropdownMenu .label-filter-item").CountAsync();
+            var items = await s.Page.Locator("#LabelSelectorMenu .label-filter-item").CountAsync();
             Assert.Equal(1, items);
-            Assert.Equal("2", (await s.Page.Locator("#LabelDropdownMenu .label-filter-item .label-filter-count").InnerTextAsync()).Trim());
+            Assert.Equal("2", (await s.Page.Locator("#LabelSelectorMenu .label-filter-item .label-filter-count").InnerTextAsync()).Trim());
         });
 
-        await s.Page.ClickAsync($"#LabelDropdownMenu .label-filter-item a:has-text('{targetLabel}')");
+        await s.Page.ClickAsync($"#LabelSelectorMenu .label-filter-item span:has-text('{targetLabel}')");
         await TestUtils.EventuallyAsync(() =>
         {
             Assert.Contains($"label:{targetLabel}", Uri.UnescapeDataString(s.Page.Url));
@@ -777,6 +778,11 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         });
 
         await s.InWalletTransactions().AssertHasLabels(targetLabel);
+        // The label dropdown exposes a "Manage Labels" link that navigates to the wallet labels page (#7252)
+        await s.SearchFilters.LabelSelectorToggle.ClickAsync();
+        await s.Page.ClickAsync("#LabelSelectorMenu a:has-text('Manage Labels')");
+        var walletId = new WalletId(s.StoreId , "BTC");
+        await s.Page.WaitForURLAsync(s.ServerUri + $"wallets/{walletId}/labels");
     }
 
     [Fact]
@@ -828,13 +834,11 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             });
 
         await s.GoToWalletTransactions(s.WalletId);
-        await s.Page.FillAsync("#SearchText", targetSearchText);
-        await s.Page.PressAsync("#SearchText", "Enter");
-        await s.Page.WaitForLoadStateAsync();
+        await s.SearchFilters.FillSearchText(targetSearchText);
 
         await TestUtils.EventuallyAsync(async () =>
         {
-            Assert.Equal(targetSearchText, await s.Page.InputValueAsync("#SearchText"));
+            await s.SearchFilters.AssertSearchText(targetSearchText);
 
             var urlAfterSearch = new Uri(s.Page.Url);
             var qsAfterSearch = HttpUtility.ParseQueryString(urlAfterSearch.Query);
@@ -842,22 +846,16 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Assert.True(string.IsNullOrEmpty(qsAfterSearch["SearchTerm"]));
         });
 
-        await s.Page.ClickAsync("#LabelOptionsToggle");
-        await s.Page.Locator("#LabelDropdownMenu").WaitForAsync();
-        await s.Page.ClickAsync($"#LabelDropdownMenu .label-filter-item a:has-text('{targetLabel}')");
-        await s.Page.WaitForLoadStateAsync();
+        await s.SearchFilters.SelectLabel(targetLabel);
 
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            Assert.Equal(targetSearchText, await s.Page.InputValueAsync("#SearchText"));
-            Assert.Contains($"label:{targetLabel}", await s.Page.InputValueAsync("input[name='SearchTerm']"));
-            Assert.Contains(targetLabel, await s.Page.InnerTextAsync("#LabelOptionsToggle"));
+        await s.SearchFilters.AssertSearchText(targetSearchText);
+        Assert.Contains($"label:{targetLabel}", await s.SearchFilters.SearchTermValue());
+        await Expect(s.SearchFilters.LabelSelectorToggle).ToContainTextAsync(targetLabel);
 
-            var urlAfterLabelFilter = new Uri(s.Page.Url);
-            var qsAfterLabelFilter = HttpUtility.ParseQueryString(urlAfterLabelFilter.Query);
-            Assert.Equal(targetSearchText, qsAfterLabelFilter["SearchText"]);
-            Assert.Contains($"label:{targetLabel}", Uri.UnescapeDataString(qsAfterLabelFilter["SearchTerm"] ?? string.Empty));
-        });
+        var urlAfterLabelFilter = new Uri(s.Page.Url);
+        var qsAfterLabelFilter = HttpUtility.ParseQueryString(urlAfterLabelFilter.Query);
+        Assert.Equal(targetSearchText, qsAfterLabelFilter["SearchText"]);
+        Assert.Contains($"label:{targetLabel}", Uri.UnescapeDataString(qsAfterLabelFilter["SearchTerm"] ?? string.Empty));
     }
 
     [Fact]
@@ -890,14 +888,11 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var targetSearchText = transactions[0].TransactionHash.ToString()[..12];
 
         await s.GoToWalletTransactions(s.WalletId);
-        var timezoneOffset = await s.Page.EvaluateAsync<int>("() => new Date().getTimezoneOffset()");
-        await s.Page.FillAsync("#SearchText", targetSearchText);
-        await s.Page.PressAsync("#SearchText", "Enter");
-        await s.Page.WaitForLoadStateAsync();
+        await s.SearchFilters.FillSearchText(targetSearchText);
 
         await TestUtils.EventuallyAsync(async () =>
         {
-            Assert.Equal(targetSearchText, await s.Page.InputValueAsync("#SearchText"));
+            await s.SearchFilters.AssertSearchText(targetSearchText);
 
             var urlAfterSearch = new Uri(s.Page.Url);
             var qsAfterSearch = HttpUtility.ParseQueryString(urlAfterSearch.Query);
@@ -905,25 +900,17 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Assert.True(string.IsNullOrEmpty(qsAfterSearch["SearchTerm"]));
         });
 
-        await s.Page.ClickAsync("#DateOptionsToggle");
-        await s.Page.ClickAsync("#DateOptionsToggle + .dropdown-menu a:text-is('Last 24 hours')");
-        await s.Page.WaitForLoadStateAsync();
+        await s.SearchFilters.SelectDateRangePreset("This month");
 
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            Assert.Equal(targetSearchText, await s.Page.InputValueAsync("#SearchText"));
-            Assert.Contains("24 Hours", await s.Page.InnerTextAsync("#DateOptionsToggle"));
+        await s.SearchFilters.AssertSearchText(targetSearchText);
+        await Expect(s.SearchFilters.DateRangeSelector).ToHaveTextAsync("This month");
 
-            var hiddenSearchTerm = await s.Page.InputValueAsync("input[name='SearchTerm']");
-            Assert.Contains("startdate:-1d", hiddenSearchTerm);
-            Assert.DoesNotContain(targetSearchText, hiddenSearchTerm);
+        Assert.Contains("daterange:thismonth", await s.SearchFilters.SearchTermValue());
 
-            var urlAfterPreset = new Uri(s.Page.Url);
-            var qsAfterPreset = HttpUtility.ParseQueryString(urlAfterPreset.Query);
-            Assert.Equal(targetSearchText, qsAfterPreset["SearchText"]);
-            Assert.Equal(timezoneOffset.ToString(CultureInfo.InvariantCulture), qsAfterPreset["timezoneOffset"] ?? qsAfterPreset["TimezoneOffset"]);
-            Assert.Contains("startdate:-1d", Uri.UnescapeDataString(qsAfterPreset["SearchTerm"] ?? string.Empty));
-        });
+        var urlAfterPreset = new Uri(s.Page.Url);
+        var qsAfterPreset = HttpUtility.ParseQueryString(urlAfterPreset.Query);
+        Assert.Equal(targetSearchText, qsAfterPreset["SearchText"]);
+        Assert.Contains("daterange:thismonth", Uri.UnescapeDataString(qsAfterPreset["SearchTerm"] ?? string.Empty));
     }
 
     [Fact]
@@ -967,23 +954,17 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             });
 
         await s.GoToWalletTransactions(s.WalletId);
-        await s.Page.ClickAsync("#LabelOptionsToggle");
-        await s.Page.Locator("#LabelDropdownMenu").WaitForAsync();
-        await s.Page.ClickAsync("#LabelDropdownMenu a:text-is('No Label')");
-        await s.Page.WaitForLoadStateAsync();
+        await s.SearchFilters.SelectNoLabel();
 
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            Assert.Contains("No Label", await s.Page.InnerTextAsync("#LabelOptionsToggle"));
-            Assert.Contains("nolabel:true", await s.Page.InputValueAsync("input[name='SearchTerm']"));
+        await Expect(s.SearchFilters.LabelSelectorToggle).ToContainTextAsync("No Label");
+        Assert.Contains("nolabel:true", await s.SearchFilters.SearchTermValue());
 
-            var urlAfterNoLabelFilter = new Uri(s.Page.Url);
-            var qsAfterNoLabelFilter = HttpUtility.ParseQueryString(urlAfterNoLabelFilter.Query);
-            Assert.Contains("nolabel:true", Uri.UnescapeDataString(qsAfterNoLabelFilter["SearchTerm"] ?? string.Empty));
+        var urlAfterNoLabelFilter = new Uri(s.Page.Url);
+        var qsAfterNoLabelFilter = HttpUtility.ParseQueryString(urlAfterNoLabelFilter.Query);
+        Assert.Contains("nolabel:true", Uri.UnescapeDataString(qsAfterNoLabelFilter["SearchTerm"] ?? string.Empty));
 
-            Assert.True(await s.Page.Locator($".transaction-row[data-value='{unlabeledTx.TransactionHash}']").IsVisibleAsync());
-            Assert.False(await s.Page.Locator($".transaction-row[data-value='{labeledTx.TransactionHash}']").IsVisibleAsync());
-        });
+        await Expect(s.Page.Locator($".transaction-row[data-value='{unlabeledTx.TransactionHash}']")).ToBeVisibleAsync();
+        await Expect(s.Page.Locator($".transaction-row[data-value='{labeledTx.TransactionHash}']")).ToBeHiddenAsync();
     }
 
     [Fact]
@@ -1048,32 +1029,26 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             });
 
         await s.GoToWalletTransactions(s.WalletId);
-        await s.Page.EvaluateAsync("() => document.querySelector(\"[data-direction-filter='out']\")?.click()");
-        await s.Page.WaitForLoadStateAsync();
-        await s.Page.ClickAsync("#LabelOptionsToggle");
-        await s.Page.Locator("#LabelDropdownMenu").WaitForAsync();
-        await s.Page.ClickAsync($"#LabelDropdownMenu .label-filter-item a:has-text('{targetLabel}')");
+        await SelectWalletDirection(s, "Outgoing");
+        await s.SearchFilters.SelectLabel(targetLabel);
         await s.Page.WaitForLoadStateAsync();
 
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            Assert.Contains("Outgoing", await s.Page.InnerTextAsync("#DirectionOptionsToggle"));
-            Assert.Contains(targetLabel, await s.Page.InnerTextAsync("#LabelOptionsToggle"));
+        await AssertDirectionToggle(s, "Outgoing");
+        await Expect(s.SearchFilters.LabelSelectorToggle).ToContainTextAsync(targetLabel);
 
-            var hiddenSearchTerm = await s.Page.InputValueAsync("input[name='SearchTerm']");
-            Assert.Contains("direction:out", hiddenSearchTerm);
-            Assert.Contains($"label:{targetLabel}", hiddenSearchTerm);
+        var hiddenSearchTerm = await s.SearchFilters.SearchTermValue();
+        Assert.Contains("direction:out", hiddenSearchTerm);
+        Assert.Contains($"label:{targetLabel}", hiddenSearchTerm);
 
-            var urlAfterCombinedFilter = new Uri(s.Page.Url);
-            var qsAfterCombinedFilter = HttpUtility.ParseQueryString(urlAfterCombinedFilter.Query);
-            var searchTerm = Uri.UnescapeDataString(qsAfterCombinedFilter["SearchTerm"] ?? string.Empty);
-            Assert.Contains("direction:out", searchTerm);
-            Assert.Contains($"label:{targetLabel}", searchTerm);
+        var urlAfterCombinedFilter = new Uri(s.Page.Url);
+        var qsAfterCombinedFilter = HttpUtility.ParseQueryString(urlAfterCombinedFilter.Query);
+        var searchTerm = Uri.UnescapeDataString(qsAfterCombinedFilter["SearchTerm"] ?? string.Empty);
+        Assert.Contains("direction:out", searchTerm);
+        Assert.Contains($"label:{targetLabel}", searchTerm);
 
-            Assert.True(await s.Page.Locator($".transaction-row[data-value='{outgoingTx.TransactionHash}']").IsVisibleAsync());
-            Assert.False(await s.Page.Locator($".transaction-row[data-value='{incomingTx.TransactionHash}']").IsVisibleAsync());
-            Assert.Equal(1, await s.Page.Locator(".transaction-row").CountAsync());
-        });
+        await Expect(s.Page.Locator($".transaction-row[data-value='{outgoingTx.TransactionHash}']")).ToBeVisibleAsync();
+        await Expect(s.Page.Locator($".transaction-row[data-value='{incomingTx.TransactionHash}']")).ToBeHiddenAsync();
+        await Expect(s.Page.Locator(".transaction-row")).ToHaveCountAsync(1);
     }
 
     [Fact]
@@ -1115,18 +1090,15 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         });
 
         await s.GoToWalletTransactions(s.WalletId);
-        Assert.Equal(string.Empty, await s.Page.InputValueAsync("#SearchText"));
+        await s.SearchFilters.AssertSearchText(string.Empty);
 
-        await s.Page.EvaluateAsync("() => document.querySelector(\"[data-direction-filter='out']\")?.click()");
+        await SelectWalletDirection(s, "Outgoing");
 
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            Assert.Contains("direction:out", await s.Page.GetAttributeAsync("input[name='SearchTerm']", "value"));
-            Assert.Contains("Outgoing", await s.Page.InnerTextAsync("#DirectionOptionsToggle"));
-            Assert.Equal(string.Empty, await s.Page.InputValueAsync("#SearchText"));
-            Assert.True(await s.Page.Locator(".transaction-row .amount-col .text-danger").CountAsync() > 0);
-            Assert.Equal(0, await s.Page.Locator(".transaction-row .amount-col .text-success").CountAsync());
-        });
+        await AssertDirectionToggle(s, "Outgoing");
+        Assert.Contains("direction:out", await s.SearchFilters.SearchTermValue());
+        await s.SearchFilters.AssertSearchText(string.Empty);
+        await Expect(s.Page.Locator(".transaction-row .amount-col .text-danger").First).ToBeVisibleAsync();
+        await Expect(s.Page.Locator(".transaction-row .amount-col .text-success")).ToHaveCountAsync(0);
     }
 
     [Fact]
@@ -1134,6 +1106,13 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
     public async Task CanClearAllWalletTransactionFiltersAndSearchText()
     {
         await using var s = CreatePlaywrightTester();
+
+        async Task AssertDateRangeTimeZone(string timeZone)
+        {
+            await s.SearchFilters.OpenDateRange();
+            await Expect(s.SearchFilters.DateRangeTimeZone).ToHaveValueAsync(timeZone);
+        }
+
         await s.StartAsync();
         await s.Server.ExplorerNode.GenerateAsync(1);
         await s.RegisterNewUser(true);
@@ -1179,39 +1158,49 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             });
 
         await s.GoToWalletTransactions(s.WalletId);
-        await s.Page.FillAsync("#SearchText", targetLabel);
-        await s.Page.PressAsync("#SearchText", "Enter");
-        await s.Page.WaitForLoadStateAsync();
-        await s.Page.EvaluateAsync("() => document.querySelector(\"[data-direction-filter='out']\")?.click()");
-        await s.Page.WaitForLoadStateAsync();
 
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            Assert.Equal(targetLabel, await s.Page.InputValueAsync("#SearchText"));
-            Assert.Contains("direction:out", await s.Page.InputValueAsync("input[name='SearchTerm']"));
-            Assert.Contains("Outgoing", await s.Page.InnerTextAsync("#DirectionOptionsToggle"));
-            Assert.Equal(1, await s.Page.Locator(".transaction-row").CountAsync());
-            Assert.Equal(1, await s.Page.Locator("#clearAllFiltersBtn").CountAsync());
-        });
+        await s.SearchFilters.OpenDateRange();
+        var browserTimeZone = await s.Page.EvaluateAsync<string>("() => Intl.DateTimeFormat().resolvedOptions().timeZone");
+        await Expect(s.SearchFilters.DateRangeTimeZone).ToHaveValueAsync(browserTimeZone + " (Default)");
+        await s.SearchFilters.DateRangeTimeZone.ClickAsync();
+        await Expect(s.SearchFilters.DateRangeTimeZone).ToHaveValueAsync(string.Empty);
+        await Expect(s.SearchFilters.DateRangeTimeZone).ToHaveAttributeAsync("placeholder", browserTimeZone + " (Default)");
+        await s.SearchFilters.DateRangeTimeZone.PressAsync("Tab");
+        await Expect(s.SearchFilters.DateRangeTimeZone).ToHaveValueAsync(browserTimeZone + " (Default)");
 
-        await s.Page.ClickAsync("#clearAllFiltersBtn");
-        await s.Page.WaitForLoadStateAsync();
+        const string selectedTimeZone = "America/New_York";
+        await s.SearchFilters.SelectTimeZone(selectedTimeZone);
+        await AssertDateRangeTimeZone(selectedTimeZone);
 
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            Assert.Equal(string.Empty, await s.Page.InputValueAsync("#SearchText"));
-            Assert.Equal(string.Empty, await s.Page.InputValueAsync("input[name='SearchTerm']"));
-            Assert.Contains("All Directions", await s.Page.InnerTextAsync("#DirectionOptionsToggle"));
-            Assert.Equal(0, await s.Page.Locator("#clearAllFiltersBtn").CountAsync());
-            Assert.True(await s.Page.Locator(".transaction-row").CountAsync() >= 2);
-            Assert.True(await s.Page.Locator(".transaction-row .amount-col .text-danger").CountAsync() > 0);
-            Assert.True(await s.Page.Locator(".transaction-row .amount-col .text-success").CountAsync() > 0);
+        await s.SearchFilters.FillSearchText(targetLabel);
+        await SelectWalletDirection(s, "Outgoing");
 
-            var urlAfterClearAll = new Uri(s.Page.Url);
-            var qsAfterClearAll = HttpUtility.ParseQueryString(urlAfterClearAll.Query);
-            Assert.True(string.IsNullOrEmpty(qsAfterClearAll["SearchText"]));
-            Assert.True(string.IsNullOrEmpty(qsAfterClearAll["SearchTerm"]));
-        });
+        await s.SearchFilters.AssertSearchText(targetLabel);
+        var searchTermWithFilters = await s.SearchFilters.SearchTermValue();
+        Assert.Contains("direction:out", searchTermWithFilters);
+        Assert.Contains($"timezone:{selectedTimeZone}", searchTermWithFilters);
+        await AssertDirectionToggle(s, "Outgoing");
+        await Expect(s.Page.Locator(".transaction-row")).ToHaveCountAsync(1);
+        await Expect(s.SearchFilters.ClearAllFiltersButton).ToHaveCountAsync(1);
+
+        await s.SearchFilters.ClearAllFilters();
+
+        await s.SearchFilters.AssertSearchText(string.Empty);
+        await Expect(s.SearchFilters.SearchTerm).ToHaveValueAsync($"timezone:{selectedTimeZone}");
+        await AssertDateRangeTimeZone(selectedTimeZone);
+        await AssertDirectionToggle(s, "All Directions");
+        await Expect(s.SearchFilters.ClearAllFiltersButton).ToHaveCountAsync(0);
+        Assert.True(await s.Page.Locator(".transaction-row").CountAsync() >= 2);
+        await Expect(s.Page.Locator(".transaction-row .amount-col .text-danger").First).ToBeVisibleAsync();
+        await Expect(s.Page.Locator(".transaction-row .amount-col .text-success").First).ToBeVisibleAsync();
+
+        var urlAfterClearAll = new Uri(s.Page.Url);
+        var qsAfterClearAll = HttpUtility.ParseQueryString(urlAfterClearAll.Query);
+        Assert.True(string.IsNullOrEmpty(qsAfterClearAll["SearchText"]));
+        Assert.Equal($"timezone:{selectedTimeZone}", qsAfterClearAll["SearchTerm"]);
+
+        await s.GoToInvoices(s.StoreId);
+        await AssertDateRangeTimeZone(selectedTimeZone);
     }
 
     [Fact]
@@ -1278,102 +1267,27 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             });
 
         await s.GoToWalletTransactions(s.WalletId);
-        var timezoneOffset = await s.Page.EvaluateAsync<int>("() => new Date().getTimezoneOffset()");
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            Assert.Equal(timezoneOffset.ToString(CultureInfo.InvariantCulture), await s.Page.InputValueAsync("#TimezoneOffset"));
-        });
+        await s.SearchFilters.FillSearchText(targetSearchText);
 
-        await s.Page.FillAsync("#SearchText", targetSearchText);
-        await s.Page.PressAsync("#SearchText", "Enter");
-        await s.Page.WaitForLoadStateAsync();
+        await SelectWalletDirection(s, "Outgoing");
 
-        await s.Page.EvaluateAsync("() => document.querySelector(\"[data-direction-filter='out']\")?.click()");
-        await s.Page.WaitForLoadStateAsync();
+        await s.SearchFilters.SelectLabel(targetLabel);
 
-        await s.Page.ClickAsync("#LabelOptionsToggle");
-        await s.Page.Locator("#LabelDropdownMenu").WaitForAsync();
-        await s.Page.ClickAsync($"#LabelDropdownMenu .label-filter-item a:has-text('{targetLabel}')");
-        await s.Page.WaitForLoadStateAsync();
+        await s.SearchFilters.SelectCustomStartDate("2026-03-01T12:34:56");
 
-        await s.Page.ClickAsync("#DateOptionsToggle");
-        await s.Page.ClickAsync("[data-bs-target='#customRangeModal']");
-        await s.Page.EvaluateAsync("() => { document.getElementById('dtpStartDate').value = '2026-03-01T12:34:56'; }");
-        await s.Page.ClickAsync("#btnCustomRangeDate");
+        await s.SearchFilters.AssertSearchText(targetSearchText);
 
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            Assert.Contains(targetSearchText, await s.Page.InputValueAsync("#SearchText"));
+        var hiddenSearchTerm = await s.SearchFilters.SearchTermValue();
+        Assert.Contains("direction:out", hiddenSearchTerm);
+        Assert.Contains($"label:{targetLabel}", hiddenSearchTerm);
+        Assert.Contains("startdate:2026-03-01T12:34:56", hiddenSearchTerm);
 
-            var hiddenSearchTerm = await s.Page.InputValueAsync("input[name='SearchTerm']");
-            Assert.Contains("direction:out", hiddenSearchTerm);
-            Assert.Contains($"label:{targetLabel}", hiddenSearchTerm);
-            Assert.Contains("startdate:2026-03-01T12:34:56", hiddenSearchTerm);
-
-            foreach (var exportSelector in new[] { "#ExportCSV", "#ExportJSON", "#ExportBIP329" })
-            {
-                var href = await s.Page.GetAttributeAsync(exportSelector, "href");
-                Assert.False(string.IsNullOrEmpty(href));
-
-                var exportUri = new Uri(href!, UriKind.RelativeOrAbsolute);
-                if (!exportUri.IsAbsoluteUri)
-                    exportUri = new Uri(new Uri(s.Page.Url), exportUri);
-
-                var qs = HttpUtility.ParseQueryString(exportUri.Query);
-                Assert.Equal(targetSearchText, qs["searchText"] ?? qs["SearchText"]);
-                Assert.Equal(timezoneOffset.ToString(CultureInfo.InvariantCulture), qs["timezoneOffset"] ?? qs["TimezoneOffset"]);
-
-                var exportSearchTerm = Uri.UnescapeDataString(qs["searchTerm"] ?? qs["SearchTerm"] ?? string.Empty);
-                Assert.Contains("direction:out", exportSearchTerm);
-                Assert.Contains($"label:{targetLabel}", exportSearchTerm);
-                Assert.Contains("startdate:2026-03-01T12:34:56", exportSearchTerm);
-                Assert.DoesNotContain(otherLabel, exportSearchTerm);
-            }
-        });
-    }
-
-    [Fact]
-    [Trait("Playwright", "Playwright-2")]
-    public async Task CanApplyWalletTransactionCustomDateFilterUsingClientTimezoneOffset()
-    {
-        await using var s = CreatePlaywrightTester();
-        await s.StartAsync();
-        await s.Server.ExplorerNode.GenerateAsync(1);
-        await s.RegisterNewUser(true);
-        await s.CreateNewStore();
-        await s.GenerateWallet(isHotWallet: true);
-
-        await s.GoToWallet(s.WalletId, WalletsNavPages.Receive);
-        var addressStr = await s.Page.GetAttributeAsync("#Address", "data-text");
-        var address = BitcoinAddress.Create(addressStr!, ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
-        await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.5m));
-        await s.Server.ExplorerNode.GenerateAsync(1);
-
-        var client = await s.AsTestAccount().CreateClient();
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            Assert.True((await client.ShowOnChainWalletTransactions(s.StoreId, "BTC")).Any());
-        });
-
-        await s.GoToWalletTransactions(s.WalletId);
-        var timezoneOffset = await s.Page.EvaluateAsync<int>("() => new Date().getTimezoneOffset()");
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            Assert.Equal(timezoneOffset.ToString(CultureInfo.InvariantCulture), await s.Page.InputValueAsync("#TimezoneOffset"));
-        });
-
-        await s.Page.ClickAsync("#DateOptionsToggle");
-        await s.Page.ClickAsync("[data-bs-target='#customRangeModal']");
-        await s.Page.EvaluateAsync("() => { document.getElementById('dtpStartDate').value = '2026-03-01T12:34:56'; }");
-        await s.Page.ClickAsync("#btnCustomRangeDate");
-
-        await TestUtils.EventuallyAsync(async () =>
-        {
-            Assert.Contains($"timezoneOffset={timezoneOffset}", s.Page.Url);
-            Assert.Contains("startdate:2026-03-01T12:34:56", Uri.UnescapeDataString(s.Page.Url));
-            Assert.Contains("Custom", await s.Page.InnerTextAsync("#DateOptionsToggle"));
-            Assert.Contains($"timezoneOffset={timezoneOffset}", await s.Page.GetAttributeAsync("#ExportCSV", "href"));
-        });
+        await Expect(s.Page.Locator("#Export input[name='searchText']")).ToHaveValueAsync(targetSearchText);
+        var exportSearchTerm = await s.Page.InputValueAsync("#Export input[name='searchTerm']");
+        Assert.Contains("direction:out", exportSearchTerm);
+        Assert.Contains($"label:{targetLabel}", exportSearchTerm);
+        Assert.Contains("startdate:2026-03-01T12:34:56", exportSearchTerm);
+        Assert.DoesNotContain(otherLabel, exportSearchTerm);
     }
 
     private async Task CreateInvoices(PlaywrightTester tester)
@@ -1387,6 +1301,15 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             await tester.GoToUrl($"i/{created.Id}");
             await tester.PayInvoice();
         }
+    }
+
+    private static Task AssertDirectionToggle(PlaywrightTester tester, string text) =>
+        Expect(tester.Page.Locator(".wallet-transactions__direction-toggle")).ToContainTextAsync(text);
+
+    private static async Task SelectWalletDirection(PlaywrightTester tester, string direction)
+    {
+        await tester.Page.ClickAsync(".wallet-transactions__direction");
+        await tester.Page.ClickAsync($".wallet-transactions__direction-option:has-text('{direction}')");
     }
 
     [Fact]

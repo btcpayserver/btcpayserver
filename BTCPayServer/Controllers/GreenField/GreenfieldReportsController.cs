@@ -31,17 +31,15 @@ public class GreenfieldReportsController(
     [Authorize(Policy = Policies.CanViewReports, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [HttpPost("~/api/v1/stores/{storeId}/reports")]
     [NonAction] // Disabling this endpoint as we still need to figure out the request/response model
-    public async Task<IActionResult> StoreReports(string storeId, [FromBody] StoreReportRequest? vm = null, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> StoreReports(string storeId, SearchString? search = null, CancellationToken cancellationToken = default)
     {
-        vm ??= new StoreReportRequest();
-        vm.ViewName ??= DefaultReport;
-        vm.TimePeriod ??= new TimePeriod();
-        vm.TimePeriod.To ??= DateTime.UtcNow;
-        vm.TimePeriod.From ??= vm.TimePeriod.To.Value.AddMonths(-1);
-        var from = vm.TimePeriod.From.Value;
-        var to = vm.TimePeriod.To.Value;
+        search ??= new SearchString(null);
+        var viewName = search.GetFilterString("view") ?? DefaultReport;
+        var range = search.GetDateRange(TimeZoneInfo.Utc);
+        var to = range.EndDate ?? DateTimeOffset.UtcNow;
+        var from = range.StartDate ?? to.AddMonths(-1);
 
-        if (ReportService.ReportProviders.TryGetValue(vm.ViewName, out var report))
+        if (ReportService.ReportProviders.TryGetValue(viewName, out var report))
         {
             if (!report.IsAvailable())
                 return this.CreateAPIError(503, "view-unavailable", $"This view is unavailable at this moment");
@@ -60,7 +58,7 @@ public class GreenfieldReportsController(
             return Ok(result);
         }
 
-        ModelState.AddModelError(nameof(vm.ViewName), "View doesn't exist");
+        ModelState.AddModelError("view", "View doesn't exist");
         return this.CreateValidationError(ModelState);
     }
 
@@ -81,4 +79,3 @@ public class GreenfieldReportsController(
         }
     }
 }
-

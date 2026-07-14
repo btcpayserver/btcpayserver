@@ -199,6 +199,16 @@
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/InvoiceId"
+                    },
+                    {
+                        "name": "includePaymentMethods",
+                        "in": "query",
+                        "required": false,
+                        "description": "Includes payment methods available to the response",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
                     }
                 ],
                 "description": "View information about the specified invoice. The store is resolved automatically from the invoice.",
@@ -744,6 +754,11 @@
                     "metadata": {
                         "$ref": "#/components/schemas/InvoiceMetadata"
                     },
+                    "comment": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "A private comment on the invoice, visible to store users."
+                    },
                     "checkout": {
                         "type": "object",
                         "nullable": true,
@@ -1067,6 +1082,11 @@
                 "properties": {
                     "metadata": {
                         "$ref": "#/components/schemas/InvoiceMetadata"
+                    },
+                    "comment": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "A private comment on the invoice, visible to store users."
                     }
                 }
             },

@@ -11,6 +11,7 @@
     var payreqId = payReq?.Id;
     var checkoutFormOptions = await FormDataService.GetSelect(storeId, Model.FormId);
     ViewData.SetLayoutModel(new LayoutModel("PaymentRequests", payreqId is null ? StringLocalizer["Create Payment Request"] : StringLocalizer["Edit Payment Request"]));
+    ViewData.SetBreadcrumbs([new(StringLocalizer["Payment Requests"], Action: nameof(BTCPayServer.Controllers.UIPaymentRequestController.GetPaymentRequests), RouteValues: new { storeId })]);
 }
 
 @section PageHeadContent {
@@ -26,15 +27,7 @@
 
 <form method="post">
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" text-translate="true">Payment Requests</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-            </ol>
-            <h2>@ViewData["Title"]</h2>
-        </nav>
+        <vc:breadcrumb />
         <div>
             @if (payreqId is null)
             {

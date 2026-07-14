@@ -36,9 +36,8 @@ public class ImpersonationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.EvaluateAsync("document.querySelector('#login-password-fieldset').disabled = true");
         await s.Page.EvaluateAsync($"document.getElementById('LoginCode').value = '{code}'");
         await s.Page.EvaluateAsync("document.getElementById(\"LoginCodeButton\").click();");
-        await s.Page.WaitForLoadStateAsync();
-        await s.Page.WaitForLoadStateAsync();
 
+        await s.WaitLoggedIn();
         await s.CreateNewStore();
         await s.GoToHome();
         await s.Page.WaitForLoadStateAsync();

@@ -194,7 +194,12 @@
 }
 
 #globalNav .globalSearch-item:hover {
-    background: var(--btcpay-neutral-100);
+    color: var(--btcpay-body-text);
+    background-color: var(--btcpay-body-bg-hover);
+}
+
+#globalNav .globalSearch-item:hover .globalSearch-item-title {
+    color: var(--btcpay-body-text);
 }
 
 #globalNav .globalSearch-item-title {

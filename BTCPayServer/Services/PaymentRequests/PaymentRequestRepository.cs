@@ -176,17 +176,19 @@ namespace BTCPayServer.Services.PaymentRequests
                 }
             }
 
-            if (!string.IsNullOrEmpty(query.LabelFilter))
+            if (query.LabelFilter is not null)
             {
                 if (string.IsNullOrEmpty(query.StoreId))
                     throw new InvalidOperationException("PaymentRequestQuery.StoreId should be specified for label filtering");
 
+                var labels = query.LabelFilter;
                 queryable = queryable.Where(pr =>
                     context.StoreLabelLinks.Any(l =>
                         l.StoreId == query.StoreId &&
                         l.ObjectId == pr.Id &&
                         l.StoreLabel.Type == WalletObjectData.Types.PaymentRequest &&
-                        l.StoreLabel.Text == query.LabelFilter.Trim()));
+                        // ReSharper disable once CSharp14OverloadResolutionWithSpanBreakingChange
+                        labels.Contains(l.StoreLabel.Text)));
             }
 
             queryable = queryable.Include(data => data.StoreData);
@@ -274,6 +276,6 @@ namespace BTCPayServer.Services.PaymentRequests
         public string SearchText { get; set; }
         public DateTimeOffset? StartDate { get; set; }
         public DateTimeOffset? EndDate { get; set; }
-        public string LabelFilter { get; set; }
+        public string[] LabelFilter { get; set; }
     }
 }

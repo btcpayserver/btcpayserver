@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -44,39 +45,36 @@ public partial class UIReportsController : Controller
     public ApplicationDbContextFactory DBContextFactory { get; }
     public TransactionLinkProviders TransactionLinkProviders { get; }
 
-    [HttpPost("stores/{storeId}/reports")]
-    [AcceptMediaTypeConstraint("application/json")]
-    [Authorize(Policy = Policies.CanViewReports, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [IgnoreAntiforgeryToken]
-    public async Task<IActionResult> StoreReportsJson(string storeId, [FromBody] StoreReportRequest? request = null, bool fakeData = false, CancellationToken cancellation = default)
-    {
-        var result = await Api.StoreReports(storeId, request, cancellation);
-        if (fakeData && Env.CheatMode)
-        {
-            var r = (StoreReportResponse)((JsonResult)result!).Value!;
-            r.Data = Generate(r.Fields).Select(r => new JArray(r)).ToList();
-        }
-        return result;
-    }
-
     [HttpGet("stores/{storeId}/reports")]
     [AcceptMediaTypeConstraint("text/html")]
     [Authorize(Policy = Policies.CanViewReports, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public IActionResult StoreReports(
+    public async Task<IActionResult> StoreReports(
         string storeId,
-        string ? viewName = null)
+        StoreReportsViewModel? model = null,
+        bool fakeData = false,
+        CancellationToken cancellation = default)
     {
-        var vm = new StoreReportsViewModel
-        {
-            InvoiceTemplateUrl = Url.Action(nameof(UIInvoiceController.Invoice), "UIInvoice", new { invoiceId = "INVOICE_ID" }),
-            ExplorerTemplateUrls = TransactionLinkProviders.ToDictionary(p => p.Key, p => p.Value.BlockExplorerLink?.Replace("{0}", "TX_ID")),
-            Request = new StoreReportRequest { ViewName = viewName ?? GreenfieldReportsController.DefaultReport },
-            AvailableViews = ReportService.ReportProviders
-                .Values
-                .Where(r => r.IsAvailable())
-                .Select(k => k.Name)
-                .OrderBy(k => k).ToList()
-        };
-        return View(vm);
+        model ??= new StoreReportsViewModel();
+        var search = model.GetSearch();
+        if (model.FilterCommand is not null)
+            return model.Redirect(Request);
+        if (search.GetExplicitTimeZone() is null)
+            return View(model);
+        var result = await Api.StoreReports(storeId, search, cancellation);
+        if (result is not ObjectResult { Value: StoreReportResponse reportResponse })
+            return result;
+
+        if (fakeData && Env.CheatMode)
+            reportResponse.Data = Generate(reportResponse.Fields).Select(r => new JArray(r)).ToList();
+
+        model.InvoiceTemplateUrl = Url.Action(nameof(UIInvoiceController.Invoice), "UIInvoice", new { invoiceId = "INVOICE_ID" });
+        model.ExplorerTemplateUrls = TransactionLinkProviders.ToDictionary(p => p.Key, p => p.Value.BlockExplorerLink?.Replace("{0}", "TX_ID"));
+        model.AvailableViews = ReportService.ReportProviders
+            .Values
+            .Where(r => r.IsAvailable())
+            .Select(k => k.Name)
+            .OrderBy(k => k).ToList();
+        model.Result = reportResponse;
+        return View(model);
     }
 }

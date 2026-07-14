@@ -496,6 +496,7 @@ namespace BTCPayServer.Hosting
                          new("payReqId", "SELECT \"StoreDataId\" FROM \"PaymentRequests\" WHERE \"Id\" = @id"),
                          new("paymentRequestId", "SELECT \"StoreDataId\" FROM \"PaymentRequests\" WHERE \"Id\" = @id"),
                          new("pullPaymentId", "SELECT \"StoreId\" FROM \"PullPayments\" WHERE \"Id\" = @id"),
+                         new("payoutId", "SELECT \"StoreDataId\" FROM \"Payouts\" WHERE \"Id\" = @id"),
                          new("invoiceId", "SELECT \"StoreDataId\" FROM \"Invoices\" WHERE \"Id\" = @id"),
                      })
 

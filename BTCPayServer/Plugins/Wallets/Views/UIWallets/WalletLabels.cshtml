@@ -4,6 +4,10 @@
     var cryptoCode = Model.WalletId.CryptoCode;
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(WalletsNavPages.Settings)}-{cryptoCode}", StringLocalizer["{0} Wallet Labels", Model.WalletId.CryptoCode])
         .SetCategory(WellKnownCategories.ForWallet(cryptoCode)));
+    ViewData.SetBreadcrumbs([
+        new(StringLocalizer["Transactions"], Action: nameof(BTCPayServer.Controllers.UIWalletsController.WalletTransactions), Controller: nameof(BTCPayServer.Controllers.UIWalletsController), RouteValues: new { walletId }),
+        new(StringLocalizer["Labels"], Active: true)
+    ]);
 }
 
 @section PageFootContent {
@@ -31,15 +35,7 @@
 }
 
 <div class="sticky-header">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a asp-action="WalletTransactions" asp-controller="UIWallets" asp-route-walletId="@walletId" text-translate="true">Transactions</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">Labels</li>
-        </ol>
-        <h2>@ViewData["Title"]</h2>
-    </nav>
+    <vc:breadcrumb />
 </div>
 
 <partial name="_StatusMessage" />

@@ -5,18 +5,11 @@
     var usedPermissionsPercentage = Model.TotalPermissions > 0 ? (int)Math.Round((double)Model.UsedPermissions.Count / Model.TotalPermissions * 100) : 0;
 	ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.APIKeys), StringLocalizer["API Key Analysis"])
 		.SetCategory(nameof(ManageNavPages)));
+    ViewData.SetBreadcrumbs([new(StringLocalizer["API Keys"], Action: nameof(BTCPayServer.Controllers.UIManageController.APIKeys))]);
 }
 
 <div class="sticky-header">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a asp-action="APIKeys" text-translate="true">API Keys</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-        </ol>
-        <h2>@ViewData["Title"]</h2>
-    </nav>
+    <vc:breadcrumb />
 </div>
 
 <div class="row g-3 mb-4">

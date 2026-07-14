@@ -2,6 +2,10 @@
 @model InvoiceDetailsModel
 @{
     ViewData.SetLayoutModel(new("Invoices", StringLocalizer["Invoice {0}", Model.Id]));
+    ViewData.SetBreadcrumbs([
+        new(StringLocalizer["Invoices"], Action: nameof(BTCPayServer.Controllers.UIInvoiceController.ListInvoices), RouteValues: new { Model.StoreId }),
+        new(Model.Id, Active: true)
+    ]);
 }
 
 @section PageHeadContent {
@@ -134,7 +138,6 @@
                 return;
             }
 
-            console.log({ refundOption, isInvalid, amount, currency })
             const reduceByAmount = (amount * (percentage / 100));
             const refundAmount = (amount - reduceByAmount).toFixed(divisibility);
             $result.innerText = `= ${refundAmount} ${currency} refund`;
@@ -169,15 +172,7 @@
 }
 
 <div class="sticky-header">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId">Invoices</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">Invoice</li>
-        </ol>
-        <h2>@ViewData["Title"]</h2>
-    </nav>
+    <vc:breadcrumb />
     <div>
         @if (Model.ShowCheckout)
         {
@@ -307,12 +302,22 @@
             </table>
         </div>
         <div class="d-flex flex-column gap-5">
+            <div>
+                <h3 class="mb-3">Comment</h3>
+                <form asp-action="Comment" asp-route-invoiceId="@Model.Id" method="post">
+                    <div class="form-group">
+                        <textarea name="comment" id="InvoiceComment" class="form-control" rows="3"
+                                  placeholder="@StringLocalizer["Add a note or comment for this invoice"]">@Model.Comment</textarea>
+                    </div>
+                    <button type="submit" id="SaveComment" class="btn btn-primary">Save Comment</button>
+                </form>
+            </div>
             @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode) ||
                     !string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
             {
                 <div>
                     <h3 class="mb-3">
-                        <span>Product Information</span>
+                        <span text-translate="true">Product Information</span>
                         <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
                             <vc:icon symbol="info" />
                         </a>
@@ -611,7 +616,7 @@
                     <table class="table table-hover mt-3 mb-4">
                         <thead>
                             <tr>
-                                <th>Date</th>
+                                <vc:date-column></vc:date-column>
                                 <th>Message</th>
                             </tr>
                         </thead>
@@ -620,7 +625,7 @@
                             {
                                 var cssClass = string.IsNullOrEmpty(evt.GetCssClass()) ? null : $"text-{evt.GetCssClass()}";
                                 <tr>
-                                    <td class="@cssClass">@evt.Timestamp.ToBrowserDate("o", "short", "medium")</td>
+                                    <td class="@cssClass">@evt.Timestamp.ToBrowserDate()</td>
                                     <td class="@cssClass">@evt.Message</td>
                                 </tr>
                             }

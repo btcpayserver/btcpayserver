@@ -1,6 +1,6 @@
 ﻿@model BTCPayServer.Plugins.Bitpay.Security.BitTokenEntity
 @{
-    ViewData.SetLayoutModel(new(nameof(StoreNavPages.Tokens), StringLocalizer["Access Tokens"]));
+    ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Tokens), StringLocalizer["Access Tokens"]).SetCategory(WellKnownCategories.Store));
     Layout = "_Layout";
 }
 <h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>

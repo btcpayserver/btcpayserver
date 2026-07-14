@@ -18,6 +18,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
+using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Fido2;
@@ -538,9 +539,26 @@ namespace BTCPayServer.Tests
             AssertSearchInvoice(acc, true, invoice.Id, "status:settled,exceptionstatus:paidPartial");
             AssertSearchInvoice(acc, true, invoice.Id, "status:settled,status:invalid,exceptionstatus:paidPartial,exceptionstatus:paidOver");
 
+            var invoiceController = acc.GetController<UIInvoiceController>();
+            var comment = "refunded manually from cashier wallet";
+            await invoiceController.Comment(invoice.Id, comment);
+
+            var listResult = await invoiceController.ListInvoices(new InvoicesModel { StoreId = acc.StoreId });
+            var listModel = (InvoicesModel)((ViewResult)listResult).Model;
+            var listedInvoice = Assert.Single(listModel.Invoices, i => i.InvoiceId == invoice.Id);
+            Assert.Equal(comment, listedInvoice.Comment);
+
+            // The comment should be included in the invoices export/report
+            var invoicesReport = await GetReport(acc, viewName: "Invoices");
+            var reportInvoiceIdIndex = invoicesReport.GetIndex("InvoiceId");
+            var reportCommentIndex = invoicesReport.GetIndex("InvoiceComment");
+            Assert.Contains(invoicesReport.Data, d =>
+                d[reportInvoiceIdIndex].Value<string>() == invoice.Id &&
+                d[reportCommentIndex]?.Value<string>() == comment);
+
             var time = invoice.InvoiceTime;
             AssertSearchInvoice(acc, true, invoice.Id, $"startdate:{time.ToString("yyyy-MM-dd HH:mm:ss")}");
-            AssertSearchInvoice(acc, true, invoice.Id, $"enddate:{time.ToString().ToLowerInvariant()}");
+            AssertSearchInvoice(acc, true, invoice.Id, $"enddate:{time.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()}");
             AssertSearchInvoice(acc, false, invoice.Id,
                 $"startdate:{time.AddSeconds(1).ToString("yyyy-MM-dd HH:mm:ss")}");
             AssertSearchInvoice(acc, false, invoice.Id,
@@ -1623,11 +1641,35 @@ namespace BTCPayServer.Tests
             {
                 Amount = 50.513m,
                 Currency = "USD",
+                Comment = "  API comment  ",
                 Metadata = new JObject() { new JProperty("taxIncluded", 50.516m), new JProperty("orderId", "000000161") }
             });
             Assert.Equal(50.51m, invoice5g.Amount);
             Assert.Equal(50.51m, (decimal)invoice5g.Metadata["taxIncluded"]);
             Assert.Equal("000000161", (string)invoice5g.Metadata["orderId"]);
+            Assert.Equal("API comment", invoice5g.Comment);
+
+            invoice5g = await greenfield.GetInvoice(invoice5g.Id);
+            Assert.Equal("API comment", invoice5g.Comment);
+
+            invoice5g = await greenfield.UpdateInvoice(invoice5g.Id, new UpdateInvoiceRequest
+            {
+                Comment = "  Updated API comment  "
+            });
+            Assert.Equal("Updated API comment", invoice5g.Comment);
+
+            invoice5g = await greenfield.UpdateInvoice(invoice5g.Id, new UpdateInvoiceRequest
+            {
+                Metadata = new JObject { new JProperty("orderId", "000000162") }
+            });
+            Assert.Equal("Updated API comment", invoice5g.Comment);
+            Assert.Equal("000000162", (string)invoice5g.Metadata["orderId"]);
+
+            invoice5g = await greenfield.UpdateInvoice(invoice5g.Id, new UpdateInvoiceRequest
+            {
+                Comment = ""
+            });
+            Assert.Equal("", invoice5g.Comment);
 
             var zeroInvoice = await greenfield.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
             {
@@ -2884,7 +2926,7 @@ namespace BTCPayServer.Tests
             await acc.CreateLNAddress();
             await acc.PayOnLNAddress();
 
-            var report = await GetReport(acc, new() { ViewName = "Payments" });
+            var report = await GetReport(acc, "Payments");
             // 1 payment on LN Address
             // 1 payment on LNURL
             // 1 payment on BOLT11
@@ -2900,7 +2942,7 @@ namespace BTCPayServer.Tests
             Assert.Single(paymentTypes["On-Chain"]);
 
             // 2 on-chain transactions: It received from the cashcow, then paid its own invoice
-            report = await GetReport(acc, new() { ViewName = "Wallets" });
+            report = await GetReport(acc, "Wallets");
             var txIdIndex = report.GetIndex("TransactionId");
             var balanceIndex = report.GetIndex("BalanceChange");
             Assert.Equal(2, report.Data.Count);
@@ -2908,7 +2950,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(report.Data, d => d[balanceIndex]["v"].Value<decimal>() == 1.0m);
 
             // Items sold
-            report = await GetReport(acc, new() { ViewName = "Sales" });
+            report = await GetReport(acc, "Sales");
             var itemIndex = report.GetIndex("Product");
             var countIndex = report.GetIndex("Quantity");
             var itemsCount = report.Data.GroupBy(d => d[itemIndex].Value<string>())
@@ -2918,7 +2960,7 @@ namespace BTCPayServer.Tests
 
             await acc.ImportOldInvoices();
             var date2018 = new DateTimeOffset(2018, 1, 1, 0, 0, 0, TimeSpan.Zero);
-            report = await GetReport(acc, new() { ViewName = "Payments", TimePeriod = new TimePeriod() { From = date2018, To = date2018 + TimeSpan.FromDays(365) } });
+            report = await GetReport(acc, "Payments", date2018, date2018 + TimeSpan.FromDays(365));
             var invoiceIdIndex = report.GetIndex("InvoiceId");
             var invoiceCurrencyAmountIndex = report.GetIndex("InvoiceCurrencyAmount");
             var rateIndex = report.GetIndex("Rate");
@@ -2940,7 +2982,7 @@ namespace BTCPayServer.Tests
 
                 async Task AssertData(string currency, decimal awaiting, decimal limit, decimal completed, bool fullyPaid)
                 {
-                    report = await GetReport(acc, new() { ViewName = "Refunds" });
+                    report = await GetReport(acc, "Refunds");
                     var currencyIndex = report.GetIndex("Currency");
                     var awaitingIndex = report.GetIndex("Awaiting");
                     var fullyPaidIndex = report.GetIndex("FullyPaid");
@@ -2957,16 +2999,16 @@ namespace BTCPayServer.Tests
                 await AssertData("USD", awaiting: 0.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
                 var payout = await client.CreatePayout(refund.Id, new CreatePayoutRequest() { Destination = addr.ToString(), PayoutMethodId = "BTC-CHAIN" });
                 await AssertData("USD", awaiting: 10.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
-                await client.ApprovePayout(acc.StoreId, payout.Id, new ApprovePayoutRequest());
+                await client.ApprovePayout(payout.Id, new ApprovePayoutRequest());
                 await AssertData("USD", awaiting: 10.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
                 if (i == 0)
                 {
-                    await client.MarkPayoutPaid(acc.StoreId, payout.Id);
+                    await client.MarkPayoutPaid(payout.Id);
                     await AssertData("USD", awaiting: 0.0m, limit: 10.0m, completed: 10.0m, fullyPaid: true);
                 }
                 if (i == 1)
                 {
-                    await client.CancelPayout(acc.StoreId, payout.Id);
+                    await client.CancelPayout(payout.Id);
                     await AssertData("USD", awaiting: 0.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
                 }
             }
@@ -2978,10 +3020,16 @@ namespace BTCPayServer.Tests
             return Math.Round(jobj["v"].Value<decimal>(), jobj["d"].Value<int>());
         }
 
-        private async Task<StoreReportResponse> GetReport(TestAccount acc, StoreReportRequest req)
+        private async Task<StoreReportResponse> GetReport(TestAccount acc, string viewName, DateTimeOffset? from = null, DateTimeOffset? to = null)
         {
-            var controller = acc.GetController<UIReportsController>();
-            return (await controller.StoreReportsJson(acc.StoreId, req)).AssertType<OkObjectResult>()
+            var search = new SearchString(null);
+            search.SetFilter("view", viewName);
+            if (from is not null)
+                search.SetFilter("startdate", from.Value.ToString("O", CultureInfo.InvariantCulture));
+            if (to is not null)
+                search.SetFilter("enddate", to.Value.ToString("O", CultureInfo.InvariantCulture));
+            var controller = acc.GetController<GreenfieldReportsController>();
+            return (await controller.StoreReports(acc.StoreId, search)).AssertType<OkObjectResult>()
                 .Value
                 .AssertType<StoreReportResponse>();
         }

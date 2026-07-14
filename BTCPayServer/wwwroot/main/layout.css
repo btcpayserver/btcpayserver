@@ -170,6 +170,25 @@
     background: var(--btcpay-neutral-100);
 }
 
+.globalNav-tooltip {
+    --btcpay-tooltip-padding-x: .75rem;
+    --btcpay-tooltip-padding-y: .375rem;
+    --btcpay-tooltip-font-size: var(--btcpay-font-size-m);
+    --btcpay-tooltip-color: var(--btcpay-body-text);
+    --btcpay-tooltip-bg: var(--btcpay-neutral-200);
+    --btcpay-tooltip-border-radius: .125rem;
+    --btcpay-tooltip-opacity: 1;
+}
+
+.globalNav-tooltip .tooltip-arrow {
+    display: none;
+}
+
+.globalNav-tooltip .tooltip-inner {
+    border: 1px solid var(--btcpay-neutral-400);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+}
+
 #globalNav .globalNav-btn .globalNav-status {
     position: absolute;
     top: .25rem;
@@ -196,75 +215,13 @@
     text-decoration: none;
 }
 
-#globalNav .dropdown-menu {
+#globalNav #globalNavAccountMenu {
     min-width: 220px;
-    border: 1px solid var(--btcpay-body-border-medium);
-    border-radius: var(--btcpay-border-radius-l);
-    background: var(--btcpay-body-bg);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, .12);
-    padding: .25rem 0;
 }
 
 #globalNav #globalNavServerMenu,
 #globalNav #globalNavPluginsMenu {
     min-width: 250px;
-}
-
-#globalNav .dropdown-menu li {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-#globalNav .dropdown-menu > li > a,
-#globalNav .dropdown-menu .menu-item,
-#globalNav .dropdown-menu .dropdown-item,
-#globalNav .dropdown-menu .nav-item .nav-link,
-#globalNav .dropdown-menu .nav-link {
-    display: block;
-    width: 100%;
-    padding: .45rem .6rem;
-    clear: both;
-    font-weight: var(--btcpay-font-weight-semibold);
-    color: var(--bs-dropdown-link-color);
-    text-decoration: none;
-    white-space: normal;
-    background-color: transparent;
-    border: 0;
-    border-radius: 0;
-}
-
-#globalNav #globalNavServerMenu > li,
-#globalNav #globalNavPluginsMenu > li,
-#globalNav #globalNavServerMenu > .nav-item,
-#globalNav #globalNavPluginsMenu > .nav-item {
-    padding: .25rem .75rem;
-}
-
-#globalNav #globalNavServerMenu > li > a,
-#globalNav #globalNavPluginsMenu > li > a,
-#globalNav #globalNavServerMenu > .nav-item > a,
-#globalNav #globalNavPluginsMenu > .nav-item > a {
-    border-radius: var(--btcpay-border-radius-m);
-    padding: .45rem .6rem;
-}
-
-#globalNav .dropdown-menu > li > a:hover,
-#globalNav .dropdown-menu .menu-item:hover,
-#globalNav .dropdown-menu .dropdown-item:hover,
-#globalNav .dropdown-menu .nav-item .nav-link:hover,
-#globalNav .dropdown-menu .nav-link:hover {
-    color: var(--bs-dropdown-link-hover-color);
-    background-color: var(--bs-dropdown-link-hover-bg);
-}
-
-#globalNav .dropdown-menu > li > a.active,
-#globalNav .dropdown-menu .menu-item.active,
-#globalNav .dropdown-menu .dropdown-item.active,
-#globalNav .dropdown-menu .nav-item .nav-link.active,
-#globalNav .dropdown-menu .nav-link.active {
-    color: var(--bs-dropdown-link-active-color);
-    background-color: var(--bs-dropdown-link-active-bg);
 }
 
 /* Global Search */
@@ -508,6 +465,7 @@
 }
 
 #NotificationsDropdown {
+    min-width: 220px;
     border-radius: var(--btcpay-border-radius-l);
     background-color: var(--btcpay-body-bg);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 16%);

@@ -1,0 +1,221 @@
+@using BTCPayServer.Components.DateRangeSelector
+@model BTCPayServer.Components.DateRangeSelector.DateRangeSelectorModel
+
+@{
+    List<(String DateRange, String Label)> filters = new()
+    {
+        ("today", StringLocalizer["Today"].Value),
+        ("yesterday", StringLocalizer["Yesterday"].Value),
+        ("thisweek", StringLocalizer["This week"].Value),
+        ("lastweek", StringLocalizer["Last week"].Value),
+        ("thismonth", StringLocalizer["This month"].Value),
+        ("lastmonth", StringLocalizer["Last month"].Value),
+        ("thisquarter", StringLocalizer["This quarter"].Value),
+        ("lastquarter", StringLocalizer["Last quarter"].Value),
+        ("thisyear", StringLocalizer["This year"].Value),
+        ("lastyear", StringLocalizer["Last year"].Value)
+    };
+}
+
+<div class="dropdown date-range-selector" id="DateRangeDropdown">
+    <button id="DateRangeSelector" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret date-range-selector__toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+        @if (Model.HasDateFilter)
+        {
+            var filter = filters.FirstOrDefault(f => Model.HasDateRange(f.DateRange));
+            if (filter.DateRange is not null)
+            {
+                <span>@filter.Label</span>
+            }
+            else
+            {
+                if (Model.DateRange.StartDate is not null && Model.DateRange.EndDate is not null)
+                {
+                    <span>@ViewLocalizer["From {0} to {1}", Model.DateRange.StartDate.Value.ToBrowserDate(), Model.DateRange.EndDate.Value.ToBrowserDate()]</span>
+                }
+                else if (Model.DateRange.StartDate is not null)
+                {
+                    <span>@ViewLocalizer["From {0}", Model.DateRange.StartDate.Value.ToBrowserDate()]</span>
+                }
+                else if (Model.DateRange.EndDate is not null)
+                {
+                    <span>@ViewLocalizer["To {0}", Model.DateRange.EndDate.Value.ToBrowserDate()]</span>
+                }
+                else
+                {
+                    <span text-translate="true">Custom range</span>
+                }
+            }
+        }
+        else
+        {
+            <span text-translate="true">All Time</span>
+        }
+    </button>
+    <div class="dropdown-menu date-range-selector__menu" aria-labelledby="DateRangeSelector">
+        <div class="px-3 py-2" style="min-width: 18rem;">
+            <button type="submit" id="DateRangeTimeZoneButton" name="FilterCommand" class="d-none date-range-selector__timezone-submit"></button>
+            <label for="DateRangeTimeZone" class="form-label small text-muted mb-1 date-range-selector__timezone-label" text-translate="true">Query timezone</label>
+            <!-- The input will get filled automatically by the browser (thanks to the timezone attribute) if the search string doesn't have a timezone -->
+            <input id="DateRangeTimeZone" class="form-control form-control-sm date-range-selector__timezone" timezone value="@Model.Search.GetExplicitTimeZone()" list="DateRangeTimeZoneOptions" autocomplete="off" />
+            <datalist id="DateRangeTimeZoneOptions" class="date-range-selector__timezone-options">
+                @foreach (var timeZone in Model.TimeZones)
+                {
+                    if (timeZone.Id is null)
+                    {
+                        <option id="DateRangeTimeZone-DefaultOption" class="date-range-selector__timezone-option date-range-selector__timezone-option--default" value="Default"><span text-translate="true">Detect from browser</span>&nbsp;<span>(<span browser-timezone></span>)</span></option>
+                    }
+                    else
+                    {
+                        <option class="date-range-selector__timezone-option" value="@timeZone.Id">@timeZone.Name</option>
+                    }
+                }
+            </datalist>
+        </div>
+        <hr class="dropdown-divider" />
+        @if (Model.ShowAllTime)
+        {
+            <button type="submit" name="FilterCommand" value="alltime" class="dropdown-item date-range-selector__preset @(!Model.HasDateFilter ? "custom-active" : string.Empty)" text-translate="true">All Time</button>
+            <hr class="dropdown-divider" />
+        }
+        @foreach (var filter in filters)
+        {
+            <button type="submit" name="FilterCommand" value="set-daterange:@filter.DateRange" class="dropdown-item date-range-selector__preset @(Model.HasDateRange(@filter.DateRange) ? "custom-active" : string.Empty)" text-translate="true">@filter.Label</button>
+        }
+        <button type="button" class="dropdown-item date-range-selector__custom-range @(Model.HasCustomDateFilter ? "custom-active" : string.Empty)" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom range</button>
+    </div>
+</div>
+
+<div class="modal fade date-range-selector__custom-range-modal" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="customRangeModalTitle" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customRangeModalTitle">@Model.CustomRangeTitle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <label for="dtpStartDate" class="col-sm-3 col-form-label" text-translate="true">Start Date</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input id="dtpStartDate" class="form-control flatdtpicker date-range-selector__custom-range-start" type="datetime-local"
+                                   data-fdtp='{ "altInput": true, "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "minuteIncrement": 1, "defaultHour": 0 }'
+                                   value="@Model.StartDateInputValue"
+                                   placeholder="@StringLocalizer["Start Date"]" />
+                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
+                                <vc:icon symbol="close" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="dtpEndDate" class="col-sm-3 col-form-label" text-translate="true">End Date</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <input id="dtpEndDate" class="form-control flatdtpicker date-range-selector__custom-range-end" type="datetime-local"
+                                   data-fdtp='{ "altInput": true, "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "minuteIncrement": 1, "defaultHour": 0 }'
+                                   value="@Model.EndDateInputValue"
+                                   placeholder="@StringLocalizer["End Date"]" />
+                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
+                                <vc:icon symbol="close" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btnCustomRangeDate" type="button" class="btn btn-primary date-range-selector__custom-range-submit" text-translate="true">Filter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        var dateRangeTimeZone = document.querySelector('.date-range-selector__timezone');
+        var defaultOption = document.querySelector('.date-range-selector__timezone-option--default');
+        var tzSubmit = document.querySelector('.date-range-selector__timezone-submit');
+        var customRangeSubmit = document.querySelector('.date-range-selector__custom-range-submit');
+        var customRangeStart = document.querySelector('.date-range-selector__custom-range-start');
+        var customRangeEnd = document.querySelector('.date-range-selector__custom-range-end');
+        var browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        var defaultValue = browserTz + ' (' + @Safe.Json(StringLocalizer["Default"].Value) + ')';
+        defaultOption.value = defaultValue;
+
+         var expicitTimeZone = @Safe.Json(Model.Search.GetExplicitTimeZone());
+         if (expicitTimeZone) {
+             dateRangeTimeZone.value = expicitTimeZone;
+         }
+         else {
+             dateRangeTimeZone.value = window.defaultDateTimeFormat.timeZone ?? defaultValue;
+         }
+
+         if (!window.getPreferredTimeZone() && browserTz === dateRangeTimeZone.value)
+         {
+             dateRangeTimeZone.value = defaultOption.value;
+         }
+
+         // Show all timezone options on focus instead of filtering by the current value.
+         // Keep the current value as a placeholder and restore it if no change is made.
+         dateRangeTimeZone.addEventListener('focus', function () {
+             this.placeholder = this.value;
+             this.value = '';
+         });
+
+         dateRangeTimeZone.addEventListener('blur', function () {
+             if (!this.value) {
+                 this.value = this.placeholder;
+             }
+             this.removeAttribute('placeholder');
+         });
+
+         function updateTimeZone() {
+             if (dateRangeTimeZone.value === defaultValue || dateRangeTimeZone.value === "") {
+                 tzSubmit.value = "set-timezone:" + browserTz;
+                 window.clearPreferredTimeZone();
+             } else {
+                 tzSubmit.value = "set-timezone:" + dateRangeTimeZone.value;
+                 window.setPreferredTimeZone(dateRangeTimeZone.value);
+             }
+         }
+
+        dateRangeTimeZone.addEventListener('change', function () {
+            updateTimeZone();
+            this.closest('form').requestSubmit(tzSubmit);
+        });
+
+        dateRangeTimeZone.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                updateTimeZone();
+                this.closest('form').requestSubmit(tzSubmit);
+            }
+        });
+
+        customRangeSubmit.addEventListener('click', function () {
+            const dtpStartDate = customRangeStart.value;
+            const dtpEndDate = customRangeEnd.value;
+
+            if (!dtpStartDate && !dtpEndDate) {
+                customRangeStart.nextElementSibling.focus();
+                return;
+            }
+
+            const dateFilters = [];
+            if (dtpStartDate) {
+                dateFilters.push(`startdate:${dtpStartDate}`);
+            }
+            if (dtpEndDate) {
+                dateFilters.push(`enddate:${dtpEndDate}`);
+            }
+
+            const cleanedSearchTerm = @Safe.Json(DateRangeSelectorModel.RemoveDatePreset(Model.Search.ToString(SearchStringFormat.OnlyUIFilters)));
+            const combinedSearchTerm = [cleanedSearchTerm, dateFilters.join(',')].filter(Boolean).join(',');
+
+            const searchTermInput = customRangeStart.closest('form').querySelector('.search-string-input__term');
+            searchTermInput.value = combinedSearchTerm;
+            searchTermInput.closest('form').submit();
+        });
+    })();
+</script>

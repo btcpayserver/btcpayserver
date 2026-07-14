@@ -179,6 +179,7 @@ async function initLabelManager (elementId) {
         async onChange (values) {
             const labels = Array.isArray(values) ? values : values.split(',');
             element.dispatchEvent(new CustomEvent("labelmanager:changed", {
+                bubbles: true,
                 detail: {
                     id: objectId,
                     type: objectType,
@@ -261,54 +262,75 @@ const initGlobalNavTooltips = () => {
     const header = document.getElementById('mainMenuHead');
     if (!header) return;
 
-    if (window.bootstrap?.Dropdown) {
-        header.addEventListener('show.bs.dropdown', event => {
-            const source = event.target;
-            if (!(source instanceof Element)) return;
+    const Tooltip = window.bootstrap?.Tooltip;
+    const Dropdown = window.bootstrap?.Dropdown;
+    const tooltipSelector = '[data-global-nav-tooltip]:not([data-bs-toggle="dropdown"])';
+    const tooltipTargets = Array.from(header.querySelectorAll(tooltipSelector));
+    const getDropdownToggle = source => source.matches('[data-bs-toggle="dropdown"]')
+        ? source
+        : source.querySelector('[data-bs-toggle="dropdown"]');
+    const getTooltipLabel = target => {
+        const labelledControl = target.matches('[aria-label]')
+            ? target
+            : target.querySelector('[aria-label]');
+        return labelledControl?.getAttribute('aria-label') || '';
+    };
+    const hideAllTooltips = () => {
+        tooltipTargets.forEach(target => Tooltip?.getInstance(target)?.hide());
+    };
 
-            const currentToggle = source.matches('[data-bs-toggle="dropdown"]')
-                ? source
-                : source.querySelector('[data-bs-toggle="dropdown"]');
-            if (!(currentToggle instanceof Element)) return;
-
-            header.querySelectorAll('[data-bs-toggle="dropdown"][aria-expanded="true"]').forEach(openToggle => {
-                if (openToggle === currentToggle) return;
-                window.bootstrap.Dropdown.getOrCreateInstance(openToggle).hide();
+    if (Tooltip) {
+        tooltipTargets.forEach(target => {
+            Tooltip.getOrCreateInstance(target, {
+                trigger: 'hover focus',
+                placement: 'bottom',
+                delay: 0,
+                animation: false,
+                customClass: 'globalNav-tooltip',
+                title: () => getTooltipLabel(target)
             });
         });
     }
 
-    if (!window.bootstrap?.Tooltip) return;
-    const tooltipTargets = Array.from(header.querySelectorAll('[data-global-nav-tooltip]'))
-        // Bootstrap supports only one component instance per element.
-        // Dropdown toggles therefore cannot also be Bootstrap tooltips.
-        .filter(target => (target.dataset.bsToggle || '').toLowerCase() !== 'dropdown');
-    if (!tooltipTargets.length) return;
-    const tooltipTargetSet = new Set(tooltipTargets);
+    if (Dropdown) {
+        header.addEventListener('show.bs.dropdown', event => {
+            const source = event.target;
+            if (!(source instanceof Element)) return;
 
-    const getTooltipOptions = target => ({
-        trigger: target.dataset.bsTrigger || 'hover',
-        placement: target.dataset.bsPlacement || 'bottom'
-    });
-    const hideAllTooltips = () => {
-        tooltipTargets.forEach(target => {
-            window.bootstrap.Tooltip.getInstance(target)?.hide();
+            const currentToggle = getDropdownToggle(source);
+            if (!(currentToggle instanceof Element)) return;
+
+            const tooltipTarget = currentToggle.closest('[data-global-nav-tooltip]');
+            if (tooltipTarget instanceof Element) {
+                const tooltip = Tooltip?.getInstance(tooltipTarget);
+                tooltip?.hide();
+                tooltip?.disable();
+            }
+
+            header.querySelectorAll('[data-bs-toggle="dropdown"][aria-expanded="true"]').forEach(openToggle => {
+                if (openToggle === currentToggle) return;
+                Dropdown.getOrCreateInstance(openToggle).hide();
+            });
         });
-    };
+        header.addEventListener('hidden.bs.dropdown', event => {
+            const source = event.target;
+            if (!(source instanceof Element)) return;
 
-    tooltipTargets.forEach(target => {
-        window.bootstrap.Tooltip.getOrCreateInstance(target, getTooltipOptions(target));
-    });
+            const currentToggle = getDropdownToggle(source);
+            const tooltipTarget = currentToggle?.closest('[data-global-nav-tooltip]');
+            if (tooltipTarget instanceof Element) {
+                Tooltip?.getInstance(tooltipTarget)?.enable();
+            }
+        });
+    }
 
     header.addEventListener('click', event => {
         const target = event.target;
         if (!(target instanceof Element)) return;
         const tooltipTarget = target.closest('[data-global-nav-tooltip]');
-        if (!(tooltipTarget instanceof Element) || !tooltipTargetSet.has(tooltipTarget)) return;
+        if (!(tooltipTarget instanceof Element) || !tooltipTarget.matches(tooltipSelector)) return;
         window.requestAnimationFrame(hideAllTooltips);
     });
-    header.addEventListener('shown.bs.dropdown', hideAllTooltips);
-    header.addEventListener('hide.bs.dropdown', hideAllTooltips);
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -326,13 +348,23 @@ document.addEventListener("DOMContentLoaded", () => {
         setStickyHeaderHeight();
     }
 
-    // initialize timezone offset value if field is present in page
-    const $timezoneOffset = document.getElementById("TimezoneOffset");
-    const timezoneOffset = new Date().getTimezoneOffset();
-    if ($timezoneOffset) $timezoneOffset.value = timezoneOffset;
-
     // localize all elements that have localizeDate class
-    formatDateTimes();
+    if (formatDateTimes)
+        formatDateTimes();
+
+    document.querySelectorAll("*[timezone], *[browser-timezone]").forEach($el => {
+        var formatter = $el.hasAttribute("timezone") ? getDateFormatter() : Intl.DateTimeFormat();
+        if (!formatter)
+            return;
+        if ($el.tagName === "INPUT") {
+            if (!$el.value)
+                $el.value = formatter.resolvedOptions().timeZone || '';
+        }
+        else if ($el.tagName === "SPAN") {
+            if (!$el.innerText)
+                $el.innerText = formatter.resolvedOptions().timeZone || '';
+        }
+    });
 
     initLabelManagers();
 
@@ -351,9 +383,11 @@ document.addEventListener("DOMContentLoaded", () => {
         var element = $(this);
         var fdtp = element.attr("data-fdtp");
 
+        var time24 = getDateFormatter().resolvedOptions().hourCycle === "h23";
         // support for initializing with special options per instance
         if (fdtp) {
             var parsed = Object.assign({}, JSON.parse(fdtp), { static: true });
+            parsed.time_24hr ??= time24;
             flatpickrInstances.push(element.flatpickr(parsed));
         } else {
             var min = element.attr("min");
@@ -368,7 +402,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 minDate: min,
                 maxDate: max,
                 defaultDate: defaultDate,
-                time_24hr: true,
+                time_24hr: time24,
                 defaultHour: 0,
                 static: true
             }));

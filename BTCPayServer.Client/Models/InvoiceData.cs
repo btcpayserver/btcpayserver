@@ -19,6 +19,7 @@ namespace BTCPayServer.Client.Models
         public InvoiceType Type { get; set; }
         public string Currency { get; set; }
         public JObject Metadata { get; set; }
+        public string Comment { get; set; }
         public CheckoutOptions Checkout { get; set; } = new CheckoutOptions();
         public ReceiptOptions Receipt { get; set; } = new ReceiptOptions();
         public class ReceiptOptions

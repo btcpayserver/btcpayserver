@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Plugins.GlobalSearch.Views;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;

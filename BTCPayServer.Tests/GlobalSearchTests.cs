@@ -88,6 +88,7 @@ public class GlobalSearchTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         foreach (var item in items.Where(item => !string.IsNullOrEmpty(item.Url)))
         {
+            TestLogs.LogInformation($"Navigating to {item.Url}");
             await s.GoToUrl(item.Url);
             await s.Page.AssertNoError();
         }

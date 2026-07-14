@@ -9,6 +9,7 @@
     var notificationDisabled = user?.DisabledNotifications == "all";
 	var expectedScheme = _context.HttpContext.Request.Scheme;
 	var expectedHost = _context.HttpContext.Request.Host.ToString().ToLower();
+    var store = _context.HttpContext.GetStoreDataOrNull();
 }
 
 <!DOCTYPE html>
@@ -16,6 +17,7 @@
 <head>
     <partial name="LayoutHead" />
     @await RenderSectionAsync("PageHeadContent", false)
+    <vc:declare-date-formatter-options></vc:declare-date-formatter-options>
 </head>
 <body class="d-flex flex-column flex-lg-row min-vh-100">
 <header id="mainMenu" class="btcpay-header d-flex flex-column d-print-none" v-pre>

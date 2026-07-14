@@ -1,7 +1,9 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Models;
 using BTCPayServer.Services.Stores;
 
 using Microsoft.AspNetCore.Authorization;

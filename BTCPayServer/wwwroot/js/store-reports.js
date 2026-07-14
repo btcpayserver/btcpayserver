@@ -1,4 +1,4 @@
-let app, searchBtnApp, origData;
+let app, origData;
 srv.sortBy = function (field, event) {
     for (let key in this.fieldViews) {
         if (this.fieldViews.hasOwnProperty(key)) {
@@ -82,61 +82,21 @@ srv.updateFieldViews = function () {
     }
 };
 document.addEventListener("DOMContentLoaded", () => {
-    delegate("click", "#searchBtn", function () {
-        fetchStoreReports();
-    })
-    delegate("input", ".flatdtpicker", function () {
-        // We don't use vue to bind dates, because VueJS break the flatpickr as soon as binding occurs.
-        let to = document.getElementById("toDate").value
-        let from = document.getElementById("fromDate").value
-
-        if (!to || !from)
-            return;
-
-        from = moment(from).unix();
-        to = moment(to).endOf('day').unix();
-
-        srv.request.timePeriod.from = from;
-        srv.request.timePeriod.to = to;
-    });
-
     delegate("click", "[data-action='exportCSV']", downloadCSV);
-
-    delegate("click", ".available-view", function (e) {
-        e.preventDefault();
-        const {view} = e.target.dataset;
-        document.querySelectorAll(".available-view").forEach($el => $el.classList.remove("active"));
-        e.target.classList.add("active");
-        srv.request.viewName = view;
-        fetchStoreReports(true)
-    });
-
-    let to = new Date();
-    let from = new Date(to.getTime() - 1000 * 60 * 60 * 24 * 30);
-    var urlParams = new URLSearchParams(new URL(window.location).search);
-    if (urlParams.has("from")) {
-        from = new Date(parseInt(urlParams.get("from")) * 1000);
+    srv.result = srv.result || {fields: [], data: [], charts: []};
+    srv.dataUpdated();
+    modifyFields(srv.result.fields, srv.result.data, 'datetime', a => a ? moment(a).format() : a);
+    srv.charts = [];
+    for (let i = 0; i < srv.result.charts.length; i++) {
+        const chart = srv.result.charts[i];
+        const table = createTable(chart, srv.result.fields.map(f => f.name), srv.result.data);
+        table.name = chart.name;
+        srv.charts.push(table);
     }
-    if (urlParams.has("to")) {
-        to = new Date(parseInt(urlParams.get("to")) * 1000);
-    }
-    srv.request = srv.request || {};
-    srv.request.timePeriod = srv.request.timePeriod || {};
-    srv.request.timePeriod.to = moment(to).unix();
-    srv.request.viewName = srv.request.viewName || "Invoices";
-    srv.request.timePeriod.from = moment(from).unix();
-    srv.request.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    srv.result = {fields: [], values: []};
-    searchBtnApp = new Vue({
-        el: '#searchGroup',
-        data() {
-            return { loading: false, error: "" };
-        },
-    });
     app = new Vue({
         el: '#app',
         data() {
-            return {srv, loading: false};
+            return {srv};
         },
         methods: {
             hasChartData(chart) {
@@ -151,11 +111,9 @@ document.addEventListener("DOMContentLoaded", () => {
             displayDate
         }
     });
-    updateUIDateRange();
-    fetchStoreReports();
 });
 
-const dtFormatter = new Intl.DateTimeFormat('default', {dateStyle: 'short', timeStyle: 'short'});
+const dtFormatter = getDateFormatter();
 
 function displayDate(val) {
     if (!val) {
@@ -167,11 +125,6 @@ function displayDate(val) {
 
 function displayValue(val) {
     return val && typeof val === "object" && typeof val.d === "number" ? new Decimal(val.v).toFixed(val.d) : val;
-}
-
-function updateUIDateRange() {
-    document.getElementById("toDate")._flatpickr.setDate(moment.unix(srv.request.timePeriod.to).toDate());
-    document.getElementById("fromDate")._flatpickr.setDate(moment.unix(srv.request.timePeriod.from).toDate());
 }
 
 // This function modify all the fields of a given type
@@ -199,69 +152,6 @@ function downloadCSV() {
     const csv = Papa.unparse({fields: srv.result.fields.map(f => f.name), data});
     const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     saveAs(blob, "export.csv");
-}
-
-let fetchPromise = null;
-var abortFetching = new AbortController()
-
-function setLoading(val)
-{
-    searchBtnApp.loading = val;
-    app.loading = val;
-}
-async function fetchStoreReports(abort) {
-    if (abort)
-    {
-        abortFetching.abort();
-    }
-    if (fetchPromise) {
-        await fetchPromise;
-    }
-    abortFetching = new AbortController();
-    fetchPromise = (async () => {
-        setLoading(true);
-        searchBtnApp.error = "";
-        try {
-            const result = await fetch(window.location, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(srv.request),
-                signal: abortFetching.signal
-            });
-
-            srv.result = await result.json();
-            srv.dataUpdated();
-            setLoading(false);
-
-            // Dates from API are UTC, convert them to local time
-            modifyFields(srv.result.fields, srv.result.data, 'datetime', a => a ? moment(a).format() : a);
-            var urlParams = new URLSearchParams(new URL(window.location).search);
-            urlParams.set("viewName", srv.request.viewName);
-            urlParams.set("from", srv.request.timePeriod.from);
-            urlParams.set("to", srv.request.timePeriod.to);
-            history.replaceState(null, null, "?" + urlParams.toString());
-            updateUIDateRange();
-
-            srv.charts = [];
-            for (let i = 0; i < srv.result.charts.length; i++) {
-                const chart = srv.result.charts[i];
-                const table = createTable(chart, srv.result.fields.map(f => f.name), srv.result.data);
-                table.name = chart.name;
-                srv.charts.push(table);
-            }
-
-            app.srv = srv;
-        } catch (e) {
-            setLoading(false);
-            if (e.name !== 'AbortError') {
-                searchBtnApp.error = e.message;
-            }
-        }
-    })();
-    await fetchPromise;
 }
 
 function getInvoiceUrl(value) {

@@ -541,15 +541,16 @@ retry:
             }
         }
 
-        public async Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId, string storeId, JObject metadata)
+        [Obsolete("The storeId parameter is now ignored. This method is deprecated and will be removed in a future release.")]
+        public Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId, string storeId, JObject metadata)
+            => UpdateInvoiceMetadata(invoiceId, metadata);
+        public async Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId, JObject metadata)
         {
 retry:
             using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await GetInvoiceRaw(invoiceId, context);
-                if (invoiceData == null || (storeId != null &&
-                                            !invoiceData.StoreDataId.Equals(storeId,
-                                                StringComparison.InvariantCultureIgnoreCase)))
+                if (invoiceData == null)
                     return null;
                 var blob = invoiceData.GetBlob();
 
@@ -581,6 +582,28 @@ retry:
                 }
                 return ToEntity(invoiceData);
             }
+        }
+        public async Task UpdateInvoiceComment(string invoiceId, string comment)
+        {
+            await using var context = _applicationDbContextFactory.CreateContext();
+            var newComment = string.IsNullOrWhiteSpace(comment?.Trim()) ? null : comment.Trim();
+            var sql = newComment is null
+                ? """
+                  UPDATE "Invoices"
+                  SET "Blob2" = COALESCE("Blob2", '{}'::jsonb) - 'comment'
+                  WHERE "Id" = @Id
+                  """
+                : """
+                  UPDATE "Invoices"
+                  SET "Blob2" = jsonb_set(COALESCE("Blob2", '{}'::jsonb), '{comment}', to_jsonb(@Comment::text), true)
+                  WHERE "Id" = @Id
+                  """;
+
+            await context.Database.GetDbConnection().ExecuteAsync(sql, new
+            {
+                Id = invoiceId,
+                Comment = newComment
+            });
         }
         public async Task<bool> MarkInvoiceStatus(string invoiceId, InvoiceStatus status)
         {
@@ -636,6 +659,8 @@ retry:
             var res = await GetInvoiceRaw(id, context, includeAddressData);
             return res == null ? null : ToEntity(res);
         }
+
+        [Obsolete("This method is deprecated and will be removed in a future release.")]
         public async Task<InvoiceEntity[]> GetInvoices(string[] invoiceIds)
         {
             var invoiceIdSet = invoiceIds.ToHashSet();
@@ -1064,8 +1089,9 @@ retry:
         public bool IncludeRefunds { get; set; }
         public bool OrderByDesc { get; set; } = true;
 
-        public void FillFromSearchText(SearchString fs, int timezoneOffset)
+        public void FillFromSearchText(SearchString fs)
         {
+            var p = fs.GetDateRange(TimeZoneInfo.Utc);
             TextSearch = fs.TextSearch;
             Unusual = fs.GetFilterBool("unusual");
             IncludeArchived = fs.GetFilterBool("includearchived") ?? false;
@@ -1074,8 +1100,8 @@ retry:
             StoreId = fs.GetFilterArray("storeid");
             ItemCode = fs.GetFilterArray("itemcode");
             OrderId = fs.GetFilterArray("orderid");
-            StartDate = fs.GetFilterDate("startdate", timezoneOffset);
-            EndDate = fs.GetFilterDate("enddate", timezoneOffset);
+            StartDate = p.StartDate;
+            EndDate = p.EndDate;
         }
     }
 

@@ -167,6 +167,7 @@ namespace BTCPayServer.Controllers
             entity.ReceiptOptions = invoice.Receipt ?? new InvoiceDataBase.ReceiptOptions();
             if (invoice.Metadata != null)
                 entity.Metadata = InvoiceMetadata.FromJObject(invoice.Metadata);
+            entity.Comment = string.IsNullOrWhiteSpace(invoice.Comment) ? null : invoice.Comment.Trim();
             invoice.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();
             entity.Currency = invoice.Currency;
             if (invoice.Amount is decimal v)

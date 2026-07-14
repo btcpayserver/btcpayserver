@@ -7,34 +7,15 @@
     var title = Model.PlanId is null ? StringLocalizer["Add plan"] : StringLocalizer["Edit plan"];
     var submitLabel = Model.PlanId is null ? StringLocalizer["Create"] : StringLocalizer["Save"];
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(SubscriptionsPlugin)}-{offeringId}", title));
+    ViewData.SetBreadcrumbs([
+        new(StringLocalizer["Offering ({0})", Model.OfferingName], Action: nameof(BTCPayServer.Plugins.Subscriptions.Controllers.UIOfferingController.Offering), RouteValues: new { storeId, offeringId = Model.OfferingId, section = "Plans" }, TestId: "offering-link"),
+        new(Model.PlanId is null ? StringLocalizer["Add plan"] : StringLocalizer["Edit plan ({0})", Model.Name], Active: true)
+    ]);
 }
 
 <form method="post">
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a asp-action="Offering"
-                       asp-route-storeId="@storeId"
-                       asp-route-offeringId="@Model.OfferingId"
-                       asp-route-section="Plans"
-                       data-testid="offering-link"
-                    >@StringLocalizer["Offering ({0})", Model.OfferingName]</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">
-                    @if (Model.PlanId is null)
-                    {
-                        <span>@StringLocalizer["Add plan"]</span>
-                    }
-                    else
-                    {
-                        <span>@StringLocalizer["Edit plan ({0})", Model.Name]</span>
-                    }
-
-                </li>
-            </ol>
-            <h2>@ViewData["Title"]</h2>
-        </nav>
+        <vc:breadcrumb />
         <input id="page-primary" type="submit" name="command" value="@submitLabel" class="btn btn-primary" />
     </div>
     <partial name="_StatusMessage" />
@@ -178,4 +159,3 @@
         </div>
     </div>
 </form>
-

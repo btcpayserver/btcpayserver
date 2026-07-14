@@ -1,5 +1,6 @@
 @using BTCPayServer.Services.PaymentRequests
 @using BTCPayServer.Client
+@using BTCPayServer.Controllers
 @using BTCPayServer.Services
 @inject CallbackGenerator CallbackGenerator
 @model BTCPayServer.Models.PaymentRequestViewModels.ListPaymentRequestsViewModel
@@ -7,37 +8,12 @@
     Layout = "_Layout";
     ViewData.SetLayoutModel(new("PaymentRequests", StringLocalizer["Payment Requests"]));
     var storeId = Context.GetStoreData().Id;
-    var statusFilterCount = CountArrayFilter("status") + (HasBooleanFilter("includearchived") ? 1 : 0);
-    var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
-    var hasTextSearch = !string.IsNullOrEmpty(Model.SearchText) || !string.IsNullOrEmpty(Model.Search?.TextSearch);
-    var hasAnyFilter =
-        statusFilterCount > 0 ||
-        hasDateFilter ||
-        hasTextSearch ||
-        !string.IsNullOrEmpty(Model.SearchTerm) ||
-        !string.IsNullOrEmpty(Model.LabelFilter);
-
-    var wallet = !string.IsNullOrEmpty(Model.WalletId) ? WalletId.Parse(Model.WalletId) : null;
+    var statusFilterCount = Model.Search.CountArrayFilter("status") + (Model.Search.HasBooleanFilter("includearchived") ? 1 : 0);
 }
 
 @section PageHeadContent {
     <script src="~/vendor/tom-select/tom-select.complete.min.js" asp-append-version="true"></script>
     <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
-}
-
-@functions
-{
-    private int CountArrayFilter(string type) =>
-        Model.Search.ContainsFilter(type) ? Model.Search.GetFilterArray(type).Length : 0;
-
-    private bool HasArrayFilter(string type, string key = null) =>
-        Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
-
-    private bool HasBooleanFilter(string key) =>
-        Model.Search.ContainsFilter(key) && Model.Search.GetFilterBool(key) is true;
-
-    private bool HasCustomDateFilter() =>
-        Model.Search.ContainsFilter("startdate") && Model.Search.ContainsFilter("enddate");
 }
 
 <div class="sticky-header">
@@ -80,59 +56,13 @@
 
 <partial name="_StatusMessage" />
 
-@* Custom Range Modal *@
-<div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="customRangeModalTitle" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="customRangeModalTitle" text-translate="true">Filter payment requests by Custom Range</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
-                    <vc:icon symbol="close" />
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group row">
-                    <label for="dtpStartDate" class="col-sm-3 col-form-label">Start Date</label>
-                    <div class="col-sm-9">
-                        <div class="input-group">
-                            <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
-                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                   placeholder="@StringLocalizer["Start Date"]" />
-                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
-                                <vc:icon symbol="close" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label class="col-sm-3 col-form-label" text-translate="true">End Date</label>
-                    <div class="col-sm-9">
-                        <div class="input-group">
-                            <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
-                                   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                   placeholder="@StringLocalizer["End Date"]" />
-                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
-                                <vc:icon symbol="close" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="btnCustomRangeDate" type="button" class="btn btn-primary" text-translate="true">Filter</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <form asp-action="GetPaymentRequests"
       asp-route-storeId="@storeId"
       method="get"
       class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8">
     <input type="hidden" asp-for="Count" />
-    <input type="hidden" asp-for="TimezoneOffset" />
-    <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
-    <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search by Id, Title or Amount..."]" />
+
+    <vc:search-string-input search-string="Model.Search" placeholder="@StringLocalizer["Search by Id, Title or Amount..."]" ></vc:search-string-input>
 
     <div class="dropdown">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -146,140 +76,16 @@
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("status", "pending")" class="dropdown-item @(HasArrayFilter("status", "pending") ? "custom-active" : "")" text-translate="true">Pending</a>
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("status", "completed")" class="dropdown-item @(HasArrayFilter("status", "completed") ? "custom-active" : "")" text-translate="true">Settled</a>
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("status", "expired")" class="dropdown-item @(HasArrayFilter("status", "expired") ? "custom-active" : "")" text-translate="true">Expired</a>
+            <button type="submit" name="FilterCommand" value="set-multi:status=pending" class="dropdown-item @(Model.Search.HasArrayFilter("status", "pending") ? "custom-active" : "")" text-translate="true">Pending</button>
+            <button type="submit" name="FilterCommand" value="set-multi:status=completed" class="dropdown-item @(Model.Search.HasArrayFilter("status", "completed") ? "custom-active" : "")" text-translate="true">Settled</button>
+            <button type="submit" name="FilterCommand" value="set-multi:status=expired" class="dropdown-item @(Model.Search.HasArrayFilter("status", "expired") ? "custom-active" : "")" text-translate="true">Expired</button>
             <div role="separator" class="dropdown-divider"></div>
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchText="@Model.SearchText" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include Archived</a>
+            <button type="submit" name="FilterCommand" value="set:includearchived=true" class="dropdown-item @(Model.Search.HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Include Archived</button>
         </div>
     </div>
-    <div class="dropdown">
-        <button id="DateOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            @if (hasDateFilter)
-            {
-                if (HasArrayFilter("startdate", "-1d"))
-                {
-                    <span text-translate="true">24 Hours</span>
-                }
-                else if (HasArrayFilter("startdate", "-3d"))
-                {
-                    <span text-translate="true">3 Days</span>
-                }
-                else if (HasArrayFilter("startdate", "-7d"))
-                {
-                    <span text-translate="true">7 Days</span>
-                }
-                else
-                {
-                    <span text-translate="true">Custom</span>
-                }
-            }
-            else
-            {
-                <span text-translate="true">All Time</span>
-            }
-        </button>
-        <div class="dropdown-menu" aria-labelledby="DateOptionsToggle">
-            <a asp-action="GetPaymentRequests"
-               asp-route-storeId="@storeId"
-               asp-route-count="@Model.Count"
-               asp-route-searchText="@Model.SearchText"
-               asp-route-searchTerm="@Model.Search.Toggle("startdate", "-1d")"
-               class="dropdown-item @(HasArrayFilter("startdate", "-1d") ? "custom-active" : "")"
-               text-translate="true">
-                Last 24 hours
-            </a>
-            <a asp-action="GetPaymentRequests"
-               asp-route-storeId="@storeId"
-               asp-route-count="@Model.Count"
-               asp-route-searchText="@Model.SearchText"
-               asp-route-searchTerm="@Model.Search.Toggle("startdate", "-3d")"
-               class="dropdown-item @(HasArrayFilter("startdate", "-3d") ? "custom-active" : "")"
-               text-translate="true">
-                Last 3 days
-            </a>
-            <a asp-action="GetPaymentRequests"
-               asp-route-storeId="@storeId"
-               asp-route-count="@Model.Count"
-               asp-route-searchText="@Model.SearchText"
-               asp-route-searchTerm="@Model.Search.Toggle("startdate", "-7d")"
-               class="dropdown-item @(HasArrayFilter("startdate", "-7d") ? "custom-active" : "")"
-               text-translate="true">
-                Last 7 days
-            </a>
-            <button type="button"
-                    class="dropdown-item @(HasCustomDateFilter() ? "custom-active" : "")"
-                    data-bs-toggle="modal"
-                    data-bs-target="#customRangeModal"
-                    text-translate="true">
-                Custom Range
-            </button>
-        </div>
-    </div>
-    @if (Model.Labels.Any())
-    {
-        <div class="dropdown">
-            <button id="LabelOptionsToggle"
-                    class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret"
-                    type="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false">
-                @if (string.IsNullOrEmpty(Model.LabelFilter))
-                {
-                    <span text-translate="true">All Labels</span>
-                }
-                else
-                {
-                    <span text-translate="true">Label:</span>
-                    <span>@Model.LabelFilter</span>
-                }
-            </button>
-
-            <ul class="dropdown-menu" aria-labelledby="LabelOptionsToggle">
-                @foreach (var label in Model.Labels)
-                {
-                    <li>
-                        <a asp-route-labelFilter="@label.Text"
-                           asp-route-searchText="@Model.SearchText"
-                           class="dropdown-item transaction-label-text@(Model.LabelFilter == label.Text ? " active" : string.Empty)"
-                           style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">
-                            @label.Text
-                        </a>
-                    </li>
-                }
-
-                @if (!string.IsNullOrEmpty(Model.LabelFilter))
-                {
-                    <li><hr class="dropdown-divider" /></li>
-                    <li>
-                        <a asp-route-labelFilter=""
-                           class="dropdown-item text-danger"
-                           text-translate="true">
-                            Clear label filter
-                        </a>
-                    </li>
-                }
-                <li><hr class="dropdown-divider" /></li>
-                <li>
-                    <a asp-action="PaymentRequestLabels" asp-controller="UIPaymentRequest" asp-route-storeId="@storeId"
-                       class="dropdown-item"
-                       text-translate="true">
-                        Manage Labels
-                    </a>
-                </li>
-            </ul>
-        </div>
-    }
-    @if (hasAnyFilter)
-    {
-        <button id="clearAllFiltersBtn"
-                type="button"
-                class="btn btn-secondary ms-auto"
-                style="min-width: 7rem;"
-                title="@StringLocalizer["Clear all filters"]">
-            <span class="align-middle" text-translate="true">Clear All</span>
-        </button>
-    }
+    <vc:label-selector labels="Model.Labels" search="Model.Search" manage-label-link="@Url.Action(nameof(UIPaymentRequestController.PaymentRequestLabels), new { storeId })"></vc:label-selector>
+    <vc:date-range-selector search="Model.Search" custom-range-title='@StringLocalizer["Filter payment requests by Custom Range"].Value'></vc:date-range-selector>
+    <vc:clear-all-filters search="Model.Search"></vc:clear-all-filters>
 </form>
 
 @if (Model.Items.Any())
@@ -288,16 +94,7 @@
         <table class="table table-hover">
             <thead>
             <tr>
-                <th class="date-col">
-                    <div class="d-flex align-items-center gap-3">
-                        <span text-translate="true">Date</span>
-                        <button type="button"
-                                class="btn btn-link p-0 switch-time-format only-for-js"
-                                title="@StringLocalizer["Switch date format"]">
-                            <vc:icon symbol="time" />
-                        </button>
-                    </div>
-                </th>
+                <vc:date-column></vc:date-column>
                 <th text-translate="true">Title</th>
                 <th style="width: 20px;"></th>
                 <th text-translate="true">Id</th>
@@ -383,53 +180,4 @@ else
 
 @section PageFootContent {
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const clearBtn = document.getElementById('clearAllFiltersBtn');
-            if (clearBtn) {
-                clearBtn.addEventListener('click', function () {
-                    const form = clearBtn.closest('form');
-                    if (!form) return;
-
-                    const searchText = form.querySelector('[name="SearchText"]');
-                    if (searchText) searchText.value = '';
-
-                    const searchTerm = form.querySelector('[name="SearchTerm"]');
-                    if (searchTerm) searchTerm.value = '';
-
-                    form.submit();
-                });
-            }
-        });
-
-        $('#btnCustomRangeDate').on('click', function () {
-            var filterString = "";
-
-            var dtpStartDate = $("#dtpStartDate").val();
-            if (dtpStartDate) {
-                filterString = "startdate%3A" + encodeURIComponent(dtpStartDate);
-            }
-
-            var dtpEndDate = $("#dtpEndDate").val();
-            if (dtpEndDate) {
-                if (filterString !== "") {
-                    filterString += ",";
-                }
-                filterString += "enddate%3A" + encodeURIComponent(dtpEndDate);
-            }
-
-            if (filterString) {
-                var baseUrl = "@Url.Action("GetPaymentRequests", new { storeId = storeId })";
-                var redirectUri = baseUrl +
-                    "?Count=" + $("#Count").val() +
-                    "&timezoneoffset=" + $("#TimezoneOffset").val() +
-                    "&SearchTerm=" + filterString +
-                    "&SearchText=" + encodeURIComponent($('input[name="SearchText"]').val() || '');
-                window.location.href = redirectUri;
-            } else {
-                $("#dtpStartDate").next().trigger("focus");
-            }
-        });
-    </script>
 }

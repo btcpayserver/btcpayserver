@@ -6,6 +6,7 @@
 @{
     ViewData.SetLayoutModel(new(nameof(StoreNavPages.Reporting), StringLocalizer["Reporting"]));
     Csp.UnsafeEval();
+    var selectedView = Model.Search.GetFilterString("view") ?? Model.AvailableViews.FirstOrDefault();
 }
 
 @section PageHeadContent
@@ -25,9 +26,6 @@
             flex: 1 1 450px;
         }
 
-        main .dropdown-menu.show {
-            z-index: 99999;
-        }
     </style>
 }
 
@@ -41,48 +39,33 @@
     </h2>
     <div>
         <a cheat-mode="true" class="btn btn-outline-info text-nowrap" asp-action="StoreReports" asp-route-fakeData="true"
-           asp-route-viewName="@Model.Request?.ViewName">Create fake data</a>
+           asp-route-searchTerm="@Model.SearchTerm" asp-route-searchText="@Model.SearchText">Create fake data</a>
         <button id="page-primary" class="btn btn-primary text-nowrap" type="button" data-action="exportCSV" text-translate="true">Export</button>
     </div>
 </div>
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
-        <nav id="SectionNav">
-            <div class="nav">
-                @foreach (var v in Model.AvailableViews)
-                {
-                    <a href="#" data-view="@v" class="available-view nav-link @(Model.Request.ViewName == v ? "active" : "")" role="tab">@v</a>
-                }
-            </div>
-        </nav>
-
-        <div class="d-flex gap-3">
-            <div class="form-group">
-                <label for="fromDate" class="form-label">@StringLocalizer["Start Date"]</label>
-                <input id="fromDate" name="fromDate"
-                       data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                       class="form-control flatdtpicker" placeholder="@StringLocalizer["Start Date"]" />
-            </div>
-
-            <div class="form-group">
-                <label for="toDate" class="form-label">@StringLocalizer["End Date"]</label>
-                <input id="toDate" name="toDate" class="form-control flatdtpicker"
-                       data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                       placeholder="@StringLocalizer["End Date"]" />
-            </div>
-            <div id="searchGroup" v-cloak class="form-group d-flex align-items-end">
-                <button id="searchBtn" class="btn btn-primary" :disabled="loading" type="button">
-                    <span v-if="loading" class="spinner-border spinner-border-sm me-1" role="status" style="margin-left: -6px;"></span>
-                    <span v-else class="me-1"><vc:icon symbol="actions-search" /></span>
-                    <span text-translate="true">Search</span>
+        <form id="StoreReportsSearch" class="d-flex flex-wrap align-items-center gap-3 mb-4" asp-action="StoreReports" method="get">
+            <button id="StoreReportsSearchSubmit" type="submit" name="FilterCommand" class="d-none"></button>
+            <input id="SearchTerm" name="SearchTerm" class="search-string-input__term" type="hidden" value="@Model.SearchTerm" />
+            <input name="SearchText" type="hidden" value="@Model.SearchText" />
+            <div class="dropdown" id="ReportViewDropdown">
+                <button id="ReportViewOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    @StringLocalizer["Report: {0}", selectedView ?? ""]
                 </button>
-                <span class="text-danger invalid-feedback field-validation-error" v-if="error">{{ error }}</span>
+                <div class="dropdown-menu" aria-labelledby="ReportViewOptionsToggle">
+                    @foreach (var v in Model.AvailableViews)
+                    {
+                        <button type="submit" name="FilterCommand" value="set:view=@v" class="dropdown-item @(selectedView == v ? "custom-active" : string.Empty)">@v</button>
+                    }
+                </div>
             </div>
-        </div>
+            <vc:date-range-selector search="Model.Search" show-all-time="false" custom-range-title='@StringLocalizer["Filter reports by Custom Range"].Value'></vc:date-range-selector>
+        </form>
     </div>
 </div>
 
-<div id="app" v-if="!loading" v-cloak class="w-100-fixed">
+<div id="app" v-cloak class="w-100-fixed">
     <div v-if="srv.charts && srv.charts.some(hasChartData)" id="charts" class="d-flex flex-wrap mb-3">
         <article v-for="chart in srv.charts" v-if="hasChartData(chart)">
             <h3>{{ chart.name }}</h3>
@@ -131,7 +114,8 @@
         <h3 id="raw-data">Raw data</h3>
         <div id="raw-data-table" class="table-responsive" v-if="srv.result.data.length">
             <table class="table table-hover">
-                <thead class="sticky-top bg-body">
+                <!-- No sticky-top because the headers then hide the calendar -->
+                <thead class="bg-body">
                 <tr>
                     <th v-for="field in srv.result.fields" :class="{ 'text-end': ['integer', 'decimal', 'amount'].includes(field.type) }">
                         <a class="text-nowrap sort-column"
@@ -171,10 +155,12 @@
                             <vc:truncate-center text="value" is-vue="true" padding="15" classes="truncate-center-id" />
                         </template>
                         <template v-else-if="srv.result.fields[columnIndex].type === 'datetime'">{{ displayDate(value) }}</template>
-                        <span v-else-if="srv.result.fields[columnIndex].type === 'boolean' && value === true"><vc:icon symbol="checkmark"
-                                                                                                                       css-class="text-success" /></span>
-                        <span v-else-if="srv.result.fields[columnIndex].type === 'boolean' && value === false"><vc:icon symbol="cross"
-                                                                                                                        css-class="text-danger" /></span>
+                        <span v-else-if="srv.result.fields[columnIndex].type === 'boolean' && value === true">
+                            <vc:icon symbol="checkmark"
+                                     css-class="text-success" /></span>
+                        <span v-else-if="srv.result.fields[columnIndex].type === 'boolean' && value === false">
+                            <vc:icon symbol="cross"
+                                     css-class="text-danger" /></span>
                         <span
                             v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value >= 0 || (typeof value === 'object' && value.v >= 0))"
                             class="text-success">{{ displayValue(value) }}</span>
@@ -199,7 +185,25 @@
     <script src="~/vendor/FileSaver/FileSaver.min.js" asp-append-version="true"></script>
     <script src="~/vendor/papaparse/papaparse.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-    <script>const srv = @Safe.Json(Model);</script>
+    <script>
+        const srv = @Safe.Json(new
+        {
+            invoiceTemplateUrl = Model.InvoiceTemplateUrl,
+            explorerTemplateUrls = Model.ExplorerTemplateUrls,
+            result = Model.Result
+        });
+    </script>
+    @if (Model.Search.GetExplicitTimeZone() is null)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const timezone = getDateFormatter().resolvedOptions().timeZone;
+                const submitButton = document.getElementById('StoreReportsSearchSubmit');
+                submitButton.value = "set-timezone:" + timezone;
+                submitButton.closest('form').requestSubmit(submitButton);
+            });
+        </script>
+    }
     <script src="~/js/datatable.js" asp-append-version="true"></script>
     <script src="~/js/store-reports.js" asp-append-version="true"></script>
 }

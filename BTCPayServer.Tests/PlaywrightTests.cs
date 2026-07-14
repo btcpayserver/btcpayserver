@@ -351,7 +351,16 @@ namespace BTCPayServer.Tests
             await s.AddLightningNode(LightningTestImplementation.CoreLightning, false);
             await s.GoToLightningSettings();
             // LNURL is true by default
-            await Expect(s.Page.Locator("#LNURLEnabled")).ToBeCheckedAsync();
+            try
+            {
+                await Expect(s.Page.Locator("#LNURLEnabled")).ToBeCheckedAsync();
+            }
+            catch
+            {
+                await s.TakeScreenshot("flaky-canlnurl.png");
+                throw;
+            }
+
             await s.Page.CheckAsync("#LUD12Enabled");
             await s.ClickPagePrimary();
 
@@ -1215,6 +1224,14 @@ namespace BTCPayServer.Tests
             var invId = await s.CreateInvoice(storeId: s.StoreId, amount: 10_000);
             await s.GoToInvoiceCheckout(invId);
             await s.PayInvoice();
+
+            // We can leave a comment on the invoice, and it should be included in the export
+            await s.GoToInvoice(invId);
+            await s.Page.FillAsync("#InvoiceComment", "refunded manually from cashier wallet");
+            await s.Page.ClickAsync("#SaveComment");
+            await s.FindAlertMessage(partialText: "The comment has been saved.");
+            await Expect(s.Page.Locator("#InvoiceComment")).ToHaveValueAsync("refunded manually from cashier wallet");
+
             await s.GoToInvoices(s.StoreId);
             await s.ClickViewReport();
 
@@ -1224,6 +1241,7 @@ namespace BTCPayServer.Tests
             csvInvTester
                 .ForInvoice(invId)
                 .AssertValues(
+                    ("InvoiceComment", "refunded manually from cashier wallet"),
                     ("Rate (BTC_CAD)", "4500"),
                     ("Rate (BTC_JPY)", "700000"),
                     ("Rate (BTC_EUR)", "4000"),
@@ -1370,27 +1388,22 @@ namespace BTCPayServer.Tests
             await Expect(s.Page.Locator("table tbody tr")).ToHaveCountAsync(2);
 
             // Filter by Title
-            await s.Page.FillAsync("input[name='SearchText']", paymentRequestTitle);
-            await s.Page.PressAsync("input[name='SearchText']", "Enter");
-            await s.Page.WaitForLoadStateAsync();
+            await s.SearchFilters.FillSearchText(paymentRequestTitle);
 
             await Expect(s.Page.Locator("table tbody tr")).ToHaveCountAsync(1);
             Assert.Contains(paymentRequestTitle, await s.Page.Locator("table tbody tr").First.InnerTextAsync());
 
             // Filter by Status
             await s.Page.ClickAsync("#StatusOptionsToggle");
-            await s.Page.ClickAsync("a:has-text('Settled')");
+            await s.Page.ClickAsync("*:has-text('Settled')");
             await s.Page.WaitForLoadStateAsync();
-            await Expect(s.Page.Locator("input[name='SearchText']"))
-                .ToHaveValueAsync(paymentRequestTitle);
+            await s.SearchFilters.AssertSearchText(paymentRequestTitle);
             var urlAfterStatusFilter = new Uri(s.Page.Url);
             var qsAfterStatusFilter = HttpUtility.ParseQueryString(urlAfterStatusFilter.Query);
             Assert.Equal(paymentRequestTitle, qsAfterStatusFilter["SearchText"]);
 
             // Filter by Amount
-            await s.Page.FillAsync("input[name='SearchText']", "0.1");
-            await s.Page.PressAsync("input[name='SearchText']", "Enter");
-            await s.Page.WaitForLoadStateAsync();
+            await s.SearchFilters.FillSearchText("0.1");
             var rowsAfterAmountSearch = s.Page.Locator("table tbody tr");
 
             await Expect(rowsAfterAmountSearch).ToHaveCountAsync(1);
@@ -1398,19 +1411,16 @@ namespace BTCPayServer.Tests
             Assert.Contains(paymentRequestTitle, amountRowText);
 
             // Filter by Id
-            await s.Page.FillAsync("input[name='SearchText']", payReqId);
-            await s.Page.PressAsync("input[name='SearchText']", "Enter");
-            await s.Page.WaitForLoadStateAsync();
+            await s.SearchFilters.FillSearchText(payReqId);
             var rowsAfterIdSearch = s.Page.Locator("table tbody tr");
             await Expect(rowsAfterIdSearch).ToHaveCountAsync(1);
             var idRowText = await rowsAfterIdSearch.First.InnerTextAsync();
             Assert.Contains(paymentRequestTitle, idRowText);
 
             // Clear All
-            await Expect(s.Page.Locator("#clearAllFiltersBtn")).ToHaveCountAsync(1);
-            await s.Page.ClickAsync("#clearAllFiltersBtn");
-            await s.Page.WaitForLoadStateAsync();
-            await Expect(s.Page.Locator("input[name='SearchText']")).ToHaveValueAsync(string.Empty);
+            await Expect(s.SearchFilters.ClearAllFiltersButton).ToHaveCountAsync(1);
+            await s.SearchFilters.ClearAllFilters();
+            await s.SearchFilters.AssertSearchText(string.Empty);
             var urlAfterClearAll = new Uri(s.Page.Url);
             var qsAfterClearAll = HttpUtility.ParseQueryString(urlAfterClearAll.Query);
             Assert.True(string.IsNullOrEmpty(qsAfterClearAll["SearchText"]));
@@ -1431,8 +1441,8 @@ namespace BTCPayServer.Tests
             //Filter by Label
             await s.Page.ClickAsync("#menu-item-PaymentRequests");
             await s.Page.WaitForLoadStateAsync();
-            await s.Page.ClickAsync("#LabelOptionsToggle");
-            await s.Page.ClickAsync($".dropdown-menu a:has-text(\"{labelName}\")");
+            await s.SearchFilters.LabelSelectorToggle.ClickAsync();
+            await s.Page.ClickAsync($"#LabelSelectorMenu button:has-text(\"{labelName}\")");
             await s.Page.WaitForLoadStateAsync();
             await TestUtils.EventuallyAsync(async () =>
             {
@@ -1444,15 +1454,9 @@ namespace BTCPayServer.Tests
 
             // Report
             await s.Page.ClickAsync("#view-report");
-            await s.Page.WaitForLoadStateAsync();
-            Assert.Contains("/reports", s.Page.Url);
-            var requestsTabClasses = await s.Page.GetAttributeAsync("#SectionNav a[data-view='Requests']", "class");
-            Assert.NotNull(requestsTabClasses);
-            Assert.Contains("active", requestsTabClasses);
-            await Expect(s.Page.Locator("#fromDate")).ToBeVisibleAsync();
-            await Expect(s.Page.Locator("#toDate")).ToBeVisibleAsync();
-            var reportHtml = await s.Page.ContentAsync();
-            Assert.Contains("\"viewName\":\"Requests\"", reportHtml);
+            await Expect(s.Page.Locator("#ReportViewOptionsToggle")).ToContainTextAsync("Requests");
+            await Expect(s.SearchFilters.DateRangeSelector).ToContainTextAsync("This month");
+            await Expect(s.Page.Locator("#ReportViewOptionsToggle")).ToContainTextAsync("Requests");
             await s.Page.WaitForSelectorAsync("#app table tbody tr");
             await Expect(s.Page.Locator("#app table tbody tr").Filter(new LocatorFilterOptions { HasText = "Payment Request" })).ToHaveCountAsync(2);
         }
@@ -1508,9 +1512,9 @@ namespace BTCPayServer.Tests
 
             await s.Page.ReloadAsync();
             await s.Page.WaitForLoadStateAsync();
-            await s.Page.WaitForSelectorAsync("#LabelOptionsToggle");
-            await s.Page.ClickAsync("#LabelOptionsToggle");
-            var labelItems = await s.Page.Locator(".dropdown-menu a").AllInnerTextsAsync();
+            await s.SearchFilters.LabelSelectorToggle.WaitForAsync();
+            await s.SearchFilters.LabelSelectorToggle.ClickAsync();
+            var labelItems = await s.Page.Locator("#LabelSelectorMenu .label-filter-text").AllInnerTextsAsync();
             var matches = labelItems.Where(t => t.Equals(labelOriginal, StringComparison.OrdinalIgnoreCase)).ToArray();
             Assert.Single(matches);
             Assert.Equal(labelOriginal, matches[0]);
@@ -1623,10 +1627,8 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage(partialText: "User successfully updated");
 
             await s.GoToServer(ServerNavPages.Users);
-            Assert.Contains(unapproved.RegisterDetails.Email, await s.Page.GetAttributeAsync("#SearchTerm", "value"));
-            Assert.Equal(1, await rows.CountAsync());
-            Assert.Contains(unapproved.RegisterDetails.Email, await rows.First.TextContentAsync());
-            Assert.Contains("Active", await s.Page.Locator("#UsersList tr.user-overview-row:first-child .user-status").TextContentAsync());
+            var users = new PMO.UsersPMO(s);
+            await users.AssertActive(unapproved.RegisterDetails.Email);
 
             await s.Logout();
             await s.GoToLogin();

@@ -48,11 +48,13 @@ namespace BTCPayServer.Tests
             await Server.StartAsync();
             var builder = new ConfigurationBuilder();
             builder.AddUserSecrets("AB0AC1DD-9D26-485B-9416-56A33F268117");
+            builder.AddEnvironmentVariables();
             var conf = builder.Build();
             var playwright = await Playwright.CreateAsync();
+            var headless = conf["PLAYWRIGHT_HEADLESS"];
             Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                Headless = Server.PayTester.InContainer || conf["PLAYWRIGHT_HEADLESS"] == "true",
+                Headless = !string.IsNullOrEmpty(headless) && bool.Parse(headless),
                 ExecutablePath = conf["PLAYWRIGHT_EXECUTABLE"],
                 SlowMo = 0, // 50 if you want to slow down
                 Args = ["--disable-frame-rate-limit"] // Fix slowness on linux (https://github.com/microsoft/playwright/issues/34625#issuecomment-2822015672)
@@ -428,7 +430,11 @@ namespace BTCPayServer.Tests
         public async Task ClickOnAllSectionLinks(string sectionSelector = "#menu-item")
         {
             List<string> links = [];
-            foreach (var locator in await Page.Locator($"{sectionSelector} .nav-link").AllAsync())
+            var linkLocator = Page.Locator($"{sectionSelector} a.nav-link");
+            if (await linkLocator.CountAsync() == 0)
+                linkLocator = Page.Locator($"{sectionSelector} a.dropdown-item");
+
+            foreach (var locator in await linkLocator.AllAsync())
             {
                 var link = await locator.GetAttributeAsync("href");
                 if (link is null or "/logout")
@@ -661,7 +667,15 @@ namespace BTCPayServer.Tests
 
             await Server.ExplorerNode.GenerateAsync(1);
             await Page.ReloadAsync();
-            await Page.Locator("#CancelWizard").ClickAsync();
+            try
+            {
+                await Page.Locator("#CancelWizard").ClickAsync();
+            }
+            catch
+            {
+                await TakeScreenshot("flaky-FundStoreWallet.png");
+                throw;
+            }
             return addressStr;
         }
 
@@ -918,7 +932,7 @@ namespace BTCPayServer.Tests
         public async Task AssertPageAccess(bool shouldHaveAccess, string url)
         {
             await GoToUrl(url);
-            await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            await Page.WaitForLoadStateAsync(LoadState.Load);
             var content = await Page.ContentAsync();
             Assert.DoesNotContain("404 - Page not found", content);
             if (shouldHaveAccess)
@@ -999,9 +1013,14 @@ namespace BTCPayServer.Tests
 
         public GlobalSearchPMO GlobalSearch => new GlobalSearchPMO(this);
 
+        public SearchFiltersPMO SearchFilters => new SearchFiltersPMO(this);
+
         public async Task WaitLoggedIn()
         {
-            await Page.WaitForURLAsync(ServerUri.AbsoluteUri + $"stores/{StoreId}");
+            if (StoreId is null)
+                await Page.WaitForURLAsync(ServerUri.AbsoluteUri + $"stores/create");
+            else
+                await Page.WaitForURLAsync(ServerUri.AbsoluteUri + $"stores/{StoreId}");
         }
     }
 }

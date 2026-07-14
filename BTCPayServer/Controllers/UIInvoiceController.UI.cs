@@ -151,6 +151,7 @@ namespace BTCPayServer.Controllers
                 Events = await _InvoiceRepository.GetInvoiceLogs(invoice.Id),
                 Metadata = metaData,
                 Archived = invoice.Archived,
+                Comment = invoice.Comment,
                 HasRefund = invoice.Refunds.Any(),
                 CanRefund = invoiceState.CanRefund(),
                 Refunds = invoice.Refunds,
@@ -202,7 +203,6 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.GetStoreByInvoiceId(i.Id);
             if (store is null)
                 return NotFound();
-
             if (!await ValidateAccessForArchivedInvoice(i))
                 return NotFound();
 
@@ -529,19 +529,12 @@ namespace BTCPayServer.Controllers
                 createPullPayment.Amount = Math.Round(createPullPayment.Amount - reduceByAmount, ppDivisibility);
             }
 
-            var ppId = await _paymentHostedService.CreatePullPayment(store, createPullPayment);
+            var ppId = await _paymentHostedService.CreateRefundPullPayment(store, createPullPayment, invoice.Id);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Store > Payouts.",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
-
-            ctx.Refunds.Add(new RefundData
-            {
-                InvoiceDataId = invoice.Id,
-                PullPaymentDataId = ppId
-            });
-            await ctx.SaveChangesAsync(cancellationToken);
 
             // TODO: Having dedicated UI later on
             return RedirectToAction(nameof(UIPullPaymentController.ViewPullPayment),
@@ -608,6 +601,33 @@ namespace BTCPayServer.Controllers
                     ? StringLocalizer["The invoice has been archived and will no longer appear in the invoice list by default."].Value
                     : StringLocalizer["The invoice has been unarchived and will appear in the invoice list by default again."].Value
             });
+            return RedirectToAction(nameof(Invoice), new { invoiceId });
+        }
+
+        [HttpPost("invoices/{invoiceId}/comment")]
+        [HttpPost("/stores/{storeId}/invoices/{invoiceId}/comment")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
+        public async Task<IActionResult> Comment(string invoiceId, string comment, string? returnUrl = null)
+        {
+            var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery
+            {
+                InvoiceId = [invoiceId],
+                StoreId = [HttpContext.GetStoreData().Id],
+                UserId = GetUserIdForInvoiceQuery()
+            })).FirstOrDefault();
+            if (invoice is null)
+                return NotFound();
+
+            await _InvoiceRepository.UpdateInvoiceComment(invoiceId, comment);
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Severity = StatusMessageModel.StatusSeverity.Success,
+                Message = string.IsNullOrWhiteSpace(comment)
+                    ? StringLocalizer["The comment has been removed."].Value
+                    : StringLocalizer["The comment has been saved."].Value
+            });
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
             return RedirectToAction(nameof(Invoice), new { invoiceId });
         }
 
@@ -1059,10 +1079,10 @@ namespace BTCPayServer.Controllers
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
         public async Task<IActionResult> ListInvoices(InvoicesModel? model = null)
         {
-            model = this.ParseListQuery(model ?? new InvoicesModel());
-            var timezoneOffset = model.TimezoneOffset ?? 0;
-            var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
-            var fs = new SearchString(searchTerm, timezoneOffset);
+            model ??= new InvoicesModel();
+            var fs = model.GetSearch();
+            if (model.FilterCommand is not null)
+                return model.Redirect(Request);
             string? storeId = model.StoreId;
             var storeIds = new HashSet<string>();
             if (storeId is not null)
@@ -1074,11 +1094,8 @@ namespace BTCPayServer.Controllers
                 foreach (var i in l)
                     storeIds.Add(i);
             }
-            model.Search = fs;
-            model.SearchText = fs.TextCombined;
-
             var apps =  await _appService.GetAllApps(User.GetIdOrNull(), false, storeId);
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps, timezoneOffset);
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps);
             invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Take = model.Count;
             invoiceQuery.Skip = model.Skip;
@@ -1107,22 +1124,25 @@ namespace BTCPayServer.Controllers
                     RedirectUrl = invoice.RedirectURL?.AbsoluteUri ?? string.Empty,
                     Amount = invoice.Price,
                     Currency = invoice.Currency,
+                    Comment = invoice.Comment,
                     CanMarkInvalid = state.CanMarkInvalid(),
                     CanMarkSettled = state.CanMarkComplete(),
                     Details = InvoicePopulatePayments(invoice),
                     HasRefund = invoice.Refunds.Any()
                 });
             }
+
+            ViewData.SetPageTimeZone(fs);
             return View(model);
         }
 
-        private InvoiceQuery GetInvoiceQuery(SearchString fs, ListAppsViewModel.ListAppViewModel[] apps, int timezoneOffset = 0)
+        private InvoiceQuery GetInvoiceQuery(SearchString fs, ListAppsViewModel.ListAppViewModel[] apps)
         {
             var query = new InvoiceQuery()
             {
                 UserId = GetUserIdForInvoiceQuery()
             };
-            query.FillFromSearchText(fs, timezoneOffset);
+            query.FillFromSearchText(fs);
             if (fs.GetFilterArray("appid") is { } appIds)
             {
                 var appsById = apps.ToDictionary(a => a.Id);

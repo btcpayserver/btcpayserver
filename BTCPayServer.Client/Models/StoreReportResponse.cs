@@ -1,16 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models;
 
-public class StoreReportRequest
-{
-    public string ViewName { get; set; }
-    public TimePeriod TimePeriod { get; set; }
-}
 public class StoreReportResponse
 {
     public class Field
@@ -48,12 +42,4 @@ public class ChartDefinition
     public bool HasGrandTotal { get; set; }
     public List<string> Aggregates { get; set; } = new List<string>();
     public List<string> Filters { get; set; } = new List<string>();
-}
-
-public class TimePeriod
-{
-    [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
-    public DateTimeOffset? From { get; set; }
-    [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
-    public DateTimeOffset? To { get; set; }
 }

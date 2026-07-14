@@ -1,6 +1,7 @@
 @model BTCPayServer.Models.InvoicingModels.CreateInvoiceModel
 @{
     ViewData.SetLayoutModel(new("Invoices", StringLocalizer["Create Invoices"]));
+    ViewData.SetBreadcrumbs([new(StringLocalizer["Invoices"], Action: nameof(BTCPayServer.Controllers.UIInvoiceController.ListInvoices), RouteValues: new { Model.StoreId })]);
 }
 
 @section PageFootContent {
@@ -26,15 +27,7 @@
 
 <form asp-action="CreateInvoice" method="post" id="create-invoice-form">
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" text-translate="true">Invoices</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-            </ol>
-            <h2>@ViewData["Title"]</h2>
-        </nav>
+		<vc:breadcrumb />
 		<input id="page-primary" type="submit" value="Create" class="btn btn-primary" />
     </div>
 

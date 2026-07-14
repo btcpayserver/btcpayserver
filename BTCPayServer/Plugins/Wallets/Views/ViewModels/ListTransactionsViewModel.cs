@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using BTCPayServer;
+using BTCPayServer.Components.LabelSelector;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Services.Invoices;
@@ -28,16 +28,25 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
             public string InvoiceId { get; set; }
             public TransactionHistoryLine HistoryLine { get; set; }
         }
-        public HashSet<(string Text, string Color, string TextColor, long UsageCount)> Labels { get; set; } = new();
-        public List<(string Text, string Color, string TextColor, long UsageCount)> PopularLabels { get; set; } = new();
+        public HashSet<LabelSelectorItemViewModel> Labels { get; set; } = new();
         public List<TransactionViewModel> Transactions { get; set; } = new();
         public override int CurrentPageCount => Transactions.Count;
         public string CryptoCode { get; set; }
         public PendingTransaction[] PendingTransactions { get; set; }
         public List<string> Rates { get; set; } = new();
-        public string SearchText { get; set; }
-        public string SearchInputText { get; set; }
-        public SearchString Search { get; set; }
         public bool HasFilters { get; set; }
+
+        protected override void AddUIFilters(SearchString search)
+        {
+            base.AddUIFilters(search);
+            search.UIFilterTypes.Add("direction");
+            LabelSelector.AddUIFilters(search);
+        }
+
+        protected override void RunFilterCommand(SearchString search)
+        {
+            base.RunFilterCommand(search);
+            LabelSelector.RunFilterCommand(search, FilterCommand);
+        }
     }
 }

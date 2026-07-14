@@ -76,9 +76,8 @@ public class UIEmailLogControllerBase(ApplicationDbContextFactory dbContextFacto
         return context.RedirectToLogsList(redirectUrl);
     }
 
-    private static MailboxAddress[] ParseAddresses(string[] addresses)
-        => addresses.Select(a => MailboxAddressValidator.TryParse(a, out var mb) ? mb : null).Where(mb => mb is not null).ToArray()!;
-
+    private static MailboxAddress[] ParseAddresses(string[]? addresses)
+        => addresses?.Select(a => MailboxAddressValidator.TryParse(a, out var mb) ? mb : null).OfType<MailboxAddress>().ToArray() ?? Array.Empty<MailboxAddress>();
 }
 
 public class EmailLogsViewModel

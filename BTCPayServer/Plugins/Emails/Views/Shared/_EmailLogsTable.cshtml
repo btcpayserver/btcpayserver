@@ -32,7 +32,7 @@
 						}
 					</td>
 					<td>@blob.Trigger</td>
-					<td>@string.Join(", ", blob.To)</td>
+					<td>@string.Join(", ", blob.To ?? Array.Empty<string>())</td>
 					<td>@blob.Subject</td>
 					<td>@log.Timestamp.ToBrowserDate()</td>
 				</tr>

@@ -245,13 +245,16 @@ namespace BTCPayServer.Tests
                 $"{{\"type\":\"tx\",\"ref\":\"not-a-txid\",\"label\":\"bad ref\"}}\n" +
                 $"{{\"type\":\"tx\",\"ref\":\"{txId}\",\"label\":\"\"}}\n" +
                 $"{{\"type\":\"tx\",\"ref\":\"{txId}\"}}\n" +
+                $"{{\"type\":\"tx\",\"ref\":\"{txId}\",\"label\":{{}}}}\n" +
+                $"{{\"type\":\"tx\",\"ref\":[1],\"label\":\"array ref\"}}\n" +
+                $"{{\"type\":5,\"ref\":\"{txId}\",\"label\":\"numeric type\"}}\n" +
                 "not json\n";
 
             var result = await Bip329Import.Parse(new StringReader(input), network);
 
             Assert.Equal(3, result.Labels.Count);
             // duplicate line deduped, invalid lines skipped, blank line ignored
-            Assert.Equal(6, result.SkippedLines);
+            Assert.Equal(9, result.SkippedLines);
             Assert.Contains(result.Labels, l => l is { ObjectType: WalletObjectData.Types.Tx, Label: "fee reimbursement" } && l.ObjectId == txId);
             Assert.Contains(result.Labels, l => l is { ObjectType: WalletObjectData.Types.Address, Label: "donations" } && l.ObjectId == address);
             Assert.Contains(result.Labels, l => l is { ObjectType: WalletObjectData.Types.Utxo, Label: "change" } && l.ObjectId == OutPoint.Parse($"{txId}-1").ToString());

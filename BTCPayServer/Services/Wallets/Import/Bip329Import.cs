@@ -46,11 +46,11 @@ namespace BTCPayServer.Services.Wallets.Import
             {
                 return null;
             }
-            var label = obj["label"]?.Value<string>()?.Trim();
-            var reference = obj["ref"]?.Value<string>();
+            var label = GetString(obj, "label")?.Trim();
+            var reference = GetString(obj, "ref");
             if (string.IsNullOrEmpty(label) || string.IsNullOrEmpty(reference))
                 return null;
-            return obj["type"]?.Value<string>() switch
+            return GetString(obj, "type") switch
             {
                 "tx" when uint256.TryParse(reference, out var txId) =>
                     new ImportedLabel(WalletObjectData.Types.Tx, txId.ToString(), label),
@@ -61,6 +61,9 @@ namespace BTCPayServer.Services.Wallets.Import
                 _ => null
             };
         }
+
+        static string? GetString(JObject obj, string name)
+            => obj[name] is JValue { Type: JTokenType.String, Value: string s } ? s : null;
 
         static string? TryParseAddress(string str, Network network)
         {

@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Logging;
@@ -39,9 +40,9 @@ public abstract class EmailSender(IBackgroundJobClient jobClient, EventAggregato
             var blob = new EmailLogBlob
             {
                 Trigger = trigger ?? "Unknown",
-                To = Array.ConvertAll(email, m => m.ToString()),
-                CC = Array.ConvertAll(cc, m => m.ToString()),
-                BCC = Array.ConvertAll(bcc, m => m.ToString()),
+                To = Array.ConvertAll(email ?? [], m => m.ToString()),
+                CC = Array.ConvertAll(cc ?? [], m => m.ToString()),
+                BCC = Array.ConvertAll(bcc ?? [], m => m.ToString()),
                 Subject = subject,
                 Body = message
             };
@@ -68,7 +69,7 @@ public abstract class EmailSender(IBackgroundJobClient jobClient, EventAggregato
                 log.SetBlob(blob);
                 await using var ctx = dbContextFactory.CreateContext();
                 ctx.EmailLogs.Add(log);
-                await ctx.SaveChangesAsync(cancellationToken);
+                await ctx.SaveChangesAsync(CancellationToken.None);
             }
         }, TimeSpan.Zero);
     }

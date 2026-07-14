@@ -17,7 +17,7 @@
 
 <form method="post" asp-action="EditPullPayment" asp-route-pullPaymentId="@Model.Id">
     <div class="sticky-header">
-        <vc:breadcrumb />
+        <vc:title-header />
         <div>
             @if (string.IsNullOrEmpty(Model.Id))
             {

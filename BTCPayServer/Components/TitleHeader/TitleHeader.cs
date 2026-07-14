@@ -1,12 +1,11 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Linq;
-using BTCPayServer;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Components.Breadcrumb;
 
-public class Breadcrumb : ViewComponent
+public class TitleHeader : ViewComponent
 {
     public IViewComponentResult Invoke(string? title = null, string? documentationUrl = null)
     {

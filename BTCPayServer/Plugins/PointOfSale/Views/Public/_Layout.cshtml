@@ -8,7 +8,7 @@
 
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
-    ViewData["Title"] = string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title;
+    ViewData.SetTitle(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title);
     ViewData["StoreBranding"] = Model.StoreBranding;
     Layout = null;
 

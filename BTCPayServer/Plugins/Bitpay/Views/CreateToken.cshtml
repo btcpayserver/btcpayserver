@@ -11,14 +11,7 @@
 
 <form method="post">
     <div class="sticky-header">
-        @if (store != null)
-        {
-            <vc:breadcrumb />
-        }
-        else
-        {
-            <h2>@ViewData["Title"]</h2>
-        }
+        <vc:title-header />
         <input id="page-primary" type="submit" value="Request Pairing" class="btn btn-primary" />
     </div>
     <partial name="_StatusMessage" />

@@ -193,7 +193,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     if (
                         request.Checkout.PaymentMethods[i] is not { } pm ||
                         !PaymentMethodId.TryParse(pm, out var pm1) ||
-                        _handlers.TryGet(pm1) is null)
+                        _handlers.TryGet(pm1) is null || pm1.ToString() == PaymentTypes.EXTERNAL.GetPaymentMethodId("MISC").ToString())
                     {
                         request.AddModelError(invoiceRequest => invoiceRequest.Checkout.PaymentMethods[i],
                             "Invalid PaymentMethodId", this);
@@ -267,6 +267,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return await GetInvoice(storeId, invoiceId);
         }
 
+
         [Authorize(Policy = Policies.CanRegisterExternalPayment, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/payments/external")]
         [HttpPost("~/api/v1/invoices/{invoiceId}/payments/external")]
@@ -286,13 +287,30 @@ namespace BTCPayServer.Controllers.Greenfield
             if (request.Rate is <= 0.0m)
                 ModelState.AddModelError(nameof(request.Rate), "The rate should be greater than 0.");
             if (request.Rate is not null && request.SettlementCurrency is null)
-                ModelState.AddModelError(nameof(request.Rate), "A rate can only be provided together with a settlementCurrency.");
-            if (!ModelState.IsValid)
-                return this.CreateValidationError(ModelState);
+                ModelState.AddModelError(nameof(request.Rate), "A rate can only be provided together with a settlement currency.");
+           
 
             if (!_handlers.TryGetValue(PaymentTypes.EXTERNAL.GetPaymentMethodId("MISC"), out var h) || h is not ExternalPaymentMethodHandler handler)
             {
                 return this.CreateAPIError(404, "external-payment-method-disabled", "The external payment method is not available on this server.");
+            }
+
+            if (store.GetPaymentMethodConfigs().TryGetValue(handler.PaymentMethodId, out var rawConfig))
+            {
+                var config = handler.ParsePaymentMethodConfig(rawConfig);
+                if (config.AllowedLabels.Count > 0 && (request.Label is null || !config.AllowedLabels.Contains(request.Label, StringComparer.OrdinalIgnoreCase)))
+                {
+                    ModelState.AddModelError(nameof(request.Label), $"This store does not support external payment from {request.Label}.");
+                }
+            }
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            var isDuplicateReference = invoice.GetPayments(false).Where(p => p.PaymentMethodId == handler.PaymentMethodId).Select(p => p.GetDetails<ExternalPaymentData>(handler))
+                .Any(d => d is not null && string.Equals(d.Reference, request.Reference, StringComparison.Ordinal));
+            if (isDuplicateReference)
+            {
+                return this.CreateAPIError(409, "duplicate-payment", "A payment with this reference has already been registered on this invoice.");
             }
 
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
@@ -351,10 +369,11 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var payment = await _paymentService.AddPayment(paymentData, new HashSet<string> { request.Reference });
             if (payment is null)
-                return this.CreateAPIError(409, "duplicate-payment", "This payment could not be registered. Invoice not found or already recorded.");
+                return this.CreateAPIError(409, "duplicate-payment", "This payment could not be registered.");
 
             _eventAggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
-            return await GetInvoice(storeId, invoiceId);
+            var updatedInvoice = await _invoiceRepository.GetInvoice(invoice.Id);
+            return Ok(ToModel(updatedInvoice, includePaymentMethods: true));
         }
 
         [Authorize(Policy = Policies.CanModifyInvoices,

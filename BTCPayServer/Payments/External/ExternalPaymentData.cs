@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace BTCPayServer.Payments.External;
 
 public class ExternalPaymentData
@@ -14,6 +16,7 @@ public class ExternalPaymentData
 public class ExternalPaymentMethodConfig
 {
     public string Description { get; set; }
+    public List<string> AllowedLabels { get; set; } = new();
 }
 
 

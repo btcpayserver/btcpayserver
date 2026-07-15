@@ -374,6 +374,7 @@ namespace BTCPayServer.Hosting
             services.AddUIExtension("checkout-end", "Lightning/LightningLikeMethodCheckout");
             services.AddUIExtension("store-invoices-payments", "Bitcoin/ViewBitcoinLikePaymentData");
             services.AddUIExtension("store-invoices-payments", "Lightning/ViewLightningLikePaymentData");
+            services.AddUIExtension("store-invoices-payments", "External/ViewExternalPaymentData");
 
             services.AddSingleton<Services.NBXplorerConnectionFactory>();
             services.AddSingleton<IHostedService, Services.NBXplorerConnectionFactory>(o => o.GetRequiredService<Services.NBXplorerConnectionFactory>());

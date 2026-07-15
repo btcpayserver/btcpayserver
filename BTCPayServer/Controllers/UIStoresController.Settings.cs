@@ -11,6 +11,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.External;
 using BTCPayServer.Payments.Lightning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,6 +26,9 @@ public partial class UIStoresController
     {
         var store = HttpContext.GetStoreDataOrNull();
         if (store == null) return NotFound();
+
+        var externalConfig = store.GetPaymentMethodConfigs().TryGetValue(PaymentTypes.EXTERNAL.GetPaymentMethodId("MISC"), out var raw)
+            ? raw.ToObject<ExternalPaymentMethodConfig>() : new ExternalPaymentMethodConfig();
 
         var storeBlob = store.GetStoreBlob();
         var vm = new GeneralSettingsViewModel
@@ -47,6 +51,7 @@ public partial class UIStoresController
             MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes,
             SpeedPolicy = store.SpeedPolicy,
             ShowRecommendedFee = storeBlob.ShowRecommendedFee,
+            ExternalPaymentAllowedLabels = string.Join(", ", externalConfig?.AllowedLabels ?? []),
             RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget
         };
 
@@ -161,6 +166,18 @@ public partial class UIStoresController
         }
         if (!ModelState.IsValid)
             return View(model);
+
+        var externalPmi = PaymentTypes.EXTERNAL.GetPaymentMethodId("MISC");
+        var existingExternalConfig = CurrentStore.GetPaymentMethodConfigs().TryGetValue(externalPmi, out var rawExternal)
+            ? rawExternal.ToObject<ExternalPaymentMethodConfig>() ?? new ExternalPaymentMethodConfig() : new ExternalPaymentMethodConfig();
+
+        var newAllowedLabels = model.ExternalPaymentAllowedLabels?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList() ?? [];
+        if (!existingExternalConfig.AllowedLabels.SequenceEqual(newAllowedLabels, StringComparer.OrdinalIgnoreCase))
+        {
+            existingExternalConfig.AllowedLabels = newAllowedLabels;
+            CurrentStore.SetPaymentMethodConfig(_handlers[externalPmi], existingExternalConfig);
+            needUpdate = true;
+        }
 
         if (CurrentStore.SetStoreBlob(blob))
         {

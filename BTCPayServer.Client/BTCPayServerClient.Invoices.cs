@@ -87,6 +87,12 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<InvoiceData>($"api/v1/invoices/{invoiceId}/status", request, HttpMethod.Post, token);
     }
 
+    public virtual async Task<InvoiceData> RegisterExternalPayment(string invoiceId, RegisterExternalPaymentRequest request, CancellationToken token = default)
+    {
+        if (request == null) throw new ArgumentNullException(nameof(request));
+        return await SendHttpRequest<InvoiceData>($"api/v1/invoices/{invoiceId}/payments/external", request, HttpMethod.Post, token);
+    }
+
     public virtual async Task<InvoiceData> UnarchiveInvoice(string invoiceId, CancellationToken token = default)
     {
         return await SendHttpRequest<InvoiceData>($"api/v1/invoices/{invoiceId}/unarchive", null, HttpMethod.Post, token);

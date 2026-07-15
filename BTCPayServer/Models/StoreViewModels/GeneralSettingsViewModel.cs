@@ -52,6 +52,9 @@ namespace BTCPayServer.Models.StoreViewModels
         [Range(0, 100)]
         public double PaymentTolerance { get; set; }
 
+        [Display(Name = "External payment labels (comma-separated, leave blank to allow any)")]
+        public string? ExternalPaymentAllowedLabels { get; set; }
+
         [Display(Name = "Default currency")]
         [MaxLength(10)]
         public string DefaultCurrency { get; set; }

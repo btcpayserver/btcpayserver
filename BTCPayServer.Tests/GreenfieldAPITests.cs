@@ -217,6 +217,61 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanRegisterExternalPayment()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            user.GrantAccess();
+            await user.RegisterDerivationSchemeAsync("BTC");
+            var client = await user.CreateClient(Policies.CanModifyInvoices);
+            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest { Amount = 1000.0m, Currency = "USD" });
+
+            var registered = await client.RegisterExternalPayment(invoice.Id, new RegisterExternalPaymentRequest
+            {
+                Amount = 1000.0m,
+                Reference = "cash-receipt-0001",
+                Label = "Cash"
+            });
+            Assert.Equal(1000.0m, registered.PaidAmount);
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                invoice = await client.GetInvoice(invoice.Id);
+                Assert.Equal(InvoiceStatus.Settled, invoice.Status);
+            });
+
+            var methods = await client.GetInvoicePaymentMethods(invoice.Id);
+            var external = Assert.Single(methods, m => m.PaymentMethodId == "MISC-EXTERNAL");
+            var payment = Assert.Single(external.Payments);
+            Assert.Equal("Settled", payment.Status.ToString());
+
+            // Duplicate reference on the same invoice should be rejected, not silently double-counted.
+            await AssertAPIError("duplicate-payment", () => client.RegisterExternalPayment(invoice.Id, new RegisterExternalPaymentRequest
+            {
+                Amount = 1000.0m,
+                Reference = "cash-receipt-0001"
+            }));
+
+            // Validation: amount must be positive, reference is required.
+            await AssertValidationError(new[] { "Amount", "Reference" }, () => client.RegisterExternalPayment(invoice.Id, new RegisterExternalPaymentRequest
+            {
+                Amount = 0.0m,
+                Reference = ""
+            }));
+
+            // Permission enforcement: a key without CanRegisterExternalPayment (or anything that
+            // includes it) must be rejected, even though it can otherwise view/modify the store.
+            var clientWithoutPermission = await user.CreateClient(Policies.CanViewInvoices);
+            await AssertAPIError("missing-permission", () => clientWithoutPermission.RegisterExternalPayment(invoice.Id, new RegisterExternalPaymentRequest
+            {
+                Amount = 1.0m,
+                Reference = "should-fail"
+            }));
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanCreateReadAndDeleteFiles()
         {
             using var tester = CreateServerTester(newDb: true);

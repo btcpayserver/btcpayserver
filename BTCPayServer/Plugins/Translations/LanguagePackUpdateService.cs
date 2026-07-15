@@ -21,7 +21,8 @@ namespace BTCPayServer.Plugins.Translations
             string? MaintainerUrl,
             DateTimeOffset? Updated,
             string File,
-            string Sha)
+            string Sha,
+            bool Rtl)
         {
             internal static LanguageManifestEntry FromDto(ManifestLanguageDto dto)
             {
@@ -37,7 +38,8 @@ namespace BTCPayServer.Plugins.Translations
                     url,
                     updated,
                     dto.File ?? string.Empty,
-                    dto.Sha ?? string.Empty);
+                    dto.Sha ?? string.Empty,
+                    dto.Rtl ?? false);
             }
 
             private static (string? Handle, string? Url) SplitMaintainer(string? raw)
@@ -54,7 +56,8 @@ namespace BTCPayServer.Plugins.Translations
             string? Maintainer,
             string? Updated,
             string? File,
-            string? Sha);
+            string? Sha,
+            bool? Rtl);
 
         internal record ManifestRootDto(ManifestLanguageDto[]? Languages);
 
@@ -87,7 +90,7 @@ namespace BTCPayServer.Plugins.Translations
 
         public Task<LanguageManifestEntry[]> GetManifestLanguages() => GetEntries();
 
-        public async Task<(string translationsJson, string version)> FetchLanguagePackFromRepository(string language)
+        public async Task<(string translationsJson, string version, bool rtl)> FetchLanguagePackFromRepository(string language)
         {
             var entries = await GetEntries();
             var entry = entries.FirstOrDefault(e =>
@@ -108,7 +111,7 @@ namespace BTCPayServer.Plugins.Translations
                 throw new InvalidOperationException(
                     $"Downloaded language pack '{language}' SHA-256 mismatch: expected {entry.Sha}, got {actualSha}. The download may be corrupt or tampered with.");
 
-            return (Encoding.UTF8.GetString(translationsBytes), entry.Sha);
+            return (Encoding.UTF8.GetString(translationsBytes), entry.Sha, entry.Rtl);
         }
 
         private static string UpdateCacheKey(string language) => $"translations.update.{language}";

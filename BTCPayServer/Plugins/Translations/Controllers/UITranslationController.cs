@@ -199,10 +199,12 @@ public class UITranslationController(
 
         Translations translations;
         string version;
+        bool rtl;
         try
         {
             var result = await languagePackUpdateService.FetchLanguagePackFromRepository(language);
             version = result.Item2;
+            rtl = result.Item3;
             if (!Translations.TryCreateFromJson(result.Item1, out translations))
             {
                 TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Downloaded language pack is invalid"].Value;
@@ -241,7 +243,7 @@ public class UITranslationController(
         }
 
         await localizer.Save(existingTranslation, translations);
-        await localizer.UpdateVersion(language, version);
+        await localizer.UpdateMetadata(language, version, rtl);
         languagePackUpdateService.InvalidateCache(language);
         return RedirectToAction(nameof(ListTranslations));
     }

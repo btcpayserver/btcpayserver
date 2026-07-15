@@ -1,0 +1,212 @@
+/* RTL tweaks RTLCSS can't infer */
+body {
+    direction: rtl;
+    /* don't remove this font-family... the default is ugly! */
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* LTR islands: code/config editors + numeric inputs */
+#globalNav,
+#mainCode,
+#TemplateConfig,
+#PrimarySource_Script,
+#FormConfig,
+.note-codable,
+#HtmlMetaTags,
+#additional-embed-payment-button .p-3,
+#additional-notification .p-3,
+input[type="number"], input[inputmode="numeric"], input[inputmode="decimal"]
+{
+    direction: ltr;
+    text-align: left;
+}
+
+input[type="number"],
+input[inputmode="numeric"],
+input[inputmode="decimal"]
+{
+    padding-right: 5px;
+    padding-left: 10px;
+}
+
+/* Top nav search dropdown */
+#globalNav .globalSearch-shell,
+.globalSearch-item-subtitle
+{
+    direction: rtl;
+    text-align: right;
+}
+
+/* Reduce the top nav menus height */
+#globalNav .nav-link {
+    padding-top: 0 !important;
+    padding-bottom: 5px !important;
+}
+
+/* Notifications box */
+#NotificationsDropdown {
+    direction: rtl;
+}
+
+/* Fix directions in top nav menus
+   (those 3 items need a class or id to replace this) */
+#globalNavAccountMenu > li:nth-child(1) div {
+    width: 100%;
+    text-align: center;
+}
+
+#globalNavAccountMenu > li:nth-child(2) div,
+#globalNavAccountMenu > li:nth-child(3) div {
+    direction: rtl;
+}
+
+#StatusUpdates {
+    left: unset;
+    right: var(--content-padding-horizontal) !important;
+}
+
+/* Identifiers (addresses/hashes/ids): keep LTR, start/end spans else reverse */
+.truncate-center {
+    direction: ltr;
+}
+.truncate-center-truncated {
+    text-align: left;
+}
+
+/* Code/config/log islands stay LTR */
+pre,
+code,
+samp,
+kbd,
+.hljs {
+    direction: ltr;
+    text-align: left;
+}
+
+/* Mirror directional sprite icons */
+.icon-caret-right,
+.icon-caret-left,
+.icon-back {
+    transform: scaleX(-1);
+}
+
+/* Logo and badge */
+#StoreSelectorHome {
+    position: relative;
+    direction: ltr;
+    float: left;
+    margin-bottom: 10px;
+}
+#StoreSelectorHome .badge {
+    position: unset;
+}
+
+/* Remove the scrollbar */
+/*
+#mainNav {
+    overflow-y: scroll;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+#mainNav::-webkit-scrollbar {
+    display: none;
+}
+*/
+
+/* Menu sections header */
+#mainNav .accordion-button,
+#mainNav .accordion-button a {
+    font-size: 1.5em !important;
+    color: rgba(var(--btcpay-body-link-rgb), var(--btcpay-link-opacity, 1));
+}
+#mainNav .accordion-button .icon{
+    position: absolute;
+    left: 0;
+}
+
+/* Dashboard widgets headers
+   ToDo: change the Html/translation to use "Key value {0}" */
+#Dashboard .widget.app-sales header.mb-3 h3 {
+    direction: ltr;
+}
+
+/* Fix to reports search button*/
+#searchGroup #searchBtn.btn.btn-primary {
+    display: inherit;
+}
+
+/* wizard.css / editor.css flips (not run through RTLCSS) */
+#wizard-navbar button::after {
+    left: auto;
+    right: 0;
+}
+#wizard-navbar .cancel {
+    margin-left: 0;
+}
+.list-group-item .image + .content {
+    padding-left: 0;
+    padding-right: .5rem;
+}
+.list-group-item .icon-caret-right {
+    margin-right: 0;
+    margin-left: 1.5rem;
+}
+.editor .nested-fields .list-group-item {
+    padding-right: 0;
+    padding-left: 1rem;
+}
+
+/* Crowdfund: widgets LTR, content RTL */
+/* TO DO: add an id to the container row and replace here */
+#app > div:nth-child(4),
+#app > div:nth-child(5) {
+    direction: ltr;
+}
+
+#crowdfund-body-description-container,
+#crowdfund-body-contribution-container {
+    direction: rtl;
+}
+
+/* Reduce the space between the previous ids...
+   equivalent to col-lg-8 */
+#crowdfund-body-description-container {
+    min-width: 62%;
+}
+
+/* POS: pin last item to inline-start */
+.posItem--last {
+    margin-left: auto;
+    margin-right: unset !important;
+}
+
+.modal-header .btn-close {
+    position: absolute;
+    left: 10px;
+}
+
+#Spread {
+    flex: inherit;
+    width: 100px !important;
+}
+
+.fee-col .text-muted {
+    display: none;
+}
+
+.invoice-payments .w-75px {
+    width: 175px;
+}
+
+@media (max-width: 1399.98px) {
+    #SearchText {
+        max-width: 42% !important;
+    }
+}
+
+@media (max-width: 991px) {
+    #SearchText {
+        max-width: none !important;
+    }
+}

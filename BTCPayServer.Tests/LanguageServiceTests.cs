@@ -28,6 +28,11 @@ namespace BTCPayServer.Tests
             public HttpClient CreateClient(string name) => new(handler, false);
         }
 
+        private class RealHttpClientFactory : IHttpClientFactory
+        {
+            public HttpClient CreateClient(string name) => new();
+        }
+
         private class StubHttpMessageHandler : HttpMessageHandler
         {
             private readonly Dictionary<string, Func<HttpResponseMessage>> _responses = new();
@@ -111,6 +116,31 @@ namespace BTCPayServer.Tests
             Assert.Null(german.MaintainerHandle);
             Assert.Null(german.MaintainerUrl);
             Assert.Null(german.Updated);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task LanguagePackUpdateService_ParsesRtlFlag()
+        {
+            // Hits the real translator manifest
+            var service = new LanguagePackUpdateService(new RealHttpClientFactory(), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
+            var languages = await service.GetManifestLanguages();
+
+            Assert.True(languages.Single(l => l.Name == "Arabic").Rtl);
+            Assert.False(languages.Single(l => l.Name == "French").Rtl);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task LanguagePackUpdateService_FetchReturnsRtlFromManifest()
+        {
+
+            var service = new LanguagePackUpdateService(new RealHttpClientFactory(), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
+            var (translationsJson, version, rtl) = await service.FetchLanguagePackFromRepository("Arabic");
+
+            Assert.True(rtl);
+            Assert.False(string.IsNullOrEmpty(version));
+            Assert.NotNull(JObject.Parse(translationsJson));
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -210,9 +240,10 @@ namespace BTCPayServer.Tests
             });
 
             var service = new LanguagePackUpdateService(new StubHttpClientFactory(handler), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
-            var (translationsJson, version) = await service.FetchLanguagePackFromRepository("French");
+            var (translationsJson, version, rtl) = await service.FetchLanguagePackFromRepository("French");
 
             Assert.Equal(expectedSha, version, ignoreCase: true);
+            Assert.False(rtl);
             Assert.Equal("Bonjour", JObject.Parse(translationsJson)["Hello"]?.ToString());
         }
 
@@ -495,6 +526,37 @@ namespace BTCPayServer.Tests
                 ("lol", null)]);
             await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id='French'");
             await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id='English'");
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanStoreAndReadRtlMetadata()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var localizer = tester.PayTester.GetService<LocalizerService>();
+            var factory = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            var db = factory.CreateContext().Database.GetDbConnection();
+
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('Arabic', 'English', 'LanguagePack')");
+
+            await localizer.UpdateMetadata("Arabic", "sha-ar", true);
+
+            var loaded = await localizer.GetTranslations("Arabic");
+            Assert.True(loaded.Rtl);
+
+            var translation = await localizer.GetTranslation("Arabic");
+            Assert.NotNull(translation);
+            Assert.Equal("sha-ar", translation.Metadata["version"]?.ToString());
+            Assert.True(translation.Metadata["rtl"]?.Value<bool>());
+
+            await localizer.UpdateMetadata("Arabic", "sha-ar2", false);
+            Assert.False((await localizer.GetTranslations("Arabic")).Rtl);
+            Assert.Equal("sha-ar2", (await localizer.GetTranslation("Arabic"))!.Metadata["version"]?.ToString());
+
+            Assert.False((await localizer.GetTranslations("English")).Rtl);
+
+            await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id='Arabic'");
         }
 
         [Fact(Timeout = TestTimeout)]

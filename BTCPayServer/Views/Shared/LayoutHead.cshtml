@@ -1,11 +1,13 @@
 @using BTCPayServer.Services
+@using BTCPayServer.Plugins.Translations
 @inject PoliciesSettings PoliciesSettings
 @inject UriResolver UriResolver
+@inject LocalizerService LocalizerService
 @{
     ViewData.TryGetValue("StoreBranding", out var storeBranding);
     var store = Context.GetStoreDataOrNull();
     var storeBlob = store?.GetStoreBlob();
-    var isBackend = store != null && storeBranding == null; 
+    var isBackend = store != null && storeBranding == null;
     if (isBackend && storeBlob.ApplyBrandColorToBackend)
     {
         storeBranding = await StoreBrandingViewModel.CreateAsync(Context.Request, UriResolver, storeBlob);
@@ -19,11 +21,23 @@
 }
 <title>@ViewData["Title"]</title>
 @* CSS *@
-<link href="~/main/bootstrap/bootstrap.css" asp-append-version="true"  rel="stylesheet" />
+@{
+    var isRtl = LocalizerService.IsRtl;
+}
+@if (isRtl)
+{
+    <link href="~/main/rtl/bootstrap.rtl.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/rtl/layout.rtl.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/rtl/site.rtl.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/rtl.css" asp-append-version="true" rel="stylesheet" />
+} else
+{
+    <link href="~/main/bootstrap/bootstrap.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/layout.css" asp-append-version="true"  rel="stylesheet" />
+    <link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
+}
 <link href="~/vendor/flatpickr/flatpickr.css" asp-append-version="true"  rel="stylesheet" />
 <link href="~/main/fonts/OpenSans.css" asp-append-version="true"  rel="stylesheet" />
-<link href="~/main/layout.css" asp-append-version="true"  rel="stylesheet" />
-<link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
 
 <partial name="LayoutHeadTheme" />
 @if (storeBranding != null)

@@ -45,7 +45,7 @@
     top: calc(100% + 2px);
 }
 .flatpickr-calendar.static.open {
-    z-index: 999;
+    z-index: 99999;
     display: block;
 }
 .flatpickr-calendar.multiMonth .flatpickr-days .dayContainer:nth-child(n+1) .flatpickr-day.inRange:nth-child(7n+7) {

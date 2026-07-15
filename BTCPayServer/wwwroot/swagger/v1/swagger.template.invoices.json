@@ -754,41 +754,41 @@
                     "amount": {
                         "type": "string",
                         "format": "decimal",
-                        "description": "The amount that was paid, in settlement currency if set, otherwise in the invoice's own currency.",
+                        "description": "Amount paid, in settlementCurrency if set, otherwise in the invoice's currency.",
                         "example": "25.00"
                     },
                     "settlementCurrency": {
                         "type": "string",
                         "nullable": true,
-                        "description": "The currency the payment was actually settled in, if different from the invoice's currency. Leave null if amount is already expressed in the invoice's currency."
+                        "description": "Currency the payment was actually made in, if different from the invoice's currency."
                     },
                     "rate": {
                         "type": "string",
                         "format": "decimal",
                         "nullable": true,
-                        "description": "Optional caller-supplied rate (units of invoice currency per 1 unit of settlementCurrency)."
+                        "description": "Conversion rate from settlementCurrency to the invoice's currency."
                     },
                     "reference": {
                         "type": "string",
-                        "description": "Caller-supplied identifier for the payment on the external system. Required.",
+                        "description": "Identifier for this payment on the external system, e.g. a transaction ID.",
                         "example": "paypal-txn-8H274..."
                     },
                     "label": {
                         "type": "string",
                         "nullable": true,
-                        "description": "Free-text label describing the method used (e.g. \"PayPal\", \"Cash\", \"Wire\"). Optional",
+                        "description": "Name of the external method used, e.g. \"PayPal\", \"Cash\", \"Wire\".",
                         "example": "PayPal"
                     },
                     "note": {
                         "type": "string",
                         "nullable": true,
-                        "description": "Optional free-text note."
+                        "description": "Free-text note."
                     },
                     "date": {
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
-                        "description": "When the payment actually happened on the external system. Defaults to now if omitted."
+                        "description": "When the payment happened. Defaults to now"
                     }
                 }
             },

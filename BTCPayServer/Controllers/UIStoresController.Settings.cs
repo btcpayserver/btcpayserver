@@ -172,11 +172,15 @@ public partial class UIStoresController
             ? rawExternal.ToObject<ExternalPaymentMethodConfig>() ?? new ExternalPaymentMethodConfig() : new ExternalPaymentMethodConfig();
 
         var newAllowedLabels = model.ExternalPaymentAllowedLabels?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList() ?? [];
-        if (!existingExternalConfig.AllowedLabels.SequenceEqual(newAllowedLabels, StringComparer.OrdinalIgnoreCase))
+        var existingLabels = existingExternalConfig.AllowedLabels ?? [];
+        if (!existingLabels.SequenceEqual(newAllowedLabels, StringComparer.OrdinalIgnoreCase))
         {
             existingExternalConfig.AllowedLabels = newAllowedLabels;
-            CurrentStore.SetPaymentMethodConfig(_handlers[externalPmi], existingExternalConfig);
-            needUpdate = true;
+            if (_handlers.TryGetValue(externalPmi, out var handler))
+            {
+                CurrentStore.SetPaymentMethodConfig(handler, existingExternalConfig);
+                needUpdate = true;
+            }
         }
 
         if (CurrentStore.SetStoreBlob(blob))

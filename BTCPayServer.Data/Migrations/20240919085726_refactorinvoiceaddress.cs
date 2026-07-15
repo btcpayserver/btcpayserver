@@ -26,7 +26,7 @@ namespace BTCPayServer.Migrations
 
             migrationBuilder.Sql("""
                 UPDATE "AddressInvoices"
-                SET 
+                SET
                 "Address" = (string_to_array("Address", '#'))[1],
                 "PaymentMethodId" = CASE WHEN (string_to_array("Address", '#'))[2] IS NULL THEN 'BTC-CHAIN'
                                          WHEN STRPOS((string_to_array("Address", '#'))[2], '_') = 0 THEN (string_to_array("Address", '#'))[2] || '-CHAIN'
@@ -40,7 +40,6 @@ namespace BTCPayServer.Migrations
                 name: "PK_AddressInvoices",
                 table: "AddressInvoices",
                 columns: new[] { "Address", "PaymentMethodId" });
-            migrationBuilder.Sql("VACUUM (ANALYZE) \"AddressInvoices\";", true);
         }
 
         /// <inheritdoc />

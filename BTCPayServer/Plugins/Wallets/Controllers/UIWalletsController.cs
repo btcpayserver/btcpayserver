@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.Mime;
 using System.Text;
@@ -33,6 +34,7 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Services.Wallets.Export;
+using BTCPayServer.Services.Wallets.Import;
 using BTCPayServer.Plugins.Wallets;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
@@ -2271,6 +2273,46 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["The label could not be renamed."].Value;
             }
 
+            return RedirectToAction(nameof(WalletLabels), new { walletId });
+        }
+
+        const int MaxLabelImportSize = 1_000_000;
+        [HttpPost("{walletId}/labels/import")]
+        [Authorize(Policy = WalletPolicies.CanManageWalletTransactions, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> ImportWalletLabels(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, IFormFile? file)
+        {
+            if (file is null || file.Length == 0)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Please select a BIP-329 file to import."].Value;
+                return RedirectToAction(nameof(WalletLabels), new { walletId });
+            }
+
+            if (file.Length > MaxLabelImportSize)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["The import file is too big (1 MB maximum)."].Value;
+                return RedirectToAction(nameof(WalletLabels), new { walletId });
+            }
+
+            var network = handlers.GetBitcoinHandler(walletId.CryptoCode).Network;
+            using var reader = new StreamReader(file.OpenReadStream());
+            var import = await Bip329Import.Parse(reader, network.NBitcoinNetwork);
+            if (import.Labels.Count == 0)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["No labels could be imported from this file. Expected BIP-329 format: one JSON object per line."].Value;
+                return RedirectToAction(nameof(WalletLabels), new { walletId });
+            }
+
+            var reqs = import.Labels
+                .GroupBy(l => (l.ObjectType, l.ObjectId))
+                .Select(g => (new WalletObjectId(walletId, g.Key.ObjectType, g.Key.ObjectId), g.Select(l => l.Label).ToArray()))
+                .ToArray();
+            await WalletRepository.AddWalletObjectLabels(reqs);
+
+            TempData[WellKnownTempData.SuccessMessage] = import.SkippedLines == 0
+                ? StringLocalizer["Imported {0} label(s).", import.Labels.Count].Value
+                : StringLocalizer["Imported {0} label(s), skipped {1} line(s).", import.Labels.Count, import.SkippedLines].Value;
             return RedirectToAction(nameof(WalletLabels), new { walletId });
         }
 

@@ -778,10 +778,23 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         });
 
         await s.InWalletTransactions().AssertHasLabels(targetLabel);
+
+        // Import BIP-329 labels from the transactions page toolbar (#6663)
+        var walletId = new WalletId(s.StoreId, "BTC");
+        const string toolbarLabel = "bip329-toolbar";
+        var toolbarTxId = transactions[1].TransactionHash.ToString();
+        var toolbarFile = Path.Combine(Path.GetTempPath(), $"bip329-{Guid.NewGuid():N}.jsonl");
+        await File.WriteAllTextAsync(toolbarFile, $"{{\"type\":\"tx\",\"ref\":\"{toolbarTxId}\",\"label\":\"{toolbarLabel}\"}}\n");
+        await s.Page.SetInputFilesAsync("#Dropdowns .wallet-labels__import-file", toolbarFile);
+        await s.Page.WaitForURLAsync(s.ServerUri + $"wallets/{walletId}/labels");
+        await s.FindAlertMessage(partialText: "Imported 1 label(s).");
+        var toolbarTx = await client.GetOnChainWalletTransaction(s.StoreId, "BTC", toolbarTxId);
+        Assert.Contains(toolbarLabel, toolbarTx.Labels.Keys);
+
+        await s.GoToWalletTransactions(s.WalletId);
         // The label dropdown exposes a "Manage Labels" link that navigates to the wallet labels page (#7252)
         await s.SearchFilters.LabelSelectorToggle.ClickAsync();
         await s.Page.ClickAsync("#LabelSelectorMenu a:has-text('Manage Labels')");
-        var walletId = new WalletId(s.StoreId , "BTC");
         await s.Page.WaitForURLAsync(s.ServerUri + $"wallets/{walletId}/labels");
 
         // Import BIP-329 labels from the wallet labels page (#6663)

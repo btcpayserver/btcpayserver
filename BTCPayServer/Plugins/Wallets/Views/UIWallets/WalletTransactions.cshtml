@@ -165,6 +165,14 @@
 
         // the actions div marks the end of the list table
         observer.observe($actions);
+
+        delegate('click', '.wallet-labels__import-button', event => {
+            event.target.closest('form').querySelector('.wallet-labels__import-file').click()
+        })
+        delegate('change', '.wallet-labels__import-file', event => {
+            if (event.target.files.length > 0)
+                event.target.closest('form').submit()
+        })
     </script>
 }
 
@@ -197,6 +205,11 @@
                 </div>
             </form>
         </div>
+        <form asp-action="ImportWalletLabels" asp-route-walletId="@walletId" method="post" enctype="multipart/form-data"
+              class="wallet-labels__import" permission="@WalletPolicies.CanManageWalletTransactions">
+            <input type="file" name="file" class="wallet-labels__import-file d-none" accept=".jsonl,.json,.txt" aria-hidden="true" tabindex="-1" />
+            <button type="button" class="btn btn-secondary wallet-labels__import-button" text-translate="true">Import BIP-329 labels</button>
+        </form>
     </div>
 </div>
 <partial name="_StatusMessage" />

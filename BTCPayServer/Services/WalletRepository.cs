@@ -662,19 +662,19 @@ namespace BTCPayServer.Services
 
         public async Task AddWalletObjectLabels((WalletObjectId id, string[] labels)[] reqs)
         {
-            var objs = new List<WalletObjectData>();
+            var objs = new Dictionary<WalletObjectId, WalletObjectData>();
             var links = new List<WalletObjectLinkData>();
             foreach (var (id, labels) in reqs)
             {
-                objs.Add(NewWalletObjectData(id));
-                foreach (var l in labels.Select(l => l.Trim().Truncate(MaxLabelSize)))
+                objs.TryAdd(id, NewWalletObjectData(id));
+                foreach (var l in labels.Select(l => l.Trim().Truncate(MaxLabelSize)).Distinct())
                 {
                     var label = CreateLabel(id.WalletId, l);
-                    objs.Add(label.ObjectData);
+                    objs.TryAdd(label.Id, label.ObjectData);
                     links.Add(NewWalletObjectLinkData(label.Id, id));
                 }
             }
-            await EnsureCreated(objs, links);
+            await EnsureCreated(objs.Values.ToList(), links);
         }
         public Task AddWalletTransactionAttachment(WalletId walletId, uint256 txId, Attachment attachment)
         {

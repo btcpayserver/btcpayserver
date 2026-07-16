@@ -295,14 +295,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateAPIError(404, "external-payment-method-disabled", "The external payment method is not available on this server.");
             }
 
-            if (store.GetPaymentMethodConfigs().TryGetValue(handler.PaymentMethodId, out var rawConfig))
-            {
-                var config = handler.ParsePaymentMethodConfig(rawConfig);
-                if (config.AllowedLabels.Count > 0 && (request.Label is null || !config.AllowedLabels.Contains(request.Label, StringComparer.OrdinalIgnoreCase)))
-                {
-                    ModelState.AddModelError(nameof(request.Label), $"This store does not support external payment from {request.Label}.");
-                }
-            }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
@@ -358,6 +350,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Currency = invoice.Currency
             }.Set(invoice, handler, new ExternalPaymentData
             {
+                PaymentUrl = request.PaymentUrl,
                 Reference = request.Reference,
                 Label = request.Label,
                 Note = request.Note,

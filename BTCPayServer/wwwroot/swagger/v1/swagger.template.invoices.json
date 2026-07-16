@@ -773,6 +773,12 @@
                         "description": "Identifier for this payment on the external system, e.g. a transaction ID.",
                         "example": "paypal-txn-8H274..."
                     },
+                    "url": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Optional link to view this payment on the external system.",
+                        "example": "https://www.paypal.com/payment/8H274..."
+                    },
                     "label": {
                         "type": "string",
                         "nullable": true,

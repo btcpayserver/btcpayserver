@@ -5,6 +5,7 @@ namespace BTCPayServer.Payments.External;
 public class ExternalPaymentData
 {
     public string Reference { get; set; } = string.Empty;
+    public string PaymentUrl { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;
     public string Note { get; set; } = string.Empty;
     public string SettlementCurrency { get; set; } = string.Empty;
@@ -16,7 +17,6 @@ public class ExternalPaymentData
 public class ExternalPaymentMethodConfig
 {
     public string Description { get; set; }
-    public List<string> AllowedLabels { get; set; } = new();
 }
 
 

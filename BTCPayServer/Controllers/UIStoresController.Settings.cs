@@ -27,9 +27,6 @@ public partial class UIStoresController
         var store = HttpContext.GetStoreDataOrNull();
         if (store == null) return NotFound();
 
-        var externalConfig = store.GetPaymentMethodConfigs().TryGetValue(PaymentTypes.EXTERNAL.GetPaymentMethodId("MISC"), out var raw)
-            ? raw.ToObject<ExternalPaymentMethodConfig>() : new ExternalPaymentMethodConfig();
-
         var storeBlob = store.GetStoreBlob();
         var vm = new GeneralSettingsViewModel
         {
@@ -51,7 +48,6 @@ public partial class UIStoresController
             MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes,
             SpeedPolicy = store.SpeedPolicy,
             ShowRecommendedFee = storeBlob.ShowRecommendedFee,
-            ExternalPaymentAllowedLabels = string.Join(", ", externalConfig?.AllowedLabels ?? []),
             RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget
         };
 
@@ -166,22 +162,6 @@ public partial class UIStoresController
         }
         if (!ModelState.IsValid)
             return View(model);
-
-        var externalPmi = PaymentTypes.EXTERNAL.GetPaymentMethodId("MISC");
-        var existingExternalConfig = CurrentStore.GetPaymentMethodConfigs().TryGetValue(externalPmi, out var rawExternal)
-            ? rawExternal.ToObject<ExternalPaymentMethodConfig>() ?? new ExternalPaymentMethodConfig() : new ExternalPaymentMethodConfig();
-
-        var newAllowedLabels = model.ExternalPaymentAllowedLabels?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList() ?? [];
-        var existingLabels = existingExternalConfig.AllowedLabels ?? [];
-        if (!existingLabels.SequenceEqual(newAllowedLabels, StringComparer.OrdinalIgnoreCase))
-        {
-            existingExternalConfig.AllowedLabels = newAllowedLabels;
-            if (_handlers.TryGetValue(externalPmi, out var handler))
-            {
-                CurrentStore.SetPaymentMethodConfig(handler, existingExternalConfig);
-                needUpdate = true;
-            }
-        }
 
         if (CurrentStore.SetStoreBlob(blob))
         {

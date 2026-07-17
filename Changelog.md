@@ -1,5 +1,50 @@
 # Changelog
 
+## 2.4.1
+
+### New features
+
+* Plugins: Improve plugin directory page (#7381) @thgO-O
+* Wallet: Add BIP-329 label import (#7457) @atharrva01
+* Invoices: Add editable invoice comments, including Greenfield API and report export support (#7444) @dstrukt
+* Email Rules: Add a new trigger for invoice refunds (#7374) @Abhijay007
+* Greenfield: Support `payoutMethods` array when refunding invoices (#7413) @atharrva01
+* Greenfield: Support `includePaymentMethods` on get invoice (#7426) @atharrva01
+* Allow time zone configuration in date range selectors (#7424) @NicolasDorier
+* Add more relevant default date range filters such as `This month`, `This week`, `This quarter` (#7424) @NicolasDorier
+* Adapt the UI for Right-To-Left (RTL) languages such as Arabic, Hebrew, and Persian (#7428) @teamssUTXO @AdilElFarissi
+
+### Fixes
+
+* Fix Boltcard payments that stopped working @Kukks
+* Fix LNDHub not being enabled by default (#7418) @NicolasDorier
+* Fix server admins unable to view a user's store @NicolasDorier
+* Fix NBXplorer error rendering (#7421) @MichaelRihani
+* Fix plugin command processing crash on Windows (#7422) @Kukks
+* Fix DASH default rate calculation and use Kraken for DASH rates (#7446) @NicolasDorier @ktechmidas
+* Fix untranslated Blazor UI strings (#7423) @Wiredancer
+* Pull Payments: Return 404 instead of 500 when opening payouts for a missing Pull Payment (#7429) @atharrva01
+* Greenfield: Unnest payout-related routes by making `storeId` optional. (#7433) @atharrva01
+* Wallet: Allow recommended fees below 1 sat/vbyte on the send screen (#7437) @NicolasDorier
+* Wallet: Refresh label filter dropdown after adding labels inline (#7436) @TowyTowy
+* Fix Custom Range formatting in the date range selector (#7439) @NicolasDorier
+* Fix Core Lightning compatibility issues (#7449) @NicolasDorier
+* Fix Boltcards payments @NicolasDorier
+* Fix the `Mark as seen` button in the notification list (#7424) @NicolasDorier
+* Fix incorrect date range filtering across DST boundaries (#7424) @NicolasDorier
+
+### Improvements
+
+* Use the browser's preferred hour format in the date time picker (#7424) @NicolasDorier
+* Add a Manage Labels link to Bitcoin Wallet labels (#7435) @NicolasDorier
+* Unify reports’ page time range selection (#7438) @NicolasDorier
+* Add tooltips to global navigation icons (#7443) @Pavlenex
+* Standardize topbar dropdown menus (#7425) @thgO-O
+* Improve topbar visual separation (#7445) @Pavlenex
+* Keep store settings navigation expanded and highlighted on subpages (#7452) @dstrukt
+* Remove misleading error logs on the first installation @NicolasDorier
+* Make global search more forgiving (#7461) @NicolasDorier
+
 ## 2.4.0
 
 See the [blog post announcement](https://blog.btcpayserver.org/btcpay-server-2-4-0/).

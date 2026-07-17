@@ -207,15 +207,6 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
             },
             new ActionResultItemViewModel
             {
-                RequiredPolicy = Policies.CanModifyServerSettings,
-                Title = "Install, update, and configure plugins",
-                Action = nameof(UIServerController.ListPlugins),
-                Controller = "UIServer",
-                Category = "Server",
-                Keywords = ["Plugins", "Configure", "Update", "Install"]
-            },
-            new ActionResultItemViewModel
-            {
                 RequiredPolicy = Policies.CanViewProfile,
                 Title = "Manage your account",
                 Action = nameof(UIManageController.Index),

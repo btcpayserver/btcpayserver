@@ -2,6 +2,7 @@
 @using BTCPayServer.Views.Manage
 @using BTCPayServer.Client
 @using BTCPayServer.Plugins
+@using BTCPayServer.Plugins.PluginManagement
 @using BTCPayServer.Services
 @using BTCPayServer.Plugins.Emails
 @using BTCPayServer.Plugins.Translations
@@ -12,7 +13,6 @@
 @model BTCPayServer.Components.GlobalNav.GlobalNavViewModel
 
 @{
-    var pluginsUrl = Url.Action("ListPlugins", "UIServer");
     var loginName = User.Identity?.Name;
     var activePage = ViewData["ActivePage"]?.ToString();
     var serverEmailsPage = $"Server-{nameof(ServerNavPages.Emails)}";
@@ -47,18 +47,12 @@
                 }
             </button>
             <ul id="globalNavPluginsMenu" class="dropdown-menu dropdown-menu-end">
-                @if (!string.IsNullOrEmpty(pluginsUrl))
-                {
-                    <li>
-                        <a id="menu-item-@nameof(ServerNavPages.Plugins)" class="dropdown-item@(activePage == nameof(ServerNavPages.Plugins) ? " active" : "")" asp-area="" asp-controller="UIServer" asp-action="ListPlugins" text-translate="true">Manage Plugins</a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" asp-area="" asp-controller="UIServer" asp-action="ListPlugins" asp-fragment="plugins-installed" text-translate="true">Installed Plugins</a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" asp-area="" asp-controller="UIServer" asp-action="ListPlugins" asp-fragment="plugins-directory" text-translate="true">Plugin Directory</a>
-                    </li>
-                }
+                <li>
+                    <a class="dropdown-item" asp-area="@PluginManagerPlugin.Area" asp-controller="UIPluginManager" asp-action="ListPlugins" text-translate="true">Installed Plugins</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-area="@PluginManagerPlugin.Area" asp-controller="UIPluginManager" asp-action="PluginDirectory" text-translate="true">Plugin Directory</a>
+                </li>
             </ul>
         </div>
 

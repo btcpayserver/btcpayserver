@@ -1,0 +1,292 @@
+@model InstalledPluginsViewModel
+@{
+    ViewData.SetTitle(StringLocalizer["Installed Plugins"]);
+}
+
+<style>
+    .version-switch .nav-link { display: inline; }
+    .version-switch .nav-link.active { display: none; }
+</style>
+
+<partial name="_StatusMessage" />
+
+@if (Model.PendingActions.Any())
+{
+    <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
+        <span text-translate="true">You need to restart BTCPay Server in order to update your active plugins.</span>
+        <form method="post" asp-area="" asp-controller="UIServer" asp-action="Maintenance" class="mt-2">
+            <button type="submit" name="command" value="soft-restart" class="btn btn-info" text-translate="true">Restart now</button>
+        </form>
+    </div>
+}
+
+@if (Model.DisabledPlugins.Any())
+{
+    <div class="alert alert-danger mb-4 d-flex align-items-center justify-content-between">
+        <span text-translate="true">Some plugins were disabled due to fatal errors. They may be incompatible with this version of BTCPay Server.</span>
+        <form method="post" asp-action="UnInstallAllDisabledPlugin" class="mt-2">
+            <button type="submit" class="btn btn-danger" text-translate="true">Uninstall all disabled plugins</button>
+        </form>
+    </div>
+}
+
+<div class="d-flex flex-column gap-5">
+@if (Model.DisabledPlugins.Any())
+{
+    <section>
+        <h3 class="mb-4" text-translate="true">Disabled Plugins</h3>
+        <ul class="list-group list-group-flush d-inline-block">
+            @foreach (var plugin in Model.DisabledPlugins)
+            {
+                <li id="@plugin.Identifier" class="list-group-item px-0">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <span>
+                            @plugin.Identifier
+                            @if (plugin.DisabledVersion is not null)
+                            {
+                                <span>(@plugin.DisabledVersion)</span>
+                            }
+                            @if (plugin.RecommendedUpdateVersion is not null)
+                            {
+                                <span class="badge bg-info ms-2">@plugin.RecommendedUpdateVersion <span text-translate="true">available</span></span>
+                            }
+                        </span>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var action in plugin.Actions)
+                            {
+                                if (string.IsNullOrEmpty(action.FormAction))
+                                {
+                                    <button type="button" class="@action.CssClass" disabled title="@(string.IsNullOrEmpty(action.Tooltip) ? null : StringLocalizer[action.Tooltip].Value)">@StringLocalizer[action.Label]</button>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-action="@action.FormAction">
+                                        <input type="hidden" name="plugin" value="@plugin.Identifier" />
+                                        @if (!string.IsNullOrEmpty(action.Version))
+                                        {
+                                            <input type="hidden" name="version" value="@action.Version" />
+                                        }
+                                        <button type="submit" class="@action.CssClass" title="@(string.IsNullOrEmpty(action.Tooltip) ? null : StringLocalizer[action.Tooltip].Value)">@StringLocalizer[action.Label]</button>
+                                    </form>
+                                }
+                            }
+                        </div>
+                    </div>
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+@if (Model.InstalledPlugins.Any())
+{
+    <section>
+        <h3 class="mb-4" text-translate="true">Installed Plugins</h3>
+        <div class="row mb-4">
+            @foreach (var plugin in Model.InstalledPlugins)
+            {
+                var updateAvailable = plugin.Update is not null;
+                var tabId = plugin.Current.Identifier.ToLowerInvariant().Replace(".", "_");
+                <div class="col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
+                    <div class="card h-100" id="@plugin.Current.Identifier">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
+                                <h4 class="card-title mb-0" data-bs-toggle="tooltip" title="@plugin.Current.Identifier">@plugin.Current.Name</h4>
+                                @if (!string.IsNullOrEmpty(plugin.Current.Author))
+                                {
+                                    <span class="text-muted text-nowrap">
+                                        <span text-translate="true">by</span>
+                                        @if (!string.IsNullOrEmpty(plugin.Current.AuthorLink))
+                                        {
+                                            <a href="@plugin.Current.AuthorLink" rel="noreferrer noopener" target="_blank">@plugin.Current.Author</a>
+                                        }
+                                        else
+                                        {
+                                            <span>@plugin.Current.Author</span>
+                                        }
+                                    </span>
+                                }
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center mb-2 gap-3">
+                                <h5 class="text-muted d-flex align-items-center mt-1 gap-3">
+                                    @plugin.Current.Version
+                                    @if (updateAvailable)
+                                    {
+                                        <div class="badge bg-info">
+                                            @plugin.Update.Version <span text-translate="true">available</span>
+                                        </div>
+                                    }
+                                </h5>
+                                @if (updateAvailable)
+                                {
+                                    <span class="nav version-switch mt-n1" role="tablist">
+                                        <a data-bs-toggle="tab" href="#@tabId-current" class="nav-link text-info p-0 active" text-translate="true">Show current info</a>
+                                        <a data-bs-toggle="tab" href="#@tabId-update" class="nav-link text-info p-0" text-translate="true">Show update info</a>
+                                    </span>
+                                }
+                                @if (!string.IsNullOrEmpty(plugin.PendingAction))
+                                {
+                                    <span class="badge bg-light text-dark">@plugin.PendingAction</span>
+                                }
+                            </div>
+
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="@tabId-current">
+                                    <p class="card-text">@plugin.Current.Description</p>
+                                    @if (plugin.Current.Dependencies.Any())
+                                    {
+                                        <h6 class="text-muted fw-semibold" text-translate="true">Dependencies</h6>
+                                        <ul class="list-group list-group-flush">
+                                            @foreach (var dependency in plugin.Current.Dependencies)
+                                            {
+                                                <li class="list-group-item p-2 d-inline-flex align-items-center gap-2">
+                                                    @dependency.Display
+                                                    @if (!dependency.IsMet)
+                                                    {
+                                                        <span title="@StringLocalizer["Dependency not met."]" data-bs-toggle="tooltip" class="text-danger">
+                                                            <vc:icon symbol="warning" />
+                                                        </span>
+                                                    }
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </div>
+
+                                @if (updateAvailable)
+                                {
+                                    <div class="tab-pane" id="@tabId-update">
+                                        <p class="card-text">@plugin.Update.Description</p>
+                                        @if (plugin.Update.Dependencies.Any())
+                                        {
+                                            <h6 class="text-muted fw-semibold" text-translate="true">Dependencies</h6>
+                                            <ul class="list-group list-group-flush">
+                                                @foreach (var dependency in plugin.Update.Dependencies)
+                                                {
+                                                    <li class="list-group-item p-2 d-inline-flex align-items-center gap-2">
+                                                        @dependency.Display
+                                                        @if (!dependency.IsMet)
+                                                        {
+                                                            <span title="@StringLocalizer["Dependency not met."]" data-bs-toggle="tooltip" class="text-danger">
+                                                                <vc:icon symbol="warning" />
+                                                            </span>
+                                                        }
+                                                    </li>
+                                                }
+                                            </ul>
+                                        }
+                                    </div>
+                                }
+
+                                <h6 class="text-muted fw-semibold mt-4" text-translate="true">Resources</h6>
+                                <ul class="list-group list-group-flush list-unstyled">
+                                    @if (!string.IsNullOrEmpty(plugin.Current.Source))
+                                    {
+                                        <li>
+                                            <a href="@plugin.Current.Source" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">
+                                                <vc:icon symbol="social-github" />
+                                                <span text-translate="true">Sources</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    @if (!string.IsNullOrEmpty(plugin.Current.Documentation))
+                                    {
+                                        <li>
+                                            <a href="@plugin.Current.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">
+                                                <vc:icon symbol="info" css-class="text-primary" />
+                                                <span text-translate="true">Details</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li>
+                                            <span class="d-flex align-items-center gap-2 text-danger">
+                                                <vc:icon symbol="docs" />
+                                                <span text-translate="true">No documentation</span>
+                                            </span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-footer border-0 pb-3 d-flex flex-wrap gap-2">
+                            @foreach (var action in plugin.Actions)
+                            {
+                                if (string.IsNullOrEmpty(action.FormAction))
+                                {
+                                    <button type="button" class="@action.CssClass" disabled title="@(string.IsNullOrEmpty(action.Tooltip) ? null : StringLocalizer[action.Tooltip].Value)">@StringLocalizer[action.Label]</button>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-action="@action.FormAction">
+                                        <input type="hidden" name="plugin" value="@plugin.Current.Identifier" />
+                                        @if (!string.IsNullOrEmpty(action.Version))
+                                        {
+                                            <input type="hidden" name="version" value="@action.Version" />
+                                        }
+                                        <button type="submit" class="@action.CssClass" title="@(string.IsNullOrEmpty(action.Tooltip) ? null : StringLocalizer[action.Tooltip].Value)">@StringLocalizer[action.Label]</button>
+                                    </form>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+}
+</div>
+
+<div class="mb-4">
+    <h3 class="mb-4" text-translate="true">Upload Plugin</h3>
+    <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#manual-upload" text-translate="true">Upload Plugin</button>
+    <div class="row collapse" id="manual-upload">
+        <div class="col col-xl-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title" text-translate="true">Add plugin manually</h4>
+                    <div class="alert alert-warning my-3">
+                        <h6 class="me-1" text-translate="true">This is an extremely dangerous operation!</h6>
+                        <span text-translate="true">Only upload plugins from trusted sources.</span>
+                    </div>
+                    <form method="post" enctype="multipart/form-data" asp-action="UploadPlugin">
+                        <input type="file" class="form-control mb-3" required name="files" accept=".btcpay" id="files">
+                        <button class="btn btn-primary" type="submit" text-translate="true">Upload</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.PendingActions.Any())
+{
+    <div class="mb-4">
+        <h3 class="mb-4" text-translate="true">Pending Action</h3>
+        <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#pending-actions" text-translate="true">Pending Actions</button>
+        <div class="row collapse" id="pending-actions">
+            <div class="col-12 col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title" text-translate="true">Pending actions</h4>
+                        <ul class="list-group list-group-flush">
+                            @foreach (var pendingAction in Model.PendingActions)
+                            {
+                                <li class="list-group-item p-2">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                        <span class="my-2 me-3">@pendingAction.Plugin</span>
+                                        <form method="post" asp-action="CancelPluginCommands">
+                                            <input type="hidden" name="plugin" value="@pendingAction.Plugin" />
+                                            <button type="submit" class="btn btn-outline-secondary">@StringLocalizer["Cancel pending {0}", pendingAction.Action]</button>
+                                        </form>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -410,13 +410,6 @@ namespace BTCPayServer.Tests
 
         public async Task GoToServer(string navPages)
         {
-            if (navPages == nameof(ServerNavPages.Plugins))
-            {
-                await Page.ClickAsync("#globalNavPluginsToggle");
-                await Page.ClickAsync("#globalNavPluginsMenu #menu-item-Plugins");
-                return;
-            }
-
             await Page.ClickAsync("#globalNavServerToggle");
             if (navPages == nameof(ServerNavPages.Emails))
             {

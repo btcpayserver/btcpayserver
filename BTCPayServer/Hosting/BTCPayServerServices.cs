@@ -106,16 +106,6 @@ namespace BTCPayServer.Hosting
             {
                 httpClient.Timeout = Timeout.InfiniteTimeSpan;
             });
-            services.AddHttpClient<PluginBuilderClient>((prov, httpClient) =>
-            {
-                var p = prov.GetRequiredService<PoliciesSettings>();
-                var pluginSource = p.PluginSource ?? PoliciesSettings.DefaultPluginSource;
-                if (pluginSource.EndsWith('/'))
-                    pluginSource = pluginSource.Substring(0, pluginSource.Length - 1);
-                if (!Uri.TryCreate(pluginSource, UriKind.Absolute, out var r) || (r.Scheme != "https" && r.Scheme != "http"))
-                    r = new Uri(PoliciesSettings.DefaultPluginSource, UriKind.Absolute);
-                httpClient.BaseAddress = r;
-            });
 
             services.AddSingleton<PrettyNameProvider>();
             services.AddSingleton<Logs>(logs);
@@ -297,7 +287,6 @@ namespace BTCPayServer.Hosting
 
             services.AddExceptionHandler<PluginExceptionHandler>();
             services.TryAddSingleton<AppService>();
-            services.AddTransient<PluginService>();
             services.AddSingleton<PluginHookService>();
             services.AddSingleton<IPluginHookService, PluginHookService>(provider => provider.GetService<PluginHookService>());
             services.TryAddTransient<Safe>();
@@ -381,7 +370,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
             services.AddSingleton<IHostedService, PeriodicTaskLauncherHostedService>();
             services.AddScheduledTask<GithubVersionFetcher>(TimeSpan.FromDays(1));
-            services.AddScheduledTask<PluginUpdateFetcher>(TimeSpan.FromDays(1));
 
             services.AddSearchResultItemProvider<ReportingSearchResultProvider>();
             services.AddReportProvider<PaymentsReportProvider>();
@@ -461,7 +449,6 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<INotificationHandler, NewVersionNotification.Handler>();
             services.AddSingleton<INotificationHandler, NewUserRequiresApprovalNotification.Handler>();
-            services.AddSingleton<INotificationHandler, PluginUpdateNotification.Handler>();
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
             services.AddSingleton<INotificationHandler, ExternalPayoutTransactionNotification.Handler>();

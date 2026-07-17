@@ -505,6 +505,11 @@ namespace BTCPayServer.Services.Invoices
 
         [JsonIgnore]
         public Uri NotificationURL => FillPlaceholdersUri(NotificationURLTemplate);
+
+        [JsonProperty]
+        public string WebhookUrl { get; set; }
+        [JsonProperty]
+        public string WebhookSecret { get; set; }
         public string ServerUrl { get; set; }
 
         [Obsolete("Use Set/GetPaymentPrompts() instead")]

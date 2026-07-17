@@ -41,8 +41,6 @@ public class UIPluginManagerController(
             : await LoadRemotePlugins();
         var model = CreatePluginDirectoryViewModel(selectedSlug, remotePlugins);
         var pluginSourceBaseUri = pluginService.GetPluginSourceBaseUri();
-        // Same-origin sources stay opaque; cross-origin sources may retain their origin for plugin-builder storage.
-        model.SelectedPluginPanel.UseOpaqueSandbox = ShouldUseOpaqueSandbox(pluginSourceBaseUri, Request.Scheme, Request.Host);
         var btcpayVersion = pluginService.GetShortBtcpayVersion();
         var preReleaseEnabled = policiesSettings.PluginPreReleases;
         model.DirectoryIframeUrl = BuildDirectoryIframeUrl(
@@ -76,7 +74,6 @@ public class UIPluginManagerController(
 
         var model = CreateSelectedPluginPanelViewModel(slug, remotePlugins, GetPluginRuntimeState());
         var pluginSourceBaseUri = pluginService.GetPluginSourceBaseUri();
-        model.UseOpaqueSandbox = ShouldUseOpaqueSandbox(pluginSourceBaseUri, Request.Scheme, Request.Host);
         model.EmbeddedDetailsUrl = BuildPluginDetailsEmbedUrl(
             pluginSourceBaseUri,
             model.SelectedSlug,
@@ -677,22 +674,6 @@ public class UIPluginManagerController(
 
         builder.Query = string.Join("&", query);
         return builder.Uri.ToString();
-    }
-
-    internal static bool ShouldUseOpaqueSandbox(Uri pluginSourceBaseUri, string requestScheme, HostString requestHost)
-    {
-        if (pluginSourceBaseUri is null || string.IsNullOrEmpty(requestScheme) || !requestHost.HasValue ||
-            !Uri.TryCreate($"{requestScheme}://{requestHost.ToUriComponent()}", UriKind.Absolute, out var requestOrigin))
-        {
-            return true;
-        }
-
-        return Uri.Compare(
-            pluginSourceBaseUri,
-            requestOrigin,
-            UriComponents.SchemeAndServer,
-            UriFormat.SafeUnescaped,
-            StringComparison.OrdinalIgnoreCase) == 0;
     }
 
     private sealed record PluginRuntimeState(

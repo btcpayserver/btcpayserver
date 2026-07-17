@@ -1,9 +1,6 @@
 @model PluginDirectoryViewModel
 @{
     ViewData.SetTitle(StringLocalizer["Plugin Directory"]);
-    var iframeSandbox = Model.SelectedPluginPanel.UseOpaqueSandbox
-        ? "allow-scripts allow-forms allow-popups"
-        : "allow-same-origin allow-scripts allow-forms allow-popups";
 }
 
 <style>
@@ -86,7 +83,7 @@
         <iframe id="plugins-directory-iframe"
                 title="@StringLocalizer["Plugin Directory"]"
                 class="plugin-manage-frame d-block w-100 border-0"
-                sandbox="@iframeSandbox"></iframe>
+                sandbox="allow-scripts allow-forms allow-popups"></iframe>
     </div>
     <div class="offcanvas offcanvas-end shadow plugin-manage-offcanvas"
          tabindex="-1"

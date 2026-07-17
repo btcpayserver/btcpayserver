@@ -22,7 +22,6 @@ namespace BTCPayServer.Plugins.PluginManagement.Models
     {
         public string SelectedSlug { get; set; }
         public string EmbeddedDetailsUrl { get; set; }
-        public bool UseOpaqueSandbox { get; set; } = true;
         public string PluginIdentifier { get; set; }
         public string PluginName { get; set; }
         public Version InstalledVersion { get; set; }

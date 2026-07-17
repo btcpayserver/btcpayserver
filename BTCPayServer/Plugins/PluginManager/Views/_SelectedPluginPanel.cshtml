@@ -1,8 +1,5 @@
 @model PluginSelectedPanelViewModel
 @{
-    var iframeSandbox = Model.UseOpaqueSandbox
-        ? "allow-scripts allow-forms allow-popups"
-        : "allow-same-origin allow-scripts allow-forms allow-popups";
     var showFacts = Model.InstalledVersion is not null ||
                     Model.DisabledVersion is not null ||
                     !string.IsNullOrEmpty(Model.PendingAction);
@@ -50,7 +47,7 @@
     <iframe class="plugin-manage-panel-details d-block flex-grow-1 w-100 border-0 mt-1"
             title="@StringLocalizer["{0} details", Model.PluginName]"
             src="@Model.EmbeddedDetailsUrl"
-            sandbox="@iframeSandbox"
+            sandbox="allow-scripts allow-forms allow-popups"
             data-plugin-identifier="@(canInstallFromEmbed ? Model.PluginIdentifier : null)"
             data-plugin-name="@(canInstallFromEmbed ? Model.PluginName : null)"
             data-pending-install="@(allowPendingInstallVersionChange ? "true" : null)"

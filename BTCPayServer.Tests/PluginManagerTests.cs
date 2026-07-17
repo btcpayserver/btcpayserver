@@ -473,36 +473,6 @@ namespace BTCPayServer.Tests
             Assert.Empty(requestedUri.Fragment);
         }
 
-        [Theory]
-        [InlineData("https://btcpay.example/catalog", "https", "btcpay.example", true)]
-        [InlineData("https://btcpay.example:443/catalog?tenant=one#section", "https", "btcpay.example", true)]
-        [InlineData("https://btcpay.example:8443/catalog", "https", "btcpay.example:8443", true)]
-        [InlineData("https://plugins.btcpay.example/catalog", "https", "btcpay.example", false)]
-        [InlineData("https://btcpay.example:8443/catalog", "https", "btcpay.example", false)]
-        [InlineData("http://btcpay.example/catalog", "https", "btcpay.example", false)]
-        public void PluginEmbed_UsesOpaqueSandboxOnlyForSameOriginSources(
-            string pluginSource,
-            string requestScheme,
-            string requestHost,
-            bool expected)
-        {
-            var result = UIPluginManagerController.ShouldUseOpaqueSandbox(
-                new Uri(pluginSource),
-                requestScheme,
-                new Microsoft.AspNetCore.Http.HostString(requestHost));
-
-            Assert.Equal(expected, result);
-        }
-
-        [Fact]
-        public void PluginEmbed_DefaultsToOpaqueSandboxWithoutAValidOrigin()
-        {
-            Assert.True(UIPluginManagerController.ShouldUseOpaqueSandbox(
-                null,
-                null,
-                default));
-        }
-
         private static PluginService.AvailablePlugin MakeAvailablePlugin(
             string identifier, string version, params (string id, string condition)[] dependencies)
         {

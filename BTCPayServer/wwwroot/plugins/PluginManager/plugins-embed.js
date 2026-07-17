@@ -35,7 +35,6 @@
         showDirectoryError();
         return;
     }
-    const pluginBuilderOrigin = new URL(pluginDirectoryUrl).origin;
 
     function startDirectory() {
         directoryReady = false;
@@ -128,10 +127,6 @@
         return detailsFrame?.contentWindow === sourceWindow ? detailsFrame : null;
     }
 
-    function usesOpaqueOrigin(frame) {
-        return !frame.sandbox.contains("allow-same-origin");
-    }
-
     function syncSelectedSlugUrl(slug) {
         const url = new URL(window.location.href);
         if (slug) {
@@ -203,7 +198,7 @@
             type: "btcpay:host-context",
             hiddenPluginIdentifiers: hiddenPluginIdentifiers,
             colorMode: getHostColorMode()
-        }, usesOpaqueOrigin(frame) ? "*" : pluginBuilderOrigin);
+        }, "*");
     }
 
     function postHostContext() {
@@ -266,9 +261,7 @@
             return;
         }
 
-        // Frames without allow-same-origin have an opaque origin serialized as "null".
-        const expectedOrigin = usesOpaqueOrigin(sourceFrame) ? "null" : pluginBuilderOrigin;
-        if (event.origin !== expectedOrigin) {
+        if (event.origin !== "null") {
             return;
         }
 

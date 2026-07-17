@@ -162,6 +162,8 @@ namespace BTCPayServer.Controllers
                                     .ToList()
             };
 
+            model.StoreHasWebhooks = (await _StoreRepository.GetWebhooks(invoice.StoreId)).Length > 0;
+
             var details = InvoicePopulatePayments(invoice);
             model.CryptoPayments = details.CryptoPayments;
             model.Payments = details.Payments;
@@ -1160,7 +1162,8 @@ namespace BTCPayServer.Controllers
         [HttpGet("/stores/{storeId}/invoices/create")]
         [HttpGet("invoices/create")]
         [Authorize(Policy = Policies.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        public async Task<IActionResult> CreateInvoice(InvoicesModel? model = null)
+        public async Task<IActionResult> CreateInvoice(InvoicesModel? model = null, decimal? amount = null,
+            string? currency = null, string? orderId = null, string? sourceInvoiceId = null)
         {
             if (string.IsNullOrEmpty(model?.StoreId))
             {
@@ -1181,9 +1184,17 @@ namespace BTCPayServer.Controllers
             var vm = new CreateInvoiceModel
             {
                 StoreId = model.StoreId,
-                Currency = storeBlob.DefaultCurrency,
+                Amount = amount,
+                Currency = string.IsNullOrEmpty(currency) ? storeBlob.DefaultCurrency : currency,
+                OrderId = orderId,
                 AvailablePaymentMethods = GetPaymentMethodsSelectList(store)
             };
+            // Charging the remainder of an underpaid invoice: carry the origin so the two can be
+            // reconciled against one order.
+            if (!string.IsNullOrEmpty(sourceInvoiceId))
+            {
+                vm.Metadata = new JObject { ["sourceInvoiceId"] = sourceInvoiceId }.ToString(Newtonsoft.Json.Formatting.Indented);
+            }
 
             return View(vm);
         }

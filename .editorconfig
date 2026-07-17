@@ -180,7 +180,8 @@ dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_null_propagation = true:suggestion
 
 # Expression-bodied members
-csharp_style_expression_bodied_methods = false:none
+# Prefer expression bodies when they fit on one line.
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
 csharp_style_expression_bodied_constructors = false:none
 csharp_style_expression_bodied_operators = false:none
 csharp_style_expression_bodied_properties = true:none

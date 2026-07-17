@@ -6,14 +6,17 @@
     Layout = "_Layout";
 }
 
-<div class="sticky-header">
-    <h2>
-        <span>@ViewData["Title"]</span>
-        <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
-            <vc:icon symbol="info" />
-        </a>
-    </h2>
-	<a id="page-primary" asp-action="Create" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" permission="@Policies.CanModifyStoreSettings" text-translate="true">
+<div class="sticky-header align-items-start">
+    <div class="d-flex flex-column gap-1 flex-grow-1">
+        <h2 class="mb-0">
+            <span>@ViewData["Title"]</span>
+            <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
+                <vc:icon symbol="info" />
+            </a>
+        </h2>
+        <p class="text-secondary mb-0" text-translate="true">Create reusable forms to collect extra information from customers during checkout.</p>
+    </div>
+	<a id="page-primary" asp-action="Create" asp-route-storeId="@storeId" class="btn btn-primary" role="button" permission="@Policies.CanModifyStoreSettings" text-translate="true">
         Create Form
     </a>
 </div>
@@ -21,10 +24,11 @@
 
 <div class="row">
     <div class="col-xxl-constrain col-xl-10">
+        <div class="settings-section">
         @if (Model.Any())
         {
-            <div class="table-responsive-md mt-0">
-                <table class="table table-hover">
+            <div class="table-responsive-md settings-section-table">
+                <table class="table table-hover mb-0">
                     <thead>
                         <tr>
                             <th text-translate="true">Name</th>
@@ -51,10 +55,11 @@
         }
         else
         {
-            <p class="text-secondary" text-translate="true">
+            <p class="text-secondary mb-0" text-translate="true">
                 There are no forms yet.
             </p>
         }
+        </div>
     </div>
 </div>
 

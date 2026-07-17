@@ -551,6 +551,10 @@ retry:
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bbqr", "bbqr.iife.js").Trim();
             expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/bbqr@1.0.0/dist/bbqr.iife.js")).Content.ReadAsStringAsync()).Trim();
             EqualJsContent(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "fuse.js", "fuse.min.js").Trim();
+            expected = (await (await client.GetAsync($"https://unpkg.com/fuse.js@6.6.2/dist/fuse.min.js")).Content.ReadAsStringAsync()).Trim();
+            EqualJsContent(expected, actual);
         }
 
         private void EqualJsContent(string expected, string actual)

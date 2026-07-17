@@ -40,6 +40,17 @@
         const localIndexTmp = [];
         vm.items.forEach(item => localIndexTmp.push(item));
         const localIndex = removeDups(localIndexTmp);
+        const localFuse = new window.Fuse(localIndex, {
+                ignoreLocation: true,
+                threshold: 0.35,
+                useExtendedSearch: true,
+                keys: [
+                    {name: 'title', weight: 0.5},
+                    {name: 'keywords', weight: 0.35},
+                    {name: 'category', weight: 0.1},
+                    {name: 'subtitle', weight: 0.05}
+                ]
+            });
 
         const now = new Date();
         const todayIso = now.toISOString().slice(0, 10);
@@ -288,29 +299,9 @@
             }
         };
 
-        // This is a case-insensitive search.
-        // The query is split, and all the parts need to match the item.
-        // For example, "Bit wall" can match "Bitcoin wallet", but so does "wall bit"
         const searchLocal = query => {
             if (!query) return [];
-            var normalized = query.toLowerCase().split(/\s+/);
-
-            var found = 0;
-            return localIndex
-                .filter(item => {
-                    if (found >= 12)
-                        return false;
-                    const title = (item.title || '');
-                    const keywords = (item.keywords || []);
-                    var all = [];
-                    keywords.forEach(keyword => { all.push(keyword.toLowerCase()); })
-                    all.push(title.toLowerCase());
-                    if (item.category)
-                        all.push(item.category.toLowerCase());
-                    var match = normalized.every(n => all.some(a => a.startsWith(n)));
-                    if (match) found++;
-                    return match;
-                });
+            return localFuse.search(query, {limit: 12}).map(result => result.item);
         };
 
         const searchRemote = async query => {

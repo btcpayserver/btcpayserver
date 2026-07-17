@@ -153,13 +153,25 @@ a.unobtrusive-link {
 
 /* Badges */
 .badge-new,
+.badge-pending,
+.badge-expired,
+.badge-invalid,
+.badge-unusual,
+.badge-processing,
+.badge-settled {
+    border-radius: 9999px;
+    padding: .4em .9em;
+    font-weight: var(--btcpay-font-weight-semibold);
+    letter-spacing: .01em;
+}
+.badge-new,
 .badge-pending {
-    background: #d4edda;
-    color: #000;
+    background: var(--btcpay-info);
+    color: var(--btcpay-info-text);
 }
 .badge-expired {
-    background: #eee;
-    color: #000;
+    background: var(--btcpay-neutral-500);
+    color: var(--btcpay-white);
 }
 .badge-invalid {
     background: var(--btcpay-danger);
@@ -265,6 +277,291 @@ h2 .icon.icon-info {
 [class*="field-validation"]:not(:empty) {
     display: inline-block;
     margin-top: .5rem;
+}
+
+/* Invoice details view */
+.invoice-detail {
+    width: 100%;
+}
+.inv-card {
+    background: var(--btcpay-bg-tile);
+    border: 1px solid var(--btcpay-body-border-light);
+    border-radius: var(--btcpay-border-radius-l);
+    padding: var(--btcpay-space-l);
+}
+.inv-stitle {
+    display: flex;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+    margin-bottom: var(--btcpay-space-m);
+    color: var(--btcpay-body-text-muted);
+    font-size: var(--btcpay-font-size-m);
+    font-weight: var(--btcpay-font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+.inv-id-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-s);
+    color: var(--btcpay-body-text-muted);
+    font-size: var(--btcpay-font-size-m);
+}
+.invoice-detail .truncate-center {
+    gap: var(--btcpay-space-m);
+}
+
+/* Hero */
+.inv-hero-amount {
+    font-size: 2rem;
+    font-weight: var(--btcpay-font-weight-bold);
+    line-height: 1.1;
+}
+.inv-hero-label {
+    margin-bottom: var(--btcpay-space-xs);
+    color: var(--btcpay-body-text-muted);
+    font-size: var(--btcpay-font-size-m);
+    font-weight: var(--btcpay-font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+/* Label / value rows */
+.inv-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--btcpay-space-m);
+    padding: var(--btcpay-space-s) 0;
+    border-bottom: 1px solid var(--btcpay-body-border-light);
+}
+.inv-row:last-child {
+    border-bottom: 0;
+}
+.inv-rl {
+    flex-shrink: 0;
+    color: var(--btcpay-body-text-muted);
+    font-size: var(--btcpay-font-size-m);
+}
+.inv-rv {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--btcpay-space-xs);
+    min-width: 0;
+    font-size: var(--btcpay-font-size-m);
+    text-align: right;
+}
+.inv-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 var(--btcpay-space-xl);
+}
+@media (max-width: 640px) {
+    .inv-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.inv-inset {
+    display: flex;
+    flex-direction: column;
+    gap: var(--btcpay-space-s);
+    margin-top: var(--btcpay-space-m);
+    padding: var(--btcpay-space-m);
+    background: var(--btcpay-body-bg);
+    border-radius: var(--btcpay-border-radius);
+}
+.inv-inset .inv-row {
+    padding: 0;
+    border-bottom: 0;
+}
+
+/* Flat list rows (refunds, events, deliveries) and status dots */
+.inv-flat {
+    display: flex;
+    align-items: center;
+    gap: var(--btcpay-space-m);
+    padding: var(--btcpay-space-s) var(--btcpay-space-m);
+    background: var(--btcpay-body-bg);
+    border-radius: var(--btcpay-border-radius);
+}
+.inv-dot,
+.inv-method-dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+}
+.inv-method-dot {
+    margin-right: var(--btcpay-space-xs);
+}
+
+/* Collapsible sections */
+.inv-collapse-head {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+    padding: var(--btcpay-space-m) var(--btcpay-space-l);
+    background: none;
+    border: 0;
+    color: var(--btcpay-body-text-muted);
+    font-size: var(--btcpay-font-size-m);
+    font-weight: var(--btcpay-font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+.inv-collapse-head .icon {
+    --icon-size: 1.5rem;
+    transition: transform .2s ease;
+}
+.inv-collapse-head[aria-expanded="true"] .icon {
+    transform: rotate(180deg);
+}
+.inv-count {
+    padding: .1rem .55rem;
+    background: var(--btcpay-body-bg);
+    border-radius: 9999px;
+    font-size: var(--btcpay-font-size-m);
+}
+
+/* Hero payment progress bar */
+.inv-progress {
+    display: block;
+    width: 100%;
+    height: 8px;
+    background: var(--btcpay-body-border-light);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.inv-progress-fill {
+    display: block;
+    height: 100%;
+    border-radius: 4px;
+}
+
+/* Contextual banner icon */
+.inv-banner-icon {
+    --icon-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+/* Payments table */
+.inv-payments th,
+.inv-payments td {
+    padding-right: var(--btcpay-space-l);
+}
+.inv-payments th:last-child,
+.inv-payments td:last-child {
+    padding-left: var(--btcpay-space-m);
+    padding-right: 0;
+}
+.inv-payments .tx {
+    text-align: right;
+}
+.inv-payments tr.inv-replaced td {
+    text-decoration: line-through;
+    opacity: .6;
+}
+.inv-payments tr.inv-last-payment td {
+    border-bottom: 0;
+}
+.inv-payments .inv-row-toggle .icon {
+    --icon-size: 1.25rem;
+    transition: transform .2s ease;
+}
+.inv-payments .inv-conf-check {
+    --icon-size: 1em;
+    vertical-align: -0.125em;
+    margin-right: .15em;
+}
+.inv-payments .inv-row-toggle[aria-expanded="true"] .icon {
+    transform: rotate(180deg);
+}
+.inv-payments tr.inv-details-row td {
+    padding: 0;
+}
+.inv-payments tr.inv-details-row .inv-inset {
+    margin-top: 0;
+    margin-bottom: var(--btcpay-space-s);
+}
+
+/* Activity debug events */
+.inv-debug-toggle .when-expanded {
+    display: none;
+}
+.inv-debug-toggle[aria-expanded="true"] .when-collapsed {
+    display: none;
+}
+.inv-debug-toggle[aria-expanded="true"] .when-expanded {
+    display: inline;
+}
+.inv-debug-log {
+    gap: var(--btcpay-space-xs);
+    padding: var(--btcpay-space-s) 0 0;
+    color: var(--btcpay-body-text-muted);
+    font-family: var(--btcpay-font-monospace);
+    font-size: var(--btcpay-font-size-xs);
+}
+
+/* Confirmation progress bar */
+.conf-track {
+    display: inline-block;
+    width: 60px;
+    height: 6px;
+    background: var(--btcpay-body-border-light);
+    border-radius: 3px;
+    overflow: hidden;
+    vertical-align: middle;
+}
+.conf-fill {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+}
+
+/* Comment */
+.invoice-comment textarea {
+    max-width: 100%;
+}
+
+/* Order items table */
+.inv-cart {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--btcpay-font-size-m);
+}
+.inv-cart th,
+.inv-cart td {
+    padding: var(--btcpay-space-s) 0;
+}
+.inv-cart thead th {
+    color: var(--btcpay-body-text-muted);
+    font-size: var(--btcpay-font-size-m);
+    font-weight: var(--btcpay-font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    border-bottom: 1px solid var(--btcpay-body-border-light);
+}
+.inv-cart tbody td {
+    border-bottom: 1px solid var(--btcpay-body-border-light);
+}
+.inv-cart .num {
+    text-align: right;
+    white-space: nowrap;
+}
+.inv-cart tfoot td {
+    color: var(--btcpay-body-text-muted);
+}
+.inv-cart tfoot tr:first-child td {
+    padding-top: var(--btcpay-space-m);
+}
+.inv-cart tfoot .total td {
+    padding-top: var(--btcpay-space-s);
+    color: var(--btcpay-body-text);
+    font-weight: var(--btcpay-font-weight-bold);
+    border-top: 1px solid var(--btcpay-body-border-light);
 }
 
 /* Print */

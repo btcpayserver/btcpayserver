@@ -1,34 +1,146 @@
 @using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Payments
+@using BTCPayServer.Payments.Bitcoin
+@using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
+@using Newtonsoft.Json
+@inject PaymentMethodHandlerDictionary Handlers
+@inject TransactionLinkProviders TransactionLinkProviders
+@inject DisplayFormatter DisplayFormatter
+@inject PrettyNameProvider PrettyName
 @model InvoiceDetailsModel
 @{
     ViewData.SetLayoutModel(new("Invoices", StringLocalizer["Invoice {0}", Model.Id]));
+    var hasPayments = Model.Payments?.Any() is true;
+    var isInvalid = Model.State.Status == InvoiceStatus.Invalid;
+    var primaryPaid = Model.CryptoPayments?.FirstOrDefault(p => p.Paid != null)?.Paid;
+    var stillDueAmount = Model.CryptoPayments?.FirstOrDefault(p => p.Due != null)?.Due;
+    var overpaidAmount = Model.Overpaid ? Model.CryptoPayments?.FirstOrDefault(p => p.Overpaid != null)?.Overpaid : null;
+
+    // Hero aggregates (progress bar, payment count, total network fee)
+    var accountedPayments = (Model.Payments ?? new List<PaymentEntity>()).Where(p => p.Accounted).ToList();
+    var invoicePrice = Model.Entity?.Price ?? 0m;
+    var paidTowardsInvoice = accountedPayments.Where(p => p.InvoicePaidAmount is not null).Sum(p => p.InvoicePaidAmount.Gross);
+    var paidPct = invoicePrice > 0 ? (int)Math.Round(Math.Clamp(paidTowardsInvoice / invoicePrice * 100m, 0m, 100m)) : (hasPayments ? 100 : 0);
+    var paymentCount = accountedPayments.Count;
+    var totalNetworkFee = accountedPayments.Sum(p => p.PaymentMethodFee);
+    var networkFeeCurrency = accountedPayments.FirstOrDefault()?.Currency;
+    var paymentLink = $"{Context.Request.Scheme}://{Context.Request.Host}/i/{Model.Id}";
+    var statusVar = Model.State.Status switch
+    {
+        InvoiceStatus.Settled => "--btcpay-success",
+        InvoiceStatus.Processing => "--btcpay-warning",
+        InvoiceStatus.New => "--btcpay-primary",
+        InvoiceStatus.Invalid => "--btcpay-danger",
+        _ => "--btcpay-body-text-muted"
+    };
+    (string Label, string Css)? exception = Model.StatusException switch
+    {
+        InvoiceExceptionStatus.PaidOver => (StringLocalizer["Overpaid"].Value, "info"),
+        InvoiceExceptionStatus.PaidPartial => (StringLocalizer["Paid Partial"].Value, "warning"),
+        InvoiceExceptionStatus.PaidLate => (StringLocalizer["Paid Late"].Value, "warning"),
+        _ => null
+    };
+}
+
+@functions {
+    string EventDotColor(string css) => css switch
+    {
+        "success" => "var(--btcpay-success)",
+        "danger" => "var(--btcpay-danger)",
+        "warning" => "var(--btcpay-warning)",
+        "info" => "var(--btcpay-info)",
+        _ => "var(--btcpay-body-text-muted)"
+    };
+
+    static decimal? ParseAmount(Newtonsoft.Json.Linq.JToken t)
+    {
+        if (t is null || t.Type == Newtonsoft.Json.Linq.JTokenType.Null)
+            return null;
+        if (t is Newtonsoft.Json.Linq.JObject o)
+            return o.Value<decimal?>("value") ?? o.Value<decimal?>("amount");
+        return decimal.TryParse(t.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : null;
+    }
+
+    // Lifecycle events (shown in Activity) contain "new event: invoice_…"; everything
+    // else (timings, rate lookups, payjoin notices, …) is treated as a debug event.
+    static readonly System.Text.RegularExpressions.Regex EventCodeRx =
+        new(@"new event:\s*(invoice_\w+)", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    static bool IsActivityEvent(string message) =>
+        !string.IsNullOrEmpty(message) && EventCodeRx.IsMatch(message);
+
+    string ActivityLabel(string message)
+    {
+        var code = EventCodeRx.Match(message).Groups[1].Value;
+        return code switch
+        {
+            "invoice_created" => StringLocalizer["Invoice created"].Value,
+            "invoice_receivedPayment" => StringLocalizer["Payment received"].Value,
+            "invoice_paidInFull" => StringLocalizer["Paid in full"].Value,
+            "invoice_paymentSettled" => StringLocalizer["Payment settled"].Value,
+            "invoice_confirmedPaid" => StringLocalizer["Payment confirmed"].Value,
+            "invoice_completed" => StringLocalizer["Invoice completed"].Value,
+            "invoice_expired" => StringLocalizer["Invoice expired"].Value,
+            "invoice_expiredPaidPartial" => StringLocalizer["Expired — partially paid"].Value,
+            "invoice_expiredPaidLate" => StringLocalizer["Expired — paid late"].Value,
+            "invoice_failedToConfirm" => StringLocalizer["Failed to confirm"].Value,
+            "invoice_markedInvalid" => StringLocalizer["Marked invalid"].Value,
+            "invoice_markedCompleted" => StringLocalizer["Marked settled"].Value,
+            "invoice_paidAfterExpiration" => StringLocalizer["Paid after expiration"].Value,
+            _ => Humanize(code)
+        };
+    }
+
+    // Opinionated dot color for an activity event: green = good, red = bad, etc.
+    string ActivityDotCss(string message)
+    {
+        var code = EventCodeRx.Match(message).Groups[1].Value;
+        return code switch
+        {
+            "invoice_receivedPayment" or "invoice_paidInFull" or "invoice_paymentSettled"
+                or "invoice_confirmedPaid" or "invoice_completed" or "invoice_markedCompleted" => "success",
+            "invoice_expired" or "invoice_expiredPaidPartial" or "invoice_failedToConfirm"
+                or "invoice_markedInvalid" => "danger",
+            "invoice_expiredPaidLate" or "invoice_paidAfterExpiration" => "warning",
+            "invoice_created" => "info",
+            _ => null
+        };
+    }
+
+    static string Humanize(string code)
+    {
+        var s = code.StartsWith("invoice_") ? code["invoice_".Length..] : code;
+        s = System.Text.RegularExpressions.Regex.Replace(s, "(?<=[a-z0-9])([A-Z])", " $1");
+        return s.Length == 0 ? code : char.ToUpperInvariant(s[0]) + s[1..].ToLowerInvariant();
+    }
+
+    // View model for a single settled/received payment card.
+    class PayCard
+    {
+        public bool IsLightning { get; init; }
+        public bool Replaced { get; init; }
+        public string Method { get; init; }
+        public int? ConfCount { get; init; }
+        public int? ConfReq { get; init; }
+        public string Amount { get; init; }
+        public string FiatValue { get; init; }
+        public string NetworkFee { get; init; }
+        public string FeeFiat { get; init; }
+        public string Rate { get; init; }
+        public string Destination { get; init; }
+        public string TxId { get; init; }
+        public string TxLink { get; init; }
+        public string AdditionalInfo { get; init; }
+        public string LnComment { get; init; }
+        public string LnAddress { get; init; }
+    }
 }
 
 @section PageHeadContent {
     <meta name="robots" content="noindex,nofollow">
-    <style>
-        #posData td > table:last-child {
-            margin-bottom: 0 !important;
-        }
-
-        #posData table > tbody > tr:first-child > td > h4 {
-            margin-top: 0 !important;
-        }
-        .invoice-information {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--btcpay-space-xl) var(--btcpay-space-xxl);
-        }
-
-            .invoice-information > div {
-                max-width: 540px;
-            }
-
-                .invoice-information > div table th {
-                    width: 200px;
-                    font-weight: var(--btcpay-font-weight-semibold);
-                }
-    </style>
 }
 
 @section PageFootContent {
@@ -46,9 +158,22 @@
 
         delegate('click', '#IssueRefund', async e => {
             e.preventDefault()
-            const { href: url } = e.target
+            const url = e.target.closest('a').href
             const response = await fetch(url)
             await handleRefundResponse(response)
+        })
+
+        delegate('click', '.mark-invoice-settled', async e => {
+            const button = e.target.closest('.mark-invoice-settled')
+            if (!confirm('Mark this invoice as settled?')) return
+            button.classList.add('disabled')
+            const response = await fetch(button.dataset.url, { method: 'POST' })
+            if (response.ok) {
+                window.location.reload()
+            } else {
+                button.classList.remove('disabled')
+                alert('Invoice state update failed')
+            }
         })
 
         delegate('submit', '#RefundForm', async e => {
@@ -143,6 +268,18 @@
         delegate('change', '#SubtractPercentage', updateSubtractPercentageResult);
         delegate('change', '#CustomCurrency', updateSubtractPercentageResult);
         delegate('change', '#CustomAmount', updateSubtractPercentageResult);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll(".webhook-time-tooltip").forEach(function (el) {
+                formatDateTimes(null, el.content);
+                el.content.querySelectorAll('time').forEach(time => {
+                    var span = document.createElement('span');
+                    span.innerHTML = time.innerHTML;
+                    time.replaceWith(span);
+                });
+                el.parentElement.setAttribute('title', el.innerHTML);
+            });
+        });
     </script>
 }
 
@@ -167,7 +304,10 @@
     </div>
 }
 
-<div class="sticky-header">
+<partial name="_StatusMessage" />
+
+<div class="invoice-detail">
+    @* Static invoice header (breadcrumb above, title/status + actions in one row), not sticky *@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
@@ -175,482 +315,616 @@
             </li>
             <li class="breadcrumb-item active" aria-current="page">Invoice</li>
         </ol>
-        <h2>@ViewData["Title"]</h2>
     </nav>
-    <div>
-        @if (Model.ShowCheckout)
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <div class="d-flex align-items-center flex-wrap gap-3">
+                <h2 class="mb-0" text-translate="true">Invoice</h2>
+                <vc:invoice-status invoice-id="@Model.Id" state="Model.State" payments="Model.Payments"
+                                   is-archived="Model.Archived" has-refund="Model.HasRefund" />
+                @if (exception is { } exh)
+                {
+                    <span class="badge bg-@exh.Css">@exh.Label</span>
+                }
+            </div>
+            <div class="inv-id-line mt-1">
+                <vc:truncate-center text="@Model.Id" padding="30" classes="font-monospace" />
+                <span>&middot;</span>
+                <span>@StringLocalizer["created"] @Model.CreatedDate.ToBrowserDate()</span>
+            </div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            @if (Model.ShowCheckout)
+            {
+                <a asp-action="Checkout" class="invoice-checkout-link btn btn-primary text-nowrap" asp-route-invoiceId="@Model.Id">Checkout</a>
+            }
+            @if (Model.ShowReceipt)
+            {
+                <a asp-action="InvoiceReceipt" asp-route-invoiceId="@Model.Id" id="Receipt" class="btn btn-secondary" target="InvoiceReceipt-@Model.Id">Receipt</a>
+            }
+            @if (Model.CanRefund)
+            {
+                <a asp-action="Refund" asp-route-invoiceId="@Model.Id" id="IssueRefund" class="btn btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#RefundModal" permission="@Policies.CanCreateNonApprovedPullPayments">Issue Refund</a>
+            }
+            <form asp-action="ToggleArchive" asp-route-invoiceId="@Model.Id" method="post">
+                <button type="submit" class="btn btn-secondary" id="btn-archive-toggle">
+                    @if (Model.Archived)
+                    {
+                        <span class="text-nowrap" title="@StringLocalizer["Unarchive this invoice"]">Unarchive</span>
+                    }
+                    else
+                    {
+                        <span class="text-nowrap" title="@StringLocalizer["Archive this invoice so that it does not appear in the invoice list by default"]">Archive</span>
+                    }
+                </button>
+            </form>
+        </div>
+    </div>
+
+    @* Hero *@
+    <div class="inv-card mb-2">
+        @if (hasPayments)
         {
-            <a asp-action="Checkout" class="invoice-checkout-link btn btn-primary text-nowrap" asp-route-invoiceId="@Model.Id">Checkout</a>
-        }
-        @if (Model.ShowReceipt)
-        {
-            <a asp-action="InvoiceReceipt" asp-route-invoiceId="@Model.Id" id="Receipt" class="btn btn-secondary" target="InvoiceReceipt-@Model.Id">Receipt</a>
-        }
-        @if (Model.CanRefund)
-        {
-            <a asp-action="Refund" asp-route-invoiceId="@Model.Id" id="IssueRefund" class="btn btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#RefundModal" permission="@Policies.CanCreateNonApprovedPullPayments">Issue Refund</a>
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-4">
+                <div>
+                    <div class="inv-hero-label" text-translate="true">Paid</div>
+                    <div class="inv-hero-amount" data-sensitive>@primaryPaid</div>
+                </div>
+                <div class="text-end">
+                    @if (Model.StillDue && stillDueAmount != null)
+                    {
+                        <div class="inv-hero-label" text-translate="true">Still Due</div>
+                        <div class="fw-semibold" style="font-size:1.5rem;color:var(--btcpay-warning)" data-sensitive>@stillDueAmount</div>
+                    }
+                    else if (overpaidAmount != null)
+                    {
+                        <div class="inv-hero-label" text-translate="true">Overpaid</div>
+                        <div class="fw-semibold" style="font-size:1.5rem;color:var(--btcpay-info)" data-sensitive>@overpaidAmount</div>
+                    }
+                    else
+                    {
+                        <div class="inv-hero-label" text-translate="true">Invoice Total</div>
+                        <div class="fw-semibold" style="font-size:1.5rem" data-sensitive>@Model.Fiat</div>
+                    }
+                </div>
+            </div>
+            <div class="inv-progress mt-3"><span class="inv-progress-fill" style="width:@(paidPct)%;background:var(@statusVar)"></span></div>
+            <div class="d-flex flex-wrap justify-content-between gap-2 mt-2 text-secondary">
+                <span>@StringLocalizer["{0}% paid", paidPct] &middot; @StringLocalizer["{0} payment(s)", paymentCount]</span>
+                @if (totalNetworkFee > 0 && networkFeeCurrency != null)
+                {
+                    <span data-sensitive>@StringLocalizer["includes {0} network fee", DisplayFormatter.Currency(totalNetworkFee, networkFeeCurrency)]</span>
+                }
+            </div>
         }
         else
         {
-            <button class="btn btn-secondary text-nowrap" title="@StringLocalizer["You can only refund an invoice that has been settled. Please wait for the transaction to confirm on the blockchain before attempting to refund it."]" disabled>Issue refund</button>
+            <div class="inv-hero-label" text-translate="true">Amount Due</div>
+            <div class="inv-hero-amount" data-sensitive>@Model.Fiat</div>
         }
-        <form asp-action="ToggleArchive" asp-route-invoiceId="@Model.Id" method="post">
-            <button type="submit" class="btn btn-secondary" id="btn-archive-toggle">
-                @if (Model.Archived)
-                {
-                    <span class="text-nowrap" title="@StringLocalizer["Unarchive this invoice"]">Unarchive</span>
-                }
-                else
-                {
-                    <span class="text-nowrap" title="@StringLocalizer["Archive this invoice so that it does not appear in the invoice list by default"]">Archive</span>
-                }
-            </button>
-        </form>
     </div>
-</div>
 
-<partial name="_StatusMessage" />
+    @* Contextual banner with actions *@
+    @if (Model.StatusException == InvoiceExceptionStatus.PaidPartial)
+    {
+        <div class="inv-card mb-2 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-start gap-2" style="min-width:0">
+                <vc:icon symbol="warning" css-class="inv-banner-icon text-warning" />
+                <span>@StringLocalizer["Partial payment received. Send the payer an updated link for the remaining {0}, or settle manually.", stillDueAmount]</span>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-secondary text-nowrap clipboard-button" data-clipboard="@paymentLink" text-translate="true">Copy payment link</button>
+                <button type="button" class="btn btn-secondary text-nowrap mark-invoice-settled" data-url="@Url.Action("ChangeInvoiceState", new { invoiceId = Model.Id, newState = "settled" })" text-translate="true">Mark settled</button>
+            </div>
+        </div>
+    }
+    else if (Model.StatusException == InvoiceExceptionStatus.PaidOver)
+    {
+        <div class="inv-card mb-2 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-start gap-2" style="min-width:0">
+                <vc:icon symbol="info" css-class="inv-banner-icon text-info" />
+                <span text-translate="true">This invoice was overpaid. Consider issuing a refund for the excess amount.</span>
+            </div>
+        </div>
+    }
+    else if (Model.StatusException == InvoiceExceptionStatus.PaidLate)
+    {
+        <div class="inv-card mb-2 d-flex align-items-start gap-2">
+            <vc:icon symbol="warning" css-class="inv-banner-icon text-warning" />
+            <span text-translate="true">Payment was received after the invoice expired. The exchange rate may have shifted.</span>
+        </div>
+    }
+    @if (isInvalid)
+    {
+        <div class="inv-card mb-2 d-flex align-items-start gap-2">
+            <vc:icon symbol="cross" css-class="inv-banner-icon text-danger" />
+            <span text-translate="true">This payment did not confirm and is considered invalid. Do not ship goods or deliver services.</span>
+        </div>
+    }
 
-<div class="invoice-details">
-    <div class="invoice-information mb-5">
-        <div>
-            <h3 class="mb-3">General Information</h3>
-            <table class="table mb-0">
-                <tr>
-                    <th>Store</th>
-                    <td>
-                        <a href="@Model.StoreLink" rel="noreferrer noopener">@Model.StoreName</a>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Invoice Id</th>
-                    <td>@Model.Id</td>
-                </tr>
-                @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
-                {
+    @* Order items — only for invoices created from POS/cart data *@
+    @if (Model.TypedMetadata?.PosData?["cart"] is Newtonsoft.Json.Linq.JArray cartArr && cartArr.OfType<Newtonsoft.Json.Linq.JObject>().Any())
+    {
+        var orderCurrency = Model.Entity?.Currency ?? "USD";
+        var orderTax = Model.TypedMetadata?.TaxIncluded ?? 0m;
+        var orderTotal = Model.Entity?.Price ?? 0m;
+        var orderItems = new List<(string Name, decimal Qty, decimal Price)>();
+        foreach (var it in cartArr.OfType<Newtonsoft.Json.Linq.JObject>())
+        {
+            var name = it.Value<string>("title") ?? it.Value<string>("name") ?? StringLocalizer["Item"].Value;
+            var qty = it.Value<decimal?>("count") ?? it.Value<decimal?>("quantity") ?? 1m;
+            var price = ParseAmount(it["price"]) ?? 0m;
+            orderItems.Add((name, qty, price));
+        }
+        var orderSubtotal = orderItems.Sum(x => x.Qty * x.Price);
+        <div class="inv-card mb-2">
+            <div class="inv-stitle" text-translate="true">Order Summary</div>
+            <table class="inv-cart">
+                <thead>
                     <tr>
-                        <th>Order Id</th>
-                        <td>
-                            @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
-                            {
-                                <a href="@Model.TypedMetadata.OrderUrl" rel="noreferrer noopener" target="_blank">
-                                    @if (string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
-                                    {
-                                        <span>View Order</span>
-                                    }
-                                    else
-                                    {
-                                        @Model.TypedMetadata.OrderId
-                                    }
-                                </a>
-                            }
-                            else
-                            {
-                                <span>@Model.TypedMetadata.OrderId</span>
-                            }
-                        </td>
+                        <th text-translate="true">Item</th>
+                        <th class="num" text-translate="true">Qty</th>
+                        <th class="num" text-translate="true">Price</th>
                     </tr>
-                }
-                @if (Model.TypedMetadata.PaymentRequestId is not null)
-                {
+                </thead>
+                <tbody>
+                    @foreach (var it in orderItems)
+                    {
+                        <tr>
+                            <td>@it.Name</td>
+                            <td class="num">&times;@it.Qty.ToString("0.####")</td>
+                            <td class="num" data-sensitive>@DisplayFormatter.Currency(it.Price, orderCurrency, DisplayFormatter.CurrencyFormat.Symbol)</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
                     <tr>
-                        <th>Payment Request Id</th>
-                        <td>
-                            <a href="@Model.PaymentRequestLink" rel="noreferrer noopener">@Model.TypedMetadata.PaymentRequestId</a>
-                        </td>
+                        <td colspan="2" text-translate="true">Subtotal</td>
+                        <td class="num" data-sensitive>@DisplayFormatter.Currency(orderSubtotal, orderCurrency, DisplayFormatter.CurrencyFormat.Symbol)</td>
                     </tr>
-                }
-                <tr>
-                    <th>State</th>
-                    <td>
-                        <vc:invoice-status invoice-id="@Model.Id" state="Model.State" payments="Model.Payments"
-                                           is-archived="Model.Archived" has-refund="Model.HasRefund" />
-                    </td>
-                </tr>
-                <tr>
-                    <th>Created Date</th>
-                    <td>@Model.CreatedDate.ToBrowserDate()</td>
-                </tr>
-                <tr>
-                    <th>Expiration Date</th>
-                    <td>@Model.ExpirationDate.ToBrowserDate()</td>
-                </tr>
-                <tr>
-                    <th>Monitoring Date</th>
-                    <td>@Model.MonitoringDate.ToBrowserDate()</td>
-                </tr>
-                <tr>
-                    <th>Transaction Speed</th>
-                    <td>@Model.TransactionSpeed</td>
-                </tr>
-                <tr>
-                    <th>Total Amount Due</th>
-                    <td><span data-sensitive>@Model.Fiat</span></td>
-                </tr>
-                @if (!string.IsNullOrEmpty(Model.NotificationUrl))
-                {
                     <tr>
-                        <th>Notification Url</th>
-                        <td>@Model.NotificationUrl</td>
+                        <td colspan="2" text-translate="true">Tax</td>
+                        <td class="num" data-sensitive>@DisplayFormatter.Currency(orderTax, orderCurrency, DisplayFormatter.CurrencyFormat.Symbol)</td>
                     </tr>
-                }
-                @if (!string.IsNullOrEmpty(Model.RedirectUrl))
-                {
-                    <tr>
-                        <th>Redirect Url</th>
-                        <td>
-                            <a href="@Model.RedirectUrl" rel="noreferrer noopener">@Model.RedirectUrl</a>
-                        </td>
+                    <tr class="total">
+                        <td colspan="2" text-translate="true">Total</td>
+                        <td class="num" data-sensitive>@DisplayFormatter.Currency(orderTotal, orderCurrency, DisplayFormatter.CurrencyFormat.Symbol)</td>
                     </tr>
-                }
+                </tfoot>
             </table>
         </div>
-        <div class="d-flex flex-column gap-5">
-            <div>
-                <h3 class="mb-3">Comment</h3>
-                <form asp-action="Comment" asp-route-invoiceId="@Model.Id" method="post">
-                    <div class="form-group">
-                        <textarea name="comment" id="InvoiceComment" class="form-control" rows="3"
-                                  placeholder="@StringLocalizer["Add a note or comment for this invoice"]">@Model.Comment</textarea>
-                    </div>
-                    <button type="submit" id="SaveComment" class="btn btn-primary">Save Comment</button>
-                </form>
-            </div>
-            @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode) ||
-                    !string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
+    }
+
+    @* Refund *@
+    @if ((Model.Refunds?.Count ?? 0) > 0)
+    {
+        <div class="inv-card mb-2">
+            <div class="inv-stitle" text-translate="true">Refunds</div>
+            @foreach (var refund in Model.Refunds)
             {
-                <div>
-                    <h3 class="mb-3">
-                        <span>Product Information</span>
-                        <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
-                            <vc:icon symbol="info" />
-                        </a>
-                    </h3>
-                    <table class="table mb-0">
-                        @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
-                        {
-                            <tr>
-                                <th>Item code</th>
-                                <td>@Model.TypedMetadata.ItemCode</td>
-                            </tr>
-                        }
-                        @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
-                        {
-                            <tr>
-                                <th>Item Description</th>
-                                <td>@Model.TypedMetadata.ItemDesc</td>
-                            </tr>
-                        }
-                    </table>
+                <div class="inv-flat mb-2">
+                    <span class="inv-dot" style="background:var(--btcpay-info)"></span>
+                    <div class="flex-grow-1" style="min-width:0">
+                        <div class="fw-semibold">@refund.PullPaymentData.Limit @refund.PullPaymentData.Currency</div>
+                        <div class="text-secondary">@refund.PullPaymentData.StartDate.ToBrowserDate()</div>
+                    </div>
+                    <a asp-action="ViewPullPayment" asp-controller="UIPullPayment" asp-route-pullPaymentId="@refund.PullPaymentDataId" target="_blank" class="btn btn-link p-0" text-translate="true">View Pull Payment</a>
                 </div>
             }
-            @if (Model.TypedMetadata.BuyerName is not null ||
-                    Model.TypedMetadata.BuyerEmail is not null ||
-                    Model.TypedMetadata.BuyerPhone is not null ||
-                    Model.TypedMetadata.BuyerAddress1 is not null ||
-                    Model.TypedMetadata.BuyerAddress2 is not null ||
-                    Model.TypedMetadata.BuyerCity is not null ||
-                    Model.TypedMetadata.BuyerState is not null ||
-                    Model.TypedMetadata.BuyerCountry is not null ||
-                    Model.TypedMetadata.BuyerZip is not null)
+        </div>
+    }
+
+    @* Payments *@
+    @{
+        var paymentCards = new List<PayCard>();
+        var invoiceCurrency = Model.Entity?.Currency;
+        foreach (var payment in Model.Payments ?? new List<PaymentEntity>())
+        {
+            if (!Handlers.TryGetValue(payment.PaymentMethodId, out var h))
             {
-                <div>
-                    <h3 class="mb-3">
-                        <span>Buyer Information</span>
-                        <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
-                            <vc:icon symbol="info" />
-                        </a>
-                    </h3>
-                    <table class="table mb-0">
-                        @if (Model.TypedMetadata.BuyerName is not null)
+                continue;
+            }
+            var pmRate = Model.CryptoPayments?.FirstOrDefault(cp => cp.PaymentMethodId == payment.PaymentMethodId)?.Rate;
+            var fiatValue = payment.InvoicePaidAmount is { } ipa && invoiceCurrency != null ? DisplayFormatter.Currency(ipa.Gross, invoiceCurrency) : null;
+            if (h is BitcoinLikePaymentHandler bh)
+            {
+                var d = bh.ParsePaymentDetails(payment.Details);
+                var confReq = NBXplorerListener.ConfirmationRequired(payment.InvoiceEntity, d);
+                var confCount = (int)Math.Min(confReq, d.ConfirmationCount);
+                var feeFiat = invoiceCurrency != null && payment.PaymentMethodFee > 0 ? DisplayFormatter.Currency(payment.PaymentMethodFee * payment.Rate, invoiceCurrency) : null;
+                paymentCards.Add(new PayCard
+                {
+                    IsLightning = false,
+                    Replaced = !payment.Accounted,
+                    Method = $"{bh.Network.DisplayName} On-Chain",
+                    ConfCount = confCount,
+                    ConfReq = confReq,
+                    Amount = DisplayFormatter.Currency(payment.Value, payment.Currency),
+                    FiatValue = fiatValue,
+                    NetworkFee = payment.PaymentMethodFee > 0 ? DisplayFormatter.Currency(payment.PaymentMethodFee, payment.Currency) : null,
+                    FeeFiat = feeFiat,
+                    Rate = pmRate,
+                    Destination = payment.Destination,
+                    TxId = d.Outpoint.Hash.ToString(),
+                    TxLink = TransactionLinkProviders.GetTransactionLink(payment.PaymentMethodId, d.Outpoint.ToString()),
+                    AdditionalInfo = d.PayjoinInformation is not null ? StringLocalizer["Payjoin"].Value : null
+                });
+            }
+            else if (h is ILightningPaymentHandler lh)
+            {
+                var d = lh.ParsePaymentDetails(payment.Details);
+                string lnComment = null, lnAddress = null;
+                if (lh.ParsePaymentPromptDetails(Model.Entity.GetPaymentPrompt(payment.PaymentMethodId)?.Details) is LNURLPayPaymentMethodDetails lnurl)
+                {
+                    lnComment = lnurl.ProvidedComment;
+                    lnAddress = lnurl.ConsumedLightningAddress;
+                }
+                paymentCards.Add(new PayCard
+                {
+                    IsLightning = true,
+                    Method = $"{lh.Network.DisplayName} Lightning",
+                    Amount = DisplayFormatter.Currency(payment.Value, lh.Network.CryptoCode, divisibility: payment.Divisibility),
+                    FiatValue = fiatValue,
+                    Rate = pmRate,
+                    Destination = d.BOLT11,
+                    TxId = d.Preimage,
+                    LnComment = lnComment,
+                    LnAddress = lnAddress
+                });
+            }
+        }
+    }
+    @if (paymentCards.Any())
+    {
+        <div class="inv-card mb-2">
+            <div class="inv-stitle" text-translate="true">Payments</div>
+            <div class="table-responsive">
+            <table class="inv-cart inv-payments">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th text-translate="true">Method</th>
+                        <th class="num" text-translate="true">Amount</th>
+                        <th class="num" text-translate="true">Fee</th>
+                        <th class="num" text-translate="true">Confs</th>
+                        <th class="tx" text-translate="true">Transaction</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ var i = 0; }
+                    @foreach (var pc in paymentCards)
+                    {
+                        i++;
+                        var last = i == paymentCards.Count;
+                        var hasDetails = !string.IsNullOrEmpty(pc.Destination) || pc.FiatValue != null || pc.Rate != null
+                            || !string.IsNullOrEmpty(pc.LnAddress) || !string.IsNullOrEmpty(pc.LnComment);
+                        <tr class="@(pc.Replaced ? "inv-replaced " : "")@(last ? "inv-last-payment" : "")" title="@(pc.Replaced ? StringLocalizer["Replaced (double-spent)"].Value : null)">
+                            <td>@i</td>
+                            <td class="text-nowrap">
+                                <span class="inv-method-dot" style="background:@(pc.IsLightning ? "var(--btcpay-warning)" : "#f7931a")"></span>@pc.Method
+                                @if (!string.IsNullOrEmpty(pc.AdditionalInfo))
+                                {
+                                    <span class="text-secondary">(@pc.AdditionalInfo)</span>
+                                }
+                            </td>
+                            <td class="num font-monospace" data-sensitive>@pc.Amount</td>
+                            <td class="num font-monospace" data-sensitive>@(pc.NetworkFee ?? "—")</td>
+                            <td class="num text-nowrap">
+                                @if (pc.ConfReq is int req)
+                                {
+                                    var cnt = pc.ConfCount ?? 0;
+                                    var confColor = cnt >= req ? "var(--btcpay-success)" : "var(--btcpay-warning)";
+                                    <span class="text-nowrap" style="color:@confColor">
+                                        @if (cnt >= req)
+                                        {
+                                            <vc:icon symbol="checkmark" css-class="inv-conf-check" />
+                                        }
+                                        @cnt/@req
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                            <td class="tx">
+                                @if (!string.IsNullOrEmpty(pc.TxId))
+                                {
+                                    <vc:truncate-center text="@pc.TxId" link="@pc.TxLink" classes="font-monospace" />
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                            <td class="num">
+                                @if (hasDetails)
+                                {
+                                    <button type="button" class="btn btn-link p-0 inv-row-toggle" data-bs-toggle="collapse" data-bs-target="#pay-details-@i" aria-expanded="false" aria-controls="pay-details-@i" title="@StringLocalizer["Toggle details"]">
+                                        <vc:icon symbol="caret-down" />
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                        @if (hasDetails)
                         {
-                            <tr>
-                                <th>Name</th>
-                                <td>@Model.TypedMetadata.BuyerName</td>
-                            </tr>
-                        }
-                        @if (Model.TypedMetadata.BuyerEmail is not null)
-                        {
-                            <tr>
-                                <th>Email</th>
-                                <td>
-                                    <a href="mailto:@Model.TypedMetadata.BuyerEmail">@Model.TypedMetadata.BuyerEmail</a>
+                            <tr class="inv-details-row @(last ? "inv-last-payment" : "")">
+                                <td colspan="7">
+                                    <div id="pay-details-@i" class="collapse">
+                                        <div class="inv-inset">
+                                            @if (!string.IsNullOrEmpty(pc.Destination))
+                                            {
+                                                <div class="inv-row">
+                                                    <span class="inv-rl">@(pc.IsLightning ? StringLocalizer["BOLT11"] : StringLocalizer["Destination"])</span>
+                                                    <span class="inv-rv"><vc:truncate-center text="@pc.Destination" classes="font-monospace" /></span>
+                                                </div>
+                                            }
+                                            @if (pc.FiatValue != null)
+                                            {
+                                                <div class="inv-row"><span class="inv-rl" text-translate="true">Fiat Value</span><span class="inv-rv" data-sensitive>@pc.FiatValue</span></div>
+                                            }
+                                            @if (pc.Rate != null)
+                                            {
+                                                <div class="inv-row"><span class="inv-rl" text-translate="true">Exchange Rate</span><span class="inv-rv" data-sensitive>@pc.Rate</span></div>
+                                            }
+                                            @if (pc.NetworkFee != null && pc.FeeFiat != null)
+                                            {
+                                                <div class="inv-row"><span class="inv-rl" text-translate="true">Network Fee</span><span class="inv-rv font-monospace" data-sensitive>@pc.NetworkFee (~@pc.FeeFiat)</span></div>
+                                            }
+                                            @if (!string.IsNullOrEmpty(pc.LnAddress))
+                                            {
+                                                <div class="inv-row"><span class="inv-rl" text-translate="true">Lightning Address</span><span class="inv-rv">@pc.LnAddress</span></div>
+                                            }
+                                            @if (!string.IsNullOrEmpty(pc.LnComment))
+                                            {
+                                                <div class="inv-row"><span class="inv-rl" text-translate="true">Comment</span><span class="inv-rv">@pc.LnComment</span></div>
+                                            }
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         }
-                        @if (Model.TypedMetadata.BuyerPhone is not null)
-                        {
-                            <tr>
-                                <th>Phone</th>
-                                <td>@Model.TypedMetadata.BuyerPhone</td>
-                            </tr>
-                        }
-                        @if (Model.TypedMetadata.BuyerAddress1 is not null)
-                        {
-                            <tr>
-                                <th>Address 1</th>
-                                <td>@Model.TypedMetadata.BuyerAddress1</td>
-                            </tr>
-                        }
-                        @if (Model.TypedMetadata.BuyerAddress2 is not null)
-                        {
-                            <tr>
-                                <th>Address 2</th>
-                                <td>@Model.TypedMetadata.BuyerAddress2</td>
-                            </tr>
-                        }
-                        @if (Model.TypedMetadata.BuyerCity is not null)
-                        {
-                            <tr>
-                                <th>City</th>
-                                <td>@Model.TypedMetadata.BuyerCity</td>
-                            </tr>
-                        }
-                        @if (Model.TypedMetadata.BuyerState is not null)
-                        {
-                            <tr>
-                                <th>State</th>
-                                <td>@Model.TypedMetadata.BuyerState</td>
-                            </tr>
-                        }
-                        @if (Model.TypedMetadata.BuyerCountry is not null)
-                        {
-                            <tr>
-                                <th>Country</th>
-                                <td>@Model.TypedMetadata.BuyerCountry</td>
-                            </tr>
-                        }
-                        @if (Model.TypedMetadata.BuyerZip is not null)
-                        {
-                            <tr>
-                                <th>Zip</th>
-                                <td>@Model.TypedMetadata.BuyerZip</td>
-                            </tr>
-                        }
-                    </table>
-                </div>
-            }
-            @if (Model.ReceiptData?.Any() is true)
-            {
-                <div>
-                    <h3 class="mb-3">
-                        <span>Receipt Information</span>
-                        <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
-                            <vc:icon symbol="info" />
-                        </a>
-                    </h3>
-                    <partial name="PosData" model="(Model.ReceiptData, 1)" />
-                </div>
-            }
-            @if (Model.AdditionalData?.Any() is true)
-            {
-                <div>
-                    <h3 class="mb-3">
-                        <span>Additional Information</span>
-                        <a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
-                            <vc:icon symbol="info" />
-                        </a>
-                    </h3>
-                    <partial name="PosData" model="(Model.AdditionalData, 1)" />
-                </div>
-            }
+                    }
+                </tbody>
+            </table>
+            </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-xxl-constrain">
-            <h3 class="mb-3">Invoice Summary</h3>
-            <partial name="ListInvoicesPaymentsPartial" model="(Model, true)" />
+    }
+    else
+    {
+        <div class="inv-card mb-2 text-center" style="padding:var(--btcpay-space-xl)">
+            <div class="text-secondary">
+                @(Model.State.Status == InvoiceStatus.New ? StringLocalizer["Waiting for the buyer to send payment…"] : StringLocalizer["No payment was received for this invoice."])
+            </div>
+        </div>
+    }
 
-            @if (Model.Deliveries.Any())
-            {
-                <section class="mt-4 d-print-none">
-                    <h3 class="mb-3">Webhooks</h3>
-                    <div class="table-responsive-xl">
-                        <table class="table table-hover mb-5">
-                            <thead>
-                                <tr>
-                                    <th>Status</th>
-                                    <th>ID</th>
-                                    <th>Type</th>
-                                    <th>Url</th>
-                                    <th>Date</th>
-                                    <th class="text-end">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var delivery in Model.Deliveries)
+    @* Info + Buyer + Product *@
+    <div class="row g-4 mb-2">
+        <div class="col-lg-6">
+            <div class="inv-card h-100">
+                <div class="inv-stitle" text-translate="true">Invoice Info</div>
+                <div class="inv-row"><span class="inv-rl" text-translate="true">Store</span><span class="inv-rv"><a href="@Model.StoreLink" rel="noreferrer noopener">@Model.StoreName</a></span></div>
+                @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
+                {
+                    <div class="inv-row"><span class="inv-rl" text-translate="true">Order Id</span><span class="inv-rv">
+                        @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
+                        {
+                            <a href="@Model.TypedMetadata.OrderUrl" rel="noreferrer noopener" target="_blank">@Model.TypedMetadata.OrderId</a>
+                        }
+                        else
+                        {
+                            <span>@Model.TypedMetadata.OrderId</span>
+                        }
+                    </span></div>
+                }
+                @if (Model.TypedMetadata.PaymentRequestId is not null)
+                {
+                    <div class="inv-row"><span class="inv-rl" text-translate="true">Payment Request</span><span class="inv-rv"><a href="@Model.PaymentRequestLink" rel="noreferrer noopener">@Model.TypedMetadata.PaymentRequestId</a></span></div>
+                }
+                @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
+                {
+                    <div class="inv-row"><span class="inv-rl" text-translate="true">Description</span><span class="inv-rv">@Model.TypedMetadata.ItemDesc</span></div>
+                }
+                @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode))
+                {
+                    <div class="inv-row"><span class="inv-rl" text-translate="true">Item code</span><span class="inv-rv">@Model.TypedMetadata.ItemCode</span></div>
+                }
+                <div class="inv-row"><span class="inv-rl" text-translate="true">Created</span><span class="inv-rv">@Model.CreatedDate.ToBrowserDate()</span></div>
+                <div class="inv-row"><span class="inv-rl" text-translate="true">Expiration</span><span class="inv-rv">@Model.ExpirationDate.ToBrowserDate()</span></div>
+                @if (!string.IsNullOrEmpty(Model.RedirectUrl))
+                {
+                    <div class="inv-row"><span class="inv-rl" text-translate="true">Redirect</span><span class="inv-rv"><a href="@Model.RedirectUrl" rel="noreferrer noopener" class="text-truncate">@Model.RedirectUrl</a></span></div>
+                }
+            </div>
+        </div>
+        @{
+            var hasBuyer = Model.TypedMetadata.BuyerName is not null || Model.TypedMetadata.BuyerEmail is not null || Model.TypedMetadata.BuyerPhone is not null
+                || Model.TypedMetadata.BuyerAddress1 is not null || Model.TypedMetadata.BuyerAddress2 is not null || Model.TypedMetadata.BuyerCity is not null
+                || Model.TypedMetadata.BuyerState is not null || Model.TypedMetadata.BuyerCountry is not null || Model.TypedMetadata.BuyerZip is not null;
+        }
+        @if (hasBuyer)
+        {
+            <div class="col-lg-6">
+                <div class="inv-card h-100">
+                    <div class="inv-stitle" text-translate="true">Buyer</div>
+                    @if (Model.TypedMetadata.BuyerName is not null)
+                    {
+                        <div class="inv-row"><span class="inv-rl" text-translate="true">Name</span><span class="inv-rv">@Model.TypedMetadata.BuyerName</span></div>
+                    }
+                    @if (Model.TypedMetadata.BuyerEmail is not null)
+                    {
+                        <div class="inv-row"><span class="inv-rl" text-translate="true">Email</span><span class="inv-rv"><a href="mailto:@Model.TypedMetadata.BuyerEmail">@Model.TypedMetadata.BuyerEmail</a></span></div>
+                    }
+                    @if (Model.TypedMetadata.BuyerPhone is not null)
+                    {
+                        <div class="inv-row"><span class="inv-rl" text-translate="true">Phone</span><span class="inv-rv">@Model.TypedMetadata.BuyerPhone</span></div>
+                    }
+                    @if (Model.TypedMetadata.BuyerAddress1 is not null)
+                    {
+                        <div class="inv-row"><span class="inv-rl" text-translate="true">Address</span><span class="inv-rv">@Model.TypedMetadata.BuyerAddress1</span></div>
+                    }
+                    @if (Model.TypedMetadata.BuyerAddress2 is not null)
+                    {
+                        <div class="inv-row"><span class="inv-rl" text-translate="true">Address 2</span><span class="inv-rv">@Model.TypedMetadata.BuyerAddress2</span></div>
+                    }
+                    @if (Model.TypedMetadata.BuyerCity is not null)
+                    {
+                        <div class="inv-row"><span class="inv-rl" text-translate="true">City</span><span class="inv-rv">@Model.TypedMetadata.BuyerCity</span></div>
+                    }
+                    @if (Model.TypedMetadata.BuyerState is not null)
+                    {
+                        <div class="inv-row"><span class="inv-rl" text-translate="true">State</span><span class="inv-rv">@Model.TypedMetadata.BuyerState</span></div>
+                    }
+                    @if (Model.TypedMetadata.BuyerZip is not null)
+                    {
+                        <div class="inv-row"><span class="inv-rl" text-translate="true">Zip</span><span class="inv-rv">@Model.TypedMetadata.BuyerZip</span></div>
+                    }
+                    @if (Model.TypedMetadata.BuyerCountry is not null)
+                    {
+                        <div class="inv-row"><span class="inv-rl" text-translate="true">Country</span><span class="inv-rv">@Model.TypedMetadata.BuyerCountry</span></div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    @* Comment *@
+    <div class="inv-card mb-2 invoice-comment">
+        <div class="inv-stitle" text-translate="true">Comment</div>
+        <form asp-action="Comment" asp-route-invoiceId="@Model.Id" method="post">
+            <div class="form-group">
+                <textarea name="comment" id="InvoiceComment" class="form-control" rows="3"
+                          placeholder="@StringLocalizer["Add a note or comment for this invoice"]">@Model.Comment</textarea>
+            </div>
+            <button type="submit" id="SaveComment" class="btn btn-primary">Save Comment</button>
+        </form>
+    </div>
+
+
+    @* Activity (collapsible) *@
+    @if (Model.Events is { Length: > 0 })
+    {
+        var orderedEvents = Model.Events.Reverse().ToList();
+        var activityEvents = orderedEvents.Where(e => IsActivityEvent(e.Message)).ToList();
+        var debugEvents = orderedEvents.Where(e => !IsActivityEvent(e.Message)).ToList();
+        <div class="inv-card p-0 mb-2 d-print-none" style="overflow:hidden">
+            <button class="inv-collapse-head" type="button" data-bs-toggle="collapse" data-bs-target="#EventTimeline" aria-expanded="true" aria-controls="EventTimeline">
+                <span text-translate="true">Activity</span>
+                <span class="inv-count">@activityEvents.Count</span>
+                <span class="ms-auto"><vc:icon symbol="caret-down" /></span>
+            </button>
+            <div class="collapse show" id="EventTimeline">
+                <div class="d-flex flex-column gap-2 p-3 pt-0">
+                    @foreach (var evt in activityEvents)
+                    {
+                        <div class="inv-flat">
+                            <span class="inv-dot" style="background:@EventDotColor(ActivityDotCss(evt.Message))"></span>
+                            <div class="flex-grow-1" style="min-width:0">
+                                <div>@ActivityLabel(evt.Message)</div>
+                            </div>
+                            <span class="text-secondary text-nowrap">@evt.Timestamp.ToBrowserDate()</span>
+                        </div>
+                    }
+                    @if (debugEvents.Count > 0)
+                    {
+                        <button type="button" class="btn btn-link p-0 align-self-start inv-debug-toggle" data-bs-toggle="collapse" data-bs-target="#DebugEvents" aria-expanded="false" aria-controls="DebugEvents">
+                            <span class="when-collapsed" text-translate="true">Show debug events</span>
+                            <span class="when-expanded" text-translate="true">Hide debug events</span>
+                        </button>
+                        <div class="collapse" id="DebugEvents">
+                            <div class="inv-debug-log d-flex flex-column">
+                                @foreach (var evt in debugEvents)
                                 {
-                                    <tr>
-                                        <form asp-action="RedeliverWebhook"
-                                              asp-route-storeId="@Model.StoreId"
-                                              asp-route-invoiceId="@Model.Id"
-                                              asp-route-deliveryId="@delivery.Id"
-                                              method="post">
-                                        <td>
-                                            <span>
-                                                @if (delivery.Success)
-                                                {
-                                                    <vc:icon symbol="checkmark" css-class="text-success" />
-                                                }
-                                                else
-                                                {
-                                                    <span title="@delivery.ErrorMessage">
-                                                        <vc:icon symbol="cross" css-class="text-danger"/>
-                                                    </span>
-                                                }
-                                            </span>
-                                        </td>
-                                        <td>
-                                                @if (!delivery.Pruned)
-                                                {
-                                                <span>
-                                                    <a asp-action="WebhookDelivery"
-                                                       asp-route-invoiceId="@Model.Id"
-                                                       asp-route-deliveryId="@delivery.Id"
-                                                       class="delivery-content"
-                                                       target="_blank">
-                                                            @delivery.Id
-                                                    </a>
-                                                </span>
-                                                }
-                                        </td>
-                                        <td>
-                                            <span>@delivery.Type</span>
-                                        </td>
-                                        <td>
-                                            <span class="text-break" data-bs-toggle="tooltip" title="@delivery.PayloadUrl" style="cursor: pointer;">
-                                                <span style="max-width: 250px;">@delivery.PayloadUrl</span>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @{
-                                                var timeDiff = delivery.DeliveryTime - delivery.Time;
-                                                var hasSignificantDelay = Math.Abs(timeDiff.TotalMinutes) > 2;
+                                    <div class="d-flex justify-content-between gap-3">
+                                        <span>@evt.Message</span>
+                                        <span class="text-nowrap">@evt.Timestamp.ToBrowserDate()</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Webhook Deliveries *@
+    @if (Model.Deliveries.Any())
+    {
+        <div class="inv-card mb-2 d-print-none">
+            <div class="inv-stitle" text-translate="true">Webhook Deliveries</div>
+            <div class="table-responsive">
+            <table class="inv-cart inv-payments">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th text-translate="true">Event</th>
+                        <th style="width:100%" text-translate="true">Payload URL</th>
+                        <th class="num text-nowrap" text-translate="true">Delivered</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var delivery in Model.Deliveries)
+                    {
+                        var timeDiff = delivery.DeliveryTime - delivery.Time;
+                        var hasSignificantDelay = Math.Abs(timeDiff.TotalMinutes) > 2;
+                        <tr>
+                            <td>
+                                <span class="inv-dot" style="background:@(delivery.Success ? "var(--btcpay-success)" : "var(--btcpay-danger)")" title="@(delivery.Success ? null : delivery.ErrorMessage)"></span>
+                            </td>
+                            <td class="text-nowrap">@delivery.Type</td>
+                            <td>
+                                <span class="text-secondary font-monospace text-truncate d-inline-block align-middle" style="max-width:100%" title="@delivery.PayloadUrl">@delivery.PayloadUrl</span>
+                            </td>
+                            <td class="num text-nowrap">
+                                <span class="webhook-time text-secondary" data-bs-html="true" data-bs-toggle="tooltip">
+                                    <template class="webhook-time-tooltip">
+                                        <div class="text-start">
+                                            <span><b text-translate="true">Created at</b>:&nbsp;@delivery.Time.ToBrowserDate()</span><br />
+                                            <span><b text-translate="true">Delivered at</b>:&nbsp;@delivery.DeliveryTime.ToBrowserDate()</span>
+                                            @if (hasSignificantDelay)
+                                            {
+                                                <br /><span><b text-translate="true">Delay</b>:&nbsp;<span>@StringLocalizer["{0} minutes", @timeDiff.TotalMinutes.ToString("F1")]</span></span>
                                             }
-                                            <span>
-                                                <span class="webhook-time" data-bs-html="true" data-bs-toggle="tooltip">
-                                                    <template class="webhook-time-tooltip">
-                                                        <div class="text-start">
-                                                            <span><b text-translate="true">Created at</b>:&nbsp;@delivery.Time.ToBrowserDate()</span><br />
-                                                            <span><b text-translate="true">Delivered at</b>:&nbsp;@delivery.DeliveryTime.ToBrowserDate()</span>
-                                                            @if (hasSignificantDelay)
-                                                            {
-                                                                <br />
-                                                                <span><b text-translate="true">Delay</b>:&nbsp;<span>@StringLocalizer["{0} minutes", @timeDiff.TotalMinutes.ToString("F1")]</span></span>
-                                                                <br />
-                                                                <br />
-                                                                <span text-translate="true">A delay means your service either failed to process earlier deliveries or is taking too long to respond.</span>
-                                                            }
-                                                        </div>
-                                                    </template>
-
-                                                    <span class="delivery-time">@delivery.DeliveryTime.ToBrowserDate()</span>
-                                                    @if (hasSignificantDelay)
-                                                    {
-                                                        <vc:icon symbol="warning" css-class="mb-1 text-warning" />
-                                                    }
-                                                </span>
-                                            </span>
-                                        </td>
-                                        <td class="text-end">
-                                                @if (!delivery.Pruned)
-                                                {
-                                                <button id="#redeliver-@delivery.Id"
-                                                        type="submit"
-                                                        class="btn btn-link p-0 redeliver">
-                                                    Redeliver
-                                                </button>
-                                                }
-                                        </td>
-                                        </form>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
-            }
-            @if ((Model.Refunds?.Count ?? 0) > 0)
-            {
-                <section class="mt-4">
-                    <h3 class="mb-3">Refunds</h3>
-                    <div class="table-responsive-xl">
-                        <table class="table table-hover mb-5">
-                            <thead>
-                                <tr>
-                                    <th>Pull Payment</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var refund in Model.Refunds)
+                                        </div>
+                                    </template>
+                                    <span class="delivery-time">@delivery.DeliveryTime.ToBrowserDate()</span>
+                                    @if (hasSignificantDelay)
+                                    {
+                                        <vc:icon symbol="warning" css-class="text-warning" />
+                                    }
+                                </span>
+                            </td>
+                            <td class="num">
+                                @if (!delivery.Pruned)
                                 {
-                                    <tr>
-
-                                        <td>
-                                            <span>
-                                                <a asp-action="ViewPullPayment" asp-controller="UIPullPayment"
-                                                   asp-route-pullPaymentId="@refund.PullPaymentDataId"
-                                                   class="delivery-content"
-                                                   target="_blank">
-                                                    @refund.PullPaymentData.Id
-                                                </a>
-                                            </span>
-                                        </td>
-                                        <td>
-											<span>@refund.PullPaymentData.Limit @refund.PullPaymentData.Currency</span>
-                                        </td>
-                                        <td>
-                                            <span>@refund.PullPaymentData.StartDate.ToBrowserDate()</span>
-                                        </td>
-                                    </tr>
+                                    <form asp-action="RedeliverWebhook" asp-route-storeId="@Model.StoreId" asp-route-invoiceId="@Model.Id" asp-route-deliveryId="@delivery.Id" method="post">
+                                        <button type="submit" class="btn btn-link p-0 redeliver" title="@StringLocalizer["Redeliver"]"><vc:icon symbol="actions-refresh" /></button>
+                                    </form>
                                 }
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-            }
-
-            @if (Model.Events is { Length: > 0 })
-            {
-                <section class="mt-5 d-print-none">
-                    <h3 class="mb-0">Events</h3>
-                    <table class="table table-hover mt-3 mb-4">
-                        <thead>
-                            <tr>
-                                <vc:date-column></vc:date-column>
-                                <th>Message</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var evt in Model.Events)
-                            {
-                                var cssClass = string.IsNullOrEmpty(evt.GetCssClass()) ? null : $"text-{evt.GetCssClass()}";
-                                <tr>
-                                    <td class="@cssClass">@evt.Timestamp.ToBrowserDate()</td>
-                                    <td class="@cssClass">@evt.Message</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </section>
-            }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            </div>
         </div>
-    </div>
+    }
+
+    @* Metadata (collapsible) *@
+    @if (Model.Metadata?.Any() is true)
+    {
+        <div class="inv-card p-0 mb-2 d-print-none" style="overflow:hidden">
+            <button class="inv-collapse-head" type="button" data-bs-toggle="collapse" data-bs-target="#Metadata" aria-expanded="false" aria-controls="Metadata">
+                <span text-translate="true">Metadata</span>
+                <span class="ms-auto"><vc:icon symbol="caret-down" /></span>
+            </button>
+            <div class="collapse" id="Metadata">
+                <pre class="font-monospace m-3 mt-0 p-3 rounded" style="background:var(--btcpay-body-bg);font-size:var(--btcpay-font-size-m)">@JsonConvert.SerializeObject(Model.Metadata, Formatting.Indented)</pre>
+            </div>
+        </div>
+    }
 </div>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll(".webhook-time-tooltip").forEach(function (el) {
-            formatDateTimes(null, el.content);
-            // Somehow <time> isn't supported in tooltip... we replace it by <span>
-            el.content.querySelectorAll('time').forEach(time => {
-                var span = document.createElement('span');
-                span.innerHTML = time.innerHTML;
-                time.replaceWith(span);
-            });
-            el.parentElement.setAttribute('title', el.innerHTML);
-        });
-    });
-</script>

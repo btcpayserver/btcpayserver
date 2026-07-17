@@ -1227,10 +1227,12 @@ namespace BTCPayServer.Tests
 
             // We can leave a comment on the invoice, and it should be included in the export
             await s.GoToInvoice(invId);
-            await s.Page.FillAsync("#InvoiceComment", "refunded manually from cashier wallet");
-            await s.Page.ClickAsync("#SaveComment");
+            var invoiceComment = s.Page.Locator(".invoice-comment");
+            await invoiceComment.Locator(".invoice-comment__toggle").ClickAsync();
+            await invoiceComment.Locator(".invoice-comment__textarea").FillAsync("refunded manually from cashier wallet");
+            await invoiceComment.Locator(".invoice-comment__save").ClickAsync();
             await s.FindAlertMessage(partialText: "The comment has been saved.");
-            await Expect(s.Page.Locator("#InvoiceComment")).ToHaveValueAsync("refunded manually from cashier wallet");
+            await Expect(invoiceComment.Locator(".invoice-comment__value")).ToHaveTextAsync("refunded manually from cashier wallet");
 
             await s.GoToInvoices(s.StoreId);
             await s.ClickViewReport();

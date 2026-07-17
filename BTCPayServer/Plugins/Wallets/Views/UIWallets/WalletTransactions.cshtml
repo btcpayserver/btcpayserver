@@ -144,7 +144,11 @@
                     // replace table and dropdowns if initial response was empty
                     if (responseEmpty) {
                         $dropdowns.remove();
-                        $transactions.innerHTML = @Safe.Json(StringLocalizer["<div class=\"text-secondary\" data-loaded=\"true\">There are no transactions yet.</div>"].Value);
+                        const emptyMessage = document.createElement('div');
+                        emptyMessage.classList.add('text-secondary');
+                        emptyMessage.dataset.loaded = 'true';
+                        emptyMessage.textContent = @Safe.Json(StringLocalizer["There are no transactions yet."].Value);
+                        $transactions.replaceChildren(emptyMessage);
                     }
                 }
             }

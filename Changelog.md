@@ -30,6 +30,8 @@
 * Fix Custom Range formatting in the date range selector (#7439) @NicolasDorier
 * Fix Core Lightning compatibility issues (#7449) @NicolasDorier
 * Fix Boltcards payments @NicolasDorier
+* Fix  Core lightning fundchannel feerate by passing NBitcoin FeePerK value directly as perkb. (#7449) @thgO-O
+* Fix c-lightning MaxFeePercent being sent to xpay in satoshi instead of millisatoshi (#7449) @TowyTowy
 * Fix the `Mark as seen` button in the notification list (#7424) @NicolasDorier
 * Fix incorrect date range filtering across DST boundaries (#7424) @NicolasDorier
 

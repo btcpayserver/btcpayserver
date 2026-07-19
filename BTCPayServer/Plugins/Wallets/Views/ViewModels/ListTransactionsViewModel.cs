@@ -21,11 +21,6 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
             public bool Positive { get; set; }
             public string Balance { get; set; }
             public HashSet<TransactionTagModel> Tags { get; set; } = new();
-            public string Rate { get; set; }
-            public List<string> Rates { get; set; } = new();
-            public RateBook WalletRateBook { get; set; }
-            public RateBook InvoiceRateBook { get; set; }
-            public string InvoiceId { get; set; }
             public TransactionHistoryLine HistoryLine { get; set; }
         }
         public HashSet<LabelSelectorItemViewModel> Labels { get; set; } = new();
@@ -33,7 +28,6 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
         public override int CurrentPageCount => Transactions.Count;
         public string CryptoCode { get; set; }
         public PendingTransaction[] PendingTransactions { get; set; }
-        public List<string> Rates { get; set; } = new();
         public bool HasFilters { get; set; }
 
         protected override void AddUIFilters(SearchString search)

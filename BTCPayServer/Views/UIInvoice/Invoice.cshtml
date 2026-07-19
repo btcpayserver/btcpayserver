@@ -32,6 +32,18 @@
                     width: 200px;
                     font-weight: var(--btcpay-font-weight-semibold);
                 }
+
+        .invoice-comment__value {
+            overflow-wrap: anywhere;
+        }
+
+        .invoice-comment__toggle {
+            margin-left: var(--btcpay-space-s);
+        }
+
+        .invoice-comment__dropdown {
+            min-width: 18rem;
+        }
     </style>
 }
 
@@ -283,6 +295,36 @@
                     <th text-translate="true">Total Amount Due</th>
                     <td><span data-sensitive>@Model.Fiat</span></td>
                 </tr>
+                <tr>
+                    <th text-translate="true">Comment</th>
+                    <td>
+                        <div class="invoice-comment d-flex align-items-start gap-2">
+                            @if (!string.IsNullOrEmpty(Model.Comment))
+                            {
+                                <span class="invoice-comment__value">@Model.Comment</span>
+                            }
+                            else
+                            {
+                                <span class="invoice-comment__value text-secondary" text-translate="true">No comment</span>
+                            }
+                            <span class="dropdown">
+                                <button class="invoice-comment__toggle btn btn-link p-0 @(!string.IsNullOrEmpty(Model.Comment) ? "text-primary" : "text-secondary")" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false" title="@(!string.IsNullOrEmpty(Model.Comment) ? StringLocalizer["Modify the comment"] : StringLocalizer["Add a comment"])">
+                                    <vc:icon symbol="actions-comment" />
+                                </button>
+                                <div class="invoice-comment__dropdown dropdown-menu">
+                                    <form asp-action="Comment" asp-route-invoiceId="@Model.Id" asp-route-returnUrl="@Context.Request.GetCurrentPathWithQueryString()" method="post">
+                                        <div class="input-group p-2">
+                                            <textarea name="comment" rows="3" cols="20" class="invoice-comment__textarea form-control form-control-sm p-1" placeholder="@StringLocalizer["Add a note or comment for this invoice"]">@Model.Comment</textarea>
+                                        </div>
+                                        <div class="p-2">
+                                            <button type="submit" class="invoice-comment__save btn btn-primary btn-sm w-100" text-translate="true">Save comment</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
                 @if (!string.IsNullOrEmpty(Model.NotificationUrl))
                 {
                     <tr>
@@ -302,16 +344,6 @@
             </table>
         </div>
         <div class="d-flex flex-column gap-5">
-            <div>
-                <h3 class="mb-3" text-translate="true">Comment</h3>
-                <form asp-action="Comment" asp-route-invoiceId="@Model.Id" method="post">
-                    <div class="form-group">
-                        <textarea name="comment" id="InvoiceComment" class="form-control" rows="3"
-                                  placeholder="@StringLocalizer["Add a note or comment for this invoice"]">@Model.Comment</textarea>
-                    </div>
-                    <button type="submit" id="SaveComment" class="btn btn-primary" text-translate="true">Save Comment</button>
-                </form>
-            </div>
             @if (!string.IsNullOrEmpty(Model.TypedMetadata.ItemCode) ||
                     !string.IsNullOrEmpty(Model.TypedMetadata.ItemDesc))
             {

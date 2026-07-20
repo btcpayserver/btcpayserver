@@ -52,16 +52,11 @@
                 ]
             });
 
-        const now = new Date();
-        const todayIso = now.toISOString().slice(0, 10);
-        const yesterday = new Date(now);
-        yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-        const yesterdayIso = yesterday.toISOString().slice(0, 10);
         const suggestedQueries = [
-            {query: `date:${todayIso}`, hint: vm.translate['Find invoices and requests created today']},
-            {query: `date:${yesterdayIso}`, hint: vm.translate['Find invoices and requests from yesterday']},
-            {query: 'tx:4e3a67', hint: vm.translate['Find by transaction id (prefix supported)']},
-            {query: 'server settings', hint: vm.translate['Jump to server settings pages quickly']}
+            {query: '4e3a67', hint: vm.translate['Find by transaction id (prefix supported)']},
+            {query: 'K4cDPJ3Hkv3bWTq8zpHGoW', hint: vm.translate['Find by invoice id']},
+            {query: '1Nro9WkpaKm9axmcfPVp79dAJU1Gx7VmMZ', hint: vm.translate['Find by address']},
+            {query: vm.translate['Get a deposit address'], hint: vm.translate['Jump to pages quickly']},
         ];
 
         let latestSearchToken = 0;

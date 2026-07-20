@@ -46,6 +46,7 @@
 * Keep store settings navigation expanded and highlighted on subpages (#7452) @dstrukt
 * Remove misleading error logs on the first installation @NicolasDorier
 * Make global search more forgiving (#7461) @NicolasDorier
+* Update default global search bar suggestions (#7466) @NicolasDorier
 
 ## 2.4.0
 

@@ -256,7 +256,7 @@ namespace BTCPayServer.Tests
             // Kraken emit one request only after first GetRates
             await factory.Providers["kraken"].GetRatesAsync(default);
 
-            var p = new KrakenExchangeRateProvider();
+            var p = new KrakenExchangeRateProvider(TestUtils.CreateHttpFactory());
             var rates = await p.GetRatesAsync(default);
             Assert.Contains(rates, e => e.CurrencyPair == new CurrencyPair("XMR", "BTC") && e.BidAsk.Bid < 1.0m);
 

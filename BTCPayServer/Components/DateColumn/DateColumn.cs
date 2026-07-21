@@ -8,11 +8,13 @@ public class DateColumn(IStringLocalizer stringLocalizer) : ViewComponent
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
     public string? ColumnName { get; set; }
-    public IViewComponentResult Invoke(string? columnName = null)
+    public string? ColumnKey { get; set; }
+    public IViewComponentResult Invoke(string? columnName = null, string? columnKey = null)
     {
         if (columnName is null)
             columnName = StringLocalizer["Date"];
         ColumnName = columnName;
+        ColumnKey = columnKey;
         return View(this);
     }
 }

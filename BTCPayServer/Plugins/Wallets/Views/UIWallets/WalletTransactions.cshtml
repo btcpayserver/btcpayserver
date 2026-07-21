@@ -96,6 +96,7 @@
 @section PageFootContent {
     @*Script must be async to ensure proper page loading*@
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
+    <script src="~/js/wallet/wallet-transactions-columns.js" asp-append-version="true"></script>
     <script>
         const $actions = document.getElementById('ListActions');
         const $transactions = document.getElementById('WalletTransactions');
@@ -158,6 +159,7 @@
             if (switchTime)
                 formatDateTimes(switchTime.dataset.mode);
             initLabelManagers();
+            if (window.WalletTxColumns) window.WalletTxColumns.apply();
         }
 
         const observer = new IntersectionObserver(async entries => {
@@ -218,7 +220,8 @@
 </div>
 <partial name="_StatusMessage" />
 
-<form id="WalletTransactionsSearch" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="WalletTransactions" asp-route-walletId="@walletId" method="get">
+<div class="d-flex flex-wrap align-items-center gap-3 mb-4" id="WalletTransactionsControls">
+<form id="WalletTransactionsSearch" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 col-xxl-8" asp-action="WalletTransactions" asp-route-walletId="@walletId" method="get">
     <input id="Count" name="Count" type="hidden" value="@Model.Count" />
     <vc:search-string-input search-string="Model.Search" placeholder="@StringLocalizer["Search transactions..."]"></vc:search-string-input>
 
@@ -248,6 +251,19 @@
 
     <vc:clear-all-filters search="Model.Search"></vc:clear-all-filters>
 </form>
+
+    <div class="dropdown wallet-columns ms-auto" id="ColumnsDropdown">
+        <button class="btn btn-secondary" type="button" id="ColumnsDropdownToggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false" title="@StringLocalizer["Columns"]" aria-label="@StringLocalizer["Columns"]">
+            <vc:icon symbol="filter" />
+        </button>
+        <div class="dropdown-menu dropdown-menu-end wallet-columns__menu" aria-labelledby="ColumnsDropdownToggle">
+            <div class="wallet-columns__hint text-secondary" text-translate="true">Check to show/hide · drag to reorder</div>
+            <ul class="wallet-columns__list list-unstyled mb-0" id="ColumnsList"></ul>
+            <div class="dropdown-divider"></div>
+            <button type="button" class="btn btn-link wallet-columns__reset" id="ColumnsReset" text-translate="true">Reset to default</button>
+        </div>
+    </div>
+</div>
 
 @if (Model.PendingTransactions?.Any() == true)
 {
@@ -325,14 +341,14 @@
             <th class="only-for-js mass-action-select-col" permission="@WalletPolicies.CanCreateWalletTransactions">
                 <input type="checkbox" class="form-check-input mass-action-select-all" />
             </th>
-            <vc:date-column></vc:date-column>
-            <th text-translate="true" style="min-width:125px">Label</th>
-            <th text-translate="true">Transaction</th>
-            <th text-translate="true" class="amount-col">Amount</th>
-            <th text-translate="true" class="fee-col">Transaction fee</th>
+            <vc:date-column column-key="date"></vc:date-column>
+            <th text-translate="true" style="min-width:125px" data-col="label" data-col-label="@StringLocalizer["Label"]">Label</th>
+            <th text-translate="true" data-col="transaction" data-col-label="@StringLocalizer["Transaction"]">Transaction</th>
+            <th text-translate="true" class="amount-col" data-col="amount" data-col-label="@StringLocalizer["Amount"]">Amount</th>
+            <th text-translate="true" class="fee-col" data-col="fee" data-col-label="@StringLocalizer["Transaction fee"]">Transaction fee</th>
             @foreach (var rate in Model.Rates)
             {
-                <th class="rate-col"><span text-translate="true">Rate</span>&nbsp;<span>(@rate)</span></th>
+                <th class="rate-col" data-col="rate" data-col-label="@StringLocalizer["Rate"]"><span text-translate="true">Rate</span>&nbsp;<span>(@rate)</span></th>
             }
             <th></th>
         </tr>

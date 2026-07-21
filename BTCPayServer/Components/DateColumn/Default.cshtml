@@ -1,6 +1,6 @@
 @model BTCPayServer.Components.DateColumn.DateColumn
 
-<th class="date-col">
+<th class="date-col" data-col="@Model.ColumnKey" data-col-label="@(Model.ColumnKey is not null ? Model.ColumnName : null)">
     <div>
         <span>@Model.ColumnName</span>
         <button type="button" class="btn btn-link p-0 ms-2 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">

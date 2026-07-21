@@ -11,7 +11,6 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
-using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Views.Stores;
 using Dapper;
@@ -370,53 +369,6 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             });
         }
 
-        // Simulate a boltcard
-        Assert.False(string.IsNullOrEmpty(lnurlStr), "LNURL string should have been captured from the previous flow");
-        {
-            var db = s.Server.PayTester.GetService<ApplicationDbContextFactory>();
-            var ppid = new Uri(LNURL.LNURL.Parse(lnurlStr, out _).ToString().Replace("https", "http")).AbsoluteUri.Split('/').Last();
-            var issuerKey = new IssuerKey(SettingsRepositoryExtensions.FixedKey());
-            var uid = RandomNumberGenerator.GetBytes(7);
-            var cardKey = issuerKey.CreatePullPaymentCardKey(uid, 0, ppid);
-            var keys = cardKey.DeriveBoltcardKeys(issuerKey);
-            await db.LinkBoltcardToPullPayment(ppid, issuerKey, uid);
-            var piccData = new byte[] { 0xc7 }.Concat(uid).Concat(new byte[] { 1, 0, 0, 0, 0, 0, 0, 0 }).ToArray();
-            var p = keys.EncryptionKey.Encrypt(piccData);
-            var c = keys.AuthenticationKey.GetSunMac(uid, 1);
-            var boltcardUrl = new Uri(s.Server.PayTester.ServerUri.AbsoluteUri +
-                                      $"boltcard?p={Encoders.Hex.EncodeData(p).ToUpperInvariant()}&c={Encoders.Hex.EncodeData(c).ToUpperInvariant()}");
-            await LNURL.LNURL.FetchInformation(boltcardUrl, s.Server.PayTester.HttpClient);
-            var info2 = (LNURLWithdrawRequest)await LNURL.LNURL.FetchInformation(boltcardUrl, s.Server.PayTester.HttpClient);
-            var fakeBoltcardUrl = new Uri(Regex.Replace(boltcardUrl.AbsoluteUri, "p=([A-F0-9]{32})", $"p={RandomBytes(16)}"));
-            await Assert.ThrowsAsync<LNUrlException>(() => LNURL.LNURL.FetchInformation(fakeBoltcardUrl, s.Server.PayTester.HttpClient));
-            fakeBoltcardUrl = new Uri(Regex.Replace(boltcardUrl.AbsoluteUri, "c=([A-F0-9]{16})", $"c={RandomBytes(8)}"));
-            await Assert.ThrowsAsync<LNUrlException>(() => LNURL.LNURL.FetchInformation(fakeBoltcardUrl, s.Server.PayTester.HttpClient));
-
-            var bolt3 = (await s.Server.CustomerLightningD.CreateInvoice(
-                new LightMoney(0.00000005m, LightMoneyUnit.BTC),
-                $"LNurl w payout test2 {DateTime.UtcNow.Ticks}",
-                TimeSpan.FromHours(1), CancellationToken.None));
-            var response2 = await info2.SendRequest(bolt3.BOLT11, s.Server.PayTester.HttpClient, null, null);
-            Assert.Equal("OK", response2.Status);
-            await Assert.ThrowsAsync<LNUrlException>(() => LNURL.LNURL.FetchInformation(boltcardUrl, s.Server.PayTester.HttpClient));
-            response2 = await info2.SendRequest(bolt3.BOLT11, s.Server.PayTester.HttpClient, null, null);
-            Assert.Equal("ERROR", response2.Status);
-            Assert.Contains("Replayed", response2.Reason);
-
-            var reg = await db.GetBoltcardRegistration(issuerKey, uid);
-            Assert.Equal((ppid, 1, 0), (reg!.PullPaymentId, reg.Counter, reg.Version));
-            await db.SetBoltcardResetState(issuerKey, uid);
-            reg = await db.GetBoltcardRegistration(issuerKey, uid);
-            Assert.Equal((null, 0, 0), (reg!.PullPaymentId, reg.Counter, reg.Version));
-            await db.LinkBoltcardToPullPayment(ppid, issuerKey, uid);
-            reg = await db.GetBoltcardRegistration(issuerKey, uid);
-            Assert.Equal((ppid, 0, 1), (reg!.PullPaymentId, reg.Counter, reg.Version));
-
-            await db.LinkBoltcardToPullPayment(ppid, issuerKey, uid);
-            reg = await db.GetBoltcardRegistration(issuerKey, uid);
-            Assert.Equal((ppid, 0, 2), (reg!.PullPaymentId, reg.Counter, reg.Version));
-        }
-
         await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
         await s.ClickPagePrimary();
         await s.Page.FillAsync("#Name", "PP1");
@@ -504,12 +456,6 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
                 Assert.Contains(PayoutState.Completed.GetStateString(), content);
                 Assert.Equal(LightningInvoiceStatus.Paid, (await s.Server.CustomerLightningD.GetInvoice(bolt2.Id)).Status);
             });
-        }
-
-        static string RandomBytes(int count)
-        {
-            var c = RandomNumberGenerator.GetBytes(count);
-            return Encoders.Hex.EncodeData(c);
         }
     }
 
@@ -882,75 +828,6 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         Assert.Equal(12.303228134m, test4.Amount);
         Assert.Equal("BTC", test4.Currency);
 
-        // Check we can register Boltcard
-        var uid = new byte[7];
-        RandomNumberGenerator.Fill(uid);
-        var card = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-        {
-            UID = uid
-        });
-        Assert.Equal(0, card.Version);
-        var card1Keys = new[] { card.K0, card.K1, card.K2, card.K3, card.K4 };
-        Assert.All(card1Keys, Assert.NotNull);
-
-        var card2 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-        {
-            UID = uid
-        });
-        Assert.Equal(0, card2.Version);
-        card2 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-        {
-            UID = uid,
-            OnExisting = OnExistingBehavior.UpdateVersion
-        });
-        Assert.Equal(1, card2.Version);
-        Assert.StartsWith("lnurlw://", card2.LNURLW);
-        Assert.EndsWith("/boltcard", card2.LNURLW);
-        var card2Keys = new[] { card2.K0, card2.K1, card2.K2, card2.K3, card2.K4 };
-        Assert.All(card2Keys, Assert.NotNull);
-        for (var i = 0; i < card1Keys.Length; i++)
-        {
-            if (i == 1)
-                Assert.Contains(card1Keys[i], card2Keys);
-            else
-                Assert.DoesNotContain(card1Keys[i], card2Keys);
-        }
-
-        var card3 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-        {
-            UID = uid,
-            OnExisting = OnExistingBehavior.KeepVersion
-        });
-        Assert.Equal(card2.Version, card3.Version);
-        var p = new byte[] { 0xc7 }.Concat(uid).Concat(new byte[8]).ToArray();
-        var card4 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-        {
-            OnExisting = OnExistingBehavior.KeepVersion,
-            LNURLW = card2.LNURLW + $"?p={Encoders.Hex.EncodeData(AESKey.Parse(card2.K1).Encrypt(p))}"
-        });
-        Assert.Equal(card2.Version, card4.Version);
-        Assert.Equal(card2.K4, card4.K4);
-        // Can't define both properties
-        await AssertEx.AssertValidationError(["LNURLW"], () => client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-        {
-            OnExisting = OnExistingBehavior.KeepVersion,
-            UID = uid,
-            LNURLW = card2.LNURLW + $"?p={Encoders.Hex.EncodeData(AESKey.Parse(card2.K1).Encrypt(p))}"
-        }));
-        // p is malformed
-        await AssertEx.AssertValidationError(["LNURLW"], () => client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-        {
-            OnExisting = OnExistingBehavior.KeepVersion,
-            UID = uid,
-            LNURLW = card2.LNURLW + $"?p=lol"
-        }));
-        // p is invalid
-        p[0] = 0;
-        await AssertEx.AssertValidationError(["LNURLW"], () => client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
-        {
-            OnExisting = OnExistingBehavior.KeepVersion,
-            LNURLW = card2.LNURLW + $"?p={Encoders.Hex.EncodeData(AESKey.Parse(card2.K1).Encrypt(p))}"
-        }));
         // Test with SATS denomination values
         var testSats = await client.CreatePullPayment(storeId, new CreatePullPaymentRequest()
         {

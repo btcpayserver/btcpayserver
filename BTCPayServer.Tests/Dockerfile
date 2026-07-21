@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0.301-noble AS builder
+FROM mcr.microsoft.com/dotnet/sdk:10.0.302-noble AS builder
 
 WORKDIR /source
 COPY nuget.config nuget.config

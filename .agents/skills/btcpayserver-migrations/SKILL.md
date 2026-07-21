@@ -13,3 +13,4 @@ description: Use when creating or reviewing Entity Framework migrations in BTCPa
 - Remove the `Down()` method.
 - Do not use `migrationBuilder.IsNpgsql()`; assume PostgreSQL is used.
 - If a migration cannot be generated through `dotnet ef migrations`, add a migration file prefixed by date in the `Migrations` folder, for example `20260525115757_passkey.cs`, and use `migrationBuilder.Sql` to run raw SQL.
+- Follow postgres naming conventions.

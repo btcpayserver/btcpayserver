@@ -1641,35 +1641,18 @@ namespace BTCPayServer.Tests
             {
                 Amount = 50.513m,
                 Currency = "USD",
-                Comment = "  API comment  ",
                 Metadata = new JObject() { new JProperty("taxIncluded", 50.516m), new JProperty("orderId", "000000161") }
             });
             Assert.Equal(50.51m, invoice5g.Amount);
             Assert.Equal(50.51m, (decimal)invoice5g.Metadata["taxIncluded"]);
             Assert.Equal("000000161", (string)invoice5g.Metadata["orderId"]);
-            Assert.Equal("API comment", invoice5g.Comment);
 
-            invoice5g = await greenfield.GetInvoice(invoice5g.Id);
-            Assert.Equal("API comment", invoice5g.Comment);
-
-            invoice5g = await greenfield.UpdateInvoice(invoice5g.Id, new UpdateInvoiceRequest
-            {
-                Comment = "  Updated API comment  "
-            });
-            Assert.Equal("Updated API comment", invoice5g.Comment);
 
             invoice5g = await greenfield.UpdateInvoice(invoice5g.Id, new UpdateInvoiceRequest
             {
                 Metadata = new JObject { new JProperty("orderId", "000000162") }
             });
-            Assert.Equal("Updated API comment", invoice5g.Comment);
             Assert.Equal("000000162", (string)invoice5g.Metadata["orderId"]);
-
-            invoice5g = await greenfield.UpdateInvoice(invoice5g.Id, new UpdateInvoiceRequest
-            {
-                Comment = ""
-            });
-            Assert.Equal("", invoice5g.Comment);
 
             var zeroInvoice = await greenfield.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
             {

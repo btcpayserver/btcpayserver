@@ -151,7 +151,7 @@ namespace BTCPayServer.Controllers
                 Events = await _InvoiceRepository.GetInvoiceLogs(invoice.Id),
                 Metadata = metaData,
                 Archived = invoice.Archived,
-                Comment = invoice.Comment,
+                Comment = invoice.Metadata.Comment,
                 HasRefund = invoice.Refunds.Any(),
                 CanRefund = invoiceState.CanRefund(),
                 Refunds = invoice.Refunds,
@@ -618,7 +618,7 @@ namespace BTCPayServer.Controllers
             if (invoice is null)
                 return NotFound();
 
-            await _InvoiceRepository.UpdateInvoiceComment(invoiceId, comment);
+            await _InvoiceRepository.UpdateInvoiceMetadata(invoiceId, "comment", string.IsNullOrWhiteSpace(comment?.Trim()) ? null : comment.Trim());
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
@@ -1124,7 +1124,7 @@ namespace BTCPayServer.Controllers
                     RedirectUrl = invoice.RedirectURL?.AbsoluteUri ?? string.Empty,
                     Amount = invoice.Price,
                     Currency = invoice.Currency,
-                    Comment = invoice.Comment,
+                    Comment = invoice.Metadata.Comment ?? string.Empty,
                     CanMarkInvalid = state.CanMarkInvalid(),
                     CanMarkSettled = state.CanMarkComplete(),
                     Details = InvoicePopulatePayments(invoice),

@@ -4,7 +4,7 @@
 
 ### New features
 
-* Plugins: Improve plugin directory page (#7381) @thgO-O
+* Plugins: Improve the plugin directory page (#7381) @thgO-O
 * Wallet: Add BIP-329 label import (#7457) @atharrva01
 * Invoices: Add editable invoice comments, including Greenfield API and report export support (#7444) @dstrukt
 * Email Rules: Add a new trigger for invoice refunds (#7374) @Abhijay007

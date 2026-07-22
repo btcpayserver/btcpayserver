@@ -449,14 +449,6 @@ retry:
             context.AddRange(filteredTerms);
         }
 
-        public static void RemoveFromTextSearch(ApplicationDbContext context, InvoiceData invoice,
-            string term)
-        {
-            var query = context.InvoiceSearches.AsQueryable();
-            var filteredQuery = query.Where(st => st.InvoiceDataId.Equals(invoice.Id) && st.Value.Equals(term));
-            context.InvoiceSearches.RemoveRange(filteredQuery);
-        }
-
         public async Task UpdateInvoiceStatus(string invoiceId, InvoiceState invoiceState)
         {
             using var context = _applicationDbContextFactory.CreateContext();
@@ -544,67 +536,65 @@ retry:
         [Obsolete("The storeId parameter is now ignored. This method is deprecated and will be removed in a future release.")]
         public Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId, string storeId, JObject metadata)
             => UpdateInvoiceMetadata(invoiceId, metadata);
+
+        [Obsolete("This method replace the whole metadata, and thus is subject to racing condition issues. Use 'UpdateInvoiceMetadata(string invoiceId, string metadataKey, JToken metadataValue)' instead")]
         public async Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId, JObject metadata)
         {
-retry:
-            using (var context = _applicationDbContextFactory.CreateContext())
-            {
-                var invoiceData = await GetInvoiceRaw(invoiceId, context);
-                if (invoiceData == null)
-                    return null;
-                var blob = invoiceData.GetBlob();
-
-                var newMetadata = InvoiceMetadata.FromJObject(metadata);
-                var oldOrderId = blob.Metadata.OrderId;
-                var newOrderId = newMetadata.OrderId;
-
-                if (newOrderId != oldOrderId)
-                {
-                    if (oldOrderId != null && (newOrderId is null || !newOrderId.Equals(oldOrderId, StringComparison.InvariantCulture)))
-                    {
-                        RemoveFromTextSearch(context, invoiceData, oldOrderId);
-                    }
-                    if (newOrderId != null)
-                    {
-                        AddToTextSearch(context, invoiceData, new[] { newOrderId });
-                    }
-                }
-
-                blob.Metadata = newMetadata;
-                invoiceData.SetBlob(blob);
-                try
-                {
-                    await context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    goto retry;
-                }
-                return ToEntity(invoiceData);
-            }
+            ArgumentNullException.ThrowIfNull(invoiceId);
+            ArgumentNullException.ThrowIfNull(metadata);
+            await UpdateInvoiceMetadataCore(invoiceId, metadata);
+            return await GetInvoice(invoiceId);
         }
-        public async Task UpdateInvoiceComment(string invoiceId, string comment)
+
+        internal async Task UpdateInvoiceMetadataCore(string invoiceId, JObject metadata)
         {
+            ArgumentNullException.ThrowIfNull(invoiceId);
+            ArgumentNullException.ThrowIfNull(metadata);
+
             await using var context = _applicationDbContextFactory.CreateContext();
-            var newComment = string.IsNullOrWhiteSpace(comment?.Trim()) ? null : comment.Trim();
-            var sql = newComment is null
+            await context.Database.GetDbConnection().QuerySingleOrDefaultAsync<(int Updated, string OldOrderId, string NewOrderId)>(
+                """
+                UPDATE "Invoices" i
+                SET "Blob2" = jsonb_set(COALESCE(i."Blob2", '{}'::jsonb), '{metadata}', @metadata::jsonb, true)
+                WHERE i."Id" = @invoiceId;
+                """,
+                new
+                {
+                    invoiceId,
+                    metadata = metadata.ToString(Formatting.None)
+                });
+        }
+
+        public async Task UpdateInvoiceMetadata(string invoiceId, string metadataKey, object metadataValue)
+        {
+            ArgumentNullException.ThrowIfNull(invoiceId);
+            ArgumentNullException.ThrowIfNull(metadataKey);
+            if (string.IsNullOrWhiteSpace(metadataKey))
+                throw new ArgumentException("Metadata key must not be empty.", nameof(metadataKey));
+
+            await using var context = _applicationDbContextFactory.CreateContext();
+
+            var value = metadataValue is null ? null : JsonConvert.SerializeObject(metadataValue);
+            var sql = value is null
                 ? """
                   UPDATE "Invoices"
-                  SET "Blob2" = COALESCE("Blob2", '{}'::jsonb) - 'comment'
-                  WHERE "Id" = @Id
+                  SET "Blob2" = jsonb_set(COALESCE("Blob2", '{}'::jsonb), '{metadata}', COALESCE("Blob2"->'metadata', '{}'::jsonb) - @metadataKey, true)
+                  WHERE "Id" = @invoiceId
                   """
                 : """
                   UPDATE "Invoices"
-                  SET "Blob2" = jsonb_set(COALESCE("Blob2", '{}'::jsonb), '{comment}', to_jsonb(@Comment::text), true)
-                  WHERE "Id" = @Id
+                  SET "Blob2" = jsonb_set(COALESCE("Blob2", '{}'::jsonb), '{metadata}', COALESCE("Blob2"->'metadata', '{}'::jsonb) || jsonb_build_object(@metadataKey, @value::jsonb), true)
+                  WHERE "Id" = @invoiceId
                   """;
 
             await context.Database.GetDbConnection().ExecuteAsync(sql, new
             {
-                Id = invoiceId,
-                Comment = newComment
+                invoiceId,
+                metadataKey,
+                value
             });
         }
+
         public async Task<bool> MarkInvoiceStatus(string invoiceId, InvoiceStatus status)
         {
             using (var context = _applicationDbContextFactory.CreateContext())

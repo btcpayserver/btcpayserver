@@ -51,6 +51,12 @@ namespace BTCPayServer.Services.Invoices
             set => this.SetAdditionalData("orderId", value);
         }
         [JsonIgnore]
+        public string Comment
+        {
+            get => this.GetAdditionalData<string>("comment");
+            set => this.SetAdditionalData("comment", value);
+        }
+        [JsonIgnore]
         public string OrderUrl
         {
             get => this.GetAdditionalData<string>("orderUrl");
@@ -761,8 +767,6 @@ namespace BTCPayServer.Services.Invoices
         public decimal NetSettled { get; private set; }
         [JsonIgnore]
         public bool DisableAccounting { get; set; }
-
-        public string Comment { get; set; }
 
         public RequestBaseUrl GetRequestBaseUrl() => RequestBaseUrl.FromUrl(ServerUrl);
     }

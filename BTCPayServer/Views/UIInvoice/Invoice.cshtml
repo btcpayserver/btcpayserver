@@ -600,6 +600,37 @@
                 </section>
 
             }
+			@if (Model.ResendableEmailRules.Any())
+			{
+				<section class="mt-4 d-print-none">
+					<h3 class="mb-3">Emails</h3>
+					<div class="table-responsive-xl">
+						<table class="table table-hover mb-5">
+							<thead>
+								<tr>
+									<th>Trigger</th>
+									<th class="text-end">Action</th>
+								</tr>
+							</thead>
+							<tbody>
+								@foreach (var rule in Model.ResendableEmailRules)
+								{
+									<tr>
+										<td>@(rule.Subject ?? rule.Trigger)</td>
+										<td class="text-end">
+											<form asp-action="ResendEmail" asp-route-invoiceId="@Model.Id" method="post" class="d-inline">
+												<input type="hidden" name="trigger" value="@rule.Trigger" />
+												<button type="submit" class="btn btn-link p-0">Resend</button>
+											</form>
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				</section>
+			}
+
             @if ((Model.Refunds?.Count ?? 0) > 0)
             {
                 <section class="mt-4">

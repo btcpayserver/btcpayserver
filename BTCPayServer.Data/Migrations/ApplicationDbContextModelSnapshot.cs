@@ -18,7 +18,7 @@ namespace BTCPayServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.6")
+                .HasAnnotation("ProductVersion", "10.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -291,6 +291,32 @@ namespace BTCPayServer.Migrations
                     b.HasKey("CustomerId", "Type");
 
                     b.ToTable("customers_identities");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.EmailLogData", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Blob")
+                        .HasColumnType("JSONB");
+
+                    b.Property<bool>("Pruned")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("StoreId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId");
+
+                    b.HasIndex("Timestamp");
+
+                    b.ToTable("EmailLogs");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.EmailRuleData", b =>
@@ -848,11 +874,11 @@ namespace BTCPayServer.Migrations
                     b.Property<DateTimeOffset?>("Expiry")
                         .HasColumnType("timestamp with time zone");
 
-                    b.PrimitiveCollection<string[]>("OutpointsUsed")
-                        .HasColumnType("text[]");
-
                     b.Property<string>("NoSignatureTransactionId")
                         .HasColumnType("text");
+
+                    b.PrimitiveCollection<string[]>("OutpointsUsed")
+                        .HasColumnType("text[]");
 
                     b.Property<int>("State")
                         .HasColumnType("integer");
@@ -871,9 +897,9 @@ namespace BTCPayServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StoreId");
-
                     b.HasIndex("NoSignatureTransactionId");
+
+                    b.HasIndex("StoreId");
 
                     b.ToTable("PendingTransactions");
                 });
@@ -2128,6 +2154,16 @@ namespace BTCPayServer.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.EmailLogData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.StoreData", "Store")
+                        .WithMany()
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Store");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.EmailRuleData", b =>

@@ -5,8 +5,11 @@
 }
 
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">
-    <div class="sticky-header">
-        <vc:title-header />
+    <div class="sticky-header align-items-start">
+        <div class="d-flex flex-column gap-1 flex-grow-1">
+            <h2 class="mb-0">@ViewData["Title"]</h2>
+            <p class="text-secondary mb-0" text-translate="true">Choose where exchange rates come from and how they're applied when pricing invoices.</p>
+        </div>
         <button id="page-primary" name="command" type="submit" class="btn btn-primary" value="Save" text-translate="true">Save</button>
     </div>
     <partial name="_StatusMessage" />
@@ -17,9 +20,8 @@
 
     <div class="row">
         <div class="col-xxl-constrain col-xl-8">
-            <fieldset>
-                <legend text-translate="true" class="mb-3">Rate Source</legend>
-
+            <h3 id="rate-source" class="settings-section-heading" text-translate="true">Rate Source</h3>
+            <div class="settings-section">
                 @if (Model.PrimarySource.ShowScripting || Model.FallbackSource?.ShowScripting is true)
                 {
                     <div class="form-group">
@@ -86,11 +88,11 @@ X_X = kraken(X_X);</code></pre>
                 }
 
                 <fieldset>
-                    <legend text-translate="true">Primary rate source</legend>
+                    <legend class="settings-section-subheading" text-translate="true">Primary rate source</legend>
                     @Html.EditorFor(m => m.PrimarySource, "/Views/UIStores/Rates.Source.cshtml")
                 </fieldset>
-                <fieldset>
-                    <legend text-translate="true">Fallback rate source</legend>
+                <fieldset class="mb-0">
+                    <legend class="settings-section-subheading" text-translate="true">Fallback rate source</legend>
                     <div class="form-group d-flex align-items-center pt-2">
                         <input asp-for="HasFallback" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#FallbackSection"
                                aria-expanded="@Model.HasFallback" aria-controls="FallbackSection" />
@@ -103,14 +105,11 @@ X_X = kraken(X_X);</code></pre>
                         @Html.EditorFor(m => m.FallbackSource, "/Views/UIStores/Rates.Source.cshtml")
                     </div>
                 </fieldset>
-            </fieldset>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-xxl-constrain col-xl-8">
-            <fieldset>
-                <legend text-translate="true" class="mb-3">Rate Spread</legend>
-                <div class="form-group">
+            </div>
+
+            <h3 id="rate-spread" class="settings-section-heading" text-translate="true">Rate Spread</h3>
+            <div class="settings-section">
+                <div class="form-group mb-0">
                     <label asp-for="Spread" class="form-label"></label>
                     <div class="input-group">
                         <input inputmode="decimal" asp-for="Spread" class="form-control" />
@@ -118,14 +117,11 @@ X_X = kraken(X_X);</code></pre>
                     </div>
                     <span asp-validation-for="Spread" class="text-danger"></span>
                 </div>
-            </fieldset>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-xxl-constrain col-xl-8">
-            <fieldset class="mb-3">
-                <legend text-translate="true">Currency Pair Testing</legend>
-                <div class="form-group">
+            </div>
+
+            <h3 id="currency-pair-testing" class="settings-section-heading" text-translate="true">Currency Pair Testing</h3>
+            <div class="settings-section">
+                <div class="form-group mb-0">
                     <label asp-for="ScriptTest" class="form-label"><span text-translate="true">Currency pairs to test against your rule</span> (<code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
                     <div class="d-flex">
                         <input asp-for="ScriptTest" class="form-control" placeholder="BTC_USD, BTC_CAD" />
@@ -138,7 +134,7 @@ X_X = kraken(X_X);</code></pre>
 
                 @if (Model.TestRateRules != null)
                 {
-                    <h5 text-translate="true" id="TestResult">Test Results:</h5>
+                    <h5 text-translate="true" id="TestResult" class="mt-4">Test Results:</h5>
                     <div class="table-responsive-md">
                         <table class="table table-hover">
                             <tbody>
@@ -166,19 +162,16 @@ X_X = kraken(X_X);</code></pre>
                         </table>
                     </div>
                 }
-            </fieldset>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-xxl-constrain col-xl-8">
-            <div class="form-group">
-                <fieldset class="mb-3">
-                    <legend text-translate="true">Default Currency Pairs</legend>
+            </div>
+
+            <h3 id="default-currency-pairs" class="settings-section-heading" text-translate="true">Default Currency Pairs</h3>
+            <div class="settings-section">
+                <div class="form-group mb-0">
                     <label asp-for="DefaultCurrencyPairs"
                            class="form-label">@ViewLocalizer["Query pairs via REST by querying {0} without the need to specify currencyPairs.", Html.ActionLink(StringLocalizer["this link"], "GetRates2", "BitpayRate", new { storeId = Model.StoreId }, new { target = "_blank" })]</label>
                     <input asp-for="DefaultCurrencyPairs" class="form-control" placeholder="BTC_USD, BTC_CAD" />
                     <span asp-validation-for="DefaultCurrencyPairs" class="text-danger"></span>
-                </fieldset>
+                </div>
             </div>
         </div>
     </div>

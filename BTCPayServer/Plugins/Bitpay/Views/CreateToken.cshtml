@@ -17,6 +17,7 @@
     <partial name="_StatusMessage" />
     <div class="row">
         <div class="col-xxl-constrain col-xl-8">
+            <div class="settings-section">
             <div class="form-group">
                 <label asp-for="Label" class="form-label"></label>
                 @if (ViewBag.HidePublicKey)
@@ -28,7 +29,7 @@
             </div>
             @if (!ViewBag.HidePublicKey)
             {
-                <div class="form-group">
+                <div class="form-group@(((bool)ViewBag.ShowStores) ? "" : " mb-0")">
                     <label asp-for="PublicKey" class="form-label"></label>
                     <input asp-for="PublicKey" class="form-control" />
                     <span asp-validation-for="PublicKey" class="text-danger"></span>
@@ -37,7 +38,7 @@
             }
             @if (ViewBag.ShowStores)
             {
-                <div class="form-group">
+                <div class="form-group mb-0">
                     <label asp-for="Stores" class="form-label"></label>
                     <select asp-for="StoreId" asp-items="Model.Stores" class="form-select"></select>
                     <span asp-validation-for="StoreId" class="text-danger"></span>
@@ -47,6 +48,7 @@
             {
                 <input type="hidden" asp-for="StoreId" />
             }
+            </div>
         </div>
     </div>
 </form>

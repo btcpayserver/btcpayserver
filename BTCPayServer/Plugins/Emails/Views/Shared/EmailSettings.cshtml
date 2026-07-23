@@ -10,11 +10,17 @@
         ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer["Email Rules"])
             .SetCategory(WellKnownCategories.Store));
     }
+    // Containerized section styling is applied on the store settings page only.
+    var sectionClass = Model.StoreId is not null ? "settings-section" : null;
+    var sectionHeadingClass = Model.StoreId is not null ? "settings-section-heading" : "my-3";
 }
 
 <form method="post" autocomplete="off">
-    <div class="sticky-header">
-        <h2>@ViewData.GetTitle()</h2>
+    <div class="sticky-header align-items-start">
+        <div class="d-flex flex-column gap-1 flex-grow-1">
+            <h2 class="mb-0">@ViewData.GetTitle()</h2>
+            <p class="text-secondary mb-0" text-translate="true">Configure the email server used to send emails from BTCPay Server.</p>
+        </div>
         <div class="d-flex justify-content-end">
             <button cheat-mode="true" id="mailpit" type="submit" class="btn btn-info" name="command" value="mailpit">Use mailpit</button>
             @if (Model.StoreId is null)
@@ -40,6 +46,7 @@
     <partial name="_StatusMessage" />
     <div class="row">
         <div class="col-xl-10 col-xxl-constrain">
+            <div class="@sectionClass">
             @if (!ViewContext.ModelState.IsValid)
             {
                 <div asp-validation-summary="All"></div>
@@ -134,7 +141,7 @@
                     }
                 </div>
                 <input asp-for="PasswordSet" type="hidden" />
-                <div class="my-4">
+                <div>
                     <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0" type="button" id="AdvancedSettingsButton"
                             data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
                         <vc:icon symbol="caret-down" />
@@ -151,17 +158,20 @@
                     </div>
                 </div>
             </div>
+            </div>
         </div>
     </div>
-    <h3 class="my-3" text-translate="true">Testing</h3>
+    <h3 class="@sectionHeadingClass @(Model.StoreId is not null ? "settings-section-heading-spaced" : "")" text-translate="true">Testing</h3>
     <div class="row">
         <div class="col-xl-10 col-xxl-constrain">
+            <div class="@sectionClass">
             <div class="form-group">
                 <label asp-for="TestEmail" class="form-label" text-translate="true">To test your settings, enter an email address</label>
                 <input asp-for="TestEmail" placeholder="@StringLocalizer["Firstname Lastname <email@example.com>"]" class="form-control" />
                 <span asp-validation-for="TestEmail" class="text-danger"></span>
             </div>
             <button type="submit" class="btn btn-secondary mt-2" name="command" value="Test" id="Test" text-translate="true">Send Test Email</button>
+            </div>
         </div>
     </div>
 </form>

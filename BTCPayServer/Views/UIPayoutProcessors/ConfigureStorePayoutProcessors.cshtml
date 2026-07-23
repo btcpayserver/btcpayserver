@@ -6,12 +6,13 @@
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.PayoutProcessors), StringLocalizer["Payout Processors"]).SetCategory(WellKnownCategories.Store));
 }
 <div class="sticky-header">
-	<h2 class="my-1">@ViewData["Title"]</h2>
+    <div class="d-flex flex-column gap-1 flex-grow-1">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <p class="text-secondary mb-0" text-translate="true">Payout Processors allow BTCPay Server to handle payouts in an automated way.</p>
+    </div>
 </div>
 
 <partial name="_StatusMessage" />
-
-<p text-translate="true">Payout Processors allow BTCPay Server to handle payouts in an automated way.</p>
 
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
@@ -19,8 +20,9 @@
         {
             foreach (var processorsView in Model)
             {
-                <h4 class="mt-5">@processorsView.Factory.FriendlyName</h4>
-                <table class="table table-hover mt-0">
+                <h4 class="settings-section-heading">@processorsView.Factory.FriendlyName</h4>
+                <div class="settings-section">
+                <table class="table table-hover mt-0 mb-0">
                     <thead>
                     <tr>
                         <th text-translate="true">Payment Method</th>
@@ -54,6 +56,7 @@
                     }
                     </tbody>
                 </table>
+                </div>
             }
         }
         else

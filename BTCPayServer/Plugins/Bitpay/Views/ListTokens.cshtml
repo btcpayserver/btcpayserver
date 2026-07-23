@@ -16,28 +16,30 @@
     </div>
 }
 <div class="sticky-header">
-    <h2 class="my-1">
-        <span text-translate="true">Greenfield API Keys</span>
-        <a href="/docs" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
-            <vc:icon symbol="info"/>
-        </a>
-    </h2>
+    <div class="d-flex flex-column gap-1 flex-grow-1">
+        <h2 class="mb-0">
+            <span text-translate="true">Greenfield API Keys</span>
+            <a href="/docs" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
+                <vc:icon symbol="info"/>
+            </a>
+        </h2>
+        <p class="text-secondary mb-0">
+            <span text-translate="true">To generate Greenfield API keys, please</span>
+            <a asp-controller="UIManage" asp-action="APIKeys" text-translate="true">click here</a>.
+        </p>
+    </div>
 </div>
 
 <partial name="_StatusMessage" />
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
-        <p>
-            <span text-translate="true">To generate Greenfield API keys, please</span>
-            <a asp-controller="UIManage" asp-action="APIKeys" text-translate="true">click here</a>.
-        </p>
-
-        <div class="d-flex align-items-center justify-content-between mt-5 mb-3">
+        <div class="settings-section-heading d-flex align-items-center justify-content-between">
             <h3 class="mb-0">@ViewData["Title"]</h3>
             <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings" text-translate="true">
                 Create Token
             </a>
         </div>
+        <div class="settings-section">
         <p>
             <span text-translate="true">Authorize a public key to access Bitpay compatible Invoice API.</span>
             <a href="https://support.bitpay.com/hc/en-us/articles/115003001183-How-do-I-pair-my-client-and-create-a-token-" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
@@ -72,17 +74,19 @@
         }
         else
         {
-            <p class="text-secondary mt-3" text-translate="true">
+            <p class="text-secondary mb-0" text-translate="true">
                 No access tokens yet.
             </p>
         }
+        </div>
 
-        <h3 class="mt-5 mb-3" text-translate="true">Legacy API Keys</h3>
+        <h3 class="settings-section-heading" text-translate="true">Legacy API Keys</h3>
+        <div class="settings-section">
         <p text-translate="true">Alternatively, you can use the invoice API by including the following HTTP Header in your requests:</p>
         <p><code>Authorization: Basic @Model.EncodedApiKey</code></p>
 
         <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings">
-            <div class="form-group">
+            <div class="form-group mb-0">
                 <label asp-for="ApiKey" class="form-label"></label>
                 <div class="d-flex">
                     <input asp-for="ApiKey" readonly class="form-control"/>
@@ -98,6 +102,7 @@
                 </div>
             </div>
         </form>
+        </div>
     </div>
 </div>
 

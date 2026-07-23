@@ -27,7 +27,8 @@
     <partial name="_StatusMessage" />
     <div class="row">
         <div class="col-sm-8 col-md-6 @(store is null ? "mx-auto" : "")">
-            <table class="table table-hover">
+            <div class="settings-section">
+            <table class="table table-hover mt-0 mb-3">
                 <tr>
                     <th text-translate="true">Label</th>
                     <td class="text-end">@Model.Label</td>
@@ -39,7 +40,7 @@
             </table>
             @if (store is null)
             {
-                <div class="form-group">
+                <div class="form-group mb-0">
                     <label asp-for="StoreId" class="form-label" text-translate="true">Pair To Store</label>
                     <select asp-for="StoreId" asp-items="@(new SelectList(Model.Stores, "Id", "Name"))" class="form-select"></select>
                     <span asp-validation-for="StoreId" class="text-danger"></span>
@@ -50,6 +51,7 @@
                 <input asp-for="StoreId" type="hidden" />
             }
             <input type="hidden" name="pairingCode" value="@Model.Id"/>
+            </div>
         </div>
     </div>
 </form>

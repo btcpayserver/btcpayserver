@@ -17,25 +17,29 @@
         }
     </style>
 }
-<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<div class="sticky-header">
+    <div class="d-flex flex-column gap-1 flex-grow-1">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <p class="text-secondary mb-0">@ViewLocalizer["Give other registered BTCPay Server users access to your store. See the {0} for granted permissions.", Html.ActionLink(StringLocalizer["roles"], "ListRoles", "UIStores", new { storeId })]</p>
+    </div>
+</div>
 <partial name="_StatusMessage" />
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
-        <p>@ViewLocalizer["Give other registered BTCPay Server users access to your store. See the {0} for granted permissions.", Html.ActionLink(StringLocalizer["roles"], "ListRoles", "UIStores", new { storeId })]</p>
-
         @if (!ViewContext.ModelState.IsValid)
         {
             <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
         }
 
-        <form method="post" class="d-flex flex-wrap align-items-center gap-3" permission="@Policies.CanModifyStoreSettings">
+        <div class="settings-section">
+        <form method="post" class="d-flex flex-wrap align-items-center gap-3 mb-4" permission="@Policies.CanModifyStoreSettings">
             <input asp-for="Email" type="text" class="form-control" placeholder="@StringLocalizer["user@example.com"]" style="flex: 1 1 14rem">
             <select asp-for="Role" class="form-select" asp-items="roles"></select>
             <button type="submit" role="button" class="btn btn-primary text-nowrap flex-grow-1 flex-sm-grow-0" id="AddUser" text-translate="true">Add User</button>
         </form>
 
-        <div class="table-responsive-md">
-            <table class="table table-hover">
+        <div class="table-responsive-md settings-section-table">
+            <table class="table table-hover mb-0">
                 <thead>
                 <tr>
                     <th text-translate="true">Email</th>
@@ -61,6 +65,7 @@
                 }
                 </tbody>
             </table>
+        </div>
         </div>
     </div>
 </div>

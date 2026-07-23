@@ -327,6 +327,50 @@
                 }
             }
         },
+        "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers": {
+            "get": {
+                "summary": "Get all subscribers",
+                "description": "Retrieves all subscribers for a specific offering.",
+                "operationId": "GetSubscribers",
+                "tags": [
+                    "Subscriptions"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewofferings"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/OfferingId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscribers retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SubscriberModel"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Offering not found."
+                    }
+                }
+            }
+        },
         "/api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}": {
             "get": {
                 "summary": "Get a subscriber",

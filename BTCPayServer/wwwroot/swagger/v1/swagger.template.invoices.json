@@ -465,6 +465,53 @@
                 ]
             }
         },
+        "/api/v1/invoices/{invoiceId}/payments/external": {
+            "post": {
+                "tags": [ "Invoices" ],
+                "summary": "Register an external payment",
+                "parameters": [
+                    { "$ref": "#/components/parameters/InvoiceId" }
+                ],
+                "description": "Registers a payment that was settled outside of BTCPay (cash, PayPal, another processor, ...) against the invoice, without going through the checkout flow.",
+                "operationId": "Invoices_RegisterExternalPayment",
+                "responses": {
+                    "200": {
+                        "description": "The updated invoice",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/InvoiceData" }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when registering the payment",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/ValidationProblemDetails" }
+                            }
+                        }
+                    },
+                    "403": { "description": "If you are authenticated but forbidden to register a payment on the invoice" },
+                    "404": { "description": "The external payment method is not available on this server" },
+                    "409": { "description": "The payment could not be registered (invoice not found or already recorded)" },
+                    "422": { "description": "A rate for settlementCurrency could not be fetched, and no explicit rate was provided" }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": { "$ref": "#/components/schemas/RegisterExternalPaymentRequest" }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [ "btcpay.store.canregisterexternalpayment" ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/invoices/{invoiceId}/unarchive": {
             "post": {
                 "tags": [
@@ -696,6 +743,58 @@
                                 "$ref": "#/components/schemas/InvoiceStatusMark"
                             }
                         ]
+                    }
+                }
+            },
+            "RegisterExternalPaymentRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [ "amount", "reference" ],
+                "properties": {
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "Amount paid, in settlementCurrency if set, otherwise in the invoice's currency.",
+                        "example": "25.00"
+                    },
+                    "settlementCurrency": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Currency the payment was actually made in, if different from the invoice's currency."
+                    },
+                    "rate": {
+                        "type": "string",
+                        "format": "decimal",
+                        "nullable": true,
+                        "description": "Conversion rate from settlementCurrency to the invoice's currency."
+                    },
+                    "reference": {
+                        "type": "string",
+                        "description": "Identifier for this payment on the external system, e.g. a transaction ID.",
+                        "example": "paypal-txn-8H274..."
+                    },
+                    "url": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Optional link to view this payment on the external system.",
+                        "example": "https://www.paypal.com/payment/8H274..."
+                    },
+                    "label": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Name of the external method used, e.g. \"PayPal\", \"Cash\", \"Wire\".",
+                        "example": "PayPal"
+                    },
+                    "note": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Free-text note."
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "When the payment happened. Defaults to now"
                     }
                 }
             },

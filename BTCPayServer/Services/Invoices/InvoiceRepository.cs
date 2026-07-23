@@ -392,7 +392,7 @@ retry:
                     return;
                 var invoiceEntity = invoice.GetBlob();
                 var existing = invoiceEntity.GetPaymentPrompt(prompt.PaymentMethodId);
-                if (existing.Destination != prompt.Destination && prompt.Activated && prompt.Destination is not null)
+                if (existing?.Destination != prompt.Destination && prompt.Activated && prompt.Destination is not null)
                 {
                     var pmi = paymentPromptContext.PaymentMethodId.ToString();
                     foreach (var tracked in paymentPromptContext.TrackedDestinations)

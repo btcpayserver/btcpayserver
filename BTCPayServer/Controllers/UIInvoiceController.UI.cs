@@ -1316,6 +1316,7 @@ namespace BTCPayServer.Controllers
         private SelectList GetPaymentMethodsSelectList(StoreData store)
         {
             return new SelectList(store.GetPaymentMethodConfigs(_handlers, true)
+                    .Where(method => method.Key.ToString() != PaymentTypes.EXTERNAL.GetPaymentMethodId("MISC").ToString())
                     .Select(method => new SelectListItem(method.Key.ToString(), method.Key.ToString())),
                 nameof(SelectListItem.Value),
                 nameof(SelectListItem.Text));

@@ -1189,49 +1189,6 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 .actions-col {
     text-align: right;
 }
-.type-col {
-    white-space: nowrap;
-}
-.tx-type {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--btcpay-space-s);
-}
-.tx-type-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 50%;
-}
-.tx-type-icon .icon {
-    width: 1rem;
-    height: 1rem;
-}
-.tx-type-receive .tx-type-icon {
-    color: #fff;
-    background-color: var(--btcpay-success);
-}
-.tx-type-send .tx-type-icon {
-    color: #fff;
-    background-color: var(--btcpay-danger);
-}
-/* Icon-only on narrow screens; label stays in the accessibility tree */
-@media (max-width: 767.98px) {
-    .tx-type-label {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-    }
-}
 
 /* Mass Actions */
 .mass-action-head,

@@ -13,22 +13,6 @@
         <td class="align-middle date-col">
             @transaction.Timestamp.ToBrowserDate()
         </td>
-        <td class="align-middle type-col">
-            @if (transaction.Positive)
-            {
-                <span class="tx-type tx-type-receive">
-                    <span class="tx-type-icon"><vc:icon symbol="payment-receive" /></span>
-                    <span class="tx-type-label" text-translate="true">Receive</span>
-                </span>
-            }
-            else
-            {
-                <span class="tx-type tx-type-send">
-                    <span class="tx-type-icon"><vc:icon symbol="payment-send" /></span>
-                    <span class="tx-type-label" text-translate="true">Send</span>
-                </span>
-            }
-        </td>
         <td class="align-middle text-start">
             <span permission="@WalletPolicies.CanManageWalletTransactions">
                 <vc:label-manager

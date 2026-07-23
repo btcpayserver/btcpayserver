@@ -1194,6 +1194,67 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     text-align: right;
 }
 
+/* Column customization */
+#ColumnsDropdownToggle {
+    /* Square icon button whose size equals the standard button height, so it lines up with the sibling filter buttons. */
+    --wallet-columns-btn-size: calc(var(--btcpay-btn-font-size) * var(--btcpay-btn-line-height) + 2 * var(--btcpay-btn-padding-y) + 2 * var(--btcpay-btn-border-width));
+
+    flex: 0 0 auto;
+    min-width: 0;
+    width: var(--wallet-columns-btn-size);
+    height: var(--wallet-columns-btn-size);
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+#ColumnsDropdownToggle .icon {
+    /* Neutralize the icon+text balancing margin so the lone icon is truly centered. */
+    margin-left: 0;
+}
+.wallet-columns__menu {
+    min-width: 15rem;
+    padding: var(--btcpay-space-s) 0;
+}
+.wallet-columns__hint {
+    padding: 0 var(--btcpay-space-m) var(--btcpay-space-s);
+    font-size: var(--btcpay-font-size-s);
+}
+.wallet-columns__list {
+    max-height: 20rem;
+    overflow-y: auto;
+}
+.wallet-columns__item {
+    display: flex;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+    padding: var(--btcpay-space-xs) var(--btcpay-space-m);
+    cursor: grab;
+}
+.wallet-columns__item:hover {
+    background-color: var(--btcpay-neutral-200);
+}
+.wallet-columns__item--dragging {
+    opacity: .5;
+    cursor: grabbing;
+}
+.wallet-columns__handle {
+    display: inline-flex;
+    padding: 0;
+    background: none;
+    border: 0;
+    color: var(--btcpay-body-text-muted);
+    cursor: grab;
+}
+.wallet-columns__item .form-check {
+    flex: 1 1 auto;
+    margin-bottom: 0;
+}
+.wallet-columns__reset {
+    padding: var(--btcpay-space-xs) var(--btcpay-space-m) 0;
+    text-decoration: none;
+}
+
 /* Mass Actions */
 .mass-action-head,
 .mass-action-actions {

@@ -2066,7 +2066,7 @@ namespace BTCPayServer.Tests
 
             Assert.NotNull(invoices);
             Assert.Single(invoices);
-            Assert.NotNull(invoices.First().PaymentMethods);
+            Assert.Null(invoices.First().PaymentMethods);
             Assert.Equal(newInvoice.Id, invoices.First().Id);
 
             //get single invoice, payment methods excluded by default and included on demand
@@ -2078,7 +2078,7 @@ namespace BTCPayServer.Tests
             invoices = await viewOnly.GetInvoices(user.StoreId, textSearch: "Banana");
             Assert.NotNull(invoices);
             Assert.Single(invoices);
-            Assert.NotNull(invoices.First().PaymentMethods);
+            Assert.Null(invoices.First().PaymentMethods);
             Assert.Equal(newInvoice.Id, invoices.First().Id);
 
             invoices = await viewOnly.GetInvoices(user.StoreId, textSearch: "apples");
@@ -2091,7 +2091,7 @@ namespace BTCPayServer.Tests
                 endDate: DateTimeOffset.Now.AddHours(1));
 
             Assert.NotNull(invoicesFiltered);
-            Assert.NotNull(invoicesFiltered.First().PaymentMethods);
+            Assert.Null(invoicesFiltered.First().PaymentMethods);
             Assert.Single(invoicesFiltered);
             Assert.Equal(newInvoice.Id, invoicesFiltered.First().Id);
 
@@ -2158,6 +2158,18 @@ namespace BTCPayServer.Tests
             Assert.Equal("BTC-CHAIN", paymentMethod.PaymentMethodId);
             Assert.Equal("BTC", paymentMethod.Currency);
             Assert.Empty(paymentMethod.Payments);
+
+            // includePaymentMethods=false (default): no payment methods in creation response
+            var invoiceWithoutMethods = await client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest { Currency = "USD", Amount = 1 });
+            Assert.Null(invoiceWithoutMethods.PaymentMethods);
+
+            // includePaymentMethods=true: payment methods returned inline with creation response
+            var invoiceWithMethods = await client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest { Currency = "USD", Amount = 1, IncludePaymentMethods = true });
+            Assert.NotNull(invoiceWithMethods.PaymentMethods);
+            Assert.Single(invoiceWithMethods.PaymentMethods);
+            Assert.Equal("BTC-CHAIN", invoiceWithMethods.PaymentMethods.First().PaymentMethodId);
 
 
             //update

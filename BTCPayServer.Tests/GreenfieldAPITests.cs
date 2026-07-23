@@ -406,6 +406,26 @@ namespace BTCPayServer.Tests
             Assert.True(app.ShowItems);
             Assert.False(app.ShowCategories);
             Assert.False(app.ShowDiscount);
+            Assert.Null(app.DefaultDiscount);
+
+            // Test the default discount
+            var discountApp = await client.CreatePointOfSaleApp(
+                user.StoreId,
+                new PointOfSaleAppRequest
+                {
+                    AppName = "test app discount",
+                    ShowDiscount = true,
+                    DefaultDiscount = 10
+                }
+            );
+            Assert.True(discountApp.ShowDiscount);
+            Assert.Equal(10, discountApp.DefaultDiscount);
+            Assert.Equal(10, (await client.GetPosApp(discountApp.Id)).DefaultDiscount);
+
+            // The default discount must be a percentage
+            await AssertValidationError(new[] { "DefaultDiscount" },
+                async () => await client.CreatePointOfSaleApp(user.StoreId,
+                    new PointOfSaleAppRequest { AppName = "test app invalid discount", ShowDiscount = true, DefaultDiscount = 101 }));
 
             // Make sure we return a 403 if we try to get an app that doesn't exist
             await AssertHttpError(403, async () =>

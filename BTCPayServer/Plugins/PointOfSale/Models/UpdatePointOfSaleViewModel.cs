@@ -35,6 +35,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public bool ShowCustomAmount { get; set; }
         [Display(Name = "User can input discount in %")]
         public bool ShowDiscount { get; set; }
+        [Display(Name = "Default discount")]
+        [Range(0, 100)]
+        public int? DefaultDiscount { get; set; }
         [Display(Name = "Display the search bar")]
         public bool ShowSearch { get; set; }
         [Display(Name = "Display the category list")]

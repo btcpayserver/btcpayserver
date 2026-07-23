@@ -143,6 +143,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 AppId = appId,
                 StoreId = store.Id,
                 HtmlLang = settings.HtmlLang,
+                DefaultLang = storeBlob.DefaultLang,
                 HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
                 NotAvailable = StringLocalizer["Not available in Keypad POS"].Value

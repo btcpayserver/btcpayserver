@@ -273,6 +273,9 @@ const posCommon = {
             this.payButtonLoading = true;
         },
         getLocale(currency) {
+            // Prefer the store's checkout language so amounts are grouped and
+            // formatted according to the merchant's locale (e.g. 1,234 vs 1.234)
+            if (this.defaultLang) return this.defaultLang
             switch (currency) {
                 case 'USD': return 'en-US'
                 case 'EUR': return 'de-DE'

@@ -80,6 +80,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public string CustomTipText { get; set; }
         public int[] CustomTipPercentages { get; set; }
         public string HtmlLang { get; set; }
+        public string DefaultLang { get; set; }
         public string HtmlMetaTags{ get; set; }
         public string Description { get; set; }
         public SelectList AllCategories { get; set; }

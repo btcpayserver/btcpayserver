@@ -14,25 +14,23 @@ using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Services.Rates
 {
     // Make sure that only one request is sent to kraken in general
-    public class KrakenExchangeRateProvider : IRateProvider
+    public class KrakenExchangeRateProvider(IHttpClientFactory httpClientFactory) : IRateProvider
     {
         public RateSourceInfo RateSourceInfo => new("kraken", "Kraken", "https://api.kraken.com/0/public/Ticker");
-        public HttpClient HttpClient
+        static readonly string[] _Symbols =
         {
-            get
-            {
-                return _LocalClient ?? _Client;
-            }
-            set
-            {
-                _LocalClient = value;
-            }
-        }
-
-        HttpClient _LocalClient;
-        static readonly HttpClient _Client = new HttpClient();
-        string[] _Symbols = Array.Empty<string>();
-        DateTimeOffset? _LastSymbolUpdate = null;
+            "XBTAUD",
+            "XXBTZCAD",
+            "XBTCHF",
+            "XXBTZEUR",
+            "XXBTZGBP",
+            "XXBTZJPY",
+            "XXBTZUSD",
+            "DASHUSD",
+            "XXDGXXBT",
+            "XLTCXXBT",
+            "XXMRXXBT"
+        };
         readonly Dictionary<string, string> _TickerMapping = new Dictionary<string, string>()
         {
             { "XXDG", "DOGE" },
@@ -84,9 +82,10 @@ namespace BTCPayServer.Services.Rates
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
             var result = new List<PairRate>();
-            var symbols = await GetSymbolsAsync(cancellationToken);
-            JToken apiTickers = await MakeJsonRequestAsync<JToken>("/0/public/Ticker", null, null, cancellationToken: cancellationToken);
-            foreach (string symbol in symbols)
+            JToken apiTickers = await MakeJsonRequestAsync<JToken>("/0/public/Ticker", null,
+                new Dictionary<string, object> { { "pair", string.Join(',', _Symbols) } },
+                cancellationToken: cancellationToken);
+            foreach (string symbol in _Symbols)
             {
                 var ticker = ConvertToExchangeTicker(symbol, apiTickers[symbol]);
                 if (ticker != null)
@@ -120,22 +119,6 @@ namespace BTCPayServer.Services.Rates
             };
         }
 
-        private async Task<string[]> GetSymbolsAsync(CancellationToken cancellationToken)
-        {
-            if (_LastSymbolUpdate != null && DateTimeOffset.UtcNow - _LastSymbolUpdate.Value < TimeSpan.FromDays(0.5))
-            {
-                return _Symbols;
-            }
-            else
-            {
-                JToken json = await MakeJsonRequestAsync<JToken>("/0/public/AssetPairs", cancellationToken: cancellationToken);
-                var symbols = (from prop in json.Children<JProperty>() where !prop.Name.Contains(".d", StringComparison.OrdinalIgnoreCase) select prop.Name).ToArray();
-                _Symbols = symbols;
-                _LastSymbolUpdate = DateTimeOffset.UtcNow;
-                return symbols;
-            }
-        }
-
         private async Task<T> MakeJsonRequestAsync<T>(string url, string baseUrl = null, Dictionary<string, object> payload = null, string requestMethod = null, CancellationToken cancellationToken = default)
         {
             StringBuilder sb = new StringBuilder();
@@ -148,7 +131,8 @@ namespace BTCPayServer.Services.Rates
                 sb.Append(String.Join('&', payload.Select(kv => $"{kv.Key}={kv.Value}").OfType<object>().ToArray()));
             }
             var request = new HttpRequestMessage(HttpMethod.Get, sb.ToString());
-            using var response = await HttpClient.SendAsync(request, cancellationToken);
+            using var httpClient = httpClientFactory.CreateClient(nameof(KrakenExchangeRateProvider));
+            using var response = await httpClient.SendAsync(request, cancellationToken);
             string stringResult = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<T>(stringResult);
             if (result is JToken json)

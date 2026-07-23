@@ -537,34 +537,66 @@ retry:
         public Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId, string storeId, JObject metadata)
             => UpdateInvoiceMetadata(invoiceId, metadata);
 
-        [Obsolete("This method replace the whole metadata, and thus is subject to racing condition issues. Use 'UpdateInvoiceMetadata(string invoiceId, string metadataKey, JToken metadataValue)' instead")]
+        [Obsolete("This method replace the whole metadata, and thus is subject to racing condition issues. Use 'UpdateInvoiceMetadata(string invoiceId, string metadataKey, JToken metadataValue)' or 'UpdateInvoiceMetadata(string invoiceId, Func<InvoiceMetadata, InvoiceMetadata> modifyMetadata)' instead")]
         public async Task<InvoiceEntity> UpdateInvoiceMetadata(string invoiceId, JObject metadata)
         {
             ArgumentNullException.ThrowIfNull(invoiceId);
             ArgumentNullException.ThrowIfNull(metadata);
-            await UpdateInvoiceMetadataCore(invoiceId, metadata);
+            await UpdateInvoiceMetadata(invoiceId, _ => InvoiceMetadata.FromJObject(metadata));
             return await GetInvoice(invoiceId);
         }
 
-        internal async Task UpdateInvoiceMetadataCore(string invoiceId, JObject metadata)
+        /// <summary>
+        /// Updates the metadata of an invoice using a function that modifies the existing metadata.
+        /// This method handles concurrency conflicts automatically by retrying the operation.
+        /// </summary>
+        /// <param name="invoiceId">The unique identifier of the invoice to update.</param>
+        /// <param name="modifyMetadata">A function that takes the current InvoiceMetadata and returns the modified InvoiceMetadata. This function should not be null.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        /// <remarks>
+        /// This method retrieves the invoice, applies the modification function to its metadata,
+        /// and saves the changes. If a concurrency conflict occurs during save, the operation is automatically retried.
+        /// If the invoice is not found, the method returns without making any changes.
+        /// </remarks>
+        public async Task UpdateInvoiceMetadata(string invoiceId, Func<InvoiceMetadata, InvoiceMetadata> modifyMetadata)
         {
             ArgumentNullException.ThrowIfNull(invoiceId);
-            ArgumentNullException.ThrowIfNull(metadata);
-
-            await using var context = _applicationDbContextFactory.CreateContext();
-            await context.Database.GetDbConnection().QuerySingleOrDefaultAsync<(int Updated, string OldOrderId, string NewOrderId)>(
-                """
-                UPDATE "Invoices" i
-                SET "Blob2" = jsonb_set(COALESCE(i."Blob2", '{}'::jsonb), '{metadata}', @metadata::jsonb, true)
-                WHERE i."Id" = @invoiceId;
-                """,
-                new
+            ArgumentNullException.ThrowIfNull(modifyMetadata);
+            retry:
+            await using (var context = _applicationDbContextFactory.CreateContext())
+            {
+                var invoiceData = await GetInvoiceRaw(invoiceId, context);
+                if (invoiceData is null)
+                    return;
+                var blob = invoiceData.GetBlob();
+                var initialMetadata = blob.Metadata;
+                var result = modifyMetadata(initialMetadata);
+                blob.Metadata = result;
+                invoiceData.SetBlob(blob);
+                try
                 {
-                    invoiceId,
-                    metadata = metadata.ToString(Formatting.None)
-                });
+                    await context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    goto retry;
+                }
+            }
         }
 
+        /// <summary>
+        /// Updates a specific metadata key-value pair for an invoice using a direct SQL update.
+        /// This method is optimized for single-key updates and does not require loading the entire invoice blob.
+        /// </summary>
+        /// <param name="invoiceId">The unique identifier of the invoice to update. Cannot be null.</param>
+        /// <param name="metadataKey">The metadata key to update or remove. Cannot be null or whitespace.</param>
+        /// <param name="metadataValue">The value to set for the metadata key. If null, the key will be removed from the metadata.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        /// <remarks>
+        /// This method uses PostgreSQL's jsonb_set function to update metadata efficiently.
+        /// When metadataValue is null, the key is removed from the metadata object.
+        /// When metadataValue is provided, it is serialized to JSON and added/updated in the metadata.
+        /// </remarks>
         public async Task UpdateInvoiceMetadata(string invoiceId, string metadataKey, object metadataValue)
         {
             ArgumentNullException.ThrowIfNull(invoiceId);

@@ -159,7 +159,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (HttpContext.GetInvoiceDataOrNull() is null)
                 return InvoiceNotFound();
             if (request.Metadata is not null)
-                await _invoiceRepository.UpdateInvoiceMetadataCore(invoiceId, request.Metadata);
+                await _invoiceRepository.UpdateInvoiceMetadata(invoiceId, m => InvoiceMetadata.FromJObject(request.Metadata));
             var invoice = await _invoiceRepository.GetInvoice(invoiceId);
             if (invoice is null)
                 return InvoiceNotFound();

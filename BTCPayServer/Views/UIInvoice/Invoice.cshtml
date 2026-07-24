@@ -332,6 +332,13 @@
                         <td>@Model.NotificationUrl</td>
                     </tr>
                 }
+                @if (!string.IsNullOrEmpty(Model.WebhookUrl))
+                {
+                    <tr>
+                        <th>Webhook Url</th>
+                        <td>@Model.WebhookUrl</td>
+                    </tr>
+                }
                 @if (!string.IsNullOrEmpty(Model.RedirectUrl))
                 {
                     <tr>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
@@ -34,6 +35,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -2012,6 +2014,40 @@ namespace BTCPayServer.Tests
                 });
             });
             Assert.Contains("Invalid or unsupported payout method: fake payment method", validationError.Message);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanUseInvoiceWebhookUrl()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.RegisterDerivationSchemeAsync("BTC");
+            var client = await user.CreateClient();
+
+            await AssertValidationError(new[] { "WebhookUrl" }, () => client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest { Amount = 10m, Currency = "USD", WebhookUrl = "not an url" }));
+
+            using var fakeServer = new FakeServer();
+            await fakeServer.Start();
+            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest
+            {
+                Amount = 10m,
+                Currency = "USD",
+                WebhookUrl = fakeServer.ServerUri.AbsoluteUri,
+                WebhookSecret = "hello"
+            });
+
+            var request = await fakeServer.GetNextRequest();
+            var bytes = await request.Request.Body.ReadBytesAsync((int)request.Request.Headers.ContentLength!.Value);
+            var expectedSig = $"sha256={Encoders.Hex.EncodeData(NBitcoin.Crypto.Hashes.HMACSHA256(Encoding.UTF8.GetBytes("hello"), bytes))}";
+            Assert.Equal(expectedSig, request.Request.Headers["BTCPay-Sig"].First());
+            var evt = JsonConvert.DeserializeObject<WebhookInvoiceEvent>(Encoding.UTF8.GetString(bytes));
+            Assert.Equal(WebhookEventType.InvoiceCreated, evt.Type);
+            Assert.Equal(invoice.Id, evt.InvoiceId);
+            request.Response.StatusCode = 200;
+            fakeServer.Done();
         }
 
         [Fact(Timeout = TestTimeout)]

@@ -145,6 +145,7 @@ namespace BTCPayServer.Controllers
                     ? null
                     : _displayFormatter.Currency(invoice.Metadata.TaxIncluded ?? 0.0m, invoice.Currency),
                 NotificationUrl = invoice.NotificationURL?.AbsoluteUri,
+                WebhookUrl = invoice.WebhookUrl,
                 RedirectUrl = invoice.RedirectURL?.AbsoluteUri,
                 TypedMetadata = invoice.Metadata,
                 StatusException = invoice.ExceptionStatus,

@@ -209,6 +209,11 @@ namespace BTCPayServer.Controllers.Greenfield
                     "PaymentTolerance can only be between 0 and 100 percent", this);
             }
 
+            if (request.WebhookUrl != null && !Uri.TryCreate(request.WebhookUrl, UriKind.Absolute, out _))
+            {
+                ModelState.AddModelError(nameof(request.WebhookUrl), "Invalid webhookUrl, it should be an absolute URL");
+            }
+
             if (request.Checkout.DefaultLanguage != null)
             {
                 var lang = LanguageService.FindLanguage(request.Checkout.DefaultLanguage);

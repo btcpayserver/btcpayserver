@@ -49,29 +49,23 @@
             align-items: center;
         }
 
-        #Export {
-            align-items: center;
-        }
-
-        #Export > .btn {
+        #view-report {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+            min-width: 7rem;
             text-align: center;
             padding-left: var(--bs-btn-padding-x);
             padding-right: var(--bs-btn-padding-x);
         }
 
-        #Export > .btn .icon {
+        #view-report .icon {
             margin-left: 0;
         }
 
-        #view-report {
-            min-width: 7rem;
-        }
-
-        #ExportDropdownToggle::after {
+        #ExportDropdownToggle::after,
+        #ImportDropdownToggle::after {
             margin-left: 0.5rem;
         }
 
@@ -183,19 +177,30 @@
 <div class="sticky-header">
     <vc:wallet-nav wallet-id="wallet"/>
     <div class="d-flex flex-wrap align-items-center gap-3" id="Dropdowns">
-        <div class="dropdown d-flex flex-wrap gap-3" id="Export" permission="@WalletPolicies.CanViewWallet">
-            <a
-                id="view-report"
-                permission="@Policies.CanViewReports"
-                asp-area=""
-                asp-controller="UIReports"
-                asp-action="StoreReports"
-                asp-route-storeId="@storeId"
-                asp-route-viewName="Wallets"
-                class="btn btn-secondary">
-                <vc:icon symbol="nav-reporting" />
-                <span text-translate="true">Reporting</span>
-            </a>
+        <a
+            id="view-report"
+            permission="@Policies.CanViewReports"
+            asp-area=""
+            asp-controller="UIReports"
+            asp-action="StoreReports"
+            asp-route-storeId="@storeId"
+            asp-route-viewName="Wallets"
+            class="btn btn-secondary">
+            <vc:icon symbol="nav-reporting" />
+            <span text-translate="true">Reporting</span>
+        </a>
+        <div class="dropdown" id="Import" permission="@WalletPolicies.CanManageWalletTransactions">
+            <form asp-action="ImportWalletLabels" asp-route-walletId="@walletId" method="post" enctype="multipart/form-data" class="wallet-labels__import">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="ImportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" text-translate="true">
+                    Import
+                </button>
+                <div class="dropdown-menu" aria-labelledby="ImportDropdownToggle">
+                    <input type="file" name="file" class="wallet-labels__import-file d-none" accept=".jsonl,.json,.txt" aria-hidden="true" tabindex="-1" />
+                    <button type="button" class="dropdown-item wallet-labels__import-button" text-translate="true">Wallet Labels (BIP-329)</button>
+                </div>
+            </form>
+        </div>
+        <div class="dropdown" id="Export" permission="@WalletPolicies.CanViewWallet">
             <form asp-action="Export" asp-route-walletId="@walletId" target="_blank" method="get">
                 <button class="btn btn-secondary dropdown-toggle" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" text-translate="true">
                     Export
@@ -209,11 +214,6 @@
                 </div>
             </form>
         </div>
-        <form asp-action="ImportWalletLabels" asp-route-walletId="@walletId" method="post" enctype="multipart/form-data"
-              class="wallet-labels__import" permission="@WalletPolicies.CanManageWalletTransactions">
-            <input type="file" name="file" class="wallet-labels__import-file d-none" accept=".jsonl,.json,.txt" aria-hidden="true" tabindex="-1" />
-            <button type="button" class="btn btn-secondary wallet-labels__import-button" text-translate="true">Import BIP-329 labels</button>
-        </form>
     </div>
 </div>
 <partial name="_StatusMessage" />
@@ -226,21 +226,21 @@
         <button id="wallet-transactions__direction-toggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret wallet-transactions__direction-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (hasIncomingOnlyFilter)
             {
-                <span text-translate="true">Incoming</span>
+                <span text-translate="true">Received</span>
             }
             else if (hasOutgoingOnlyFilter)
             {
-                <span text-translate="true">Outgoing</span>
+                <span text-translate="true">Sent</span>
             }
             else
             {
-                <span text-translate="true">All Directions</span>
+                <span text-translate="true">All</span>
             }
         </button>
         <div class="dropdown-menu wallet-transactions__direction-menu" aria-labelledby="wallet-transactions__direction-toggle">
-            <button type="submit" name="FilterCommand" value="unset:direction" class="dropdown-item wallet-transactions__direction-option @((!hasIncomingOnlyFilter && !hasOutgoingOnlyFilter) ? "custom-active" : string.Empty)" text-translate="true">All Directions</button>
-            <button type="submit" name="FilterCommand" value="set:direction=in" class="dropdown-item wallet-transactions__direction-option @(hasIncomingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Incoming</button>
-            <button type="submit" name="FilterCommand" value="set:direction=out" class="dropdown-item wallet-transactions__direction-option @(hasOutgoingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Outgoing</button>
+            <button type="submit" name="FilterCommand" value="unset:direction" class="dropdown-item wallet-transactions__direction-option @((!hasIncomingOnlyFilter && !hasOutgoingOnlyFilter) ? "custom-active" : string.Empty)" text-translate="true">All</button>
+            <button type="submit" name="FilterCommand" value="set:direction=in" class="dropdown-item wallet-transactions__direction-option @(hasIncomingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Received</button>
+            <button type="submit" name="FilterCommand" value="set:direction=out" class="dropdown-item wallet-transactions__direction-option @(hasOutgoingOnlyFilter ? "custom-active" : string.Empty)" text-translate="true">Sent</button>
         </div>
     </div>
     <vc:label-selector labels="Model.Labels" search="Model.Search" allow-no-label-filter="true" manage-label-link="@walletLabelsLink"></vc:label-selector>
@@ -330,10 +330,6 @@
             <th text-translate="true">Transaction</th>
             <th text-translate="true" class="amount-col">Amount</th>
             <th text-translate="true" class="fee-col">Transaction fee</th>
-            @foreach (var rate in Model.Rates)
-            {
-                <th class="rate-col"><span text-translate="true">Rate</span>&nbsp;<span>(@rate)</span></th>
-            }
             <th></th>
         </tr>
         </thead>
@@ -342,7 +338,7 @@
             <th class="only-for-js mass-action-select-col">
                 <input type="checkbox" class="form-check-input mass-action-select-all" />
             </th>
-            <th colspan="5">
+            <th colspan="6">
                 <div class="d-flex flex-wrap align-items-center gap-3">
                     <div>
                         <strong class="mass-action-selected-count">0</strong>
@@ -350,7 +346,7 @@
                     </div>
                     <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId" permission="@WalletPolicies.CanCreateWalletTransactions" class="d-inline-flex align-items-center gap-3">
                         <button id="BumpFee" name="command" type="submit" value="cpfp" class="btn btn-link">
-                            <vc:icon symbol="actions-send" />
+                            <vc:icon symbol="bump-fee" />
                             <span text-translate="true">Bump fee</span>
                         </button>
                     </form>

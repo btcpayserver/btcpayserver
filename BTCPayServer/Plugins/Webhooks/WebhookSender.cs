@@ -106,7 +106,7 @@ public class WebhookSender(
 
     public void EnqueueDelivery(WebhookDeliveryRequest context)
     {
-        _processingQueue.Enqueue(context.WebhookId ?? context.Delivery.Id, cancellationToken => Process(context, cancellationToken));
+        _processingQueue.Enqueue(context.WebhookId ?? context.WebhookBlob.Url, cancellationToken => Process(context, cancellationToken));
     }
 
     private async Task Process(WebhookDeliveryRequest ctx, CancellationToken cancellationToken)

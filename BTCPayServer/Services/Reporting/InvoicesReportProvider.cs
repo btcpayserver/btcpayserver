@@ -147,7 +147,6 @@ public class InvoicesReportProvider : ReportProvider
                 }
             }
             else if (invoiceEntity is
-                     not { Status: InvoiceStatus.Expired, ExceptionStatus: InvoiceExceptionStatus.None } and
                      not { Status: InvoiceStatus.New, ExceptionStatus: InvoiceExceptionStatus.None })
             {
                 FlattenFields(invoiceEntity.Metadata.ToJObject(), metadataFields, new(invoiceEntity, DisplayFormatter));

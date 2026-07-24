@@ -37,6 +37,14 @@
                 </div>
             </div>
 
+            <h4 class="mt-5 mb-2" text-translate="true">Backup</h4>
+            <p text-translate="true">Create a backup of your BTCPay Server data.</p>
+            <div class="form-group">
+                <div class="input-group">
+                    <button name="command" type="submit" class="btn btn-secondary" value="backup" disabled="@(Model.CanUseSSH ? null : "disabled")" text-translate="true">Backup</button>
+                </div>
+            </div>
+
             <h4 class="mt-5 mb-2" text-translate="true">Update</h4>
             <p text-translate="true">Update to the latest version of BTCPay Server.</p>
             <div class="form-group">

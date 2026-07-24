@@ -50,7 +50,7 @@ namespace BTCPayServer.Services
                 if (!_handlers.TryGetValue(paymentMethodId, out var handler))
                     return false;
                 InvoiceLogs logs = new InvoiceLogs();
-                var paymentContext = new PaymentMethodContext(store, store.GetStoreBlob(), store.GetPaymentMethodConfig(paymentMethodId), handler, invoice, logs);
+                var paymentContext = new PaymentMethodContext(store, store.GetStoreBlob(), store.GetPaymentMethodConfig(paymentMethodId), handler, invoice, logs, _invoiceRepository);
                 if (!paymentPrompt.Activated)
                     paymentContext.Logs.Write("Activating", InvoiceEventData.EventSeverity.Info);
                 try

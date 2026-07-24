@@ -28,7 +28,9 @@ using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
 using BTCPayServer.Payouts;
 using BTCPayServer.Plugins.Webhooks;
+using Dapper;
 using Microsoft.AspNetCore.Mvc.Localization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Controllers
@@ -237,7 +239,7 @@ namespace BTCPayServer.Controllers
             entity.UpdateTotals();
 
 
-            var creationContext = new InvoiceCreationContext(store, storeBlob, entity, logs, _handlers, invoicePaymentMethodFilter);
+            var creationContext = new InvoiceCreationContext(store, storeBlob, entity, logs, _handlers, invoicePaymentMethodFilter, _InvoiceRepository);
             creationContext.SetLazyActivation(entity.LazyPaymentMethods);
             foreach (var term in additionalSearchTerms ?? Array.Empty<string>())
                 creationContext.AdditionalSearchTerms.Add(term);
@@ -248,6 +250,7 @@ namespace BTCPayServer.Controllers
                 await FetchRates(creationContext, cancellationToken);
 
                 await creationContext.CreatePaymentPrompts();
+
                 var contexts = creationContext.PaymentMethodContexts
                                               .Where(s => s.Value.Status is PaymentMethodContext.ContextStatus.WaitingForActivation or PaymentMethodContext.ContextStatus.Created)
                                               .Select(s => s.Value)

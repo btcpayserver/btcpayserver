@@ -236,34 +236,18 @@ public class PendingTransactionService(
         }
         else
         {
-            var failedInputIndexes = finalizationErrors is null or { Count: 0 }
-                ? "unknown"
-                : string.Join(",", finalizationErrors.Select(error => error.InputIndex).Distinct());
             var finalizationErrorDetails = FormatFinalizationErrors(finalizationErrors);
-            if ((blob.SignaturesCollected ?? 0) >= (blob.SignaturesNeeded ?? int.MaxValue))
-            {
-                logger.LogWarning(
-                    "Finalization attempt failed for pending transaction {PendingTransactionId} despite signature progress " +
-                    "{SignaturesCollected}/{SignaturesNeeded}. Failed input indexes: {FailedInputIndexes}. " +
-                    "Errors: {FinalizationErrors}",
-                    pendingTransaction.Id,
-                    blob.SignaturesCollected,
-                    blob.SignaturesNeeded,
-                    failedInputIndexes,
-                    finalizationErrorDetails);
-            }
-            else
-            {
-                logger.LogDebug(
-                    "Finalization attempt failed for pending transaction {PendingTransactionId}. Signature progress: " +
-                    "{SignaturesCollected}/{SignaturesNeeded}; failed input indexes: {FailedInputIndexes}. " +
-                    "Errors: {FinalizationErrors}",
-                    pendingTransaction.Id,
-                    blob.SignaturesCollected,
-                    blob.SignaturesNeeded,
-                    failedInputIndexes,
-                    finalizationErrorDetails);
-            }
+            var logLevel = (blob.SignaturesCollected ?? 0) >= (blob.SignaturesNeeded ?? int.MaxValue)
+                ? LogLevel.Warning
+                : LogLevel.Debug;
+            logger.Log(
+                logLevel,
+                "Finalization attempt failed for pending transaction {PendingTransactionId}. Signature progress: " +
+                "{SignaturesCollected}/{SignaturesNeeded}. Errors: {FinalizationErrors}",
+                pendingTransaction.Id,
+                blob.SignaturesCollected,
+                blob.SignaturesNeeded,
+                finalizationErrorDetails);
         }
         pendingTransaction.SetBlob(blob);
         return (pendingTransaction, retained);

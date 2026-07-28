@@ -197,28 +197,34 @@ public class PendingTransactionService(
             return (pendingTransaction, false);
         }
 
-        var beforeProgress = GetSignatureProgress(BuildEffectivePsbt(blob, network));
-        var mergedPsbt = BuildEffectivePsbt(blob, network, psbt);
+        var mergedPsbt = BuildEffectivePsbt(blob, network);
+        var beforeProgress = GetSignatureProgress(mergedPsbt);
+        mergedPsbt.Combine(psbt);
         var afterProgress = GetSignatureProgress(mergedPsbt);
         var meaningfulDelta = HasMeaningfulDelta(beforeProgress, afterProgress);
 
-        blob.CollectedSignatures.Add(new CollectedSignature
+        var finalized = mergedPsbt.TryFinalize(out var finalizationErrors);
+        var retained = meaningfulDelta || finalized;
+        if (retained)
         {
-            ReceivedPSBT = newPsbtBase64,
-            Timestamp = DateTimeOffset.UtcNow
-        });
+            blob.CollectedSignatures.Add(new CollectedSignature
+            {
+                ReceivedPSBT = newPsbtBase64,
+                Timestamp = DateTimeOffset.UtcNow
+            });
+        }
         ApplyProgress(blob, afterProgress);
 
         logger.LogInformation(
-            "Retrying finalization for pending transaction {PendingTransactionId} after collecting PSBT {CollectedPSBTCount}. " +
-            "Signature progress: {SignaturesCollected}/{SignaturesNeeded}; progress changed: {SignatureProgressChanged}",
+            "Retried finalization for pending transaction {PendingTransactionId}. Retained PSBT count: {CollectedPSBTCount}; " +
+            "signature progress: {SignaturesCollected}/{SignaturesNeeded}; PSBT retained: {PSBTRetained}",
             pendingTransaction.Id,
             blob.CollectedSignatures.Count,
             blob.SignaturesCollected,
             blob.SignaturesNeeded,
-            meaningfulDelta);
+            retained);
 
-        if (mergedPsbt.TryFinalize(out var finalizationErrors))
+        if (finalized)
         {
             if ((blob.SignaturesCollected ?? 0) < (blob.SignaturesNeeded ?? 0))
                 blob.SignaturesCollected = blob.SignaturesNeeded;
@@ -260,7 +266,7 @@ public class PendingTransactionService(
             }
         }
         pendingTransaction.SetBlob(blob);
-        return (pendingTransaction, true);
+        return (pendingTransaction, retained);
     }
 
 

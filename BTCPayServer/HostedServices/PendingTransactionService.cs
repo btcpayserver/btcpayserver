@@ -233,25 +233,30 @@ public class PendingTransactionService(
             var failedInputIndexes = finalizationErrors is null or { Count: 0 }
                 ? "unknown"
                 : string.Join(",", finalizationErrors.Select(error => error.InputIndex).Distinct());
+            var finalizationErrorDetails = FormatFinalizationErrors(finalizationErrors);
             if ((blob.SignaturesCollected ?? 0) >= (blob.SignaturesNeeded ?? int.MaxValue))
             {
                 logger.LogWarning(
                     "Finalization attempt failed for pending transaction {PendingTransactionId} despite signature progress " +
-                    "{SignaturesCollected}/{SignaturesNeeded}. Failed input indexes: {FailedInputIndexes}",
+                    "{SignaturesCollected}/{SignaturesNeeded}. Failed input indexes: {FailedInputIndexes}. " +
+                    "Errors: {FinalizationErrors}",
                     pendingTransaction.Id,
                     blob.SignaturesCollected,
                     blob.SignaturesNeeded,
-                    failedInputIndexes);
+                    failedInputIndexes,
+                    finalizationErrorDetails);
             }
             else
             {
                 logger.LogDebug(
                     "Finalization attempt failed for pending transaction {PendingTransactionId}. Signature progress: " +
-                    "{SignaturesCollected}/{SignaturesNeeded}; failed input indexes: {FailedInputIndexes}",
+                    "{SignaturesCollected}/{SignaturesNeeded}; failed input indexes: {FailedInputIndexes}. " +
+                    "Errors: {FinalizationErrors}",
                     pendingTransaction.Id,
                     blob.SignaturesCollected,
                     blob.SignaturesNeeded,
-                    failedInputIndexes);
+                    failedInputIndexes,
+                    finalizationErrorDetails);
             }
         }
         pendingTransaction.SetBlob(blob);
@@ -444,6 +449,26 @@ public class PendingTransactionService(
         blob.SignaturesNeeded = progress.SignaturesNeeded;
         blob.SignaturesTotal = progress.SignaturesTotal;
         blob.SignaturesCollected = progress.SignaturesCollected;
+    }
+
+    private static string FormatFinalizationErrors(IList<PSBTError>? errors)
+    {
+        if (errors is null or { Count: 0 })
+            return "unknown";
+
+        const int maxErrors = 20;
+        const int maxMessageLength = 256;
+        var details = errors.Take(maxErrors).Select(error =>
+        {
+            var message = error.Message.Replace('\r', ' ').Replace('\n', ' ');
+            if (message.Length > maxMessageLength)
+                message = $"{message[..maxMessageLength]}…";
+            return $"input {error.InputIndex}: {message}";
+        });
+        var result = string.Join(" | ", details);
+        return errors.Count > maxErrors
+            ? $"{result} | {errors.Count - maxErrors} more error(s)"
+            : result;
     }
 
     private sealed record PendingTransactionSignatureProgress(

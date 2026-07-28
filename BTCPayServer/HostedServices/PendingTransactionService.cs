@@ -190,14 +190,17 @@ public class PendingTransactionService(
         var network = networkProvider.GetNetwork<BTCPayNetwork>(pendingTransaction.CryptoCode)?.NBitcoinNetwork ?? psbt.Network;
 
         if (blob.CollectedSignatures.Any(s => s.ReceivedPSBT == newPsbtBase64))
+        {
+            logger.LogInformation(
+                "Skipping finalization retry for pending transaction {PendingTransactionId}: this PSBT was already collected",
+                pendingTransaction.Id);
             return (pendingTransaction, false);
+        }
 
         var beforeProgress = GetSignatureProgress(BuildEffectivePsbt(blob, network));
         var mergedPsbt = BuildEffectivePsbt(blob, network, psbt);
         var afterProgress = GetSignatureProgress(mergedPsbt);
-
-        if (!HasMeaningfulDelta(beforeProgress, afterProgress))
-            return (pendingTransaction, false);
+        var meaningfulDelta = HasMeaningfulDelta(beforeProgress, afterProgress);
 
         blob.CollectedSignatures.Add(new CollectedSignature
         {
@@ -206,11 +209,50 @@ public class PendingTransactionService(
         });
         ApplyProgress(blob, afterProgress);
 
-        if (mergedPsbt.TryFinalize(out _))
+        logger.LogInformation(
+            "Retrying finalization for pending transaction {PendingTransactionId} after collecting PSBT {CollectedPSBTCount}. " +
+            "Signature progress: {SignaturesCollected}/{SignaturesNeeded}; progress changed: {SignatureProgressChanged}",
+            pendingTransaction.Id,
+            blob.CollectedSignatures.Count,
+            blob.SignaturesCollected,
+            blob.SignaturesNeeded,
+            meaningfulDelta);
+
+        if (mergedPsbt.TryFinalize(out var finalizationErrors))
         {
             if ((blob.SignaturesCollected ?? 0) < (blob.SignaturesNeeded ?? 0))
                 blob.SignaturesCollected = blob.SignaturesNeeded;
             pendingTransaction.State = PendingTransactionState.Signed;
+            logger.LogInformation(
+                "Finalized pending transaction {PendingTransactionId} after collecting PSBT {CollectedPSBTCount}",
+                pendingTransaction.Id,
+                blob.CollectedSignatures.Count);
+        }
+        else
+        {
+            var failedInputIndexes = finalizationErrors is null or { Count: 0 }
+                ? "unknown"
+                : string.Join(",", finalizationErrors.Select(error => error.InputIndex).Distinct());
+            if ((blob.SignaturesCollected ?? 0) >= (blob.SignaturesNeeded ?? int.MaxValue))
+            {
+                logger.LogWarning(
+                    "Finalization attempt failed for pending transaction {PendingTransactionId} despite signature progress " +
+                    "{SignaturesCollected}/{SignaturesNeeded}. Failed input indexes: {FailedInputIndexes}",
+                    pendingTransaction.Id,
+                    blob.SignaturesCollected,
+                    blob.SignaturesNeeded,
+                    failedInputIndexes);
+            }
+            else
+            {
+                logger.LogDebug(
+                    "Finalization attempt failed for pending transaction {PendingTransactionId}. Signature progress: " +
+                    "{SignaturesCollected}/{SignaturesNeeded}; failed input indexes: {FailedInputIndexes}",
+                    pendingTransaction.Id,
+                    blob.SignaturesCollected,
+                    blob.SignaturesNeeded,
+                    failedInputIndexes);
+            }
         }
         pendingTransaction.SetBlob(blob);
         return (pendingTransaction, true);
@@ -355,7 +397,7 @@ public class PendingTransactionService(
             var validExpectedPartialSigCount = input.PartialSigs.Keys.Count(multisigParams.PubKeys.Contains);
             var collected = finalized
                 ? multisigParams.SignatureCount
-                : Math.Min(validExpectedPartialSigCount, multisigParams.SignatureCount);
+                : validExpectedPartialSigCount;
             inputs.Add(new PendingTransactionInputProgress(
                 true,
                 multisigParams.SignatureCount,

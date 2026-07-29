@@ -237,7 +237,9 @@ public class PendingTransactionService(
         else
         {
             var finalizationErrorDetails = FormatFinalizationErrors(finalizationErrors);
-            var logLevel = (blob.SignaturesCollected ?? 0) >= (blob.SignaturesNeeded ?? int.MaxValue)
+            var signaturesNeeded = blob.SignaturesNeeded ?? 0;
+            var logLevel = signaturesNeeded > 0 &&
+                           (blob.SignaturesCollected ?? 0) >= signaturesNeeded
                 ? LogLevel.Warning
                 : LogLevel.Debug;
             logger.Log(
@@ -358,16 +360,13 @@ public class PendingTransactionService(
         return true;
     }
 
-    private static PSBT BuildEffectivePsbt(PendingTransactionBlob blob, Network network, PSBT? additionalPsbt = null)
+    private static PSBT BuildEffectivePsbt(PendingTransactionBlob blob, Network network)
     {
         var effectivePsbt = PSBT.Parse(blob.PSBT, network);
         foreach (var collectedSignature in blob.CollectedSignatures)
         {
             effectivePsbt.Combine(PSBT.Parse(collectedSignature.ReceivedPSBT, network));
         }
-
-        if (additionalPsbt is not null)
-            effectivePsbt.Combine(additionalPsbt);
 
         return effectivePsbt;
     }

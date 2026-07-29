@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -260,17 +261,58 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
     [Fact]
     [Trait("Integration", "Integration")]
+    public async Task PendingNonMultisigFinalizationFailureLogsAtDebugLevel()
+    {
+        var dbTester = CreateDBTester();
+        await dbTester.MigrateAsync();
+        var contextFactory = dbTester.CreateContextFactory();
+        var storeId = await CreateTestStore(contextFactory);
+        var logger = new RecordingLogger<PendingTransactionService>();
+        var pendingTransactionService = new PendingTransactionService(
+            CreateNetworkProvider(),
+            contextFactory,
+            new EventAggregator(BTCPayLogs),
+            logger);
+        var testPsbt = CreatePendingSingleSigPsbt();
+        var pendingTransaction = await pendingTransactionService.CreatePendingTransaction(
+            storeId,
+            "BTC",
+            testPsbt.BasePsbt,
+            RequestBaseUrl.FromUrl("https://example.com"),
+            cancellationToken: CancellationToken.None);
+
+        pendingTransaction = await pendingTransactionService.CollectSignature(
+            new PendingTransactionService.PendingTransactionFullId("BTC", storeId, pendingTransaction.Id),
+            SignInputs(testPsbt.BasePsbt, testPsbt.Signer, 0),
+            CancellationToken.None);
+
+        Assert.NotNull(pendingTransaction);
+        var blob = pendingTransaction.GetBlob();
+        Assert.Equal(0, blob.SignaturesNeeded);
+        Assert.Equal(0, blob.SignaturesCollected);
+        Assert.Equal(PendingTransactionState.Pending, pendingTransaction.State);
+        Assert.Contains(logger.Entries, entry =>
+            entry.Level == LogLevel.Debug &&
+            entry.Message.Contains(pendingTransaction.Id, StringComparison.Ordinal));
+        Assert.DoesNotContain(logger.Entries, entry =>
+            entry.Level == LogLevel.Warning &&
+            entry.Message.Contains(pendingTransaction.Id, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    [Trait("Integration", "Integration")]
     public async Task PendingTwoOfFourMultisigRetainsProgressingPSBTsAndRetriesFinalization()
     {
         var dbTester = CreateDBTester();
         await dbTester.MigrateAsync();
         var contextFactory = dbTester.CreateContextFactory();
         var storeId = await CreateTestStore(contextFactory);
+        var logger = new RecordingLogger<PendingTransactionService>();
         var pendingTransactionService = new PendingTransactionService(
             CreateNetworkProvider(),
             contextFactory,
             new EventAggregator(BTCPayLogs),
-            LoggerFactory.CreateLogger<PendingTransactionService>());
+            logger);
         var testPsbt = CreatePendingMultisigPsbt(4);
         var pendingTransaction = await pendingTransactionService.CreatePendingTransaction(
             storeId,
@@ -319,15 +361,27 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         Assert.Equal(2, blob.CollectedSignatures.Count);
         Assert.Equal(2, blob.SignaturesCollected);
         Assert.Equal(PendingTransactionState.Pending, pendingTransaction.State);
+        Assert.Contains(logger.Entries, entry =>
+            entry.Level == LogLevel.Warning &&
+            entry.Message.Contains(pendingTransaction.Id, StringComparison.Ordinal));
 
-        // A third eligible signer must be retained, reported as 3/4, and trigger
-        // another finalization attempt. NBitcoin can now select two valid signatures.
+        // Per-input progress must be retained even while the aggregate remains at two.
         pendingTransaction = await pendingTransactionService.CollectSignature(
             pendingTransactionId,
-            SignInputs(testPsbt.BasePsbt, testPsbt.SignerC, 0, 1),
+            SignInputs(testPsbt.BasePsbt, testPsbt.Signers[2], 0),
             CancellationToken.None);
         blob = pendingTransaction!.GetBlob();
         Assert.Equal(3, blob.CollectedSignatures.Count);
+        Assert.Equal(2, blob.SignaturesCollected);
+        Assert.Equal(PendingTransactionState.Pending, pendingTransaction.State);
+
+        // Once the third signer reaches the second input, NBitcoin can select two valid signatures.
+        pendingTransaction = await pendingTransactionService.CollectSignature(
+            pendingTransactionId,
+            SignInputs(testPsbt.BasePsbt, testPsbt.Signers[2], 1),
+            CancellationToken.None);
+        blob = pendingTransaction!.GetBlob();
+        Assert.Equal(4, blob.CollectedSignatures.Count);
         Assert.Equal(3, blob.SignaturesCollected);
         Assert.Equal(PendingTransactionState.Signed, pendingTransaction.State);
     }
@@ -824,6 +878,28 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         return psbt.ToBase64();
     }
 
+    private static (PSBT BasePsbt, Key Signer) CreatePendingSingleSigPsbt()
+    {
+        var network = Network.RegTest;
+        var signer = new Key();
+        var scriptPubKey = signer.PubKey.WitHash.ScriptPubKey;
+
+        var previousTransactionA = network.CreateTransaction();
+        previousTransactionA.Outputs.Add(Money.Coins(1.0m), scriptPubKey);
+        var previousTransactionB = network.CreateTransaction();
+        previousTransactionB.Outputs.Add(Money.Coins(1.1m), scriptPubKey);
+
+        var builder = network.CreateTransactionBuilder();
+        builder.AddCoins(
+            previousTransactionA.Outputs.AsCoins().First(),
+            previousTransactionB.Outputs.AsCoins().First());
+        builder.Send(new Key().PubKey.WitHash.ScriptPubKey, Money.Coins(1.5m));
+        builder.SetChange(new Key().PubKey.WitHash.ScriptPubKey);
+        builder.SendFees(Money.Satoshis(10_000));
+
+        return (builder.BuildPSBT(false), signer);
+    }
+
     private static TestPendingMultisigPsbt CreatePendingMultisigPsbt(int signerCount = 3)
     {
         if (signerCount < 2)
@@ -898,10 +974,34 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         return new StoreRepository(contextFactory, new JsonSerializerSettings(), eventAggregator, settingsRepository);
     }
 
+    private sealed class RecordingLogger<T> : ILogger<T>
+    {
+        public List<(LogLevel Level, string Message)> Entries { get; } = [];
+
+        public IDisposable BeginScope<TState>(TState state)
+        {
+            return null;
+        }
+
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return true;
+        }
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception exception,
+            Func<TState, Exception, string> formatter)
+        {
+            Entries.Add((logLevel, formatter(state, exception)));
+        }
+    }
+
     private sealed record TestPendingMultisigPsbt(PSBT BasePsbt, Key[] Signers)
     {
         public Key SignerA => Signers[0];
         public Key SignerB => Signers[1];
-        public Key SignerC => Signers[2];
     }
 }

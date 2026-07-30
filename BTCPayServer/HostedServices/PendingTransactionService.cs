@@ -190,30 +190,69 @@ public class PendingTransactionService(
         var network = networkProvider.GetNetwork<BTCPayNetwork>(pendingTransaction.CryptoCode)?.NBitcoinNetwork ?? psbt.Network;
 
         if (blob.CollectedSignatures.Any(s => s.ReceivedPSBT == newPsbtBase64))
-            return (pendingTransaction, false);
-
-        var beforeProgress = GetSignatureProgress(BuildEffectivePsbt(blob, network));
-        var mergedPsbt = BuildEffectivePsbt(blob, network, psbt);
-        var afterProgress = GetSignatureProgress(mergedPsbt);
-
-        if (!HasMeaningfulDelta(beforeProgress, afterProgress))
-            return (pendingTransaction, false);
-
-        blob.CollectedSignatures.Add(new CollectedSignature
         {
-            ReceivedPSBT = newPsbtBase64,
-            Timestamp = DateTimeOffset.UtcNow
-        });
+            logger.LogInformation(
+                "Skipping finalization retry for pending transaction {PendingTransactionId}: this PSBT was already collected",
+                pendingTransaction.Id);
+            return (pendingTransaction, false);
+        }
+
+        var mergedPsbt = BuildEffectivePsbt(blob, network);
+        var beforeProgress = GetSignatureProgress(mergedPsbt);
+        mergedPsbt.Combine(psbt);
+        var afterProgress = GetSignatureProgress(mergedPsbt);
+        var meaningfulDelta = HasMeaningfulDelta(beforeProgress, afterProgress);
+
+        var finalized = mergedPsbt.TryFinalize(out var finalizationErrors);
+        var retained = meaningfulDelta || finalized;
+        if (retained)
+        {
+            blob.CollectedSignatures.Add(new CollectedSignature
+            {
+                ReceivedPSBT = newPsbtBase64,
+                Timestamp = DateTimeOffset.UtcNow
+            });
+        }
         ApplyProgress(blob, afterProgress);
 
-        if (mergedPsbt.TryFinalize(out _))
+        logger.LogInformation(
+            "Retried finalization for pending transaction {PendingTransactionId}. Retained PSBT count: {CollectedPSBTCount}; " +
+            "signature progress: {SignaturesCollected}/{SignaturesNeeded}; PSBT retained: {PSBTRetained}",
+            pendingTransaction.Id,
+            blob.CollectedSignatures.Count,
+            blob.SignaturesCollected,
+            blob.SignaturesNeeded,
+            retained);
+
+        if (finalized)
         {
             if ((blob.SignaturesCollected ?? 0) < (blob.SignaturesNeeded ?? 0))
                 blob.SignaturesCollected = blob.SignaturesNeeded;
             pendingTransaction.State = PendingTransactionState.Signed;
+            logger.LogInformation(
+                "Finalized pending transaction {PendingTransactionId} after collecting PSBT {CollectedPSBTCount}",
+                pendingTransaction.Id,
+                blob.CollectedSignatures.Count);
+        }
+        else
+        {
+            var finalizationErrorDetails = FormatFinalizationErrors(finalizationErrors);
+            var signaturesNeeded = blob.SignaturesNeeded ?? 0;
+            var logLevel = signaturesNeeded > 0 &&
+                           (blob.SignaturesCollected ?? 0) >= signaturesNeeded
+                ? LogLevel.Warning
+                : LogLevel.Debug;
+            logger.Log(
+                logLevel,
+                "Finalization attempt failed for pending transaction {PendingTransactionId}. Signature progress: " +
+                "{SignaturesCollected}/{SignaturesNeeded}. Errors: {FinalizationErrors}",
+                pendingTransaction.Id,
+                blob.SignaturesCollected,
+                blob.SignaturesNeeded,
+                finalizationErrorDetails);
         }
         pendingTransaction.SetBlob(blob);
-        return (pendingTransaction, true);
+        return (pendingTransaction, retained);
     }
 
 
@@ -321,16 +360,13 @@ public class PendingTransactionService(
         return true;
     }
 
-    private static PSBT BuildEffectivePsbt(PendingTransactionBlob blob, Network network, PSBT? additionalPsbt = null)
+    private static PSBT BuildEffectivePsbt(PendingTransactionBlob blob, Network network)
     {
         var effectivePsbt = PSBT.Parse(blob.PSBT, network);
         foreach (var collectedSignature in blob.CollectedSignatures)
         {
             effectivePsbt.Combine(PSBT.Parse(collectedSignature.ReceivedPSBT, network));
         }
-
-        if (additionalPsbt is not null)
-            effectivePsbt.Combine(additionalPsbt);
 
         return effectivePsbt;
     }
@@ -355,7 +391,7 @@ public class PendingTransactionService(
             var validExpectedPartialSigCount = input.PartialSigs.Keys.Count(multisigParams.PubKeys.Contains);
             var collected = finalized
                 ? multisigParams.SignatureCount
-                : Math.Min(validExpectedPartialSigCount, multisigParams.SignatureCount);
+                : validExpectedPartialSigCount;
             inputs.Add(new PendingTransactionInputProgress(
                 true,
                 multisigParams.SignatureCount,
@@ -402,6 +438,26 @@ public class PendingTransactionService(
         blob.SignaturesNeeded = progress.SignaturesNeeded;
         blob.SignaturesTotal = progress.SignaturesTotal;
         blob.SignaturesCollected = progress.SignaturesCollected;
+    }
+
+    private static string FormatFinalizationErrors(IList<PSBTError>? errors)
+    {
+        if (errors is null or { Count: 0 })
+            return "unknown";
+
+        const int maxErrors = 20;
+        const int maxMessageLength = 256;
+        var details = errors.Take(maxErrors).Select(error =>
+        {
+            var message = error.Message.Replace('\r', ' ').Replace('\n', ' ');
+            if (message.Length > maxMessageLength)
+                message = $"{message[..maxMessageLength]}…";
+            return $"input {error.InputIndex}: {message}";
+        });
+        var result = string.Join(" | ", details);
+        return errors.Count > maxErrors
+            ? $"{result} | {errors.Count - maxErrors} more error(s)"
+            : result;
     }
 
     private sealed record PendingTransactionSignatureProgress(

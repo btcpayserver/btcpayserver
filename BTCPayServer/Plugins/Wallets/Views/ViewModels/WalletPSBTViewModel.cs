@@ -42,6 +42,7 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
             var psbt = await GetPSBTCore(network, modelState);
             if (psbt != null)
             {
+                psbt.AddWitnessUtxoToSegwitInputs();
                 Decoded = psbt.ToString();
                 PSBTHex = psbt.ToHex();
                 PSBT = psbt.ToBase64();

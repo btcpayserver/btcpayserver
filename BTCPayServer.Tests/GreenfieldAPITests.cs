@@ -40,6 +40,7 @@ using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Sdk;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
+using PayoutEvent = BTCPayServer.HostedServices.PayoutEvent;
 using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 
 namespace BTCPayServer.Tests
@@ -3708,18 +3709,22 @@ namespace BTCPayServer.Tests
 
             // Send just enough money to cover the smallest of the payouts.
             var fee = (await tester.PayTester.GetService<IFeeProviderFactory>().CreateFeeProvider(tester.DefaultNetwork).GetFeeRateAsync(100)).GetFee(150);
-            await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create((await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
+            uint256 txid = await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create((await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
                 tester.ExplorerClient.Network.NBitcoinNetwork), Money.Coins(0.00001m) + fee);
             await tester.ExplorerNode.GenerateAsync(1);
             await TestUtils.EventuallyAsync(async () =>
             {
                 Assert.Single(await adminClient.ShowOnChainWalletTransactions(admin.StoreId, "BTC"));
+                Assert.Contains(await adminClient.GetOnChainWalletUTXOs(admin.StoreId, "BTC"),
+                    utxo => utxo.Outpoint.Hash == txid);
 
                 payouts = await adminClient.GetStorePayouts(admin.StoreId);
                 Assert.Equal(3, payouts.Length);
             });
-            await adminClient.UpdateStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC",
-                new OnChainAutomatedPayoutSettings() { IntervalSeconds = TimeSpan.FromSeconds(600), FeeBlockTarget = 1000 });
+            await tester.WaitForEvent<PayoutEvent>(
+                () => adminClient.UpdateStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC",
+                    new OnChainAutomatedPayoutSettings() { IntervalSeconds = TimeSpan.FromSeconds(600), FeeBlockTarget = 1000 }),
+                e => e.Type == PayoutEvent.PayoutEventType.Updated && e.Payout.Id == notApprovedPayoutWithoutPullPayment.Id);
             Assert.Equal(600, Assert.Single(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC")).IntervalSeconds.TotalSeconds);
 
             await TestUtils.EventuallyAsync(async () =>
@@ -3729,13 +3734,18 @@ namespace BTCPayServer.Tests
                 Assert.Single(payouts, data => data.State == PayoutState.InProgress);
             });
 
-            uint256 txid = null;
             await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
             {
                 txid = await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create((await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
                     tester.ExplorerClient.Network.NBitcoinNetwork), Money.Coins(0.01m) + fee);
             }, correctEvent: ev => ev.NewTransactionEvent.TransactionData.TransactionHash == txid);
-            await tester.PayTester.GetService<PayoutProcessorService>().Restart(new PayoutProcessorService.PayoutProcessorQuery(admin.StoreId, Payouts.PayoutMethodId.Parse("BTC")));
+            await TestUtils.EventuallyAsync(async () =>
+                Assert.Contains(await adminClient.GetOnChainWalletUTXOs(admin.StoreId, "BTC"),
+                    utxo => utxo.Outpoint.Hash == txid));
+            await tester.WaitForEvent<PayoutEvent>(
+                () => tester.PayTester.GetService<PayoutProcessorService>().Restart(
+                    new PayoutProcessorService.PayoutProcessorQuery(admin.StoreId, Payouts.PayoutMethodId.Parse("BTC"))),
+                e => e.Type == PayoutEvent.PayoutEventType.Updated && e.Payout.Id == notapprovedPayoutWithPullPayment.Id);
             await TestUtils.EventuallyAsync(async () =>
             {
                 Assert.Equal(4, (await adminClient.ShowOnChainWalletTransactions(admin.StoreId, "BTC")).Count());

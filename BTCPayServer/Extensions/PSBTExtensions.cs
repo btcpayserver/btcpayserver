@@ -26,9 +26,9 @@ namespace BTCPayServer
 
                 var previousOutput = nonWitnessUtxo.Outputs[(int)input.PrevOut.N];
                 var redeemScript = input.RedeemScript;
-                if (IsSegwit(previousOutput.ScriptPubKey) ||
+                if (previousOutput.ScriptPubKey.IsScriptType(ScriptType.Witness) ||
                     redeemScript is not null &&
-                    IsSegwit(redeemScript) &&
+                    redeemScript.IsScriptType(ScriptType.Witness) &&
                     redeemScript.Hash.ScriptPubKey == previousOutput.ScriptPubKey)
                 {
                     input.WitnessUtxo = previousOutput;
@@ -36,13 +36,6 @@ namespace BTCPayServer
             }
 
             return psbt;
-        }
-
-        private static bool IsSegwit(Script scriptPubKey)
-        {
-            return PayToWitPubKeyHashTemplate.Instance.CheckScriptPubKey(scriptPubKey) ||
-                   PayToWitScriptHashTemplate.Instance.CheckScriptPubKey(scriptPubKey) ||
-                   PayToTaprootTemplate.Instance.CheckScriptPubKey(scriptPubKey);
         }
     }
 }

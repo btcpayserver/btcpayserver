@@ -118,6 +118,14 @@
                     "Apps",
                     "Point of Sale"
                 ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ],
                 "operationId": "Apps_GetPointOfSaleApp",
                 "summary": "Get Point of Sale app data",
                 "description": "Returns POS app data",
@@ -202,6 +210,14 @@
                 "tags": [
                     "Apps",
                     "Crowdfund"
+                ],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
                 ],
                 "operationId": "Apps_GetCrowdfundApp",
                 "summary": "Get crowdfund app data",

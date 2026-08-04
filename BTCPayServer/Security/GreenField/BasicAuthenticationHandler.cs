@@ -75,7 +75,7 @@ namespace BTCPayServer.Security.Greenfield
             }
             if (user is null)
                 return Fail($"Basic authentication failed");
-            if (user.Fido2Credentials.Any())
+            if (await signInManager.IsTwoFactorEnabledAsync(user))
             {
                 return Fail("Cannot use Basic authentication when multi-factor is enabled.");
             }

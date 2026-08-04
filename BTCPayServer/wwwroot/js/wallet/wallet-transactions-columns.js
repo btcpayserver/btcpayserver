@@ -4,7 +4,7 @@
 // from the header cells tagged with `data-col` / `data-col-label`, so the
 // control adapts automatically as columns are added or removed from the view.
 (function () {
-    const STORAGE_KEY = 'btcpay-wallet-tx-columns';
+    const STORAGE_KEY_BASE = 'btcpay-wallet-tx-columns';
     const TABLE_ID = 'WalletTransactions';
     const BODY_ID = 'WalletTransactionsList';
     const LIST_ID = 'ColumnsList';
@@ -13,7 +13,7 @@
     const SVG_NS = 'http://www.w3.org/2000/svg';
 
     let state = { registry: [], order: [], hidden: [] };
-    let dragEl = null;
+    let moveLabelFormat = 'Move {0}'; // localized template supplied by the view
 
     const getTable = () => document.getElementById(TABLE_ID);
     const getHeaderRow = () => {
@@ -41,9 +41,14 @@
         return cols;
     };
 
+    // Scope the saved preference to the current column set ("schema"), so visiting a
+    // store/wallet with a different set of columns (e.g. no rate columns) writes to a
+    // separate key and can't drop another layout's hidden/order preferences.
+    const storageKey = () => `${STORAGE_KEY_BASE}:${getRegistry().map(c => c.key).slice().sort().join(',')}`;
+
     const loadSaved = () => {
         try {
-            const parsed = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+            const parsed = JSON.parse(window.localStorage.getItem(storageKey()));
             if (!parsed || !Array.isArray(parsed.order)) return null;
             return { order: parsed.order, hidden: Array.isArray(parsed.hidden) ? parsed.hidden : [] };
         } catch (e) {
@@ -53,7 +58,7 @@
 
     const persist = () => {
         try {
-            window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ order: state.order, hidden: state.hidden }));
+            window.localStorage.setItem(storageKey(), JSON.stringify({ order: state.order, hidden: state.hidden }));
         } catch (e) { /* storage unavailable — degrade gracefully */ }
     };
 
@@ -112,7 +117,7 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'wallet-columns__handle';
-        btn.setAttribute('aria-label', `Move ${label}`);
+        btn.setAttribute('aria-label', moveLabelFormat.replace('{0}', () => label));
         const svg = document.createElementNS(SVG_NS, 'svg');
         svg.setAttribute('role', 'img');
         svg.setAttribute('class', 'icon icon-actions-drag');
@@ -132,7 +137,6 @@
             if (!(key in labels)) return;
             const li = document.createElement('li');
             li.className = 'wallet-columns__item';
-            li.draggable = true;
             li.dataset.col = key;
 
             const check = document.createElement('div');
@@ -170,18 +174,11 @@
         apply();
     };
 
-    const dragAfter = (list, y) => {
-        let closest = null;
-        let closestOffset = Number.NEGATIVE_INFINITY;
-        list.querySelectorAll(`li[data-col]:not(.${DRAGGING_CLASS})`).forEach(child => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closestOffset) {
-                closestOffset = offset;
-                closest = child;
-            }
-        });
-        return closest;
+    // Read the current DOM order of the list back into state, then persist + apply.
+    const commitOrder = list => {
+        state.order = [...list.querySelectorAll('li[data-col]')].map(el => el.dataset.col);
+        persist();
+        apply();
     };
 
     // Reorder a row by one step; keyboard-accessible alternative to dragging.
@@ -190,9 +187,7 @@
         if (dir < 0 && li.previousElementSibling) list.insertBefore(li, li.previousElementSibling);
         else if (dir > 0 && li.nextElementSibling) list.insertBefore(li.nextElementSibling, li);
         else return;
-        state.order = [...list.querySelectorAll('li[data-col]')].map(el => el.dataset.col);
-        persist();
-        apply();
+        commitOrder(list);
         li.querySelector('.wallet-columns__handle').focus();
     };
 
@@ -211,31 +206,74 @@
             }
         }, list);
 
-        list.addEventListener('dragstart', event => {
-            dragEl = event.target.closest('li[data-col]');
-            if (!dragEl) return;
-            dragEl.classList.add(DRAGGING_CLASS);
-            event.dataTransfer.effectAllowed = 'move';
-        });
-        list.addEventListener('dragover', event => {
-            if (!dragEl) return;
+        // Pointer-based dragging works with mouse, touch and pen (HTML5 drag events
+        // never fire on touch). Unlike native drag there's no browser "ghost", so the
+        // dragged row follows the pointer via a transform — making it obvious what is
+        // being moved — while the other rows reflow underneath it.
+        delegate('pointerdown', '.wallet-columns__handle', event => {
+            if (event.button != null && event.button !== 0) return; // primary button / touch / pen only
+            const li = event.target.closest('li[data-col]');
+            if (!li) return;
             event.preventDefault();
-            event.dataTransfer.dropEffect = 'move';
-            const after = dragAfter(list, event.clientY);
-            list.insertBefore(dragEl, after);
-        });
-        list.addEventListener('dragend', () => {
-            if (!dragEl) return;
-            dragEl.classList.remove(DRAGGING_CLASS);
-            dragEl = null;
-            state.order = [...list.querySelectorAll('li[data-col]')].map(li => li.dataset.col);
-            persist();
-            apply();
-        });
+
+            // Safety net: clear any leftover drag state (e.g. from an interrupted drag).
+            list.querySelectorAll(`.${DRAGGING_CLASS}`).forEach(el => {
+                el.classList.remove(DRAGGING_CLASS);
+                el.style.transform = '';
+            });
+
+            // Track the dragged row in a local (not shared) so a second, concurrent
+            // pointer (multi-touch, palm, fast re-tap) can't hijack an in-flight drag.
+            const item = li;
+            item.classList.add(DRAGGING_CLASS);
+            const pointerId = event.pointerId;
+            // startY is the pointer position at which the current transform baseline is 0.
+            let startY = event.clientY;
+
+            const onMove = e => {
+                if (e.pointerId !== pointerId) return;
+                item.style.transform = `translateY(${e.clientY - startY}px)`;
+
+                // Once the dragged row's centre passes a neighbour's centre, swap them,
+                // then nudge startY so the row stays visually pinned under the pointer.
+                const rect = item.getBoundingClientRect();
+                const mid = rect.top + rect.height / 2;
+                const next = item.nextElementSibling;
+                const prev = item.previousElementSibling;
+                let moved = false;
+                if (next) {
+                    const nb = next.getBoundingClientRect();
+                    if (mid > nb.top + nb.height / 2) { list.insertBefore(item, next.nextElementSibling); moved = true; }
+                }
+                if (!moved && prev) {
+                    const pb = prev.getBoundingClientRect();
+                    if (mid < pb.top + pb.height / 2) { list.insertBefore(item, prev); moved = true; }
+                }
+                if (moved) {
+                    startY += item.getBoundingClientRect().top - rect.top;
+                    item.style.transform = `translateY(${e.clientY - startY}px)`;
+                }
+            };
+            // Listen on document so the drag always ends cleanly, even if pointer capture
+            // is lost when the dragged row is re-inserted in the DOM (which would otherwise
+            // leave the row's highlight stuck).
+            const onUp = e => {
+                if (e.pointerId !== pointerId) return;
+                document.removeEventListener('pointermove', onMove);
+                document.removeEventListener('pointerup', onUp);
+                document.removeEventListener('pointercancel', onUp);
+                item.style.transform = '';
+                item.classList.remove(DRAGGING_CLASS);
+                commitOrder(list);
+            };
+            document.addEventListener('pointermove', onMove);
+            document.addEventListener('pointerup', onUp);
+            document.addEventListener('pointercancel', onUp);
+        }, list);
 
         delegate('click', `#${RESET_ID}`, () => {
             try {
-                window.localStorage.removeItem(STORAGE_KEY);
+                window.localStorage.removeItem(storageKey());
             } catch (e) { /* storage unavailable — degrade gracefully */ }
             state = resolveState();
             buildList();
@@ -243,11 +281,13 @@
         });
     };
 
-    if (getTable() && getHeaderRow() && document.getElementById(LIST_ID)) {
+    const listEl = document.getElementById(LIST_ID);
+    if (getTable() && getHeaderRow() && listEl) {
+        moveLabelFormat = listEl.dataset.moveLabel || moveLabelFormat;
         state = resolveState();
         buildList();
         apply();
-        wire(document.getElementById(LIST_ID));
+        wire(listEl);
         // Expose so the infinite-scroll loader can re-apply after appending rows.
         window.WalletTxColumns = { apply };
     }

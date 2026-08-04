@@ -252,13 +252,13 @@
     <vc:clear-all-filters search="Model.Search"></vc:clear-all-filters>
 </form>
 
-    <div class="dropdown wallet-columns ms-auto" id="ColumnsDropdown">
+    <div class="dropdown wallet-columns ms-auto only-for-js" id="ColumnsDropdown">
         <button class="btn btn-secondary" type="button" id="ColumnsDropdownToggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false" title="@StringLocalizer["Columns"]" aria-label="@StringLocalizer["Columns"]">
             <vc:icon symbol="filter" />
         </button>
         <div class="dropdown-menu dropdown-menu-end wallet-columns__menu" aria-labelledby="ColumnsDropdownToggle">
             <div class="wallet-columns__hint text-secondary" text-translate="true">Check to show/hide · drag to reorder</div>
-            <ul class="wallet-columns__list list-unstyled mb-0" id="ColumnsList"></ul>
+            <ul class="wallet-columns__list list-unstyled mb-0" id="ColumnsList" data-move-label="@StringLocalizer["Move {0}"]"></ul>
             <div class="dropdown-divider"></div>
             <button type="button" class="btn btn-link wallet-columns__reset" id="ColumnsReset" text-translate="true">Reset to default</button>
         </div>

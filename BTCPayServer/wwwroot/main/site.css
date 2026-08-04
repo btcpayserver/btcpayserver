@@ -1231,12 +1231,23 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     padding: var(--btcpay-space-xs) var(--btcpay-space-m);
     cursor: grab;
 }
-.wallet-columns__item:hover {
-    background-color: var(--btcpay-neutral-200);
+/* Only on devices with a real hovering pointer — otherwise the highlight sticks after a tap on touch. */
+@media (hover: hover) and (pointer: fine) {
+    .wallet-columns__item:hover {
+        background-color: var(--btcpay-neutral-200);
+    }
 }
 .wallet-columns__item--dragging {
-    opacity: .5;
+    /* No browser drag-ghost with Pointer Events, so the row itself follows the
+       pointer (via transform) and is lifted above its siblings to make the move obvious. */
+    background-color: var(--btcpay-neutral-200);
+    border-radius: var(--btcpay-border-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
+    position: relative;
+    z-index: 2;
     cursor: grabbing;
+    user-select: none;
+    will-change: transform;
 }
 .wallet-columns__handle {
     display: inline-flex;
@@ -1245,6 +1256,8 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     border: 0;
     color: var(--btcpay-body-text-muted);
     cursor: grab;
+    /* Let pointer-based dragging start on touch without the browser scrolling instead. */
+    touch-action: none;
 }
 .wallet-columns__item .form-check {
     flex: 1 1 auto;
@@ -1253,6 +1266,26 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 .wallet-columns__reset {
     padding: var(--btcpay-space-xs) var(--btcpay-space-m) 0;
     text-decoration: none;
+}
+/* Roomier rows and ~44px tap targets on touch devices, without changing the
+   compact desktop layout. */
+@media (pointer: coarse) {
+    .wallet-columns__item {
+        min-height: 3rem;
+        padding-top: var(--btcpay-space-s);
+        padding-bottom: var(--btcpay-space-s);
+    }
+    .wallet-columns__handle {
+        /* Fill the row height so the grab area is tall without overhanging into neighbours. */
+        align-self: stretch;
+        min-width: 2.75rem;
+        align-items: center;
+        justify-content: center;
+    }
+    .wallet-columns__item .form-check-label {
+        display: inline-block;
+        padding: var(--btcpay-space-xs) 0;
+    }
 }
 
 /* Mass Actions */

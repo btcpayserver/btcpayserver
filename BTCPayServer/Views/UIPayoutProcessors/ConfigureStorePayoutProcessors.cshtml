@@ -20,9 +20,10 @@
         {
             foreach (var processorsView in Model)
             {
-                <h4 class="settings-section-heading">@processorsView.Factory.FriendlyName</h4>
+                <h3 class="settings-section__heading">@processorsView.Factory.FriendlyName</h3>
                 <div class="settings-section">
-                <table class="table table-hover mt-0 mb-0">
+                <div class="table-responsive settings-section__table">
+                <table class="table table-hover mb-0">
                     <thead>
                     <tr>
                         <th text-translate="true">Payment Method</th>
@@ -56,6 +57,7 @@
                     }
                     </tbody>
                 </table>
+                </div>
                 </div>
             }
         }

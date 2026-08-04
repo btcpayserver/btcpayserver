@@ -26,7 +26,7 @@ using PosViewType = BTCPayServer.Client.Models.PosViewType;
 namespace BTCPayServer.Controllers.Greenfield
 {
     [ApiController]
-    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldAppsController : ControllerBase
     {
@@ -56,7 +56,6 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/apps/crowdfund")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateCrowdfundApp(string storeId, CrowdfundAppRequest request)
         {
             var store = HttpContext.GetStoreData();
@@ -87,7 +86,6 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/apps/pos")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreatePointOfSaleApp(string storeId, PointOfSaleAppRequest request)
         {
             var store = HttpContext.GetStoreData();
@@ -118,7 +116,6 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpPut("~/api/v1/apps/pos/{appId}")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> UpdatePointOfSaleApp(string appId, PointOfSaleAppRequest request)
         {
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType, includeArchived: true);
@@ -158,7 +155,6 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpGet("~/api/v1/apps")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetAllApps()
         {
             var apps = await _appService.GetAllApps(User.GetId(), includeArchived: true);
@@ -167,7 +163,6 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/apps")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetAllApps(string storeId)
         {
             var apps = await _appService.GetAllApps(User.GetId(), false, storeId, true);
@@ -176,7 +171,6 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpGet("~/api/v1/apps/{appId}")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetApp(string appId)
         {
             var app = await _appService.GetApp(appId, null, includeArchived: true);
@@ -196,7 +190,6 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpPut("~/api/v1/apps/crowdfund/{appId}")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> UpdateCrowdfundApp(string appId, CrowdfundAppRequest request)
         {
             var app = await _appService.GetApp(appId, CrowdfundAppType.AppType, includeArchived: true);
@@ -229,7 +222,6 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpDelete("~/api/v1/apps/{appId}")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> DeleteApp(string appId)
         {
             var app = await _appService.GetApp(appId, null, includeArchived: true);
@@ -241,7 +233,6 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpGet("~/api/v1/apps/{appId}/sales")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetAppSales(string appId, [FromQuery] int numberOfDays = 7)
         {
             var app = await _appService.GetApp(appId, null, includeArchived: true);
@@ -252,7 +243,6 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpGet("~/api/v1/apps/{appId}/top-items")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetAppTopItems(string appId, [FromQuery] int offset = 0, [FromQuery] int count = 10)
         {
             var app = await _appService.GetApp(appId, null, includeArchived: true);
@@ -266,7 +256,6 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpPost("~/api/v1/apps/{appId}/image")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> UploadAppItemImage(string appId, IFormFile? file)
         {
             var app = await _appService.GetApp(appId, null, includeArchived: true);
@@ -305,7 +294,6 @@ namespace BTCPayServer.Controllers.Greenfield
             }
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/apps/{appId}/image/{fileId}")]
         public async Task<IActionResult> DeleteAppItemImage(string appId, string fileId)
         {

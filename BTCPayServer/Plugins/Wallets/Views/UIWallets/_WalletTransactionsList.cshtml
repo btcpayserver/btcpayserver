@@ -10,10 +10,10 @@
         <td class="align-middle only-for-js mass-action-select-col" permission="@WalletPolicies.CanCreateWalletTransactions">
             <input name="selectedTransactions" type="checkbox" class="form-check-input mass-action-select" form="WalletActions" value="@transaction.Id" />
         </td>
-        <td class="align-middle date-col">
+        <td class="align-middle date-col" data-col="date">
             @transaction.Timestamp.ToBrowserDate()
         </td>
-        <td class="align-middle text-start">
+        <td class="align-middle text-start" data-col="label">
             <span permission="@WalletPolicies.CanManageWalletTransactions">
                 <vc:label-manager
                     wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Tx, transaction.Id)"
@@ -45,13 +45,13 @@
                 }
             </span>
         </td>
-        <td>
+        <td data-col="transaction">
             <vc:truncate-center text="@transaction.Id" link="@transaction.Link" classes="truncate-center-id" />
         </td>
-        <td class="align-middle amount-col">
+        <td class="align-middle amount-col" data-col="amount">
             <span data-sensitive class="text-@(transaction.Positive ? "success" : "danger")@(transaction.IsConfirmed ? "" : " opacity-50")">@transaction.Balance</span>
         </td>
-        <td class="align-middle fee-col">
+        <td class="align-middle fee-col" data-col="fee">
             <span data-sensitive class="@(transaction.IsConfirmed ? "" : " opacity-50")">
                 @if (transaction.HistoryLine is { Fee: { } fee, FeeRate: { } fr })
                 {
@@ -61,7 +61,7 @@
         </td>
         @foreach (var rate in transaction.Rates)
         {
-            <td class="align-middle rate-col">
+            <td class="align-middle rate-col" data-col="rate">
                 <span>@rate</span>
             </td>
         }

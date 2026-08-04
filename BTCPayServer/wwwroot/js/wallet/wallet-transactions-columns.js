@@ -13,6 +13,7 @@
     const SVG_NS = 'http://www.w3.org/2000/svg';
 
     let state = { registry: [], order: [], hidden: [] };
+    let storeId = '';
     let moveLabelFormat = 'Move {0}'; // localized template supplied by the view
 
     const getTable = () => document.getElementById(TABLE_ID);
@@ -41,10 +42,8 @@
         return cols;
     };
 
-    // Scope the saved preference to the current column set ("schema"), so visiting a
-    // store/wallet with a different set of columns (e.g. no rate columns) writes to a
-    // separate key and can't drop another layout's hidden/order preferences.
-    const storageKey = () => `${STORAGE_KEY_BASE}:${getRegistry().map(c => c.key).slice().sort().join(',')}`;
+    // Scope preferences to the store and current column set ("schema").
+    const storageKey = () => `${STORAGE_KEY_BASE}:${storeId}`;
 
     const loadSaved = () => {
         try {
@@ -283,6 +282,7 @@
 
     const listEl = document.getElementById(LIST_ID);
     if (getTable() && getHeaderRow() && listEl) {
+        storeId = listEl.dataset.storeId;
         moveLabelFormat = listEl.dataset.moveLabel || moveLabelFormat;
         state = resolveState();
         buildList();

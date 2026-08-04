@@ -177,7 +177,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
     [Fact]
     [Trait("Integration", "Integration")]
-    public async Task PendingMultisigTransactionCountsFinalizedInputsAndSelfHealsStoredProgress()
+    public async Task PendingMultisigTransactionCountsFinalizedInputsAndSelfHealsStoredProgressAndState()
     {
         var dbTester = CreateDBTester();
         await dbTester.MigrateAsync();
@@ -257,6 +257,39 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         Assert.Equal(2, blob.SignaturesNeeded);
         Assert.Equal(3, blob.SignaturesTotal);
         Assert.Equal(1, blob.SignaturesCollected);
+
+        await using (var ctx = dbContextFactory.CreateContext())
+        {
+            var staleTransaction = await ctx.PendingTransactions.FindAsync(pendingTransaction.Id);
+            Assert.NotNull(staleTransaction);
+            var staleBlob = staleTransaction!.GetBlob();
+            staleBlob.CollectedSignatures.Add(new CollectedSignature
+            {
+                ReceivedPSBT = SignInputs(testPsbt.BasePsbt, testPsbt.SignerB, 1).ToBase64(),
+                Timestamp = DateTimeOffset.UtcNow
+            });
+            staleBlob.SignaturesNeeded = 2;
+            staleBlob.SignaturesTotal = 3;
+            staleBlob.SignaturesCollected = 2;
+            staleTransaction.SetBlob(staleBlob);
+            Assert.Equal(PendingTransactionState.Pending, staleTransaction.State);
+            await ctx.SaveChangesAsync();
+        }
+
+        var finalized = await pendingTransactionService.GetPendingTransaction(
+            new PendingTransactionService.PendingTransactionFullId("BTC", storeId, pendingTransaction.Id));
+        blob = finalized!.GetBlob();
+        Assert.Equal(2, blob.SignaturesNeeded);
+        Assert.Equal(3, blob.SignaturesTotal);
+        Assert.Equal(2, blob.SignaturesCollected);
+        Assert.Equal(PendingTransactionState.Signed, finalized.State);
+
+        await using (var ctx = dbContextFactory.CreateContext())
+        {
+            var persisted = await ctx.PendingTransactions.FindAsync(pendingTransaction.Id);
+            Assert.NotNull(persisted);
+            Assert.Equal(PendingTransactionState.Signed, persisted!.State);
+        }
     }
 
     [Fact]
@@ -364,6 +397,10 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         Assert.Contains(logger.Entries, entry =>
             entry.Level == LogLevel.Warning &&
             entry.Message.Contains(pendingTransaction.Id, StringComparison.Ordinal));
+
+        pendingTransaction = await pendingTransactionService.GetPendingTransaction(pendingTransactionId);
+        Assert.NotNull(pendingTransaction);
+        Assert.Equal(PendingTransactionState.Pending, pendingTransaction.State);
 
         // Per-input progress must be retained even while the aggregate remains at two.
         pendingTransaction = await pendingTransactionService.CollectSignature(

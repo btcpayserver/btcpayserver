@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
 using Xunit;
@@ -6,6 +7,56 @@ namespace BTCPayServer.Tests
 {
     public class PSBTTests(ITestOutputHelper helper) : UnitTestBase(helper)
     {
+        [Fact]
+        public void AddsWitnessUtxoToSegwitInputs()
+        {
+            var network = Network.RegTest;
+            var keys = new[] { new Key(), new Key() };
+            var witnessScript = PayToMultiSigTemplate.Instance.GenerateScriptPubKey(
+                2,
+                keys.Select(key => key.PubKey).ToArray());
+            var nativeP2wsh = witnessScript.WitHash.ScriptPubKey;
+            var nativeP2wpkh = new Key().PubKey.WitHash.ScriptPubKey;
+            var nestedP2wshRedeem = witnessScript.WitHash.ScriptPubKey;
+            var nestedP2wsh = nestedP2wshRedeem.Hash.ScriptPubKey;
+            var taproot = new Key().PubKey.GetScriptPubKey(ScriptPubKeyType.TaprootBIP86);
+            var futureWitness = PayToWitTemplate.Instance.GenerateScriptPubKey(OpcodeType.OP_2, new byte[32]);
+            var legacyP2sh = witnessScript.Hash.ScriptPubKey;
+
+            var previousTransaction = network.CreateTransaction();
+            previousTransaction.Outputs.Add(Money.Coins(1.0m), nativeP2wsh);
+            previousTransaction.Outputs.Add(Money.Coins(1.1m), nativeP2wpkh);
+            previousTransaction.Outputs.Add(Money.Coins(1.2m), nestedP2wsh);
+            previousTransaction.Outputs.Add(Money.Coins(1.3m), taproot);
+            previousTransaction.Outputs.Add(Money.Coins(1.4m), futureWitness);
+            previousTransaction.Outputs.Add(Money.Coins(1.5m), legacyP2sh);
+
+            var spendingTransaction = network.CreateTransaction();
+            for (var i = 0; i < previousTransaction.Outputs.Count; i++)
+                spendingTransaction.Inputs.Add(new OutPoint(previousTransaction.GetHash(), i));
+            spendingTransaction.Outputs.Add(Money.Coins(4.5m), new Key().PubKey.WitHash.ScriptPubKey);
+
+            var psbt = PSBT.FromTransaction(spendingTransaction, network);
+            foreach (var input in psbt.Inputs)
+                input.NonWitnessUtxo = previousTransaction;
+            psbt.Inputs[0].WitnessScript = witnessScript;
+            psbt.Inputs[2].RedeemScript = nestedP2wshRedeem;
+            psbt.Inputs[2].WitnessScript = witnessScript;
+            psbt.Inputs[5].RedeemScript = witnessScript;
+
+            Assert.All(psbt.Inputs, input => Assert.Null(input.WitnessUtxo));
+
+            psbt.AddWitnessUtxoToSegwitInputs();
+
+            for (var i = 0; i < 5; i++)
+            {
+                Assert.NotNull(psbt.Inputs[i].WitnessUtxo);
+                Assert.Equal(previousTransaction.Outputs[i], psbt.Inputs[i].WitnessUtxo);
+            }
+            Assert.Null(psbt.Inputs[5].WitnessUtxo);
+            Assert.All(psbt.Inputs, input => Assert.Same(previousTransaction, input.NonWitnessUtxo));
+        }
+
         [Fact]
         [Trait("Playwright", "Playwright")]
         public async Task CanPlayWithPSBT()

@@ -349,13 +349,30 @@ public class PendingTransactionService(
         if (network is null)
             return false;
 
-        var progress = GetSignatureProgress(BuildEffectivePsbt(blob, network));
-        if (blob.SignaturesNeeded == progress.SignaturesNeeded &&
-            blob.SignaturesTotal == progress.SignaturesTotal &&
-            blob.SignaturesCollected == progress.SignaturesCollected)
+        var effectivePsbt = BuildEffectivePsbt(blob, network);
+        var progress = GetSignatureProgress(effectivePsbt);
+        var changed = blob.SignaturesNeeded != progress.SignaturesNeeded ||
+                      blob.SignaturesTotal != progress.SignaturesTotal ||
+                      blob.SignaturesCollected != progress.SignaturesCollected;
+
+        if (changed)
+            ApplyProgress(blob, progress);
+
+        if (pendingTransaction.State == PendingTransactionState.Pending &&
+            progress.SignaturesNeeded > 0 &&
+            progress.SignaturesCollected >= progress.SignaturesNeeded &&
+            effectivePsbt.TryFinalize(out _))
+        {
+            pendingTransaction.State = PendingTransactionState.Signed;
+            changed = true;
+            logger.LogInformation(
+                "Finalized pending transaction {PendingTransactionId} while refreshing stored signature progress",
+                pendingTransaction.Id);
+        }
+
+        if (!changed)
             return false;
 
-        ApplyProgress(blob, progress);
         pendingTransaction.SetBlob(blob);
         return true;
     }

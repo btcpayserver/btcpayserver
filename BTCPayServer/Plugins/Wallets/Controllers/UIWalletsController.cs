@@ -304,6 +304,7 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     var psbtResponse = await explorer.CreatePSBTAsync(paymentMethod.AccountDerivation, createPSBT, cancellationToken);
+                    psbtResponse.PSBT.AddWitnessUtxoToSegwitInputs();
 
                     signingContext = new SigningContextModel
                     {
@@ -384,6 +385,7 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     var psbtResponse = await explorer.CreatePSBTAsync(paymentMethod.AccountDerivation, createPSBT, cancellationToken);
+                    psbtResponse.PSBT.AddWitnessUtxoToSegwitInputs();
 
                     signingContext = new SigningContextModel
                     {

@@ -69,6 +69,7 @@ namespace BTCPayServer.Controllers
             if (psbt == null)
                 throw new NotSupportedException(StringLocalizer["You need to update your version of NBXplorer"]);
 
+            psbt.PSBT.AddWitnessUtxoToSegwitInputs();
             return psbt;
         }
 

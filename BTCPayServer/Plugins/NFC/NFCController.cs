@@ -3,7 +3,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
@@ -21,16 +20,19 @@ namespace BTCPayServer.Plugins.NFC
     public class NFCController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly NFCExternalHttpClientFactory _externalHttpClientFactory;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly InvoiceActivator _invoiceActivator;
         private readonly StoreRepository _storeRepository;
 
         public NFCController(IHttpClientFactory httpClientFactory,
+            NFCExternalHttpClientFactory externalHttpClientFactory,
             InvoiceRepository invoiceRepository,
             InvoiceActivator invoiceActivator,
             StoreRepository storeRepository)
         {
             _httpClientFactory = httpClientFactory;
+            _externalHttpClientFactory = externalHttpClientFactory;
             _invoiceRepository = invoiceRepository;
             _invoiceActivator = invoiceActivator;
             _storeRepository = storeRepository;
@@ -76,16 +78,21 @@ namespace BTCPayServer.Plugins.NFC
                 return BadRequest(e.Message);
             }
 
+            if (!NFCExternalHttpClientFactory.TryValidateUri(uri, out var uriError))
+            {
+                return BadRequest(uriError);
+            }
+
             if (!string.IsNullOrEmpty(tag) && !tag.Equals("withdrawRequest"))
             {
                 return BadRequest("LNURL was not LNURL-Withdraw");
             }
 
             LNURLWithdrawRequest info;
-            var httpClient = CreateHttpClient(uri);
+            using var initialHttpClient = _externalHttpClientFactory.CreateClient(uri);
             try
             {
-                info = await LNURL.LNURL.FetchInformation(uri, tag, httpClient) as LNURLWithdrawRequest;
+                info = await LNURL.LNURL.FetchInformation(uri, tag, initialHttpClient) as LNURLWithdrawRequest;
             }
             catch (Exception ex)
             {
@@ -96,6 +103,11 @@ namespace BTCPayServer.Plugins.NFC
             if (info?.Callback is null)
             {
                 return BadRequest("Could not fetch info from LNURL-Withdraw");
+            }
+
+            if (!NFCExternalHttpClientFactory.TryValidateUri(info.Callback, out var callbackError))
+            {
+                return BadRequest($"Invalid LNURL callback: {callbackError}");
             }
 
             string bolt11 = null;
@@ -148,12 +160,12 @@ namespace BTCPayServer.Plugins.NFC
 
                 try
                 {
-                    httpClient = CreateHttpClient(info.Callback);
                     var amount = LightMoney.Coins(due);
                     var actionPath = Url.Action(nameof(UILNURLController.GetLNURLForInvoice), "UILNURL",
                         new { invoiceId = request.InvoiceId, cryptoCode = "BTC", amount = amount.MilliSatoshi });
                     var url = Request.GetAbsoluteUri(actionPath);
-                    var resp = await httpClient.GetAsync(url);
+                    using var internalHttpClient = _httpClientFactory.CreateClient();
+                    using var resp = await internalHttpClient.GetAsync(url);
                     var response = await resp.Content.ReadAsStringAsync();
 
                     if (resp.IsSuccessStatusCode)
@@ -181,7 +193,8 @@ namespace BTCPayServer.Plugins.NFC
 
             try
             {
-                var result = await info.SendRequest(bolt11, httpClient, null, null);
+                using var callbackHttpClient = _externalHttpClientFactory.CreateClient(info.Callback);
+                var result = await info.SendRequest(bolt11, callbackHttpClient, null, null);
                 if (!string.IsNullOrEmpty(result.Status) && result.Status.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
                 {
                     return Ok(result.Reason);
@@ -195,11 +208,5 @@ namespace BTCPayServer.Plugins.NFC
             }
         }
 
-        private HttpClient CreateHttpClient(Uri uri)
-        {
-            return _httpClientFactory.CreateClient(uri.IsOnion()
-                ? LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient
-                : LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient);
-        }
     }
 }

@@ -70,6 +70,11 @@ namespace BTCPayServer.Client.Models
         /// </summary>
         public int? StoreQuota { get; set; }
 
+        /// <summary>
+        /// whether Basic authentication is allowed for the Greenfield API
+        /// </summary>
+        public bool AllowGreenfieldBasicAuth { get; set; }
+
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
     }

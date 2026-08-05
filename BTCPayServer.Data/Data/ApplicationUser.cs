@@ -62,5 +62,6 @@ namespace BTCPayServer.Data
         public string Name { get; set; }
         public string InvitationToken { get; set; }
         public int? StoreQuota { get; set; }
+        public bool AllowGreenfieldBasicAuth { get; set; }
     }
 }

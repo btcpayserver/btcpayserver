@@ -59,9 +59,10 @@ namespace BTCPayServer.Security.Greenfield
                 .FirstOrDefaultAsync(applicationUser =>
                     applicationUser.NormalizedUserName == userManager.NormalizeName(username));
 
-            // We disable throttling for new accounts to give time to create API keys via greenfield API.
-            if (user?.Created is not {} created ||
-                (DateTimeOffset.UtcNow - created) > TimeSpan.FromMinutes(5))
+            // Give new accounts time to create API keys via the Greenfield API.
+            TimeSpan? accountAge = user?.Created is { } created ? DateTimeOffset.UtcNow - created : null;
+            var isNewAccount = accountAge >= TimeSpan.Zero && accountAge <= TimeSpan.FromMinutes(5);
+            if (!isNewAccount)
             {
                 if (Context.Connection.RemoteIpAddress?.ToString() is string ip)
                     if (!await rateLimitService.Throttle(ZoneLimits.Login, ip))
@@ -75,6 +76,8 @@ namespace BTCPayServer.Security.Greenfield
             }
             if (user is null)
                 return Fail($"Basic authentication failed");
+            if (!isNewAccount && user.GetBlob()?.AllowGreenfieldBasicAuth is not true)
+                return Fail("Basic authentication for the Greenfield API is not enabled for this user.");
             if (await signInManager.IsTwoFactorEnabledAsync(user))
             {
                 return Fail("Cannot use Basic authentication when multi-factor is enabled.");

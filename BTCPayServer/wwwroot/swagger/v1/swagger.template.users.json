@@ -70,6 +70,11 @@
                                         "type": "string",
                                         "description": "The new password of the user",
                                         "nullable": true
+                                    },
+                                    "allowGreenfieldBasicAuth": {
+                                        "type": "boolean",
+                                        "description": "Whether to allow Basic authentication for the Greenfield API",
+                                        "nullable": true
                                     }
                                 }
                             }
@@ -565,6 +570,10 @@
                     "disabled": {
                         "type": "boolean",
                         "description": "True if an admin has disabled the user"
+                    },
+                    "allowGreenfieldBasicAuth": {
+                        "type": "boolean",
+                        "description": "Whether Basic authentication is allowed for the Greenfield API"
                     },
                     "roles": {
                         "type": "array",

@@ -222,7 +222,7 @@
       },
       "Basic": {
         "type": "http",
-        "description": "BTCPay Server supports authenticating and authorizing users through the Basic HTTP authentication scheme. Send the user and password encoded in base64 with the format `Basic {base64(username:password)}`. Using this authentication method implicitly provides you with the `unrestricted` permission",
+        "description": "BTCPay Server supports authenticating and authorizing users through the Basic HTTP authentication scheme during the first five minutes after account creation or when the user explicitly enables it. Send the user and password encoded in base64 with the format `Basic {base64(username:password)}`. Using this authentication method implicitly provides you with the `unrestricted` permission",
         "scheme": "Basic"
       }
     }

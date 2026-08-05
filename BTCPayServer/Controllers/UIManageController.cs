@@ -95,7 +95,8 @@ namespace BTCPayServer.Controllers
                 Name = blob.Name,
                 ImageUrl = string.IsNullOrEmpty(blob.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
                 EmailConfirmed = user.EmailConfirmed,
-                RequiresEmailConfirmation = user.RequiresEmailConfirmation
+                RequiresEmailConfirmation = user.RequiresEmailConfirmation,
+                AllowGreenfieldBasicAuth = blob.AllowGreenfieldBasicAuth
             };
             return View(model);
         }
@@ -174,6 +175,12 @@ namespace BTCPayServer.Controllers
             }
 
             var blob = user.GetBlob() ?? new();
+            if (blob.AllowGreenfieldBasicAuth != model.AllowGreenfieldBasicAuth)
+            {
+                blob.AllowGreenfieldBasicAuth = model.AllowGreenfieldBasicAuth;
+                needUpdate = true;
+            }
+
             if (blob.Name != model.Name)
             {
                 blob.Name = model.Name;

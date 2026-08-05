@@ -67,6 +67,13 @@
                 <span asp-validation-for="ImageFile" class="text-danger"></span>
             </div>
         }
+        <div class="form-group">
+            <div class="form-check">
+                <input asp-for="AllowGreenfieldBasicAuth" class="form-check-input" />
+                <label asp-for="AllowGreenfieldBasicAuth" class="form-check-label"></label>
+            </div>
+            <small class="text-muted" text-translate="true">Basic authentication is less secure than API keys. New users can use it for five minutes to create an API key without enabling this setting.</small>
+        </div>
         <h3 class="mt-5 mb-4" text-translate="true">Delete Account</h3>
         <div id="danger-zone">
             <a id="delete-user" asp-action="DeleteUserPost" class="btn btn-outline-danger mb-5" data-confirm-input="@StringLocalizer["Delete"]" data-bs-toggle="modal" data-bs-target="#ConfirmModal" text-translate="true">Delete Account</a>

@@ -34,6 +34,9 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         [Display(Name = "HTML Meta Tags")]
         public string HtmlMetaTags{ get; set; }
 
+        [Display(Name = "Tax Rate")]
+        public string? TaxRateId { get; set; }
+        public List<StoreTaxRate> TaxRates { get; set; } = new();
 
         [Required]
         public string Description { get; set; }

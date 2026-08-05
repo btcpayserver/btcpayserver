@@ -204,6 +204,13 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var blob = user.GetBlob() ?? new();
+            if (request.AllowGreenfieldBasicAuth is { } allowGreenfieldBasicAuth &&
+                allowGreenfieldBasicAuth != blob.AllowGreenfieldBasicAuth)
+            {
+                blob.AllowGreenfieldBasicAuth = allowGreenfieldBasicAuth;
+                needUpdate = true;
+            }
+
             if (request.Name is not null && request.Name != blob.Name)
             {
                 blob.Name = request.Name;

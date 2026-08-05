@@ -86,6 +86,7 @@ namespace BTCPayServer.Services
                 Roles = roles,
                 Disabled = data.IsDisabled,
                 StoreQuota = blob.StoreQuota,
+                AllowGreenfieldBasicAuth = blob.AllowGreenfieldBasicAuth,
                 ImageUrl = string.IsNullOrEmpty(blob.ImageUrl)
                     ? null
                     : await uriResolver.Resolve(request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),

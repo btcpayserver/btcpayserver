@@ -1587,6 +1587,27 @@ namespace BTCPayServer.Tests
                                                         WHERE "Id"=@id
                                                         """, new{ id = user.UserId });
 
+            var basicAuthDisabled = await AssertEx.AssertApiError(401, "unauthenticated",
+                () => clientBasic.GetCurrentUser());
+            Assert.Contains("not enabled", basicAuthDisabled.Message);
+
+            var updatedUser = await clientProfile.UpdateCurrentUser(new UpdateApplicationUserRequest
+            {
+                AllowGreenfieldBasicAuth = true
+            });
+            Assert.True(updatedUser.AllowGreenfieldBasicAuth);
+            Assert.True((await clientBasic.GetCurrentUser()).AllowGreenfieldBasicAuth);
+
+            updatedUser = await clientProfile.UpdateCurrentUser(new UpdateApplicationUserRequest
+            {
+                AllowGreenfieldBasicAuth = false
+            });
+            Assert.False(updatedUser.AllowGreenfieldBasicAuth);
+            await clientProfile.UpdateCurrentUser(new UpdateApplicationUserRequest
+            {
+                AllowGreenfieldBasicAuth = true
+            });
+
             var err = await AssertEx.AssertApiError(401, "unauthenticated", async () =>
             {
                 for (var i = 0; i < 10; i++)

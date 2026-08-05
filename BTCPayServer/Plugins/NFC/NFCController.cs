@@ -76,6 +76,15 @@ namespace BTCPayServer.Plugins.NFC
                 return BadRequest(e.Message);
             }
 
+            if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+            {
+                return BadRequest("LNURL scheme must be http or https");
+            }
+            if (Extensions.IsLocalNetwork(uri.DnsSafeHost))
+            {
+                return BadRequest("LNURL must not point to a local or private network host");
+            }
+
             if (!string.IsNullOrEmpty(tag) && !tag.Equals("withdrawRequest"))
             {
                 return BadRequest("LNURL was not LNURL-Withdraw");

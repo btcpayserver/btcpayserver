@@ -627,6 +627,16 @@ namespace BTCPayServer
                 resp.Headers[name] = value;
         }
 
+        /// <summary>
+        /// Fast-path check that rejects hostnames whose <em>label</em> already reveals a
+        /// private/local destination (`.internal`, `.local`, `.lan`, single-label hosts)
+        /// or literal-IP hosts in loopback/RFC1918. Does NOT resolve DNS - a public-looking
+        /// hostname that A-records to a private IP will pass this check. For endpoints that
+        /// issue outbound HTTP against caller-supplied URLs (SSRF surface), pair this with a
+        /// DNS-resolve-and-filter helper AND pin the outbound socket to the resolved address
+        /// to defeat DNS-rebind. See <c>NFCController.ResolveAndValidateAsync</c> for the
+        /// canonical shape.
+        /// </summary>
         public static bool IsLocalNetwork(string server)
         {
             ArgumentNullException.ThrowIfNull(server);

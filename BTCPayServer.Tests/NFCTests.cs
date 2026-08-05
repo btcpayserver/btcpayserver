@@ -27,9 +27,19 @@ public class NFCTests
     }
 
     [Theory]
-    [InlineData("https://example.com/withdraw")]
+    [InlineData("http://example.com/withdraw")]
     [InlineData("http://93.184.216.34/withdraw")]
-    [InlineData("http://exampleexampleexampleexampleexampleexampleexampleexampleexample.onion/withdraw")]
+    public void RejectsClearnetHttpLnurlTargets(string target)
+    {
+        Assert.False(NFCExternalHttpClientFactory.TryValidateUri(new Uri(target), out var error));
+        Assert.NotNull(error);
+    }
+
+    [Theory]
+    [InlineData("https://example.com/withdraw")]
+    [InlineData("https://93.184.216.34/withdraw")]
+    [InlineData("http://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/withdraw")]
+    [InlineData("https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/withdraw")]
     public void AcceptsPublicAndOnionLnurlTargets(string target)
     {
         Assert.True(

@@ -66,7 +66,14 @@ namespace BTCPayServer.Plugins.NFC
                 return false;
             }
 
-            if (uri.IsOnion())
+            var isOnion = uri.IsOnion();
+            if (!isOnion && uri.Scheme != Uri.UriSchemeHttps)
+            {
+                error = "Clearnet LNURL scheme must be https";
+                return false;
+            }
+
+            if (isOnion)
             {
                 error = null;
                 return true;

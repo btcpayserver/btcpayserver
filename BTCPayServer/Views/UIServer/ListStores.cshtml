@@ -5,13 +5,18 @@
     ViewData["StoreList"] = true;
 }
 <div class="sticky-header">
-	<h2 class="my-1">@ViewData["Title"]</h2>
+    <div class="d-flex flex-column gap-1">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <p class="text-secondary mb-0" text-translate="true">Every store on this server and the users who can access them.</p>
+    </div>
 </div>
 <partial name="_StatusMessage" />
 
 @if (Model.Stores.Any())
 {
-    <table class="table table-hover">
+    <div class="settings-section">
+    <div class="table-responsive settings-section__table">
+    <table class="table table-hover mb-0">
         <thead>
             <tr>
                 <th text-translate="true">Store</th>
@@ -68,6 +73,8 @@
             }
         </tbody>
     </table>
+    </div>
+    </div>
 }
 else
 {

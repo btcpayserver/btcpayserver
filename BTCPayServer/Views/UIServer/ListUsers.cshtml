@@ -30,20 +30,24 @@
     </script>
 }
 
-<div class="sticky-header">
-    <vc:title-header />
+<div class="sticky-header align-items-start">
+    <div class="d-flex flex-column gap-1 flex-grow-1">
+        <h2 class="mb-0" text-translate="true">Users</h2>
+        <p class="text-secondary mb-0" text-translate="true">Manage the accounts that can access this server.</p>
+    </div>
 	<a id="page-primary" asp-action="CreateUser" class="btn btn-primary" role="button" text-translate="true">
         Add User
     </a>
 </div>
 <partial name="_StatusMessage" />
 
-<form asp-action="ListUsers" asp-route-sortOrder="@(userEmailSortOrder)" style="max-width:640px" method="get">
+<form asp-action="ListUsers" asp-route-sortOrder="@(userEmailSortOrder)" style="max-width:640px" method="get" class="mb-3">
     <input asp-for="SearchTerm" class="form-control" placeholder="@StringLocalizer["Search by email..."]" />
 </form>
 
-<div class="table-responsive">
-    <table class="table table-hover">
+<div class="settings-section">
+<div class="table-responsive settings-section__table">
+    <table class="table table-hover mb-0">
         <thead>
         <tr>
             <th>
@@ -165,8 +169,11 @@
         </tbody>
     </table>
 </div>
+</div>
 
-<vc:pager view-model="Model"></vc:pager>
+<div class="mt-3">
+    <vc:pager view-model="Model"></vc:pager>
+</div>
 
 <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Send verification email"], StringLocalizer["This will send a verification email to the user."], StringLocalizer["Send"]))" />
 <partial name="ShowQR" />

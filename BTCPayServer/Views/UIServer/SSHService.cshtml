@@ -13,10 +13,11 @@
 
 @if (Model.SSHKeyFileContent != null)
 {
-    <h4 text-translate="true">Authorized keys</h4>
+    <h3 class="settings-section__heading" text-translate="true">Authorized keys</h3>
     <p text-translate="true">You can enter here SSH public keys authorized to connect to your server.</p>
     <div class="row">
         <div class="col-md-8">
+            <div class="settings-section">
             <form method="post">
                 <div class="form-group">
                     <textarea asp-for="SSHKeyFileContent" rows="20" cols="80" class="form-control"></textarea>
@@ -24,6 +25,7 @@
                 </div>
                 <button name="command" id="submit" type="submit" class="btn btn-primary" value="Save" text-translate="true">Save</button>
             </form>
+            </div>
         </div>
     </div>
 }

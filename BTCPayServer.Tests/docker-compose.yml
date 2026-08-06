@@ -101,7 +101,7 @@ services:
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.6.5
+    image: nicolasdorier/nbxplorer:2.6.10
     restart: unless-stopped
     ports:
       - "32838:32838"

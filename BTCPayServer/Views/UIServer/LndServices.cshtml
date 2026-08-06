@@ -13,7 +13,8 @@
     BTCPay exposes LND's @Model.ConnectionType service for outside consumption, you will find connection information here.
 </p>
 
-<h4 class="mb-3" text-translate="true">Compatible wallets</h4>
+<h3 class="settings-section__heading" text-translate="true">Compatible wallets</h3>
+<div class="settings-section">
 <div class="services-list">
     @if (Model.Uri != null)
     {
@@ -27,8 +28,10 @@
         </a>
     }
 </div>
+</div>
 
-<h4 class="mt-4 mb-3" text-translate="true">QR Code connection</h4>
+<h3 class="settings-section__heading" text-translate="true">QR Code connection</h3>
+<div class="settings-section">
 <p text-translate="true">You can use this QR Code to connect external software to your LND instance. This QR Code is only valid for 10 minutes.</p>
 
 @if (Model.QRCode == null)
@@ -56,8 +59,10 @@ else
         </p>
     </div>
 }
+</div>
 
-<h4 class="mt-5 mb-3" text-translate="true">More details</h4>
+<h3 class="settings-section__heading" text-translate="true">More details</h3>
+<div class="settings-section">
 <p>Alternatively, you can see the settings by clicking <a href="#details" data-bs-toggle="collapse">here</a>.</p>
 
 <div id="details" class="collapse">
@@ -121,6 +126,7 @@ else
             <input asp-for="CertificateThumbprint" readonly class="form-control" />
         </div>
     }
+</div>
 </div>
 
 @section PageFootContent {

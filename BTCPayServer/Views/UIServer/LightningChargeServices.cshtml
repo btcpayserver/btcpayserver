@@ -16,7 +16,8 @@
         {
             <div asp-validation-summary="All"></div>
         }
-        <div class="form-group">
+        <div class="settings-section">
+        <div class="form-group mb-0">
             <p text-translate="true">Lightning charge is a simple API for invoicing on lightning network, you can use it with several plugins:</p>
             <ul>
                 <li><a href="https://github.com/ElementsProject/woocommerce-gateway-lightning" target="_blank" rel="noreferrer noopener">WooCommerce Lightning Gateway</a>: A comprehensive e-commerce application that integrates with stock-management and order-tracking systems</li>
@@ -29,11 +30,13 @@
                 <li><a href="https://github.com/ElementsProject/nanotip" target="_blank" rel="noreferrer noopener">Nanotip</a>: The simple tip jar, rebuilt to issue Lightning Network invoices</li>
             </ul>
         </div>
+        </div>
     </div>
 </div>
 <div class="row">
     <div class="col-md-8">
-        <h4 text-translate="true">Credentials</h4>
+        <h3 class="settings-section__heading" text-translate="true">Credentials</h3>
+        <div class="settings-section">
         @if (Model.Uri != null)
         {
             <div class="form-group">
@@ -55,5 +58,6 @@
                 <input asp-for="AuthenticatedUri" class="form-control" readonly />
             </div>
         }
+        </div>
     </div>
 </div>

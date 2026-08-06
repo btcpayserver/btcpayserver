@@ -338,6 +338,13 @@ h2 .icon.icon-info {
     background: var(--btcpay-bg-tile);
     padding: var(--btcpay-space-l);
 }
+/* A short description under a section heading: half the usual gap above and below */
+.settings-section__heading--described {
+    margin-bottom: calc(0.5 * var(--btcpay-space-m));
+}
+.settings-section__description {
+    margin-bottom: calc(0.5 * var(--btcpay-space-m));
+}
 /* Sub-heading inside a section: one ladder step below the section heading */
 .settings-section__subheading {
     font-size: var(--btcpay-font-size-l);

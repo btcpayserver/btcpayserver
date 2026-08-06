@@ -14,10 +14,12 @@
 </div>
 <partial name="_StatusMessage" />
 
-<p text-translate="true">Any uploaded files are being saved on the same machine that hosts BTCPay; please pay attention to your storage space.</p>
 <div class="row">
     <div class="col-xl-10 col-xxl-constrain">
+        <div class="settings-section">
+        <p text-translate="true">Any uploaded files are being saved on the same machine that hosts BTCPay; please pay attention to your storage space.</p>
         <a asp-action="Storage" asp-route-forceChoice="true" text-translate="true">Change Storage provider</a>
+        </div>
     </div>
 </div>
 

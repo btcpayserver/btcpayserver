@@ -24,9 +24,11 @@
             {
                 <div asp-validation-summary="All"></div>
             }
-            <div class="form-group">
+            <div class="settings-section">
+            <div class="form-group mb-0">
                 <label asp-for="Provider" class="form-label"></label>
                 <select asp-for="Provider" asp-items="@Model.ProvidersList" class="form-select w-auto"></select>
+            </div>
             </div>
         </div>
     </div>

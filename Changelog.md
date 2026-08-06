@@ -1,5 +1,33 @@
 # Changelog
 
+## 2.4.2
+
+Although these security fixes are not critical, we recommend updating at your earliest convenience.
+We recommend integrators to also update NBXplorer to version 2.6.10.
+
+Those have been reported to us by @brunoerg and @benthecarman from the Bitcoin Red Team effort.
+
+### Breaking change
+
+* Greenfield: Disable Basic authentication by default five minutes after account creation, with opt-in available through account settings and the API (#7492) @NicolasDorier
+
+We are not aware of any user impacted by this breaking change, as API Keys authentication is generally used.
+
+### New features
+
+* Wallet: Allow hiding, showing, and reordering transaction table columns (#7474) @dstrukt
+
+### Fixes
+
+* Wallet: Improve multisig PSBT signing and finalization reliability, including compatibility with newer HWI and Jade firmware versions (#7484 #7488) @rockstardev
+* Fix RTL stylesheets not loading correctly (#7482) @teamssUTXO
+* Fix TOTP two-factor authentication bypass via Greenfield Basic authentication (#7491) @NicolasDorier
+
+### Improvements
+
+* Improve the layout and readability of store settings pages (#7448) @dstrukt
+* Payment Requests: Rate limit public invoice creation @NicolasDorier
+
 ## 2.4.1
 
 ### New features

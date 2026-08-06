@@ -5,11 +5,18 @@
 }
 
 <div class="sticky-header">
-	<h2 class="my-1">@ViewData["Title"]</h2>
+    <div class="d-flex flex-column gap-1">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <p class="text-secondary mb-0" text-translate="true">Browse and download BTCPay Server log files.</p>
+    </div>
 </div>
 <partial name="_StatusMessage" />
 
-<ul class="list-unstyled">
+<div class="row">
+    <div class="col-xl-8 col-xxl-constrain">
+        <h3 class="settings-section__heading" text-translate="true">Log files</h3>
+        <div class="settings-section">
+<ul class="list-unstyled mb-0">
     @foreach (var file in Model.LogFiles)
     {
         <li>
@@ -21,8 +28,8 @@
     }
 </ul>
 
-<nav aria-label="..." class="w-100">
-    <ul class="pagination float-start">
+<nav aria-label="..." class="w-100 mt-3">
+    <ul class="pagination mb-0">
         <li class="page-item @(Model.LogFileOffset == 0 ? "disabled" : null)">
             <a class="page-link" asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset - 5)">&laquo;</a>
         </li>
@@ -34,6 +41,9 @@
         </li>
     </ul>
 </nav>
+        </div>
+    </div>
+</div>
 
 @if (!string.IsNullOrEmpty(Model.Log))
 {

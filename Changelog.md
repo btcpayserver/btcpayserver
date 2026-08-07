@@ -2,7 +2,7 @@
 
 ## 2.4.2
 
-Although these security fixes are not critical, we recommend updating at your earliest convenience.
+This release contains fix of a critical vulnerability that is being actively exploited. You need to update as fast as you can.
 We recommend integrators to also update NBXplorer to version 2.6.10.
 
 Those have been reported to us by @brunoerg and @benthecarman from the Bitcoin Red Team effort.

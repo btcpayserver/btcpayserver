@@ -1,3 +1,20 @@
+> [!WARNING]
+> **Security release — update to [v2.4.2](https://github.com/btcpayserver/btcpayserver/releases/tag/v2.4.2) immediately.** Every earlier version, **including the 2.4.2 release candidates**, contains a critical vulnerability that allowed an unauthenticated remote attacker to obtain LND `.macaroon` credential files. It was actively exploited and funds were stolen.
+>
+> **If you use LND, update now** to BTCPay Server 2.4.2 and LND 0.21.1 — `Admin dashboard → Server Settings → Maintenance → Update`, or for standard Docker deployments:
+>
+> ```bash
+> cd btcpayserver-docker && ./btcpay-update.sh
+> ```
+>
+> **If you cannot update right away, take the server offline** until you can. Do not leave an affected LND deployment accessible from the internet.
+>
+> Users of other Lightning implementations, and deployments that do not use Lightning, are not exposed to this credential risk — updating is still strongly encouraged. BTCPay Server's on-chain wallets, including hot wallets, are **not** affected.
+>
+> **Read the [official security advisory](https://blog.btcpayserver.org/security-advisory-btcpay-server-2-4-2/)** for what to check on your LND node, and for credentials you expose through a route you manage yourself.
+>
+> *Temporary notice — remove once operators have had time to update.*
+
 # BTCPay Server
 
 ![BTCPay Server](BTCPayServer/wwwroot/img/btc_pay_BG_twitter.png)

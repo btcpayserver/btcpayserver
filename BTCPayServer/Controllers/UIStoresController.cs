@@ -185,6 +185,7 @@ public partial class UIStoresController : Controller
 
     public StoreData CurrentStore => HttpContext.GetStoreData();
 
+    [NonAction]
     public PaymentMethodOptionViewModel.Format[] GetEnabledPaymentMethodChoices(StoreData storeData)
     {
         var enabled = storeData.GetEnabledPaymentIds();

@@ -121,6 +121,7 @@ public class UIEmailRuleControllerBase(
         return emailCtx.RedirectToRuleList(model.RedirectUrl);
     }
 
+    [NonAction]
     public async Task<IActionResult> EmailRulesEditCore(EmailsRuleControllerContext emailCtx, long ruleId, string? redirectUrl = null)
     {
         await using var ctx = DbContextFactory.CreateContext();
@@ -136,6 +137,7 @@ public class UIEmailRuleControllerBase(
         });
     }
 
+    [NonAction]
     public async Task<IActionResult> EmailRulesEditCore(EmailsRuleControllerContext emailCtx, long ruleId, StoreEmailRuleViewModel model)
     {
         await ValidateCondition(model);

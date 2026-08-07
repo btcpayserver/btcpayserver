@@ -143,6 +143,7 @@ namespace BTCPayServer
             });
         }
 
+        [NonAction]
         public ActionResult RedirectToList(string successMessage = null)
         {
             if (successMessage != null)

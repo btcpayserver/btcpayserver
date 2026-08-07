@@ -594,6 +594,7 @@ namespace BTCPayServer
                 });
         }
 
+        [NonAction]
         public async Task<IActionResult> GetLNURLRequest(
             string cryptoCode,
             Data.StoreData store,

@@ -20,14 +20,18 @@ public class UISubscriptionControllerBase(
     public SubscriptionHostedService SubsService { get; } = subsService;
     protected IStringLocalizer StringLocalizer => stringLocalizer;
     protected LinkGenerator LinkGenerator => linkGenerator;
+    [NonAction]
     public RedirectResult RedirectToInvoiceCheckout(string invoiceId) => Redirect(linkGenerator.InvoiceCheckoutLink(invoiceId, Request.GetRequestBaseUrl()));
 
+    [NonAction]
     public IActionResult RedirectToSubscriberPortal(string portalId, string anchor = null)
         => RedirectToAction(nameof(UISubscriberPortalController.SubscriberPortal), "UISubscriberPortal", new { portalSessionId = portalId, anchor });
 
+    [NonAction]
     public IActionResult RedirectToPlanCheckout(string checkoutId)
         => RedirectToAction(nameof(UIPlanCheckoutController.PlanCheckout), "UIPlanCheckout", new { checkoutId });
 
+    [NonAction]
     public async Task<IActionResult> RedirectToPlanCheckoutPayment(string checkoutId, CancellationToken cancellationToken)
     {
         try

@@ -283,7 +283,11 @@ public static partial class ApplicationDbContextExtensions
                         : (await ctx.Customers.GetBySelector(storeId, selector))?.Id;
         if (customerId is null)
             return null;
-        return await subscribers.IncludeAll().Where(s => s.OfferingId == offeringId && s.CustomerId == customerId).FirstOrDefaultAsync();
+        return await subscribers.IncludeAll()
+            .Where(s => s.OfferingId == offeringId &&
+                        s.Offering.App.StoreDataId == storeId &&
+                        s.CustomerId == customerId)
+            .FirstOrDefaultAsync();
     }
 
     public static Task<CustomerData?> GetBySelector(this IQueryable<CustomerData> customers, string storeId, CustomerSelector selector)

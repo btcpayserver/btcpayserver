@@ -980,16 +980,6 @@
                                 "example": "I can't believe it's not butter",
                                 "nullable": true
                             },
-                            "disqusEnabled": {
-                                "type": "boolean",
-                                "description": "Whether Disqus is enabled for the app",
-                                "nullable": true
-                            },
-                            "disqusShortname": {
-                                "type": "string",
-                                "description": "Disqus shortname to used for the app",
-                                "nullable": true
-                            },
                             "soundsEnabled": {
                                 "type": "boolean",
                                 "description": "Whether sounds on new contributions are enabled",

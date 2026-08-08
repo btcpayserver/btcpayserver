@@ -133,6 +133,14 @@
                 </div>
             </h3>
             <div class="settings-section">
+                <div class="form-group d-flex">
+                    <input asp-for="NfcEnabled" type="checkbox" class="btcpay-toggle me-3"/>
+                    <div>
+                        <label asp-for="NfcEnabled" class="form-check-label"></label>
+                        <span asp-validation-for="NfcEnabled" class="text-danger"></span>
+                        <div class="form-text" text-translate="true">Shows a Pay by NFC button on checkout when the customer's device supports it. The card's LNURL-withdraw is submitted to the server, which then fetches it.</div>
+                    </div>
+                </div>
                 <div id="CheckNFC" class="form-group d-none">
                     <button type="button" class="btn btn-outline-secondary" text-translate="true">Check if NFC is supported and enabled on this device</button>
                 </div>

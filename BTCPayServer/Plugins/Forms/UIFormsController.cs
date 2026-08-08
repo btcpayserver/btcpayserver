@@ -18,6 +18,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Forms;
 
@@ -172,6 +173,7 @@ public class UIFormsController(
     [AllowAnonymous]
     [HttpPost("~/forms/{formId}")]
     [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
+    [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
     public async Task<IActionResult> SubmitForm(string formId)
     {
         var formData = await formDataService.GetForm(formId);

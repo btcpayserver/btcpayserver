@@ -96,6 +96,12 @@ public partial class UIStoresController
             return View(vm);
         }
 
+        if (await _userManager.IsInRoleAsync(user, Roles.ServerAdmin) && !await IsServerAdmin())
+        {
+            ModelState.AddModelError(nameof(vm.Email), StringLocalizer["Only a server admin can add or update the store membership of a server admin"]);
+            return View(vm);
+        }
+
         var res = await _storeRepo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId);
         if (res is AddOrUpdateStoreUserResult.Success)
         {
@@ -135,6 +141,9 @@ public partial class UIStoresController
     private async Task<bool> IsAdmin()
     => (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser))).Succeeded;
 
+    private async Task<bool> IsServerAdmin()
+    => (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
+
     [HttpPost("{storeId}/users/{userId}")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> UpdateStoreUser(string storeId, string userId, StoreUsersViewModel.StoreUserViewModel vm)
@@ -142,6 +151,13 @@ public partial class UIStoresController
         var roleId = await _storeRepo.ResolveStoreRoleId(storeId, vm.Role);
         var storeUsers = await _storeRepo.GetStoreUsers(storeId);
         var user = storeUsers.First(user => user.Id == userId);
+
+        var applicationUser = await _userManager.FindByIdAsync(userId);
+        if (applicationUser is not null && await _userManager.IsInRoleAsync(applicationUser, Roles.ServerAdmin) && !await IsServerAdmin())
+        {
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Only a server admin can add or update the store membership of a server admin."].Value;
+            return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
+        }
 
         var res = await _storeRepo.AddOrUpdateStoreUser(storeId, userId, roleId);
         if (res is AddOrUpdateStoreUserResult.Success)

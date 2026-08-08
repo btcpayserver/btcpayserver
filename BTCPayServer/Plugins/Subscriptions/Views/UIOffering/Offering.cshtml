@@ -107,10 +107,12 @@
                             data-plan-name="@p.Data.Name"
                             data-allow-trial="@(p.Data.TrialDays > 0)">
                             <td class="fw-semibold text-nowrap plan-name-col">
-                                <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                      permission="@SubscriptionsPolicies.CanManageSubscribers">
                                     @p.Data.Name
                                 </span>
-                                <div class="dropdown-menu">
+                                <span not-permission="@SubscriptionsPolicies.CanManageSubscribers">@p.Data.Name</span>
+                                <div class="dropdown-menu" permission="@SubscriptionsPolicies.CanManageSubscribers">
                                     <a
                                         href="#"
                                         text-translate="true"
@@ -182,7 +184,7 @@
             {
                 <a
                     href="#"
-                    permission="@SubscriptionsPolicies.CanModifyOfferings"
+                    permission="@SubscriptionsPolicies.CanManageSubscribers"
                     text-translate="true"
                     role="button"
                     id="page-primary"
@@ -382,7 +384,8 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 text-translate="true">Mails</h4>
                 <div class="d-flex justify-content-start sticky-footer">
-                    <button id="page-primary" class="btn btn-success px-4" type="submit" text-translate="true">Save</button>
+                    <button id="page-primary" class="btn btn-success px-4" type="submit" text-translate="true"
+                            permission="@SubscriptionsPolicies.CanModifyOfferings">Save</button>
                 </div>
             </div>
 
@@ -420,7 +423,8 @@
                                 <label asp-for="PaymentRemindersDays" class="form-label" text-translate="true">Email Reminder Days Before Due</label>
                                 <div class="input-group">
                                     <input inputmode="number" asp-for="PaymentRemindersDays" class="form-control" style="max-width:12ch;"
-                                           min="0" />
+                                           min="0" permission="@SubscriptionsPolicies.CanModifyOfferings" />
+                                    <span class="form-control" not-permission="@SubscriptionsPolicies.CanModifyOfferings">@Model.PaymentRemindersDays</span>
                                     <span class="input-group-text" text-translate="true">days</span>
                                 </div>
                                 <span asp-validation-for="PaymentRemindersDays" class="text-danger"></span>
@@ -434,8 +438,9 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-4 mb-3">
                         <h5 class="mb-0" text-translate="true">Email rules</h5>
-                        <span class="dropdown-toggle btn btn-outline-secondary" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Add email rule</span>
-                        <div class="dropdown-menu">
+                        <span class="dropdown-toggle btn btn-outline-secondary" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                              permission="@SubscriptionsPolicies.CanModifyOfferings">Add email rule</span>
+                        <div class="dropdown-menu" permission="@SubscriptionsPolicies.CanModifyOfferings">
                             @foreach (var availableRule in Model.AvailableTriggers)
                             {
                                 <button

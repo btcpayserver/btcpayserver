@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.3
+
+This is a security release; updating is recommended for servers shared with many users.
+
 ## 2.4.2
 
 This release contains fix of a critical vulnerability that is being actively exploited. You need to update as fast as you can.

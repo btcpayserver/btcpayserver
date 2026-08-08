@@ -197,9 +197,27 @@ public class PendingTransactionService(
             return (pendingTransaction, false);
         }
 
+        var originalPsbt = PSBT.Parse(blob.PSBT, network);
+        if (originalPsbt.Inputs.Any(i => i.GetCoin() is null))
+        {
+            logger.LogWarning(
+                "Rejected PSBT for pending transaction {PendingTransactionId}: the original PSBT lacks UTXO data",
+                pendingTransaction.Id);
+            return (pendingTransaction, false);
+        }
+
         var mergedPsbt = BuildEffectivePsbt(blob, network);
         var beforeProgress = GetSignatureProgress(mergedPsbt);
         mergedPsbt.Combine(psbt);
+
+        if (!HasValidFinalScripts(mergedPsbt))
+        {
+            logger.LogWarning(
+                "Rejected PSBT for pending transaction {PendingTransactionId}: it carries final scripts that do not satisfy the spent coins",
+                pendingTransaction.Id);
+            return (pendingTransaction, false);
+        }
+
         var afterProgress = GetSignatureProgress(mergedPsbt);
         var meaningfulDelta = HasMeaningfulDelta(beforeProgress, afterProgress);
 
@@ -375,6 +393,20 @@ public class PendingTransactionService(
 
         pendingTransaction.SetBlob(blob);
         return true;
+    }
+
+    internal static bool HasValidFinalScripts(PSBT psbt)
+    {
+        if (!psbt.Inputs.Any(i => i.IsFinalized()))
+            return true;
+
+        if (psbt.Inputs.Any(i => i.GetCoin() is null))
+            return false;
+
+        var precomputed = psbt.PrecomputeTransactionData();
+        return psbt.Inputs
+            .Where(i => i.IsFinalized())
+            .All(i => i.VerifyScript(ScriptVerify.Standard, precomputed, out _));
     }
 
     private static PSBT BuildEffectivePsbt(PendingTransactionBlob blob, Network network)

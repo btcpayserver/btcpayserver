@@ -227,6 +227,12 @@ namespace BTCPayServer.Plugins
                     logger.LogInformation($"Skipping disabled plugin {pluginIdentifier}");
                     continue;
                 }
+                if (IsIncompatible(pluginIdentifier, TryReadPluginVersion(directory, pluginIdentifier)))
+                {
+                    logger.LogWarning($"Refusing to load the plugin {pluginIdentifier}, this version cannot be run. It has been disabled and will stay disabled until it is updated to a newer version.");
+                    ExecuteCommand(("disable", pluginIdentifier), pluginsFolder);
+                    continue;
+                }
 
                 pluginsToPreload.Add((pluginIdentifier, pluginFilePath));
             }
@@ -585,6 +591,47 @@ namespace BTCPayServer.Plugins
             QueueCommands(pluginDir, ("disable", plugin));
         }
 
+
+        internal static Version? TryReadPluginVersion(string pluginDirectory, string pluginIdentifier)
+        {
+            var manifestFileName = Path.Join(pluginDirectory, pluginIdentifier + ".json");
+            if (!File.Exists(manifestFileName))
+                return null;
+            try
+            {
+                return JObject.Parse(File.ReadAllText(manifestFileName))
+                    .ToObject<PluginService.AvailablePlugin>()?.Version;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static readonly Dictionary<string, Version> IncompatiblePlugins =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                { "BTCPayServer.Plugins.ShopifyPlugin", new Version(1, 1, 5) },
+                { "BTCPayServer.Plugins.Ecwid", new Version(1, 1, 0) },
+                { "SamRockProtocol", new Version(1, 1, 0) },
+                { "BTCPayServer.Plugins.Stripe", new Version(1, 0, 12) },
+                { "BTCPayServer.Plugins.BigCommercePlugin", new Version(1, 0, 7) },
+                { "BTCPayServer.RockstarDev.Plugins.MarkPaidCheckout", new Version(0, 1, 2) },
+                { "BTCPayServer.Plugins.ArkPayServer", new Version(2, 4, 2) },
+                { "BTCPayServer.Plugins.Cashu", new Version(1, 0, 4) }
+            };
+
+        internal static bool IsIncompatible(string? pluginIdentifier, Version? version)
+        {
+            if (pluginIdentifier is null || !IncompatiblePlugins.TryGetValue(pluginIdentifier, out var lastAffected))
+                return false;
+            if (version is null)
+                return true;
+            return TruncateToBuild(version) <= TruncateToBuild(lastAffected);
+        }
+
+        private static Version TruncateToBuild(Version version)
+            => new(version.Major, version.Minor, Math.Max(version.Build, 0));
 
         // Loads the list of disabled plugins from the file
         private static HashSet<string> GetDisabledPluginIdentifiers(string pluginsFolder)

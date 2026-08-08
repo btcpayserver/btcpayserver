@@ -273,6 +273,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             foreach (var cartItem in jposData.Cart)
             {
                 cartItem.Count = Math.Max(1, cartItem.Count);
+                cartItem.Price = Math.Max(0, cartItem.Price);
             }
             if (jposData.Cart.Any(cartItem => string.IsNullOrEmpty(cartItem.Id)))
                 return NotFound();

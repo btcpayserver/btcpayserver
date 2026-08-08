@@ -18,7 +18,7 @@ public class UpdateApplicationUserRequest
     public string Email { get; set; }
 
     /// <summary>
-    /// current password of the user
+    /// current password of the user, required to change the email or the password
     /// </summary>
     public string CurrentPassword { get; set; }
 

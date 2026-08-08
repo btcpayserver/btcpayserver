@@ -284,7 +284,7 @@ namespace BTCPayServer.Tests
             {
                 TestLogs.LogInformation($"Replacing the wallet");
                 await Page.ClickAsync("#ActionsDropdownToggle");
-                await Page.ClickAsync("#ChangeWalletLink");
+                await Page.ClickAsync(".wallet-settings__replace-wallet");
                 await Page.FillAsync("#ConfirmInput", "REPLACE");
                 await Page.ClickAsync("#ConfirmContinue");
             }

@@ -154,6 +154,41 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
     [Fact]
     [Trait("Playwright", "Playwright-2")]
+    public async Task CanAddLabelsOnWalletSendPage()
+    {
+        await using var s = CreatePlaywrightTester();
+        await s.StartAsync();
+        await s.Server.ExplorerNode.GenerateAsync(1);
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await s.GenerateWallet(isHotWallet: true);
+
+        await s.GoToUrl($"wallets/{s.WalletId}/send");
+
+        // Regression: app-relative URLs must be resolved by the UrlResolutionTagHelper,
+        // otherwise tom-select 404s and the label manager never initializes
+        var content = await s.Page.ContentAsync();
+        Assert.DoesNotContain("src=\"~/", content);
+        Assert.DoesNotContain("href=\"~/", content);
+
+        // The label manager is initialized by tom-select
+        await s.Page.WaitForSelectorAsync("input.label-manager.tomselected");
+        var hasTomSelect = await s.Page.EvaluateAsync<bool>(
+            "() => !!document.querySelector('input.label-manager').tomselect");
+        Assert.True(hasTomSelect, "TomSelect was not initialized on the label manager");
+
+        // Can add a label?
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            await s.Page.ClickAsync("div.label-manager input");
+            await s.Page.FillAsync("div.label-manager input", "send-label");
+            await s.Page.Keyboard.PressAsync("Enter");
+            await s.Page.WaitForSelectorAsync("[data-value='send-label']");
+        });
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanManageWallet()
     {
         await using var s = CreatePlaywrightTester();

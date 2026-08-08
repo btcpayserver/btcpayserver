@@ -64,7 +64,7 @@
         <main class="flex-grow-1">
             <div class="d-flex flex-column justify-content-center gap-4">
                 <partial name="_StoreHeader" model="(Model.Title, Model.StoreBranding)" />
-                <div class="text-center mt-n3">
+                <div class="text-center mt-n3" v-pre>
                     Invoice from
                     @if (!string.IsNullOrEmpty(Model.StoreWebsite))
                     {
@@ -215,7 +215,7 @@
                 {
                     <section class="tile">
                         <h2 class="h4 mb-3" text-translate="true">Memo</h2>
-                        <div id="InvoiceDescription" v-html="srvModel.description">@Safe.Raw(Model.Description)</div>
+                        <div id="InvoiceDescription" v-pre>@Safe.Raw(Model.Description)</div>
                     </section>
                 }
 

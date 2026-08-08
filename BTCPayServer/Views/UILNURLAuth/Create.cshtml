@@ -52,7 +52,7 @@
               if (request.readyState === 4 && request.status === 200) {
                 setTimeout(check, 1000);
               } else if (request.readyState === 4 ){
-                  window.location.href = @Safe.Json(Url.Action("RedirectToList", new { successMessage = "The lightning node will now act as a security device for your account" }));
+                  window.location.href = @Safe.Json(Url.Action("CreateComplete"));
               }
             }
 

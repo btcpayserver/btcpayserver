@@ -18,6 +18,7 @@ using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NBitpayClient;
+using NicolasDorier.RateLimits;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Plugins.Bitpay.Controllers;
@@ -31,16 +32,19 @@ public class BitpayInvoiceController : ControllerBase
     private readonly Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> _bitpayExtensions;
     private readonly CurrencyNameTable _currencyNameTable;
     private readonly InvoiceRepository _InvoiceRepository;
+    private readonly IRateLimitService _rateLimitService;
 
     public BitpayInvoiceController(UIInvoiceController invoiceController,
         Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> bitpayExtensions,
         CurrencyNameTable currencyNameTable,
-        InvoiceRepository invoiceRepository)
+        InvoiceRepository invoiceRepository,
+        IRateLimitService rateLimitService)
     {
         _InvoiceController = invoiceController;
         _bitpayExtensions = bitpayExtensions;
         _currencyNameTable = currencyNameTable;
         _InvoiceRepository = invoiceRepository;
+        _rateLimitService = rateLimitService;
     }
 
     [HttpPost]
@@ -53,6 +57,10 @@ public class BitpayInvoiceController : ControllerBase
         var store = HttpContext.GetStoreDataOrNull();
         if (store == null)
             throw new BitpayHttpException(404, "Store not found");
+        if (User.Identity?.AuthenticationType == Security.BitpayAuthenticationTypes.Anonymous &&
+            HttpContext.Connection.RemoteIpAddress is { } addr &&
+            !await _rateLimitService.Throttle(ZoneLimits.PublicInvoices, addr.ToString(), cancellationToken))
+            throw new BitpayHttpException(429, "Too many requests");
         return await CreateInvoiceCore(invoice, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
     }
 

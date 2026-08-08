@@ -34,7 +34,7 @@ Vue.component("lnurl-withdraw-checkout", {
                 (activePaymentMethodId === 'BTC-CHAIN' && isUnified && lnurlwAvailable) ||
                 // Lightning with LNURL available
                 (activePaymentMethodId === 'BTC-LN' && lnurlwAvailable))
-            return isAvailable && (this.nfcSupported || this.testFallback)
+            return isAvailable && this.model.nfcEnabled && (this.nfcSupported || this.testFallback)
         },
         testFallback () {
             return !this.nfcSupported && window.location.search.match('lnurlwtest=(1|true)')

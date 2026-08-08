@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.Plugins.Multisig.Models;
@@ -27,6 +28,7 @@ namespace BTCPayServer.Plugins.Multisig.Controllers;
 [Area(MultisigPlugin.Area)]
 public class UIMultisigWalletsController(
     StoreRepository storeRepository,
+    IAuthorizationService authorizationService,
     ExplorerClientProvider explorerProvider,
     BTCPayWalletProvider walletProvider,
     MultisigService multisigService,
@@ -39,6 +41,14 @@ public class UIMultisigWalletsController(
     private static bool IsSupportedCryptoCode(string? cryptoCode) =>
         string.Equals(cryptoCode, "BTC", StringComparison.OrdinalIgnoreCase);
 
+    private async Task<bool> CanSetupMultisigWallet(StoreData store, string cryptoCode)
+    {
+        if (!multisigService.HasOnChainWallet(store, cryptoCode))
+            return true;
+
+        return (await authorizationService.AuthorizeAsync(User, store.Id, Policies.CanModifyStoreSettings)).Succeeded;
+    }
+
     [HttpGet("{storeId}/onchain/{cryptoCode}/import/multisig")]
     public async Task<IActionResult> SetupMultisig(string storeId, string cryptoCode)
     {
@@ -48,6 +58,9 @@ public class UIMultisigWalletsController(
 
         if (!IsSupportedCryptoCode(vm.CryptoCode))
             return NotFound();
+
+        if (!await CanSetupMultisigWallet(HttpContext.GetStoreData(), vm.CryptoCode))
+            return Forbid();
 
         await multisigService.PopulateSetupViewModel(vm);
         return View(vm);
@@ -62,6 +75,9 @@ public class UIMultisigWalletsController(
 
         if (!IsSupportedCryptoCode(vm.CryptoCode))
             return NotFound();
+
+        if (!await CanSetupMultisigWallet(store, vm.CryptoCode))
+            return Forbid();
 
         var selectedIds = (vm.MultisigParticipantUserIds ?? Array.Empty<string>())
             .Where(id => !string.IsNullOrWhiteSpace(id))
@@ -147,6 +163,9 @@ public class UIMultisigWalletsController(
         var pending = await multisigService.GetPendingMultisigSetupContext(store.Id, multisigSetupId);
         if (pending is null)
             return NotFound();
+
+        if (!await CanSetupMultisigWallet(store, pending.CryptoCode))
+            return Forbid();
 
         vm.StoreId = pending.StoreId;
         vm.CryptoCode = pending.CryptoCode;

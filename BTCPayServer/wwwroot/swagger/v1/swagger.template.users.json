@@ -63,7 +63,7 @@
                                     },
                                     "currentPassword": {
                                         "type": "string",
-                                        "description": "The current password of the user",
+                                        "description": "The current password of the user. Required when changing the email or the password.",
                                         "nullable": true
                                     },
                                     "newPassword": {
@@ -91,6 +91,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
                                 }
                             }
                         }

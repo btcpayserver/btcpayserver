@@ -169,6 +169,7 @@ public class UpdateRoleViewModel
 {
     [Required]
     [Display(Name = "Role")]
+    [FromForm]
     public string Role { get; set; }
 
     [Display(Name = "Permissions")] public HashSet<string> Permissions { get; set; } = new();

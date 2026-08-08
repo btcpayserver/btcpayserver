@@ -285,6 +285,17 @@ namespace BTCPayServer.Payments.Bitcoin
                 if (acc.AccountKey is null)
                     validationContext.ModelState.AddModelError(nameof(res.AccountKeySettings), "Missing AccountKey");
             }
+
+            if (res.IsHotWallet)
+            {
+                var previous = validationContext.PreviousConfig?.ToObject<DerivationSchemeSettings>(Serializer);
+                if (previous?.IsHotWallet is not true ||
+                    previous.AccountDerivation?.ToString() != res.AccountDerivation?.ToString())
+                {
+                    validationContext.ModelState.AddModelError(nameof(res.IsHotWallet),
+                        "IsHotWallet cannot be set through this API. Generate or import a wallet with private keys instead.");
+                }
+            }
             return Task.CompletedTask;
         }
 

@@ -117,6 +117,18 @@ namespace BTCPayServer
             });
         }
 
+        [HttpGet("register/complete")]
+        public IActionResult CreateComplete()
+        {
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Severity = StatusMessageModel.StatusSeverity.Success,
+                Message = StringLocalizer["The lightning node will now act as a security device for your account"].Value
+            });
+
+            return RedirectToList();
+        }
+
 
         [HttpGet("login-check")]
         [AllowAnonymous]
@@ -144,17 +156,8 @@ namespace BTCPayServer
         }
 
         [NonAction]
-        public ActionResult RedirectToList(string successMessage = null)
+        public ActionResult RedirectToList()
         {
-            if (successMessage != null)
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Success,
-                    Html = successMessage
-                });
-            }
-
             return RedirectToAction("TwoFactorAuthentication", "UIManage");
         }
     }

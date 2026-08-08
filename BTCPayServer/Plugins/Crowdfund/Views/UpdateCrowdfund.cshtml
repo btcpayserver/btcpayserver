@@ -321,32 +321,6 @@ Please insert valid HTML here. Only meta tags accepted.'>
                         </div>
                     </div>
                     <div class="accordion-item">
-                        <h2 class="accordion-header" id="additional-discussion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-discussion" aria-expanded="false" aria-controls="additional-discussion">
-                                <span text-translate="true">Discussion</span>
-                                <vc:icon symbol="caret-down" />
-                            </button>
-                        </h2>
-                        <div id="additional-discussion" class="accordion-collapse collapse" aria-labelledby="additional-discussion-header">
-                            <div class="accordion-body">
-                                <div class="form-group mb-0">
-                                    <div class="d-flex align-items-center">
-                                        <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
-                                        <label asp-for="DisqusEnabled" class="form-check-label"></label>
-                                        <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
-                                    </div>
-                                </div>
-                                <div class="collapse @(Model.DisqusEnabled ? "show" : "")" id="DisqusEnabledSettings">
-                                    <div class="form-group mb-0 pt-3">
-                                        <label asp-for="DisqusShortname" class="form-label"></label>
-                                        <input asp-for="DisqusShortname" class="form-control" />
-                                        <span asp-validation-for="DisqusShortname" class="text-danger"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-notification-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-notification" aria-expanded="false" aria-controls="additional-notification">
                                 <span text-translate="true">Notification URL Callbacks</span>

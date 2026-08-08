@@ -61,13 +61,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         [Display(Name = "Enable sounds on new payments")]
         public bool SoundsEnabled { get; set; }
 
-        [Required]
-        [Display(Name = "Enable Disqus Comments")]
-        public bool DisqusEnabled { get; set; }
-
-        [Display(Name = "Disqus Shortname")]
-        public string DisqusShortname { get; set; }
-
         [Display(Name = "Start date")]
         public DateTime? StartDate { get; set; }
 

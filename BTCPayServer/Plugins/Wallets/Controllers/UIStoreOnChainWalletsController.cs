@@ -120,6 +120,7 @@ public class UIStoreOnChainWalletsController(
 
     [HttpPost("{storeId}/onchain/{cryptoCode}/modify")]
     [HttpPost("{storeId}/onchain/{cryptoCode}/import/{method:regex(^(hardware|file|xpub|scan|seed)$)}")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> UpdateWallet(
         WalletSetupViewModel vm,
         [FromRoute] string storeId = null,
@@ -720,6 +721,7 @@ public class UIStoreOnChainWalletsController(
     }
 
     [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ConfirmDeleteWallet([FromRoute] string storeId, [FromRoute] string cryptoCode)
     {
         var checkResult = IsAvailable(cryptoCode, out var store, out var network);

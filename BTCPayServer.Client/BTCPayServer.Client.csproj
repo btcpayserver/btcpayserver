@@ -30,8 +30,8 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
     <ItemGroup>
-      <PackageReference Include="BTCPayServer.Lightning.Common" Version="1.7.1" />
-      <PackageReference Include="NBitcoin" Version="10.0.8" />
+      <PackageReference Include="BTCPayServer.Lightning.Common" Version="1.7.2" />
+      <PackageReference Include="NBitcoin" Version="10.0.9" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     </ItemGroup>
   <ItemGroup>

@@ -242,6 +242,10 @@ namespace BTCPayServer.Data
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool PlaySoundOnPayment { get; set; }
 
+        [DefaultValue(false)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public bool NfcEnabled { get; set; }
+
 		[JsonConverter(typeof(UnresolvedUriJsonConverter))]
 		public UnresolvedUri PaymentSoundUrl { get; set; }
 

@@ -34,6 +34,7 @@ namespace BTCPayServer.Plugins.PayButton.Controllers
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         [Route("api/v1/invoices")]
+        [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> PayButtonHandle(PayButtonViewModel model)
         {
             return await PayButtonHandle(model, CancellationToken.None);

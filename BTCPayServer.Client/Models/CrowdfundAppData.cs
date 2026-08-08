@@ -20,8 +20,6 @@ public abstract class CrowdfundBaseData : AppBaseData
     public string? MainImageUrl { get; set; }
     public string? NotificationUrl { get; set; }
     public string? Tagline { get; set; }
-    public bool? DisqusEnabled { get; set; }
-    public string? DisqusShortname { get; set; }
     public bool? SoundsEnabled { get; set; }
     public bool? AnimationsEnabled { get; set; }
     public int? ResetEveryAmount { get; set; }

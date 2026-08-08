@@ -602,6 +602,7 @@ namespace BTCPayServer.Tests
     {
         [HttpPost]
         [Route("postredirect-callback-test")]
+        [IgnoreAntiforgeryToken]
         public ActionResult PostRedirectCallbackTestpage(IFormCollection data)
         {
             var list = data.Keys.Aggregate(new Dictionary<string, string>(), (res, key) =>

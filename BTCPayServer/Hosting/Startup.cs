@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
@@ -161,6 +162,9 @@ namespace BTCPayServer.Hosting
                  o.Filters.Add(new XXSSProtectionAttribute());
                  o.Filters.Add(new ReferrerPolicyAttribute("same-origin"));
                  o.ModelBinderProviders.Insert(0, new ModelBinders.DefaultModelBinderProvider());
+                 var routeProvider = o.ValueProviderFactories.OfType<RouteValueProviderFactory>().Single();
+                 o.ValueProviderFactories.Remove(routeProvider);
+                 o.ValueProviderFactories.Insert(0, routeProvider);
                  if (!Configuration.GetOrDefault<bool>("nocsp", false))
                      o.Filters.Add(new ContentSecurityPolicyAttribute(CSPTemplate.AntiXSS));
                  o.Filters.Add(new JsonHttpExceptionFilter());

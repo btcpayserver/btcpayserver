@@ -887,6 +887,7 @@ namespace BTCPayServer.Controllers
                 DefaultLang = lang ?? invoice.DefaultLanguage ?? storeBlob.DefaultLang ?? "en",
                 ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
                 ShowStoreHeader = storeBlob.ShowStoreHeader,
+                NfcEnabled = storeBlob.NfcEnabled,
                 StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob),
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CelebratePayment = storeBlob.CelebratePayment,

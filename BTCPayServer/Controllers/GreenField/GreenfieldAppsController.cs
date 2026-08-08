@@ -342,9 +342,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 NotificationUrl = request.NotificationUrl?.Trim(),
                 Tagline = request.Tagline?.Trim(),
                 PerksTemplate = request.PerksTemplate is not null ? AppService.SerializeTemplate(AppService.Parse(request.PerksTemplate.Trim())) : null,
-                // If Disqus shortname is not null or empty we assume that Disqus should be enabled
-                DisqusEnabled = !string.IsNullOrEmpty(request.DisqusShortname?.Trim()),
-                DisqusShortname = request.DisqusShortname?.Trim(),
                 // If explicit parameter is not passed for enabling sounds/animations, turn them on if custom sounds/colors are passed
                 SoundsEnabled = request.SoundsEnabled ?? parsedSounds != null,
                 AnimationsEnabled = request.AnimationsEnabled ?? parsedColors != null,
@@ -503,8 +500,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 MainImageUrl = settings.MainImageUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), settings.MainImageUrl),
                 NotificationUrl = settings.NotificationUrl,
                 Tagline = settings.Tagline,
-                DisqusEnabled = settings.DisqusEnabled,
-                DisqusShortname = settings.DisqusShortname,
                 SoundsEnabled = settings.SoundsEnabled,
                 AnimationsEnabled = settings.AnimationsEnabled,
                 ResetEveryAmount = settings.ResetEveryAmount,

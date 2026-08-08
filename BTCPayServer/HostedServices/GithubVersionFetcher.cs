@@ -62,18 +62,7 @@ namespace BTCPayServer.HostedServices
 
                 var isReleaseVersionTag = _releaseVersionTag.IsMatch(tag);
                 if (isReleaseVersionTag)
-                {
                     return tag.TrimStart('v');
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            else
-            {
-                _logger.LogWarning($"Unsuccessful status code returned during new version check. " +
-                                   $"Url: {_updateurl}, HTTP Code: {resp.StatusCode}, Response Body: {strResp}");
             }
 
             return null;

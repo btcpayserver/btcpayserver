@@ -30,9 +30,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         public StoreBrandingViewModel StoreBranding { get; set; }
         public AppItem[] Perks { get; set; }
         public bool SimpleDisplay { get; set; }
-        public bool DisqusEnabled { get; set; }
         public bool SoundsEnabled { get; set; }
-        public string DisqusShortname { get; set; }
         public bool AnimationsEnabled { get; set; }
         public string[] AnimationColors { get; set; }
         public string[] Sounds { get; set; }

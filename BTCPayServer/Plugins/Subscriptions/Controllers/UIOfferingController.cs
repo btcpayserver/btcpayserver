@@ -48,7 +48,7 @@ public partial class UIOfferingController(
 ) : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
     [HttpPost("stores/{storeId}/offerings/{offeringId}/new-subscriber")]
-    [Authorize(Policy = SubscriptionsPolicies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = SubscriptionsPolicies.CanManageSubscribers, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> NewSubscriber(
         string storeId, string offeringId,
         string planId,
@@ -84,6 +84,7 @@ public partial class UIOfferingController(
     }
 
     [HttpGet("stores/{storeId}/offerings")]
+    [Authorize(Policy = SubscriptionsPolicies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult CreateOffering(string storeId)
     {
         return View();
@@ -239,6 +240,7 @@ public partial class UIOfferingController(
         => RedirectToAction(nameof(Offering), new { storeId, offeringId, section = section });
 
     [HttpPost("stores/{storeId}/offerings")]
+    [Authorize(Policy = SubscriptionsPolicies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> CreateOffering(string storeId, CreateOfferingViewModel vm, string? command = null)
     {
         if (env.CheatMode && command == "create-fake")
@@ -274,6 +276,7 @@ public partial class UIOfferingController(
     static string Predicate(string condition) => $"$ ?({condition})";
 
     [HttpPost("stores/{storeId}/offerings/{offeringId}/Mails")]
+    [Authorize(Policy = SubscriptionsPolicies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> SaveMailSettings(string storeId, string offeringId, SubscriptionsViewModel vm, string? addEmailRule = null)
     {
         await using var ctx = DbContextFactory.CreateContext();
@@ -455,6 +458,7 @@ public partial class UIOfferingController(
     }
 
     [HttpPost("stores/{storeId}/offerings/{offeringId}/configure")]
+    [Authorize(Policy = SubscriptionsPolicies.CanModifyOfferings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ConfigureOffering(
         string storeId,
         string offeringId,
@@ -643,7 +647,7 @@ public partial class UIOfferingController(
         plan.OptimisticActivation = vm.OptimisticActivation;
         plan.Renewable = vm.Renewable;
         plan.RecurringType = vm.RecurringType;
-        plan.OfferingId = vm.OfferingId;
+        plan.OfferingId = offering.Id;
         plan.PlanChanges ??= new();
 
         foreach (var vmPC in vm.PlanChanges)

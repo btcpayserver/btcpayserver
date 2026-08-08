@@ -83,7 +83,7 @@
         <h3 class="settings-section__heading settings-section__heading--spaced" text-translate="true">Legacy API Keys</h3>
         <div class="settings-section">
         <p text-translate="true">Alternatively, you can use the invoice API by including the following HTTP Header in your requests:</p>
-        <p><code>Authorization: Basic @Model.EncodedApiKey</code></p>
+		<p permission="@Policies.CanModifyStoreSettings"><code>Authorization: Basic @Model.EncodedApiKey</code></p>
 
         <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings">
             <div class="form-group mb-0">

@@ -28,6 +28,8 @@ namespace BTCPayServer.PayoutProcessors.Lightning;
 
 public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<LightningAutomatedPayoutBlob>
 {
+	public const double MaxRoutingFeePercent = 3.0;
+
 	private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
 	private readonly LightningClientFactoryService _lightningClientFactoryService;
 	private readonly IOptions<LightningNetworkOptions> _options;
@@ -229,7 +231,8 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
             var pay = await lightningClient.Pay(bolt11PaymentRequest.ToString(),
                 new PayInvoiceParams()
                 {
-                    Amount = new LightMoney((decimal)payoutData.Amount, LightMoneyUnit.BTC)
+                    Amount = new LightMoney((decimal)payoutData.Amount, LightMoneyUnit.BTC),
+                    MaxFeePercent = MaxRoutingFeePercent
                 }, cancellationToken);
             if (pay is { Result: PayResult.CouldNotFindRoute })
             {

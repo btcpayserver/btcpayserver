@@ -5,6 +5,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -22,6 +23,7 @@ namespace BTCPayServer.Controllers.Greenfield
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldStoreUsersController : ControllerBase
     {
+        private readonly IAuthorizationService _authorizationService;
         private readonly StoreRepository _storeRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly CallbackGenerator _callbackGenerator;
@@ -31,11 +33,13 @@ namespace BTCPayServer.Controllers.Greenfield
             StoreRepository storeRepository,
             UserManager<ApplicationUser> userManager,
             CallbackGenerator callbackGenerator,
-            UriResolver uriResolver)
+            UriResolver uriResolver,
+            IAuthorizationService authorizationService)
         {
             _storeRepository = storeRepository;
             _userManager = userManager;
             _callbackGenerator = callbackGenerator;
+            _authorizationService = authorizationService;
             _uriResolver = uriResolver;
         }
 
@@ -69,6 +73,11 @@ namespace BTCPayServer.Controllers.Greenfield
             var user = await _userManager.FindByIdOrEmail(idOrEmail ?? request.Id);
             if (user == null)
                 return UserNotFound();
+
+            if (await _userManager.IsInRoleAsync(user, Roles.ServerAdmin) &&
+                !(await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded)
+                return this.CreateAPIPermissionError(Policies.CanModifyServerSettings,
+                    "Only a server admin can add or update the store membership of a server admin");
 
             StoreRoleId roleId = null;
             if (request.StoreRole is not null)
@@ -104,12 +113,13 @@ namespace BTCPayServer.Controllers.Greenfield
         private async Task<IEnumerable<StoreUserData>> ToAPI(StoreData store)
         {
             var storeUsers = new List<StoreUserData>();
+            var canManageStoreUsers = (await _authorizationService.AuthorizeAsync(User, store.Id, Policies.CanModifyStoreSettings)).Succeeded;
             foreach (var storeUser in store.UserStores)
             {
                 var user = await _userManager.FindByIdOrEmail(storeUser.ApplicationUserId);
                 if (user == null)
                     continue;
-                var data = await UserService.ForAPI<StoreUserData>(user, [], _callbackGenerator, _uriResolver, Request);
+                var data = await UserService.ForAPI<StoreUserData>(user, [], _callbackGenerator, _uriResolver, Request, canManageStoreUsers);
                 data.StoreRole = storeUser.StoreRoleId;
 
                 // Deprecated properties

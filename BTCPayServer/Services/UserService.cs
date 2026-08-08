@@ -70,7 +70,8 @@ namespace BTCPayServer.Services
             string?[] roles,
             CallbackGenerator callbackGenerator,
             UriResolver uriResolver,
-            HttpRequest request) where T : ApplicationUserData, new()
+            HttpRequest request,
+            bool includeInvitationUrl) where T : ApplicationUserData, new()
         {
             var blob = data.GetBlob() ?? new UserBlob();
             return new T
@@ -90,8 +91,7 @@ namespace BTCPayServer.Services
                 ImageUrl = string.IsNullOrEmpty(blob.ImageUrl)
                     ? null
                     : await uriResolver.Resolve(request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
-                InvitationUrl = string.IsNullOrEmpty(blob.InvitationToken) ? null
-                    : callbackGenerator.ForInvitation(data.Id, blob.InvitationToken)
+                InvitationUrl = !includeInvitationUrl || string.IsNullOrEmpty(blob.InvitationToken) ? null : callbackGenerator.ForInvitation(data.Id, blob.InvitationToken)
             };
         }
 

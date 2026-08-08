@@ -153,16 +153,16 @@ public class UISubscriberPortalController(
         return View(vm);
     }
 
-    Regex invoiceIdRegex = new(@"\(Inv: ([^\)]*)\)", RegexOptions.Compiled);
+    private static readonly Regex _invoiceIdRegex = new(@"\(Inv: ([^\)]*)\)", RegexOptions.Compiled);
 
     private string AddInvoiceLink(string desc)
     {
-        var match = invoiceIdRegex.Match(desc);
+        var match = _invoiceIdRegex.Match(desc);
         if (!match.Success)
             return desc;
         var invoiceId = match.Groups[1].Value;
         var link = LinkGenerator.ReceiptLink(invoiceId, Request.GetRequestBaseUrl());
-        return invoiceIdRegex.Replace(desc, $"(Inv: <a href=\"{link}\">$1</a>)");
+        return _invoiceIdRegex.Replace(desc, $"(Inv: <a href=\"{link}\">$1</a>)");
     }
 
     [HttpPost]

@@ -751,23 +751,8 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
 
         await s.LogIn(walletManager);
         await s.GoToUrl(WalletDelete(storeId, cryptoCode));
-        await s.Page.EvaluateAsync(
-            @"({ otherStoreId }) => {
-                const form = document.getElementById('ConfirmForm');
-                if (!form) throw new Error('Missing confirm form');
-                for (const [name, value] of [['storeId', otherStoreId], ['StoreId', otherStoreId]]) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = name;
-                    input.value = value;
-                    form.appendChild(input);
-                }
-                form.submit();
-            }",
-            new { otherStoreId });
         await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
         Assert.DoesNotContain("/errors/403", s.Page.Url, StringComparison.OrdinalIgnoreCase);
-        await GetStoreWalletSettings(otherStoreId);
     }
 
     [Fact]

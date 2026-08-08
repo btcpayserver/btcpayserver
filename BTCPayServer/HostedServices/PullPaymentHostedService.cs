@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Events;
 using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
@@ -561,7 +562,7 @@ namespace BTCPayServer.HostedServices
                 }
 
                 payout.Amount = Extensions.RoundUp(cryptoAmount,
-                    network.Divisibility);
+                    payoutHandler is LightningLikePayoutHandler ? network.Divisibility + 3 : network.Divisibility);
                 await ctx.SaveChangesAsync();
 
                 _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Approved, payout));

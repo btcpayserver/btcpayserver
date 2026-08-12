@@ -66,7 +66,7 @@ public class UISubscriberPortalController(
         if (session is null || store is null)
             return NotFound();
 
-        var planChanges = session.Subscriber.Plan.PlanChanges
+        var planChanges = session.Subscriber.Plan.PlanChanges.Where(p => p.PlanChange.Status == PlanData.PlanStatus.Active)
             .Select(p => new SubscriberPortalViewModel.PlanChange(p.PlanChange)
             {
                 ChangeType = p.Type
@@ -117,7 +117,7 @@ public class UISubscriberPortalController(
         var credit = session.Subscriber.GetCredit();
         var displayFormat = DisplayFormatter.CurrencyFormat.Symbol;
         vm.MigratePopups = new();
-        foreach (var change in session.Subscriber.Plan.PlanChanges)
+        foreach (var change in session.Subscriber.Plan.PlanChanges.Where(c => c.PlanChange.Status == PlanData.PlanStatus.Active))
         {
             if (change.PlanChange.Currency != curr)
                 continue;

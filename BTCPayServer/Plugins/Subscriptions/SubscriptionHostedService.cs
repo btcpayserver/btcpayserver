@@ -166,6 +166,63 @@ public class SubscriptionHostedService(
         }
     }
 
+    public async Task BulkMigratePlan(string planId, string targetPlanId, string offeringId, bool immediate)
+    {
+        await using var subCtx = CreateContext(CancellationToken);
+        var ctx = subCtx.Context;
+        var targetPlan = await ctx.Plans.FirstOrDefaultAsync(p => p.Id == targetPlanId && p.OfferingId == offeringId);
+        if (targetPlan is null)
+            return;
+
+        var activeSubscribers = await ctx.Subscribers.IncludeAll().Where(s => s.PlanId == planId && s.IsActive).ToListAsync();
+        await ctx.PlanFeatures.FetchPlanFeaturesAsync(activeSubscribers.Select(s => s.Plan));
+        var now = subCtx.Now;
+        var expiredSubscribers = new List<SubscriberData>();
+        foreach (var sub in activeSubscribers)
+        {
+            if (!immediate)
+            {
+                sub.NewPlanId = targetPlanId;
+                sub.NewPlan = targetPlan;
+                continue;
+            }
+            var unusedAmount = subCtx.RoundAmount(sub.GetUnusedPeriodAmount(now) ?? 0m, sub.Plan.Currency);
+            var availableCredit = sub.GetCredit() + unusedAmount;
+            var canAfford = availableCredit >= targetPlan.Price;
+            if (canAfford)
+            {
+                if (unusedAmount > 0)
+                    await subCtx.CreditSubscriber(sub, $"Refund for unused period on plan '{sub.Plan.Name}'", unusedAmount);
+
+                var charged = await subCtx.TryChargeSubscriber(sub, $"Migration to plan '{targetPlan.Name}'", targetPlan.Price);
+                if (charged)
+                {
+                    var prevPlan = sub.Plan;
+                    using var scope = sub.NewPlanScope(targetPlan);
+                    sub.StartNextPlan(now);
+                    scope.Commit();
+                    subCtx.AddEvent(new SubscriptionEvent.PlanStarted(sub, prevPlan));
+                }
+            }
+            else
+            {
+                sub.PeriodEnd = now;
+                sub.GracePeriodEnd = null;
+                sub.TrialEnd = null;
+                sub.AutoRenew = false;
+                expiredSubscribers.Add(sub);
+            }
+        }
+        await ctx.SaveChangesAsync();
+        await UpdateSubscriptionStates(subCtx, new MemberSelector.PassedDate(null, now.AddSeconds(1)));
+        foreach (var sub in expiredSubscribers)
+        {
+            sub.NewPlanId = targetPlanId;
+            sub.NewPlan = targetPlan;
+        }
+        await ctx.SaveChangesAsync();
+    }
+
     record UpdateDatesRequest(long SubId, DateTimeOffset StartDate, DateTimeOffset? ExpirationDate);
 
     public Task UpdateDates(long subId, DateTimeOffset startDate, DateTimeOffset? expirationDate)
@@ -495,7 +552,8 @@ public class SubscriptionHostedService(
                 {
                     checkout.CreditedByInvoice += diff;
                     await subCtx.CreditSubscriber(sub, $"Credit purchase (Inv: {invoice.Id})", diff);
-                    await TryStartPlan(subCtx, checkout, sub);
+                    if (plan.Status != PlanData.PlanStatus.Retired)
+                        await TryStartPlan(subCtx, checkout, sub);
                 }
                 else
                 {
@@ -722,6 +780,9 @@ public class SubscriptionHostedService(
         {
             plan = await ctx.Plans.GetPlanFromId(planId, portal.Subscriber.OfferingId);
             if (plan is null)
+                return new PlanMigrationResult.NotFound();
+
+            if (plan.Status == PlanData.PlanStatus.Retired)
                 return new PlanMigrationResult.NotFound();
 
             var planChangeRecord  = portal.Subscriber.Plan.PlanChanges

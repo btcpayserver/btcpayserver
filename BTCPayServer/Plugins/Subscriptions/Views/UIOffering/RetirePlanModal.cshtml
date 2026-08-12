@@ -1,0 +1,154 @@
+@model List<SubscriptionsViewModel.SelectablePlan>
+<div class="modal fade" id="retirePlanModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" text-translate="true">Retire Plan</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>You are about to retire <strong id="retirePlanName"></strong>.</p>
+                <p class="text-muted" text-translate="true">
+                    No new subscriptions or plan migrations to this plan will be allowed.
+                    Choose what to do with existing active subscribers:
+                </p>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="retireAction" id="retireAction-nothing" value="nothing" checked>
+					<label class="form-check-label" for="retireAction-nothing" text-translate="true">Do nothing</label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="retireAction" id="retireAction-autorenew" value="disable-autorenew">
+					<label class="form-check-label" for="retireAction-autorenew" text-translate="true">Turn off auto-renew</label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="retireAction" id="retireAction-suspend" value="suspend">
+					<label class="form-check-label" for="retireAction-suspend" text-translate="true">Immediately suspend all</label>
+                </div>
+                @if (Model.Any())
+                {
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="retireAction" id="retireAction-migrate" value="migrate">
+						<label class="form-check-label" for="retireAction-migrate" text-translate="true">Migrate all</label>
+                    </div>
+                    <div id="migratePlanSelector" style="display:none;" class="ms-4">
+                        <label class="form-label" text-translate="true">Migrate to plan</label>
+                        <select id="retireMigratePlanId" name="migrateToPlanId" class="form-select">
+                            @foreach (var plan in Model)
+                            {
+                                <option value="@plan.Id">@plan.Name</option>
+                            }
+                        </select>
+
+						<label class="form-label" text-translate="true">When</label>
+						<select id="retireMigrateTiming" name="migrateTiming" class="form-select">
+							<option value="period-end">At period end</option>
+							<option value="immediate">Immediately (billing adjusted from credit balance)</option>
+						</select>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <form id="retirePlanForm" method="post">
+                    <input type="hidden" id="retirePlanId" name="planId" />
+                    <input type="hidden" id="retireActionInput" name="retireAction" value="nothing" />
+					<input type="hidden" id="retireMigratePlanInput" name="migrateToPlanId" />
+					<input type="hidden" id="retireMigrateTimingInput" name="migrateTiming" value="period-end" />
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" text-translate="true">Cancel</button>
+                    <button type="submit" class="btn btn-success" text-translate="true">Retire Plan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('retirePlanModal');
+        const form = document.getElementById('retirePlanForm');
+        const planIdInput = document.getElementById('retirePlanId');
+        const actionInput = document.getElementById('retireActionInput');
+        const migratePlanInput = document.getElementById('retireMigratePlanInput');
+        const migrateTimingInput = document.getElementById('retireMigrateTimingInput');
+        const migratePlanSelector = document.getElementById('migratePlanSelector');
+        const radios = modal.querySelectorAll('input[name="retireAction"]');
+
+        modal.addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget;
+            if (!trigger) return;
+
+            const planId = trigger.getAttribute('data-plan-id');
+            const planName = trigger.getAttribute('data-plan-name');
+            const retireUrl = trigger.getAttribute('data-retire-url');
+
+            document.getElementById('retirePlanName').textContent = planName;
+            planIdInput.value = planId;
+            form.action = retireUrl;
+
+            modal.querySelector('#retireAction-nothing').checked = true;
+            actionInput.value = 'nothing';
+            if (migratePlanSelector) migratePlanSelector.style.display = 'none';
+            if (migratePlanInput) migratePlanInput.value = '';
+            if (migrateTimingInput) migrateTimingInput.value = 'period-end';
+
+            const migrateTimingSelect = document.getElementById('retireMigrateTiming');
+            if (migrateTimingSelect) migrateTimingSelect.value = 'period-end';
+
+			const migrateSelect = document.getElementById('retireMigratePlanId');
+            const migrateRadio = document.getElementById('retireAction-migrate');
+            if (migrateSelect) {
+                Array.from(migrateSelect.options).forEach(function (opt) {
+                    opt.hidden = opt.value === planId;
+                    opt.disabled = opt.value === planId;
+                });
+                const validTargets = Array.from(migrateSelect.options).filter(o => !o.hidden);
+                const hasTarget = validTargets.length > 0;
+                if (hasTarget) {
+                    migrateSelect.value = validTargets[0].value;
+                    if (migratePlanInput) migratePlanInput.value = validTargets[0].value;
+                } else {
+                    migrateSelect.value = '';
+                    if (migratePlanInput) migratePlanInput.value = '';
+                }
+                if (migrateRadio) {
+                    migrateRadio.disabled = !hasTarget;
+                    migrateRadio.closest('.form-check').classList.toggle('text-muted', !hasTarget);
+                }
+                if (migrateSelect) migrateSelect.disabled = !hasTarget;
+            }
+        });
+
+        radios.forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                actionInput.value = this.value;
+                if (migratePlanSelector) {
+                    migratePlanSelector.style.display = this.value === 'migrate' ? '' : 'none';
+                }
+                if (migratePlanInput) {
+                    migratePlanInput.value = this.value === 'migrate'
+                        ? document.getElementById('retireMigratePlanId').value
+                        : '';
+                }
+                if (migrateTimingInput && this.value !== 'migrate') {
+                    migrateTimingInput.value = 'period-end';
+                    const migrateTimingSelect = document.getElementById('retireMigrateTiming');
+                    if (migrateTimingSelect) migrateTimingSelect.value = 'period-end';
+                }
+            });
+        });
+
+        const migrateSelect = document.getElementById('retireMigratePlanId');
+        if (migrateSelect) {
+            migrateSelect.addEventListener('change', function () {
+                if (migratePlanInput) migratePlanInput.value = this.value;
+            });
+        }
+
+        const migrateTimingSelect = document.getElementById('retireMigrateTiming');
+        if (migrateTimingSelect) {
+            migrateTimingSelect.addEventListener('change', function () {
+                if (migrateTimingInput) migrateTimingInput.value = this.value;
+            });
+        }
+    });
+</script>

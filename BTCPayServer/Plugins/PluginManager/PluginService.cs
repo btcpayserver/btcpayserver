@@ -101,6 +101,23 @@ namespace BTCPayServer.Plugins
             return plugins.ToArray();
         }
 
+        internal async Task<AvailablePlugin> GetDirectoryPluginBySlug(string pluginSlug)
+        {
+            var publishedVersion = await _pluginBuilderClient.GetDirectoryPluginBySlug(
+                pluginSlug,
+                GetShortBtcpayVersion(),
+                _policiesSettings.PluginPreReleases);
+
+            if (!string.Equals(publishedVersion.ProjectSlug, pluginSlug, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException($"Plugin slug {publishedVersion.ProjectSlug} does not match requested slug {pluginSlug}.");
+
+            var availablePlugin = MapToAvailablePlugin(publishedVersion);
+            if (availablePlugin is null || string.IsNullOrWhiteSpace(availablePlugin.Identifier) || availablePlugin.Version is null)
+                throw new InvalidDataException($"Plugin manifest not found or invalid. BuildId: {publishedVersion.BuildId} PluginSlug: {publishedVersion.ProjectSlug}");
+
+            return availablePlugin;
+        }
+
 #nullable enable
         private static AvailablePlugin? MapToAvailablePlugin(PublishedVersion publishedVersion)
         {

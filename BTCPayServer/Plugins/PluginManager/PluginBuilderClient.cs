@@ -75,6 +75,19 @@ namespace BTCPayServer.Plugins
             var result = await HttpClient.GetStringAsync($"api/v1/plugins{queryString}", cancellationToken);
             return JsonConvert.DeserializeObject<PublishedVersion[]>(result, serializerSettings) ?? throw new InvalidOperationException();
         }
+
+        public async Task<PublishedVersion> GetDirectoryPluginBySlug(string pluginSlug, string btcpayVersion, bool includePreRelease = false)
+        {
+            var queryString = $"?includePreRelease={includePreRelease}";
+            if (btcpayVersion is not null)
+                queryString += $"&btcpayVersion={Uri.EscapeDataString(btcpayVersion)}";
+
+            var result = await HttpClient.GetStringAsync(
+                $"api/v1/plugins/directory/{Uri.EscapeDataString(pluginSlug)}{queryString}");
+            return JsonConvert.DeserializeObject<PublishedVersion>(result, serializerSettings)
+                   ?? throw new InvalidOperationException();
+        }
+
         public async Task<PublishedVersion> GetPlugin(string pluginSlug, string version)
         {
             try

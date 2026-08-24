@@ -1162,7 +1162,7 @@ namespace BTCPayServer.Tests
             // Duplicate email
             await AssertValidationError(["Email"],
                 async () => await adminClient.UpdateCurrentUser(
-                    new UpdateApplicationUserRequest { Email = "test@gmail.com" }));
+                    new UpdateApplicationUserRequest { Email = "test@gmail.com", CurrentPassword = "abceudhqw" }));
 
             // Invalid current password
             await AssertValidationError(["CurrentPassword"],

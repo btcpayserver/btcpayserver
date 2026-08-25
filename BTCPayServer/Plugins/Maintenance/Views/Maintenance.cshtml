@@ -1,7 +1,8 @@
 @using Microsoft.AspNetCore.Html
-@model BTCPayServer.Models.ServerViewModels.MaintenanceViewModel
+@using BTCPayServer.Views.Server
+@model MaintenanceViewModel
 @{
-    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Maintenance), StringLocalizer["Maintenance"])
+    ViewData.SetLayoutModel(new LayoutModel(nameof(MaintenancePlugin), StringLocalizer["Maintenance"])
         .SetCategory(WellKnownCategories.Server));
 }
 
@@ -15,17 +16,17 @@
         <div class="col-xl-8 col-xxl-constrain">
             <div class="form-group">
                 <label asp-for="DNSDomain" class="form-label"></label>
-                <input asp-for="DNSDomain" class="form-control" disabled="@(Model.CanUseSSH ? null : "disabled")" />
+                <input asp-for="DNSDomain" class="form-control" disabled="@(Model.SupportedCommands.Contains(HostCommands.ChangeDomain) ? null : "disabled")" />
                 <div class="form-text">@ViewLocalizer["You can change the domain name of your server by following {0}.", new HtmlString($"<a href=\"https://docs.btcpayserver.org/FAQ/Deployment/#how-to-change-your-btcpay-server-domain-name\" target=\"_blank\" rel=\"noreferrer noopener\">{StringLocalizer["this guide"]}</a>")]</div>
                 <span asp-validation-for="DNSDomain" class="text-danger"></span>
             </div>
-            <button name="command" type="submit" class="btn btn-secondary" value="changedomain" title="@StringLocalizer["Change domain"]" disabled="@(Model.CanUseSSH ? null : "disabled")">Change Domain</button>
+            <button name="command" type="submit" class="btn btn-secondary" value="changedomain" title="@StringLocalizer["Change domain"]" disabled="@(Model.SupportedCommands.Contains(HostCommands.ChangeDomain) ? null : "disabled")">Change Domain</button>
 
             <h4 class="mt-5 mb-2" text-translate="true">Restart</h4>
             <p text-translate="true">Restart BTCPay Server and related services.</p>
             <div class="form-group">
                 <div class="input-group">
-                    <button name="command" type="submit" class="btn btn-secondary" value="restart" disabled="@(Model.CanUseSSH ? null : "disabled")" text-translate="true">Restart</button>
+                    <button name="command" type="submit" class="btn btn-secondary" value="restart" disabled="@(Model.SupportedCommands.Contains(HostCommands.Restart) ? null : "disabled")" text-translate="true">Restart</button>
                 </div>
             </div>
 
@@ -33,7 +34,7 @@
             <p text-translate="true">Delete unused Docker images present on your system.</p>
             <div class="form-group">
                 <div class="input-group">
-                    <button name="command" type="submit" class="btn btn-secondary" value="clean" disabled="@(Model.CanUseSSH ? null : "disabled")" text-translate="true">Clean</button>
+                    <button name="command" type="submit" class="btn btn-secondary" value="clean" disabled="@(Model.SupportedCommands.Contains(HostCommands.Clean) ? null : "disabled")" text-translate="true">Clean</button>
                 </div>
             </div>
 
@@ -41,7 +42,7 @@
             <p text-translate="true">Update to the latest version of BTCPay Server.</p>
             <div class="form-group">
                 <div class="input-group">
-                    <button name="command" type="submit" class="btn btn-primary" value="update" disabled="@(Model.CanUseSSH ? null : "disabled")" text-translate="true">Update</button>
+                    <button name="command" type="submit" class="btn btn-primary" value="update" disabled="@(Model.SupportedCommands.Contains(HostCommands.Update) ? null : "disabled")" text-translate="true">Update</button>
                 </div>
             </div>
         </div>

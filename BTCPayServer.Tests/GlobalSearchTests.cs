@@ -19,6 +19,7 @@ public class GlobalSearchTests(ITestOutputHelper helper) : UnitTestBase(helper)
     public async Task TestGlobalSearch()
     {
         await using var s = CreatePlaywrightTester();
+        await s.Server.InstallHostCommands();
         await s.StartAsync();
         await s.RegisterNewUser(isAdmin: true);
         await s.CreateNewStore();

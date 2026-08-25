@@ -29,9 +29,6 @@ services:
       TEST_MERCHANTLND: "http://merchant_lnd:8080/"
       TESTS_INCONTAINER: "true"
       PLAYWRIGHT_HEADLESS: "true"
-      TESTS_SSHCONNECTION: "root@sshd:22"
-      TESTS_SSHPASSWORD: ""
-      TESTS_SSHKEYFILE: ""
       TESTS_SOCKSENDPOINT: "tor:9050"
       TESTS_ARTIFACTS_DIR: "/tmp/Artifacts"
     expose:
@@ -45,7 +42,6 @@ services:
       custom:
         ipv4_address: 172.23.0.18
     volumes:
-      - "sshd_datadir:/root/.ssh"
       - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
       - "merchant_lightningd_datadir:/etc/merchant_lightningd_datadir"
       - "tests_datadir:/tmp/Artifacts"
@@ -61,20 +57,8 @@ services:
       - merchant_lightningd
       - customer_lnd
       - merchant_lnd
-      - sshd
       - tor
       - mailpit
-
-  sshd:
-    build:
-        context: .
-        dockerfile: sshd.Dockerfile
-    ports:
-        - "21622:22"
-    expose:
-        - 22
-    volumes:
-        - "sshd_datadir:/root/.ssh"
 
   devlnd:
     image: btcpayserver/bitcoin:31.0
@@ -380,7 +364,6 @@ services:
 
 volumes:
     tests_datadir:
-    sshd_datadir:
     bitcoin_datadir:
     elementsd_liquid_datadir:
     customer_lightningd_datadir:

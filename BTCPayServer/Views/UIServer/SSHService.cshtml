@@ -9,36 +9,7 @@
     <vc:title-header />
 </div>
 <partial name="_StatusMessage" />
-<p text-translate="true">SSH services are used by the maintenance operations.</p>
-<div class="row">
-    <div class="col-md-8">
-        @if (!ViewContext.ModelState.IsValid)
-        {
-            <div asp-validation-summary="All"></div>
-        }
-
-        <div class="form-group">
-            <div class="form-group">
-                <label asp-for="CommandLine" class="form-label"></label>
-                <input asp-for="CommandLine" class="form-control" readonly />
-            </div>
-            @if (!string.IsNullOrEmpty(Model.Password))
-            {
-                <div class="form-group">
-                    <label asp-for="Password" class="form-label"></label>
-                    <input asp-for="Password" class="form-control" readonly />
-                </div>
-            }
-            @if (!string.IsNullOrEmpty(Model.KeyFilePassword))
-            {
-                <div class="form-group">
-                    <label asp-for="KeyFilePassword" class="form-label"></label>
-                    <input asp-for="KeyFilePassword" class="form-control" readonly />
-                </div>
-            }
-        </div>
-    </div>
-</div>
+<p text-translate="true">Maintenance operations use local BTCPay commands.</p>
 
 @if (Model.SSHKeyFileContent != null)
 {

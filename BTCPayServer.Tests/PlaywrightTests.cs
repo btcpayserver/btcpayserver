@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -48,6 +49,7 @@ namespace BTCPayServer.Tests
         public async Task CanNavigateServerSettings()
         {
             await using var s = CreatePlaywrightTester();
+            await s.Server.InstallHostCommands();
             await s.StartAsync();
             await s.RegisterNewUser(true);
             await s.SkipWizard();
@@ -875,6 +877,7 @@ namespace BTCPayServer.Tests
         public async Task CanUseSSHService()
         {
             await using var s = CreatePlaywrightTester();
+            await s.Server.InstallHostCommands();
             await s.StartAsync();
             var settings = s.Server.PayTester.GetService<SettingsRepository>();
             var policies = await settings.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
@@ -884,14 +887,6 @@ namespace BTCPayServer.Tests
             await s.GoToUrl("/server/services");
             await s.Page.WaitForLoadStateAsync();
             Assert.Contains("server/services/ssh", await s.Page.ContentAsync());
-            using (var client = await s.Server.PayTester.GetService<BTCPayServerOptions>().SSHSettings
-                .ConnectAsync())
-            {
-                var result = await client.RunBash("echo hello");
-                Assert.Equal(string.Empty, result.Error);
-                Assert.Equal("hello\n", result.Output);
-                Assert.Equal(0, result.ExitStatus);
-            }
 
             await s.GoToUrl("/server/services/ssh");
             await s.Page.AssertNoError();

@@ -53,7 +53,6 @@
     <PackageReference Include="Serilog" Version="4.4.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="SSH.NET" Version="2026.0.0" />
     <PackageReference Include="TwentyTwenty.Storage" Version="2.26.1" />
     <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.26.1" />
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.26.1" />

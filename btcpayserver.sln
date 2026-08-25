@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32414.318
@@ -15,7 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{29290EC7-0
 		.github\workflows\ci.yml = .github\workflows\ci.yml
 		.github\workflows\release.yml = .github\workflows\release.yml
 		Build\Common.csproj = Build\Common.csproj
-		docker-entrypoint.sh = docker-entrypoint.sh
+		Docker\docker-entrypoint.sh = Docker\docker-entrypoint.sh
+		Docker\btcpay-host = Docker\btcpay-host
 		Dockerfile = Dockerfile
 		Build\Version.csproj = Build\Version.csproj
 	EndProjectSection

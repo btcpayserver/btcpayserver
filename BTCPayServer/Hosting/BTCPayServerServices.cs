@@ -366,8 +366,7 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<Services.NBXplorerConnectionFactory>();
             services.AddSingleton<IHostedService, Services.NBXplorerConnectionFactory>(o => o.GetRequiredService<Services.NBXplorerConnectionFactory>());
-            services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
-            services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
+            services.AddSingleton<Services.ProcessRunner>();
             services.AddSingleton<IHostedService, PeriodicTaskLauncherHostedService>();
             services.AddScheduledTask<GithubVersionFetcher>(TimeSpan.FromDays(1));
 

@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Net;
 using BTCPayServer.Logging;
-using BTCPayServer.SSH;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -95,49 +94,6 @@ namespace BTCPayServer.Configuration
 
             UpdateUrl = conf.GetOrDefault<Uri>("updateurl", null);
 
-            var sshSettings = ParseSSHConfiguration(conf);
-            if ((!string.IsNullOrEmpty(sshSettings.Password) || !string.IsNullOrEmpty(sshSettings.KeyFile)) && !string.IsNullOrEmpty(sshSettings.Server))
-            {
-                int waitTime = 0;
-                while (!string.IsNullOrEmpty(sshSettings.KeyFile) && !File.Exists(sshSettings.KeyFile))
-                {
-                    if (waitTime++ < 5)
-                        System.Threading.Thread.Sleep(1000);
-                    else
-                        throw new ConfigException($"sshkeyfile does not exist");
-                }
-
-                if (sshSettings.Port > ushort.MaxValue ||
-                   sshSettings.Port < ushort.MinValue)
-                    throw new ConfigException($"ssh port is invalid");
-                if (!string.IsNullOrEmpty(sshSettings.Password) && !string.IsNullOrEmpty(sshSettings.KeyFile))
-                    throw new ConfigException($"sshpassword or sshkeyfile should be provided, but not both");
-                try
-                {
-                    sshSettings.CreateConnectionInfo();
-                    SSHSettings = sshSettings;
-                }
-                catch (NotSupportedException ex)
-                {
-                    Logs.Configuration.LogWarning($"The SSH key is not supported ({ex.Message}), try to generate the key with ssh-keygen using \"-m PEM\". Skipping SSH configuration...");
-                }
-                catch (Exception ex)
-                {
-                    Logs.Configuration.LogWarning(ex, "Error while loading SSH settings");
-                }
-            }
-
-            var fingerPrints = conf.GetOrDefault<string>("sshtrustedfingerprints", "");
-            if (!string.IsNullOrEmpty(fingerPrints))
-            {
-                foreach (var fingerprint in fingerPrints.Split(';', StringSplitOptions.RemoveEmptyEntries))
-                {
-                    if (!SSHFingerprint.TryParse(fingerprint, out var f))
-                        throw new ConfigException($"Invalid ssh fingerprint format {fingerprint}");
-                    SSHSettings?.TrustedFingerprints.Add(f);
-                }
-            }
-
             RootPath = conf.GetOrDefault<string>("rootpath", "/");
             if (!RootPath.StartsWith("/", StringComparison.InvariantCultureIgnoreCase))
                 RootPath = "/" + RootPath;
@@ -160,44 +116,8 @@ namespace BTCPayServer.Configuration
 
         public bool CheatMode { get; set; }
 
-        private SSHSettings ParseSSHConfiguration(IConfiguration conf)
-        {
-            var settings = new SSHSettings();
-            settings.Server = conf.GetOrDefault<string>("sshconnection", null);
-            if (settings.Server != null)
-            {
-                var parts = settings.Server.Split(':');
-                if (parts.Length == 2 && int.TryParse(parts[1], out int port))
-                {
-                    settings.Port = port;
-                    settings.Server = parts[0];
-                }
-                else
-                {
-                    settings.Port = 22;
-                }
-
-                parts = settings.Server.Split('@');
-                if (parts.Length == 2)
-                {
-                    settings.Username = parts[0];
-                    settings.Server = parts[1];
-                }
-                else
-                {
-                    settings.Username = "root";
-                }
-            }
-            settings.Password = conf.GetOrDefault<string>("sshpassword", "");
-            settings.KeyFile = conf.GetOrDefault<string>("sshkeyfile", "");
-            settings.AuthorizedKeysFile = conf.GetOrDefault<string>("sshauthorizedkeys", "");
-            settings.KeyFilePassword = conf.GetOrDefault<string>("sshkeyfilepassword", "");
-            return settings;
-        }
-
         public string RootPath { get; set; }
         public bool DockerDeployment { get; set; }
-        public SSHSettings SSHSettings { get; set; }
         public string TorrcFile { get; set; }
         public string[] TorServices { get; set; }
         public Uri UpdateUrl { get; set; }

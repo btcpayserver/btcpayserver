@@ -39,12 +39,6 @@ namespace BTCPayServer.Configuration
             app.Option("--deprecated", $"Allow deprecated settings (default:false)", CommandOptionType.BoolValue);
             app.Option("--externalservices", $"Links added to external services inside Server Settings / Services under the format service1:path2;service2:path2.(default: empty)", CommandOptionType.SingleValue);
             app.Option("--rootpath", "The root path in the URL to access BTCPay (default: /)", CommandOptionType.SingleValue);
-            app.Option("--sshconnection", "SSH server to manage BTCPay under the form user@server:port (default: root@externalhost or empty)", CommandOptionType.SingleValue);
-            app.Option("--sshpassword", "SSH password to manage BTCPay (default: empty)", CommandOptionType.SingleValue);
-            app.Option("--sshkeyfile", "SSH private key file to manage BTCPay (default: empty)", CommandOptionType.SingleValue);
-            app.Option("--sshkeyfilepassword", "Password of the SSH keyfile (default: empty)", CommandOptionType.SingleValue);
-            app.Option("--sshauthorizedkeys", "Path to a authorized_keys file that BTCPayServer can modify from the website (default: empty)", CommandOptionType.SingleValue);
-            app.Option("--sshtrustedfingerprints", "SSH Host public key fingerprint or sha256 (default: empty, it will allow untrusted connections)", CommandOptionType.SingleValue);
             app.Option("--torrcfile", "Path to torrc file containing hidden services directories (default: empty)", CommandOptionType.SingleValue);
             app.Option("--torservices", "Tor hostnames of available services added to Server Settings (and sets onion header for btcpay). Format: btcpayserver:host.onion:80;btc-p2p:host2.onion:81,BTC-RPC:host3.onion:82,UNKNOWN:host4.onion:83. (default: empty)", CommandOptionType.SingleValue);
             app.Option("--socksendpoint", "Socks endpoint to connect to onion urls (default: empty)", CommandOptionType.SingleValue);

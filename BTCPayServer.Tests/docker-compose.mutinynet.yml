@@ -16,19 +16,7 @@ services:
       - merchant_lightningd
       - customer_lnd
       - merchant_lnd
-      - sshd
       - tor
-
-  sshd:
-    build:
-        context: .
-        dockerfile: sshd.Dockerfile
-    ports:
-        - "21622:22"
-    expose:
-        - 22
-    volumes:
-        - "sshd_datadir:/root/.ssh"
 
   devlnd:
     image: btcpayserver/mutinynet:c23afab47fbe
@@ -268,7 +256,6 @@ services:
         - "tor_servicesdir:/var/lib/tor/hidden_services"
 
 volumes:
-    sshd_datadir:
     bitcoin_datadir:
     elementsd_liquid_datadir:
     customer_lightningd_datadir:

@@ -205,6 +205,11 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(nameof(vm.DNSDomain), $"The server is already set to use this domain");
                     return View(vm);
                 }
+                if (Uri.CheckHostName(vm.DNSDomain) != UriHostNameType.Dns)
+                {
+                    ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid hostname");
+                    return View(vm);
+                }
                 var builder = new UriBuilder();
                 try
                 {

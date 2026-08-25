@@ -365,6 +365,7 @@ public class UIServerMonetizationController(
         var features = new[]
         {
             (MonetizationFeatures.CanAccess, StringLocalizer["Can access BTCPay Server"].Value),
+            (MonetizationFeatures.AllowUserAssociation, StringLocalizer["Allow user association"].Value),
         }.Select(e => new FeatureData()
         {
             CustomId = e.Item1,

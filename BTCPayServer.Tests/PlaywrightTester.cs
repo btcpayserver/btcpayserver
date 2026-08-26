@@ -57,7 +57,7 @@ namespace BTCPayServer.Tests
                 Headless = !string.IsNullOrEmpty(headless) && bool.Parse(headless),
                 ExecutablePath = conf["PLAYWRIGHT_EXECUTABLE"],
                 SlowMo = 0, // 50 if you want to slow down
-                Args = ["--disable-frame-rate-limit"] // Fix slowness on linux (https://github.com/microsoft/playwright/issues/34625#issuecomment-2822015672)
+                Args = ["--disable-frame-rate-limit"], // Fix slowness on linux (https://github.com/microsoft/playwright/issues/34625#issuecomment-2822015672)
             });
             var context = await Browser.NewContextAsync();
             Page = await context.NewPageAsync();
@@ -360,7 +360,7 @@ namespace BTCPayServer.Tests
             else { await GoToUrl("/"); }
         }
 
-        public async Task AddUserToStore(string storeId, string email, string role)
+        public async Task AddUserToStore(string storeId, string email, string role, bool requireInvitation = false)
         {
             var addUser = Page.Locator("#AddUser");
             if (!await addUser.IsVisibleAsync())
@@ -368,10 +368,18 @@ namespace BTCPayServer.Tests
                 await GoToStore(storeId, StoreNavPages.Users);
             }
 
+            if (!requireInvitation)
+                await Page.Locator(".store-users__require-invitation").UncheckAsync();
+
             await Page.FillAsync("#Email", email);
             await Page.SelectOptionAsync("#Role", role);
+            var requireInvitationToggle = Page.Locator(".store-users__require-invitation");
+            var canSkipInvitation = await requireInvitationToggle.IsVisibleAsync();
             await Page.ClickAsync("#AddUser");
-            await FindAlertMessage(partialText: "The user has been added successfully");
+            if (requireInvitation || !canSkipInvitation)
+                await Expect(Page.Locator("#StoreInvitationSent")).ToHaveCountAsync(1);
+            else
+                await FindAlertMessage(partialText: "The user has been added successfully");
         }
 
         public async Task LogIn(string user, string password = "123456")

@@ -41,51 +41,22 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AddUserToStore(storeId, employee, "Employee");
 
         // Should successfully change the role
-        var userRows = await s.Page.Locator("#StoreUsersList tr").AllAsync();
-        Assert.Equal(2, userRows.Count);
-        ILocator employeeRow = null;
-        foreach (var row in userRows)
-        {
-            if ((await row.InnerTextAsync()).Contains(employee, StringComparison.InvariantCultureIgnoreCase)) employeeRow = row;
-        }
-
-        Assert.NotNull(employeeRow);
-        await employeeRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
-        Assert.Equal(employee, await s.Page.InnerTextAsync("#EditUserEmail"));
-        await s.Page.SelectOptionAsync("#EditUserRole", "Manager");
-        await s.Page.ClickAsync("#EditContinue");
+        var userRows = s.Page.Locator(".store-users__row");
+        await Expect(userRows).ToHaveCountAsync(2);
+        var employeeRow = userRows.Filter(new() { HasText = employee });
+        await Expect(employeeRow).ToHaveCountAsync(1);
+        await employeeRow.Locator(".store-users__role-form select").SelectOptionAsync("Manager");
         await s.FindAlertMessage(partialText: $"The role of {employee} has been changed to Manager.");
 
-        // Should not see a message when not changing role
-        userRows = await s.Page.Locator("#StoreUsersList tr").AllAsync();
-        Assert.Equal(2, userRows.Count);
-        employeeRow = null;
-        foreach (var row in userRows)
-        {
-            if ((await row.InnerTextAsync()).Contains(employee, StringComparison.InvariantCultureIgnoreCase)) employeeRow = row;
-        }
+        userRows = s.Page.Locator(".store-users__row");
+        employeeRow = userRows.Filter(new() { HasText = employee });
+        await Expect(employeeRow.Locator(".store-users__role-form select")).ToHaveValueAsync("Manager");
 
-        Assert.NotNull(employeeRow);
-        await employeeRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
-        Assert.Equal(employee, await s.Page.InnerTextAsync("#EditUserEmail"));
-        await s.Page.ClickAsync("#EditContinue");
-        await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, "The user already has the role Manager.");
-
-        // Should not change last owner
-        userRows = await s.Page.Locator("#StoreUsersList tr").AllAsync();
-        Assert.Equal(2, userRows.Count);
-        ILocator ownerRow = null;
-        foreach (var row in userRows)
-        {
-            if ((await row.InnerTextAsync()).Contains(owner, StringComparison.InvariantCultureIgnoreCase)) ownerRow = row;
-        }
-
-        Assert.NotNull(ownerRow);
-        await ownerRow.Locator("a[data-bs-target='#EditModal']").ClickAsync();
-        Assert.Equal(owner, await s.Page.InnerTextAsync("#EditUserEmail"));
-        await s.Page.SelectOptionAsync("#EditUserRole", "Employee");
-        await s.Page.ClickAsync("#EditContinue");
-        await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, "The user is the last owner. Their role cannot be changed.");
+        // The last owner's role cannot be edited.
+        var ownerRow = userRows.Filter(new() { HasText = owner });
+        await Expect(ownerRow).ToHaveCountAsync(1);
+        await Expect(ownerRow.Locator(".store-users__role")).ToContainTextAsync("Owner");
+        await Expect(ownerRow.Locator(".store-users__role-form")).ToHaveCountAsync(0);
     }
 
     [Fact]
@@ -264,10 +235,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.Page.Locator("#Email").FillAsync(s.AsTestAccount().Email);
         await s.Page.Locator("#Role").SelectOptionAsync("Owner");
         await s.Page.ClickAsync("#AddUser");
-        Assert.Contains("The user already has the role Owner.", await s.Page.Locator(".validation-summary-errors").TextContentAsync());
-        await s.Page.Locator("#Role").SelectOptionAsync("Manager");
-        await s.Page.ClickAsync("#AddUser");
-        Assert.Contains("The user is the last owner. Their role cannot be changed.", await s.Page.Locator(".validation-summary-errors").TextContentAsync());
+        await Expect(s.Page.Locator(".validation-summary-errors")).ToContainTextAsync("The user already has access to this store.");
 
         await s.GoToStore(StoreNavPages.Roles);
         await s.ClickPagePrimary();

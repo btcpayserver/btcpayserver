@@ -25,6 +25,7 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
         services.AddSingleton<IHostedService, StoreEmailRuleProcessorSender>();
         services.AddTransient<EmailTriggerViewModels>();
         services.AddSingleton<IHostedService, UserEventHostedService>();
+        services.AddSingleton<IHostedService, StoreInvitationEventHostedService>();
         services.AddMigration<ApplicationDbContext, Migrations.DefaultServerEmailRulesMigration>();
         services.AddMigration("20251223_emailsettingsmigration", """
                                   INSERT INTO "Settings" ("Id", "Value")
@@ -51,6 +52,10 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
         ConfigureEmailSearch(services);
 
         RegisterServerEmailTriggers(services);
+        foreach (var storeTrigger in StoreMailTriggers.GetViewModels())
+        {
+            services.AddSingleton(storeTrigger);
+        }
     }
 
     private static void ConfigureEmailSearch(IServiceCollection services)
@@ -204,6 +209,25 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
                 new ("{ApprovalLink}", "The link that the admin needs to use to approve the user"),
             },
             Description = "Admin: Approval request",
+        };
+        vms.Add(vm);
+
+        vm = new EmailTriggerViewModel()
+        {
+            Trigger = ServerMailTriggers.StoreInvitePending,
+            DefaultEmail = new()
+            {
+                To = ["{User.MailboxAddress}"],
+                Subject = "Invitation to join {StoreInvitation.StoreName}",
+                Body = CreateEmailBody($"You have been invited to join <b>{{StoreInvitation.StoreName}}</b> as {{StoreInvitation.Role}}.<br/><br/>{CallToAction("View invitation", "{StoreInvitation.Link}")}"),
+            },
+            PlaceHolders = new()
+            {
+                new ("{StoreInvitation.StoreName}", "The name of the store the user is invited to"),
+                new ("{StoreInvitation.Role}", "The role the user is invited with"),
+                new ("{StoreInvitation.Link}", "The link where the user can accept or decline the invitation"),
+            },
+            Description = "User: Store invitation",
         };
         vms.Add(vm);
 

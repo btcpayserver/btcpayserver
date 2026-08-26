@@ -1,0 +1,59 @@
+@model BTCPayServer.Models.StoreViewModels.StoreInvitationSentViewModel
+@{
+    Layout = "_LayoutWizard";
+    ViewData.SetTitle(Model.JustSent ? StringLocalizer["Invitation sent"] : StringLocalizer["Invitation link"]);
+}
+
+@section PageHeadContent {
+    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true" />
+}
+
+@section Navbar {
+    <a asp-action="StoreUsers" asp-route-storeId="@Model.StoreId" id="CancelWizard" class="cancel">
+        <vc:icon symbol="cross" />
+    </a>
+}
+
+<header class="text-center">
+    <h1 class="mb-2">@ViewData["Title"]</h1>
+    <p class="text-secondary">
+        @if (Model.JustSent)
+        {
+            @StringLocalizer["{0} has been invited as {1}.", Model.Email, Model.Role]
+        }
+        else
+        {
+            @StringLocalizer["{0} was invited as {1}.", Model.Email, Model.Role]
+        }
+        <span>@StringLocalizer["The invitation expires {0}.", Model.Expiry.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)]</span>
+    </p>
+</header>
+
+<div class="col-sm-10 col-xxl-8 mx-auto text-center" id="StoreInvitationSent">
+    <div class="payment-box">
+        <div class="qr-container clipboard-button" data-clipboard="@Model.InvitationUrl">
+            <vc:qr-code data="@Model.InvitationUrl" />
+        </div>
+        <div class="input-group mt-3">
+            <div class="form-floating">
+                <vc:truncate-center text="@Model.InvitationUrl" padding="15" elastic="true" classes="form-control-plaintext" id="InvitationUrl" />
+                <label for="InvitationUrl" text-translate="true">Invitation URL</label>
+            </div>
+        </div>
+    </div>
+    <p class="text-secondary mt-3 mb-0">
+        @if (!Model.JustSent)
+        {
+            <span text-translate="true">Share this link with them. Viewing it here changes nothing.</span>
+        }
+        else if (Model.EmailSent)
+        {
+            <span text-translate="true">An invitation email has been sent. You may alternatively share this link with them.</span>
+        }
+        else
+        {
+            <span text-translate="true">No invitation email was sent, so you need to share this link with them.</span>
+        }
+    </p>
+    <a asp-action="StoreUsers" asp-route-storeId="@Model.StoreId" class="btn btn-primary w-100 mt-4" id="BackToStoreUsers" text-translate="true">Back to store users</a>
+</div>

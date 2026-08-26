@@ -38,7 +38,7 @@ public class UIPluginManagerController(
     {
         var remotePlugins = string.IsNullOrWhiteSpace(selectedSlug)
             ? []
-            : await LoadRemotePlugins();
+            : await LoadRemotePlugins(selectedSlug);
         var model = CreatePluginDirectoryViewModel(selectedSlug, remotePlugins);
         var pluginSourceBaseUri = pluginService.GetPluginSourceBaseUri();
         var btcpayVersion = pluginService.GetShortBtcpayVersion();
@@ -65,7 +65,7 @@ public class UIPluginManagerController(
         AvailablePlugin[] remotePlugins;
         try
         {
-            remotePlugins = await pluginService.GetRemotePlugins(null);
+            remotePlugins = await LoadRemotePluginsForSelectedSlug(slug);
         }
         catch
         {
@@ -610,11 +610,11 @@ public class UIPluginManagerController(
             .ToList();
     }
 
-    private async Task<AvailablePlugin[]> LoadRemotePlugins()
+    private async Task<AvailablePlugin[]> LoadRemotePlugins(string selectedSlug = null)
     {
         try
         {
-            return await pluginService.GetRemotePlugins(null);
+            return await LoadRemotePluginsForSelectedSlug(selectedSlug);
         }
         catch (Exception ex)
         {
@@ -625,6 +625,20 @@ public class UIPluginManagerController(
             });
             return [];
         }
+    }
+
+    private async Task<AvailablePlugin[]> LoadRemotePluginsForSelectedSlug(string selectedSlug)
+    {
+        var remotePlugins = await pluginService.GetRemotePlugins(null);
+        if (string.IsNullOrWhiteSpace(selectedSlug) ||
+            remotePlugins.Any(plugin => string.Equals(plugin.CatalogSlug, selectedSlug, StringComparison.OrdinalIgnoreCase)))
+            return remotePlugins;
+
+        var searchedPlugins = await pluginService.GetRemotePlugins(selectedSlug);
+        return remotePlugins
+            .Concat(searchedPlugins.Where(plugin =>
+                string.Equals(plugin.CatalogSlug, selectedSlug, StringComparison.OrdinalIgnoreCase)))
+            .ToArray();
     }
 
     private IActionResult RedirectToPlugins(string selectedSlug)

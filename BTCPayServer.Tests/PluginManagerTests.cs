@@ -289,6 +289,138 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public async Task SelectedPluginPanel_FallsBackToSearchForUnlistedPlugin()
+        {
+            var requestedQueries = new List<string>();
+            using var httpClient = new HttpClient(new TestHttpMessageHandler(request =>
+            {
+                requestedQueries.Add(request.RequestUri!.Query);
+                if (request.RequestUri.Query.Contains("searchPluginName=unlistedplugin"))
+                {
+                    return TestHttpMessageHandler.JsonResponse("""
+                                                                [{
+                                                                    "projectSlug": "unlistedplugin",
+                                                                    "buildId": 2,
+                                                                    "manifestInfo": {
+                                                                        "identifier": "UnlistedPlugin",
+                                                                        "name": "Unlisted Plugin",
+                                                                        "version": "1.0.0"
+                                                                    },
+                                                                    "buildInfo": {}
+                                                                }]
+                                                                """);
+                }
+
+                return TestHttpMessageHandler.JsonResponse("""
+                                                            [{
+                                                                "projectSlug": "listedplugin",
+                                                                "buildId": 1,
+                                                                "manifestInfo": {
+                                                                    "identifier": "ListedPlugin",
+                                                                    "name": "Listed Plugin",
+                                                                    "version": "1.0.0"
+                                                                },
+                                                                "buildInfo": {}
+                                                            }]
+                                                            """);
+            }))
+            {
+                BaseAddress = new Uri("https://plugins.example/")
+            };
+            var controller = CreatePluginManagerController(Path.GetTempPath(), [], httpClient);
+
+            var result = await controller.SelectedPluginPanel("unlistedplugin");
+
+            var view = Assert.IsType<Microsoft.AspNetCore.Mvc.PartialViewResult>(result);
+            var model = Assert.IsType<PluginSelectedPanelViewModel>(view.Model);
+            Assert.Equal("unlistedplugin", model.SelectedSlug);
+            Assert.Equal("UnlistedPlugin", model.PluginIdentifier);
+            Assert.Equal("1.0.0", model.InstallVersion);
+            Assert.Contains(requestedQueries, query => query.Contains("searchPluginName=unlistedplugin"));
+        }
+
+        [Fact]
+        public async Task SelectedPluginPanel_DoesNotFallBackToSearchWhenSlugIsListed()
+        {
+            var requestedQueries = new List<string>();
+            using var httpClient = new HttpClient(new TestHttpMessageHandler(request =>
+            {
+                requestedQueries.Add(request.RequestUri!.Query);
+                return TestHttpMessageHandler.JsonResponse("""
+                                                            [{
+                                                                "projectSlug": "testplugin",
+                                                                "buildId": 1,
+                                                                "manifestInfo": {
+                                                                    "identifier": "TestPlugin",
+                                                                    "name": "Test Plugin",
+                                                                    "version": "1.0.0"
+                                                                },
+                                                                "buildInfo": {}
+                                                            }]
+                                                            """);
+            }))
+            {
+                BaseAddress = new Uri("https://plugins.example/")
+            };
+            var controller = CreatePluginManagerController(Path.GetTempPath(), [], httpClient);
+
+            var result = await controller.SelectedPluginPanel("testplugin");
+
+            var view = Assert.IsType<Microsoft.AspNetCore.Mvc.PartialViewResult>(result);
+            var model = Assert.IsType<PluginSelectedPanelViewModel>(view.Model);
+            Assert.Equal("TestPlugin", model.PluginIdentifier);
+            Assert.DoesNotContain(requestedQueries, query => query.Contains("searchPluginName="));
+        }
+
+        [Fact]
+        public async Task PluginDirectory_LoadsUnlistedPluginForSelectedSlug()
+        {
+            using var httpClient = new HttpClient(new TestHttpMessageHandler(request =>
+            {
+                if (request.RequestUri!.Query.Contains("searchPluginName=unlistedplugin"))
+                {
+                    return TestHttpMessageHandler.JsonResponse("""
+                                                                [{
+                                                                    "projectSlug": "unlistedplugin",
+                                                                    "buildId": 2,
+                                                                    "manifestInfo": {
+                                                                        "identifier": "UnlistedPlugin",
+                                                                        "name": "Unlisted Plugin",
+                                                                        "version": "1.0.0"
+                                                                    },
+                                                                    "buildInfo": {}
+                                                                }]
+                                                                """);
+                }
+
+                return TestHttpMessageHandler.JsonResponse("""
+                                                            [{
+                                                                "projectSlug": "listedplugin",
+                                                                "buildId": 1,
+                                                                "manifestInfo": {
+                                                                    "identifier": "ListedPlugin",
+                                                                    "name": "Listed Plugin",
+                                                                    "version": "1.0.0"
+                                                                },
+                                                                "buildInfo": {}
+                                                            }]
+                                                            """);
+            }))
+            {
+                BaseAddress = new Uri("https://plugins.example/")
+            };
+            var controller = CreatePluginManagerController(Path.GetTempPath(), [], httpClient);
+
+            var result = await controller.PluginDirectory("unlistedplugin");
+
+            var view = Assert.IsType<Microsoft.AspNetCore.Mvc.ViewResult>(result);
+            var model = Assert.IsType<PluginDirectoryViewModel>(view.Model);
+            Assert.Equal("unlistedplugin", model.SelectedPluginPanel.SelectedSlug);
+            Assert.Equal("UnlistedPlugin", model.SelectedPluginPanel.PluginIdentifier);
+            Assert.Equal("1.0.0", model.SelectedPluginPanel.InstallVersion);
+        }
+
+        [Fact]
         public void PluginDirectoryViewModel_HidesInstalledAndDisabledIdentifiersForEmbed()
         {
             var model = CreatePluginDirectoryViewModel(

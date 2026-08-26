@@ -246,6 +246,7 @@ public partial class UIStoresController
         vm.ShowStoreHeader = storeBlob.ShowStoreHeader;
         vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
         vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
+        vm.AllowZeroAmountInvoices = storeBlob.AllowZeroAmountInvoices;
         vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
         vm.PaymentSoundUrl = storeBlob.PaymentSoundUrl is null
             ? string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/payment.mp3")
@@ -382,6 +383,7 @@ public partial class UIStoresController
         blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
         blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
         blob.LazyPaymentMethods = model.LazyPaymentMethods;
+        blob.AllowZeroAmountInvoices = model.AllowZeroAmountInvoices;
         blob.RedirectAutomatically = model.RedirectAutomatically;
         blob.ReceiptOptions = model.ReceiptOptions.ToDTO();
         blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;

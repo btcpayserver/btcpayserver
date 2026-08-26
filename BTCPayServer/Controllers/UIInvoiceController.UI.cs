@@ -1276,7 +1276,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         [Route("invoices/{invoiceId}/changestate/{newState}")]
         [Route("stores/{storeId}/invoices/{invoiceId}/changestate/{newState}")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyInvoices)]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> ChangeInvoiceState(string invoiceId, string newState)
         {

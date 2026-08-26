@@ -50,6 +50,9 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Only enable the payment method after user explicitly chooses it")]
         public bool LazyPaymentMethods { get; set; }
 
+        [Display(Name = "Allow creating zero-amount invoices")]
+        public bool AllowZeroAmountInvoices { get; set; }
+
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public bool RedirectAutomatically { get; set; }
 

@@ -1250,6 +1250,10 @@ namespace BTCPayServer.Tests
             Assert.Equal("EUR", invoice.Currency);
             Assert.Equal(InvoiceType.TopUp, invoice.Type);
 
+            var store = await client.GetStore(user.StoreId);
+            store.AllowZeroAmountInvoices = true;
+            await client.UpdateStore(store.Id, store);
+
             // with bitpay api
             var invoice2 = await user.BitPay.CreateInvoiceAsync(new Invoice());
             Assert.Equal("EUR", invoice2.Currency);
@@ -1625,6 +1629,10 @@ namespace BTCPayServer.Tests
             invoice4 = user.BitPay.CreateInvoice(
                 new Invoice() { Price = 0.000000019m, Currency = "BTC", FullNotifications = true }, Facade.Merchant);
             Assert.Equal(0.000000019m, invoice4.Price);
+
+            var store = await btcpayClient.GetStore(user.StoreId);
+            store.AllowZeroAmountInvoices = true;
+            await btcpayClient.UpdateStore(store.Id, store);
 
             var invoice = user.BitPay.CreateInvoice(
                 new Invoice() { Price = -0.1m, Currency = "BTC", FullNotifications = true }, Facade.Merchant);

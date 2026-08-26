@@ -12,7 +12,6 @@ Write pull request descriptions for the people who need to understand the change
 - Assume most readers are non-technical users, merchants, admins, support people, translators, or reviewers trying to understand the product impact.
 - Use technical details only when the pull request is itself technical and the details are necessary to review or explain the change.
 - Avoid implementation jargon such as controller, view model, migration, refactor, endpoint, dependency injection, database schema, or renamed class unless that is the actual user-facing concern.
-- Do not write about your testing strategy.
 
 ## Content
 
@@ -34,7 +33,6 @@ Write pull request descriptions for the people who need to understand the change
 
 - Start with a short paragraph explaining the functional change in plain language.
 - Add screenshots or a short video when applicable.
-- Add a concise testing note that describes the user flow or scenario checked, not just the command that was run.
 - Add technical notes only when they are necessary for reviewers, operators, integrators, or plugin authors.
 
 ## Style

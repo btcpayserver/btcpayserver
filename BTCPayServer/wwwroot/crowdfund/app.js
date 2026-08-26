@@ -181,7 +181,9 @@ app = new Vue({
                 }else {
                 this.startDiff = null;
             }
-            this.lastUpdated = moment(this.srvModel.info.lastUpdated).calendar();
+            var lastUpdated = this.srvModel.info.lastUpdated;
+            // The SignalR push serializes dates as unix seconds, the initial render as ISO strings
+            this.lastUpdated = (typeof lastUpdated === 'number' ? moment.unix(lastUpdated) : moment(lastUpdated)).calendar();
             this.active = this.started && !this.ended;
             setTimeout(this.updateComputed, 1000);
         },
@@ -276,8 +278,12 @@ app = new Vue({
 
         });
         eventAggregator.$on("info-updated", function (model) {
-            console.warn("UPDATED", self.srvModel, arguments);
-            self.srvModel = model;
+            // Only merge the fields which change with contributions: The pushed model
+            // is built outside of an HTTP request and hence lacks the mainImageUrl.
+            self.srvModel.info = model.info;
+            self.srvModel.perkCount = model.perkCount;
+            self.srvModel.perkValue = model.perkValue;
+            self.srvModel.perks = model.perks;
         });
         eventAggregator.$on("connection-pending", function () {
             self.connectionStatus = "pending";

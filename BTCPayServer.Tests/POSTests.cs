@@ -1058,10 +1058,12 @@ goodies:
         {
             try
             {
-                var items = await s.Page.QuerySelectorAllAsync(itemSelector);
-                var sums = await s.Page.QuerySelectorAllAsync(sumsSelector);
-                Assert.Equal(assertion.Items.Length, items.Count);
-                Assert.Equal(assertion.Sums.Length, sums.Count);
+                var itemRows = s.Page.Locator(itemSelector);
+                var sumRows = s.Page.Locator(sumsSelector);
+                await Expect(itemRows).ToHaveCountAsync(assertion.Items.Length);
+                await Expect(sumRows).ToHaveCountAsync(assertion.Sums.Length);
+                var items = await itemRows.ElementHandlesAsync();
+                var sums = await sumRows.ElementHandlesAsync();
                 for (int i = 0; i < assertion.Items.Length; i++)
                 {
                     var txt = (await items[i].TextContentAsync()).NormalizeWhitespaces();

@@ -106,14 +106,14 @@ public class WebhookSender(
 
     public void EnqueueDelivery(WebhookDeliveryRequest context)
     {
-        _processingQueue.Enqueue(context.WebhookId, cancellationToken => Process(context, cancellationToken));
+        _processingQueue.Enqueue(context.WebhookId ?? context.WebhookBlob.Url, cancellationToken => Process(context, cancellationToken));
     }
 
     private async Task Process(WebhookDeliveryRequest ctx, CancellationToken cancellationToken)
     {
         try
         {
-            var wh = (await StoreRepository.GetWebhook(ctx.WebhookId))?.GetBlob();
+            var wh = ctx.WebhookId is null ? ctx.WebhookBlob : (await StoreRepository.GetWebhook(ctx.WebhookId))?.GetBlob();
             if (wh is null || !wh.ShouldDeliver(ctx.WebhookEvent.Type))
                 return;
             var result = await SendAndSaveDelivery(ctx, cancellationToken);
@@ -128,7 +128,7 @@ public class WebhookSender(
                          })
                 {
                     await Task.Delay(wait, cancellationToken);
-                    var localCtx = await CreateRedeliveryRequest(originalDeliveryId);
+                    var localCtx = ctx.WebhookId is null ? ctx : await CreateRedeliveryRequest(originalDeliveryId);
                     // This may have changed
                     if (localCtx is null || !localCtx.WebhookBlob.AutomaticRedelivery ||
                         !localCtx.WebhookBlob.ShouldDeliver(ctx.WebhookEvent.Type))
@@ -213,7 +213,8 @@ public class WebhookSender(
         CancellationToken cancellationToken)
     {
         var result = await SendDelivery(ctx, cancellationToken);
-        await StoreRepository.AddWebhookDelivery(ctx.Delivery);
+        if (ctx.WebhookId is not null)
+            await StoreRepository.AddWebhookDelivery(ctx.Delivery);
 
         return result;
     }
@@ -231,7 +232,7 @@ public class WebhookSender(
             .ToArray();
     }
     public class WebhookDeliveryRequest(
-        string webhookId,
+        string? webhookId,
         WebhookEvent webhookEvent,
         WebhookDeliveryData delivery,
         WebhookBlob webhookBlob)
@@ -239,7 +240,10 @@ public class WebhookSender(
         public WebhookEvent WebhookEvent { get; } = webhookEvent;
         public WebhookDeliveryData Delivery { get; } = delivery;
         public WebhookBlob WebhookBlob { get; } = webhookBlob;
-        public string WebhookId { get; } = webhookId;
+        /// <summary>
+        /// If null, the webhook isn't stored in database (ex: webhook set at invoice creation), so the delivery isn't saved.
+        /// </summary>
+        public string? WebhookId { get; } = webhookId;
     }
 
     public class DeliveryResult

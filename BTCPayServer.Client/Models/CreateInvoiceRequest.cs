@@ -8,5 +8,7 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal? Amount { get; set; }
         public string[] AdditionalSearchTerms { get; set; }
+        public string WebhookUrl { get; set; }
+        public string WebhookSecret { get; set; }
     }
 }

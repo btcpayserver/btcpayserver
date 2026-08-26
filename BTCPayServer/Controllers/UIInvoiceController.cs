@@ -197,6 +197,8 @@ namespace BTCPayServer.Controllers
             }
             entity.PaymentTolerance = invoice.Checkout.PaymentTolerance ?? storeBlob.PaymentTolerance;
             entity.RedirectURLTemplate = invoice.Checkout.RedirectURL?.Trim();
+            entity.WebhookUrl = invoice.WebhookUrl?.Trim();
+            entity.WebhookSecret = invoice.WebhookSecret;
             if (additionalTags != null)
                 entity.InternalTags.AddRange(additionalTags);
             return await CreateInvoiceCoreRaw(entity, store, excludeFilter, invoice.AdditionalSearchTerms, cancellationToken, entityManipulator);

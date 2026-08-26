@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using Microsoft.Extensions.Logging;
@@ -51,6 +52,23 @@ public class WebhookProviderHostedService(
             ev.Timestamp = delivery.Timestamp;
             ev.IsRedelivery = false;
             webhookSender.EnqueueDelivery(new(webhook.Id, ev, delivery, webhook.GetBlob()));
+        }
+
+        if (evt is InvoiceEvent { Invoice: { WebhookUrl: { } invoiceWebhookUrl } invoice })
+        {
+            var ev = Clone(webhookEvent);
+            var delivery = Data.WebhookDeliveryData.Create(null);
+            ev.DeliveryId = delivery.Id;
+            ev.OriginalDeliveryId = delivery.Id;
+            ev.Timestamp = delivery.Timestamp;
+            ev.IsRedelivery = false;
+            webhookSender.EnqueueDelivery(new(null, ev, delivery, new WebhookBlob
+            {
+                Url = invoiceWebhookUrl,
+                Secret = invoice.WebhookSecret,
+                AutomaticRedelivery = true,
+                AuthorizedEvents = new AuthorizedWebhookEvents { Everything = true }
+            }));
         }
 
         if (await GetStore(webhookEvent) is {} store)

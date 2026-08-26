@@ -1066,6 +1066,18 @@
                                 },
                                 "description": "Additional search term to help you find this invoice via text search",
                                 "nullable": true
+                            },
+                            "webhookUrl": {
+                                "type": "string",
+                                "format": "url",
+                                "nullable": true,
+                                "description": "If set, all the webhook events of this invoice will also be sent to this URL, in addition to the webhooks configured on the store. Useful when several websites share the same store and each needs to receive events for its own invoices.",
+                                "example": "https://example.com/callback"
+                            },
+                            "webhookSecret": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "The secret used to compute the `BTCPay-Sig` header of the deliveries sent to `webhookUrl`, so the receiver can authenticate the payload. If null, the `BTCPay-Sig` is computed with an empty secret."
                             }
                         }
                     }

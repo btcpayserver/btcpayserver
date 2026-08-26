@@ -1,14 +1,13 @@
-@using BTCPayServer.Plugins.PullPayments.Boltcards
 @model BTCPayServer.Models.ViewPullPaymentModel
 
 @if (Model.LnurlEndpoint is not null)
 {
-    <p id="BoltcardActions">
-        <a id="SetupBoltcard" asp-area="@PullPaymentsBoltcardsPlugin.Area" asp-action="SetupBoltcard" asp-controller="UIBoltcardPullPaymentSetup" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard" text-translate="true">
+    <p id="BoltcardActions" class="boltcard-actions">
+        <a id="SetupBoltcard" class="boltcard-actions__setup" href="@Model.SetupDeepLink" target="_blank" rel="noreferrer noopener" text-translate="true">
             Setup Boltcard
         </a>
         <span>&nbsp;|&nbsp;</span>
-        <a id="ResetBoltcard" asp-area="@PullPaymentsBoltcardsPlugin.Area" asp-action="SetupBoltcard" asp-controller="UIBoltcardPullPaymentSetup" asp-route-pullPaymentId="@Model.Id" asp-route-command="reset-boltcard" text-translate="true">
+        <a id="ResetBoltcard" class="boltcard-actions__reset" href="@Model.ResetDeepLink" target="_blank" rel="noreferrer noopener" text-translate="true">
             Reset Boltcard
         </a>
     </p>

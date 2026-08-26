@@ -37,3 +37,7 @@ Use these patterns when writing or refactoring Playwright tests in BTCPayServer.
 - Move repeated sequences into a PMO when they represent reusable component or page behavior.
 - Keep one-off logic in the test if abstraction would obscure the scenario.
 - Run the relevant test or test project build after refactoring Playwright selectors or PMOs.
+
+## Running And Debugging Tests
+
+- Before debugging BTCPay Server or running tests, start the test dependencies by running `docker-compose up -d dev` from the `BTCPayServer.Tests` directory.

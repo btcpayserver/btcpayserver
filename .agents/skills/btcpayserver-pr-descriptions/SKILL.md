@@ -42,3 +42,8 @@ Write pull request descriptions for the people who need to understand the change
 - Keep the description focused on outcomes and behavior.
 - Avoid filler such as "this PR updates files" or "this PR changes logic".
 - Avoid overstating the impact; say what changed and who benefits.
+
+## GitHub CLI Formatting
+
+- When creating or editing PR descriptions with `gh pr create` or `gh pr edit`, pass real multiline Markdown so GitHub renders paragraphs, lists, and code blocks correctly.
+- Do not pass literal `\n` sequences in quoted strings. Use a heredoc, a temporary body file, or Bash ANSI-C quoting (`$'...'`) when invoking `gh` from the shell.

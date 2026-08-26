@@ -955,7 +955,6 @@ goodies:
 
             // Receipt
             await s.Page.ClickAsync("#ReceiptLink");
-
             await AssertReceipt(s, new()
             {
                 Items = [
@@ -1044,6 +1043,7 @@ goodies:
 
         private async Task AssertReceipt(PlaywrightTester s, AssertReceiptAssertion assertion)
         {
+            await s.Page.WaitForSelectorAsync("#ReceiptLinkPrint");
             await AssertReceipt(s, assertion, "#CartData table tbody tr", "#CartData table tfoot tr");
             // Receipt print
             var o = s.Page.Context.WaitForPageAsync();

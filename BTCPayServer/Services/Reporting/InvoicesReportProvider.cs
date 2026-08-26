@@ -86,6 +86,7 @@ public class InvoicesReportProvider : ReportProvider
             EndDate = queryContext.To,
             StartDate = queryContext.From,
             StoreId = new[] { queryContext.StoreId },
+            OrderByDesc = false,
         }, cancellation);
 
         queryContext.ViewDefinition = new ViewDefinition()

@@ -84,7 +84,7 @@ namespace BTCPayServer.Controllers.Greenfield
             AssertCryptoCodeWallet(paymentMethodId, out var network, out _);
 
             var handler = handlers.GetBitcoinHandler(network);
-            var ctx = new PaymentMethodConfigValidationContext(authorizationService, ModelState, request.Config, User, Store.GetPaymentMethodConfig(paymentMethodId));
+            var ctx = new PaymentMethodConfigValidationContext(authorizationService, ModelState, request.Config, User, Store.GetPaymentMethodConfig(paymentMethodId), Store);
             await handler.ValidatePaymentMethodConfig(ctx);
             if (ctx.MissingPermission is not null)
             {

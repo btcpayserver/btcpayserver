@@ -81,7 +81,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 try
                 {
-                    var ctx = new PaymentMethodConfigValidationContext(authorizationService, ModelState, config, User, Store.GetPaymentMethodConfig(paymentMethodId));
+                    var ctx = new PaymentMethodConfigValidationContext(authorizationService, ModelState, config, User, Store.GetPaymentMethodConfig(paymentMethodId), Store);
                     await handler.ValidatePaymentMethodConfig(ctx);
                     config = ctx.Config;
                     if (ctx.MissingPermission is not null)

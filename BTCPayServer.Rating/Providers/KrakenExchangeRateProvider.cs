@@ -14,37 +14,86 @@ using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Services.Rates
 {
     // Make sure that only one request is sent to kraken in general
-    public class KrakenExchangeRateProvider : IRateProvider
+    public class KrakenExchangeRateProvider(IHttpClientFactory httpClientFactory) : IRateProvider
     {
-        public RateSourceInfo RateSourceInfo => new("kraken", "Kraken", "https://api.kraken.com/0/public/Ticker");
-        public HttpClient HttpClient
+        public RateSourceInfo RateSourceInfo => new("kraken", "Kraken", $"https://api.kraken.com/0/public/Ticker?pair={string.Join(',', _Symbols)}");
+        static readonly string[] _Symbols =
         {
-            get
-            {
-                return _LocalClient ?? _Client;
-            }
-            set
-            {
-                _LocalClient = value;
-            }
-        }
-
-        HttpClient _LocalClient;
-        static readonly HttpClient _Client = new HttpClient();
-        string[] _Symbols = Array.Empty<string>();
-        DateTimeOffset? _LastSymbolUpdate = null;
+            "XBTAUD",
+            "XXBTZCAD",
+            "XBTCHF",
+            "XXBTZEUR",
+            "XXBTZGBP",
+            "XXBTZJPY",
+            "XXBTZUSD",
+            "DASHUSD",
+            "XXDGXXBT",
+            "XLTCXXBT",
+            "XXMRXXBT",
+            "XETHZUSD",
+            "XETHXXBT",
+            "BCHUSD",
+            "BCHXBT",
+            "XXRPZUSD",
+            "XXRPXXBT",
+            "SOLUSD",
+            "SOLXBT",
+            "ADAUSD",
+            "ADAXBT",
+            "DOTUSD",
+            "DOTXBT",
+            "LINKUSD",
+            "LINKXBT",
+            "ATOMUSD",
+            "ATOMXBT",
+            "XXLMZUSD",
+            "XXLMXXBT",
+            "XETCZUSD",
+            "XETCXXBT",
+            "TRXUSD",
+            "TRXXBT",
+            "ALGOUSD",
+            "ALGOXBT",
+            "FILUSD",
+            "FILXBT",
+            "AVAXUSD",
+            "XZECZUSD",
+            "USDTZUSD",
+            "USDCUSD",
+            "DAIUSD",
+            "PYUSDUSD",
+            "PAXGUSD",
+            "XAUTUSD"
+        };
         readonly Dictionary<string, string> _TickerMapping = new Dictionary<string, string>()
         {
+            { "ADA", "ADA" },
+            { "ALGO", "ALGO" },
+            { "ATOM", "ATOM" },
+            { "AVAX", "AVAX" },
+            { "BCH", "BCH" },
+            { "DAI", "DAI" },
             { "XXDG", "DOGE" },
             { "XXBT", "BTC" },
             { "XBT", "BTC" },
             { "DASH", "DASH" },
+            { "DOT", "DOT" },
+            { "FIL", "FIL" },
+            { "LINK", "LINK" },
+            { "PAXG", "PAXG" },
+            { "PYUSD", "PYUSD" },
+            { "SOL", "SOL" },
+            { "TRX", "TRX" },
+            { "USDT", "USDT" },
+            { "XAUT", "XAUT" },
             { "ZUSD", "USD" },
             { "ZEUR", "EUR" },
             { "ZJPY", "JPY" },
             { "ZCAD", "CAD" },
             { "ZGBP", "GBP" },
+            { "XETC", "ETC" },
             { "XXMR", "XMR" },
+            { "XXLM", "XLM" },
             { "XETH", "ETH" },
             { "USDC", "USDC" }, // On A=A purpose
             { "XZEC", "ZEC" },
@@ -84,9 +133,10 @@ namespace BTCPayServer.Services.Rates
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
             var result = new List<PairRate>();
-            var symbols = await GetSymbolsAsync(cancellationToken);
-            JToken apiTickers = await MakeJsonRequestAsync<JToken>("/0/public/Ticker", null, null, cancellationToken: cancellationToken);
-            foreach (string symbol in symbols)
+            JToken apiTickers = await MakeJsonRequestAsync<JToken>("/0/public/Ticker", null,
+                new Dictionary<string, object> { { "pair", string.Join(',', _Symbols) } },
+                cancellationToken: cancellationToken);
+            foreach (string symbol in _Symbols)
             {
                 var ticker = ConvertToExchangeTicker(symbol, apiTickers[symbol]);
                 if (ticker != null)
@@ -120,22 +170,6 @@ namespace BTCPayServer.Services.Rates
             };
         }
 
-        private async Task<string[]> GetSymbolsAsync(CancellationToken cancellationToken)
-        {
-            if (_LastSymbolUpdate != null && DateTimeOffset.UtcNow - _LastSymbolUpdate.Value < TimeSpan.FromDays(0.5))
-            {
-                return _Symbols;
-            }
-            else
-            {
-                JToken json = await MakeJsonRequestAsync<JToken>("/0/public/AssetPairs", cancellationToken: cancellationToken);
-                var symbols = (from prop in json.Children<JProperty>() where !prop.Name.Contains(".d", StringComparison.OrdinalIgnoreCase) select prop.Name).ToArray();
-                _Symbols = symbols;
-                _LastSymbolUpdate = DateTimeOffset.UtcNow;
-                return symbols;
-            }
-        }
-
         private async Task<T> MakeJsonRequestAsync<T>(string url, string baseUrl = null, Dictionary<string, object> payload = null, string requestMethod = null, CancellationToken cancellationToken = default)
         {
             StringBuilder sb = new StringBuilder();
@@ -148,7 +182,8 @@ namespace BTCPayServer.Services.Rates
                 sb.Append(String.Join('&', payload.Select(kv => $"{kv.Key}={kv.Value}").OfType<object>().ToArray()));
             }
             var request = new HttpRequestMessage(HttpMethod.Get, sb.ToString());
-            using var response = await HttpClient.SendAsync(request, cancellationToken);
+            using var httpClient = httpClientFactory.CreateClient(nameof(KrakenExchangeRateProvider));
+            using var response = await httpClient.SendAsync(request, cancellationToken);
             string stringResult = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<T>(stringResult);
             if (result is JToken json)

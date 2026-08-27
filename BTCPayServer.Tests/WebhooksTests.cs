@@ -222,8 +222,11 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             await user.SetupWebhook();
             var client = await user.CreateClient();
 
+            var store = await client.GetStore(user.StoreId);
+            store.AllowZeroAmountInvoices = true;
+            await client.UpdateStore(store.Id, store);
 
-           var  invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
+            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
             {
                 Amount = 0.00m,
                 Currency = "BTC"

@@ -229,6 +229,8 @@ namespace BTCPayServer.Controllers
                 taxIncluded = Math.Min(taxIncluded, entity.Price);
                 entity.Metadata.TaxIncluded = taxIncluded;
             }
+            if (entity.Type != InvoiceType.TopUp && entity.Price == 0m && !storeBlob.AllowZeroAmountInvoices)
+                throw new BitpayHttpException(400, "Zero-amount invoice creation is disabled for this store.");
 
             var getAppsTaggingStore = _InvoiceRepository.GetAppsTaggingStore(store.Id);
             entity.Status = InvoiceStatus.New;

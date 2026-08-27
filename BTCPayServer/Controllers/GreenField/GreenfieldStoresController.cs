@@ -218,6 +218,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi,
                 LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints,
                 OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
+                AllowZeroAmountInvoices = storeBlob.AllowZeroAmountInvoices,
                 RedirectAutomatically = storeBlob.RedirectAutomatically,
                 LazyPaymentMethods = storeBlob.LazyPaymentMethods,
                 ShowRecommendedFee = storeBlob.ShowRecommendedFee,
@@ -270,6 +271,7 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi.Value;
             blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints.Value;
             blob.OnChainWithLnInvoiceFallback = restModel.OnChainWithLnInvoiceFallback.Value;
+            blob.AllowZeroAmountInvoices = restModel.AllowZeroAmountInvoices.Value;
             blob.LazyPaymentMethods = restModel.LazyPaymentMethods.Value;
             blob.RedirectAutomatically = restModel.RedirectAutomatically.Value;
             blob.ShowRecommendedFee = restModel.ShowRecommendedFee.Value;

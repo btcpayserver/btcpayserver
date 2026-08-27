@@ -22,6 +22,11 @@ Write pull request descriptions for the people who need to understand the change
 - Do not repeat a file-by-file or commit-by-commit summary that reviewers can already see in the diff.
 - Do not describe purely internal implementation choices unless they affect how someone uses, deploys, reviews, or tests BTCPay Server.
 
+## Greenfield API Changes
+
+- If a pull request changes Greenfield API behavior, request/response fields, models, or validation, verify whether the Swagger documentation under `BTCPayServer/wwwroot/swagger/v1/` must be updated.
+- When the Greenfield API surface changes, update the matching `swagger.template.*.json` file in the same pull request.
+
 ## Visual Evidence
 
 - Prefer screenshots for visual changes.

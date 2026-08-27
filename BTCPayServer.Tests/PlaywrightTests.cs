@@ -981,7 +981,8 @@ namespace BTCPayServer.Tests
                 CelebratePayment = false,
                 DefaultLang = "fr-FR",
                 NetworkFeeMode = NetworkFeeMode.MultiplePaymentsOnly,
-                ShowStoreHeader = false
+                ShowStoreHeader = false,
+                AllowZeroAmountInvoices = true
             });
             await s.GoToServer();
             await s.Page.ClickAsync("#SetTemplate");
@@ -991,6 +992,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("Can Use Store?", newStore.Name);
             Assert.Equal("https://test.com/", newStore.Website);
             Assert.False(newStore.CelebratePayment);
+            Assert.True(newStore.AllowZeroAmountInvoices);
             Assert.Equal("fr-FR", newStore.DefaultLang);
             Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
             Assert.False(newStore.ShowStoreHeader);
@@ -1724,7 +1726,15 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync("[data-invoice-state-badge] .dropdown-menu button:first-child");
             await TestUtils.EventuallyAsync(async () => Assert.Contains("Settled (marked)", await s.Page.ContentAsync()));
 
-            // Zero amount invoice should redirect to receipt
+            // Zero amount invoice creation is disabled by default.
+            await s.CreateInvoice(0, expectedSeverity: StatusMessageModel.StatusSeverity.Error);
+
+            var client = await s.AsTestAccount().CreateClient();
+            var store = await client.GetStore(s.StoreId);
+            store.AllowZeroAmountInvoices = true;
+            await client.UpdateStore(store.Id, store);
+
+            // Zero amount invoice should redirect to receipt when explicitly allowed.
             var zeroAmountId = await s.CreateInvoice(0);
             await s.GoToUrl($"/i/{zeroAmountId}");
             Assert.EndsWith("/receipt", s.Page.Url);

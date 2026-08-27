@@ -1422,6 +1422,7 @@ namespace BTCPayServer.Tests
                 LogoUrl = "https://example.org/logo.svg",
                 BrandColor = "#003366",
                 ApplyBrandColorToBackend = true,
+                AllowZeroAmountInvoices = true,
                 PaymentMethodCriteria = new List<PaymentMethodCriteriaData>
             {
                 new()
@@ -1438,6 +1439,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("https://example.org/logo.svg", updatedStore.LogoUrl);
             Assert.Equal("#003366", updatedStore.BrandColor);
             Assert.True(updatedStore.ApplyBrandColorToBackend);
+            Assert.True(updatedStore.AllowZeroAmountInvoices);
             var s = (await client.GetStore(newStore.Id));
             Assert.Equal("B", s.Name);
             var pmc = Assert.Single(s.PaymentMethodCriteria);
@@ -2034,6 +2036,47 @@ namespace BTCPayServer.Tests
                 });
             });
             Assert.Contains("Invalid or unsupported payout method: fake payment method", validationError.Message);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CreateInvoiceRespectsAllowZeroAmountInvoicesSetting()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+
+            await user.RegisterAsync(true);
+            await user.CreateStoreAsync();
+            await user.RegisterDerivationSchemeAsync("BTC");
+
+            var client = await user.CreateClient(Policies.Unrestricted);
+            var store = await client.GetStore(user.StoreId);
+            Assert.False(store.AllowZeroAmountInvoices);
+            store.PaymentMethodCriteria =
+            [
+                new PaymentMethodCriteriaData
+                {
+                    Amount = 5,
+                    Above = true,
+                    PaymentMethodId = "BTC",
+                    CurrencyCode = "USD"
+                }
+            ];
+            await client.UpdateStore(store.Id, JObject.FromObject(store).ToObject<UpdateStoreRequest>());
+
+            await AssertHttpError(400, async () =>
+                await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest { Amount = 0, Currency = "USD" }));
+
+            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest { Amount = 5, Currency = "USD" });
+            Assert.Single(await client.GetInvoicePaymentMethods(invoice.Id));
+
+            store = await client.GetStore(user.StoreId);
+            store.AllowZeroAmountInvoices = true;
+            await client.UpdateStore(store.Id, JObject.FromObject(store).ToObject<UpdateStoreRequest>());
+
+            invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest { Amount = 0, Currency = "USD" });
+            Assert.Empty(await client.GetInvoicePaymentMethods(invoice.Id));
         }
 
         [Fact(Timeout = TestTimeout)]

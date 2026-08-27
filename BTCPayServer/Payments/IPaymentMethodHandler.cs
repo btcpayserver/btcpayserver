@@ -76,15 +76,17 @@ namespace BTCPayServer.Payments
     public class PaymentMethodConfigValidationContext
     {
         public record MissingPermissionError(string Permission, string Message);
-        public PaymentMethodConfigValidationContext(IAuthorizationService authorizationService, ModelStateDictionary modelState, JToken config, ClaimsPrincipal user, JToken? previousConfig)
+        public PaymentMethodConfigValidationContext(IAuthorizationService authorizationService, ModelStateDictionary modelState, JToken config, ClaimsPrincipal user, JToken? previousConfig, Data.StoreData store)
         {
             PreviousConfig = previousConfig;
             ModelState = modelState;
             AuthorizationService = authorizationService;
             Config = config;
             User = user;
+            Store = store;
         }
         public ClaimsPrincipal User { get; }
+        public Data.StoreData Store { get; }
         public JToken? PreviousConfig { get; }
         public JToken Config { get; set; }
         public ModelStateDictionary ModelState { get; }

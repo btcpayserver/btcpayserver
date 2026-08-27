@@ -170,7 +170,7 @@ public partial class UIStoresController
 
         var handler = (LightningLikePaymentHandler)_handlers[paymentMethodId];
         var ctx = new PaymentMethodConfigValidationContext(_authorizationService, ModelState,
-            JToken.FromObject(paymentMethod, handler.Serializer), User, oldConf is null ? null : JToken.FromObject(oldConf, handler.Serializer));
+            JToken.FromObject(paymentMethod, handler.Serializer), User, oldConf is null ? null : JToken.FromObject(oldConf, handler.Serializer), store);
         await handler.ValidatePaymentMethodConfig(ctx);
         if (ctx.MissingPermission is not null)
             ModelState.AddModelError(nameof(vm.ConnectionString), StringLocalizer["You do not have the permissions to change this settings"]);

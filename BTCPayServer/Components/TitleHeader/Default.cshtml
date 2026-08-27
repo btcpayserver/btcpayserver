@@ -1,7 +1,13 @@
+@using BTCPayServer.Components.Breadcrumb
 @model BTCPayServer.Components.Breadcrumb.BreadcrumbViewModel
 
+@functions {
+    private bool IsTitleOnly(IReadOnlyList<BreadcrumbItem> modelItems)
+    => modelItems.Count == 1 && modelItems[0].Active && Model.Title is not null && modelItems[0].Text as string == Model.Title?.ToString();
+}
+
 <nav aria-label="breadcrumb" class="title-header-nav">
-    @if (Model.Items.Any())
+    @if (Model.Items.Any() && !IsTitleOnly(Model.Items))
     {
         <ol class="breadcrumb title-header-nav__items">
             @foreach (var item in Model.Items)

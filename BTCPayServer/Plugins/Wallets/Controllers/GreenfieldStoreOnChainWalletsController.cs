@@ -70,7 +70,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             return Ok(new OnChainWalletOverviewData()
             {
-                Label = derivationScheme.Label ?? "Unlabeled wallet",
+                Label = derivationScheme.Label ?? "",
                 Balance = balance.Total.GetValue(network),
                 UnconfirmedBalance = balance.Unconfirmed.GetValue(network),
                 ConfirmedBalance = balance.Confirmed.GetValue(network),

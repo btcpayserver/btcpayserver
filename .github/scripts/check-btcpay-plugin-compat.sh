@@ -2,7 +2,7 @@
 set -u
 
 ROOT_DIR="${1:-/tmp/btcpay-plugin-check}"
-BTCPAY_ABS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BTCPAY_ABS="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 EXOLIX_REPO="https://github.com/Nisaba/btcpayserver-plugins.git"
 SAMROCK_REPO="https://github.com/rockstardev/SamRockProtocol.git"

@@ -8,8 +8,8 @@
 <p align="center"> BTCPay Server is a free and open-source Bitcoin payment processor which allows you to accept bitcoin without fees or intermediaries.
 </p>
 <p align="center">
-  <a href="https://circleci.com/gh/btcpayserver/btcpayserver">
-    <img src="https://img.shields.io/circleci/build/github/btcpayserver/btcpayserver"/>
+  <a href="https://github.com/btcpayserver/btcpayserver/actions/workflows/ci.yml">
+    <img src="https://github.com/btcpayserver/btcpayserver/actions/workflows/ci.yml/badge.svg"/>
   </a>
   <a href="https://github.com/btcpayserver/btcpayserver/releases/">
     <img src="https://img.shields.io/github/v/release/btcpayserver/btcpayserver"/>

@@ -99,8 +99,6 @@ reviews:
       enabled: true
     semgrep:
       enabled: true
-    circleci:
-      enabled: true
     sqlfluff:
       enabled: true
     prismaLint:

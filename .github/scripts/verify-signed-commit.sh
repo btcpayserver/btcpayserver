@@ -1,12 +1,14 @@
-#!/bin/sh
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-gpg --batch --import *.asc
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+gpg --batch --import "$SCRIPT_DIR"/*.asc
 echo "Checking commit signature..."
 status=$(git log -1 --format="%G?" HEAD)
 
 case "$status" in
-  G|U)  ;;   # signed (trusted or not)
+  G|U) ;;
   *)
     echo "ERROR: commit is not properly signed (status: $status)"
     exit 1

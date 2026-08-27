@@ -31,6 +31,10 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
         await s.FindAlertMessage(partialText: "Monetization activated");
 
+        await s.GoToUrl("/account/billing");
+        await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, partialText: "No billing subscription is associated with your account.");
+        await GoToMonetization(s);
+
         // Creating a new user, should create a new subscriber
         var ev = await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
         {

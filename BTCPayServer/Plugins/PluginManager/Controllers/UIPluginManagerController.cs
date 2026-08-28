@@ -241,8 +241,8 @@ public class UIPluginManagerController(
     internal async Task<InstalledPluginsViewModel> CreateInstalledPluginsViewModel(
         IEnumerable<AvailablePlugin> remotePlugins = null)
     {
-        remotePlugins ??= await LoadRemotePlugins();
         var runtimeState = GetPluginRuntimeState();
+        remotePlugins ??= await LoadLatestVersionsForInstalledPlugins(runtimeState);
         var versionsByIdentifier = remotePlugins
             .GroupBy(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(
@@ -600,11 +600,18 @@ public class UIPluginManagerController(
             .ToList();
     }
 
-    private async Task<AvailablePlugin[]> LoadRemotePlugins()
+    private async Task<AvailablePlugin[]> LoadLatestVersionsForInstalledPlugins(PluginRuntimeState runtimeState)
     {
         try
         {
-            return await pluginService.GetRemotePlugins(null);
+            var pendingPluginIdentifiers = runtimeState.PendingCommands
+                .Where(command =>
+                    command.command.Equals("install", StringComparison.OrdinalIgnoreCase) ||
+                    command.command.Equals("enable", StringComparison.OrdinalIgnoreCase))
+                .Select(command => command.plugin);
+            return await pluginService.GetLatestVersionsForInstalledPlugins(
+                runtimeState.DisabledVersions,
+                pendingPluginIdentifiers);
         }
         catch (Exception ex)
         {

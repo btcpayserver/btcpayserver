@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
@@ -444,18 +445,64 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
-        public async Task InstalledPluginsViewModel_BlocksUninstallWhenPendingInstallDependsOnInstalledPlugin()
+        [Theory]
+        [InlineData("install")]
+        [InlineData("enable")]
+        public async Task InstalledPluginsViewModel_BlocksUninstallWhenPendingPluginHasNoManifest(string command)
         {
-            var model = await CreateInstalledPluginsViewModel(
-                loadedPlugins: [MakeLoadedPlugin("Dependency")],
-                allAvailable: [MakeAvailablePlugin("Dependent", "1.0.0", ("Dependency", ">=1.0.0"))],
-                command: ("install", "Dependent"));
+            InstalledPluginRequest[] requestedPlugins = null;
+            using var httpClient = new HttpClient(new TestHttpMessageHandler(request =>
+            {
+                requestedPlugins = JsonConvert.DeserializeObject<InstalledPluginRequest[]>(
+                    request.Content!.ReadAsStringAsync().GetAwaiter().GetResult());
+                return TestHttpMessageHandler.JsonResponse("""
+                                                           [{
+                                                               "projectSlug": "dependent",
+                                                               "buildId": 1,
+                                                               "manifestInfo": {
+                                                                   "identifier": "Dependent",
+                                                                   "name": "Dependent",
+                                                                   "version": "1.0.0",
+                                                                   "dependencies": [{
+                                                                       "identifier": "Dependency",
+                                                                       "condition": ">=1.0.0"
+                                                                   }]
+                                                               },
+                                                               "buildInfo": {}
+                                                           }]
+                                                           """);
+            }));
+            httpClient.BaseAddress = new Uri("https://plugins.example/");
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-pending-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                var disabled = command == "enable"
+                    ? new Dictionary<string, Version> { ["Dependent"] = null }
+                    : null;
+                WritePluginState(pluginDir, disabled, (command, "Dependent"), null);
+                var controller = CreatePluginManagerController(
+                    pluginDir,
+                    [MakeLoadedPlugin("Dependency")],
+                    httpClient);
 
-            var plugin = Assert.Single(model.InstalledPlugins);
-            var blockedAction = Assert.Single(plugin.Actions);
-            Assert.Null(blockedAction.FormAction);
-            Assert.NotNull(blockedAction.Tooltip);
+                var model = await controller.CreateInstalledPluginsViewModel();
+
+                Assert.NotNull(requestedPlugins);
+                Assert.Equal(2, requestedPlugins.Length);
+                Assert.Contains(requestedPlugins,
+                    plugin => plugin.Identifier == "Dependency" && plugin.Version == "1.0.0");
+                Assert.Contains(requestedPlugins,
+                    plugin => plugin.Identifier == "Dependent" && plugin.Version == "0.0.0");
+                var plugin = Assert.Single(model.InstalledPlugins);
+                var blockedAction = Assert.Single(plugin.Actions);
+                Assert.Null(blockedAction.FormAction);
+                Assert.NotNull(blockedAction.Tooltip);
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
         }
 
         [Fact]
@@ -519,22 +566,136 @@ namespace BTCPayServer.Tests
         public async Task PluginBuilderClientConfiguration_PreservesPluginSourceSubpath()
         {
             Uri requestedUri = null;
+            HttpMethod requestedMethod = null;
             using var httpClient = new HttpClient(new TestHttpMessageHandler(request =>
             {
                 requestedUri = request.RequestUri;
+                requestedMethod = request.Method;
                 return TestHttpMessageHandler.JsonResponse("[]");
             }));
             PluginManagerPlugin.ConfigurePluginBuilderClient(
                 new PoliciesSettings { PluginSource = "https://plugins.example.com/catalog?tenant=one#section" },
                 httpClient);
 
-            await new PluginBuilderClient(httpClient).GetPublishedVersions("2.3.7", false);
+            await new PluginBuilderClient(httpClient).GetInstalledPluginsUpdates(
+                "2.3.7",
+                false,
+                [new InstalledPluginRequest("TestPlugin", "1.0.0")]);
 
             Assert.Equal("https://plugins.example.com/catalog/", httpClient.BaseAddress.AbsoluteUri);
-            Assert.Equal("/catalog/api/v1/plugins", requestedUri.AbsolutePath);
+            Assert.Equal(HttpMethod.Post, requestedMethod);
+            Assert.Equal("/catalog/api/v1/plugins/updates", requestedUri.AbsolutePath);
             Assert.Contains("btcpayVersion=2.3.7", requestedUri.Query);
+            Assert.False(bool.Parse(QueryHelpers.ParseQuery(requestedUri.Query)["includePreRelease"].ToString()));
             Assert.DoesNotContain("tenant=one", requestedUri.Query);
             Assert.Empty(requestedUri.Fragment);
+        }
+
+        [Fact]
+        public async Task LatestVersionsForInstalledPlugins_RequestsOnlyEligibleInstalledPlugins()
+        {
+            var systemPlugin = MakeLoadedPlugin("SystemPlugin");
+            systemPlugin.SystemPlugin = true;
+            var requestCount = 0;
+            Uri requestedUri = null;
+            HttpMethod requestedMethod = null;
+            InstalledPluginRequest[] requestedPlugins = null;
+            using var httpClient = new HttpClient(new TestHttpMessageHandler(request =>
+            {
+                requestCount++;
+                requestedUri = request.RequestUri;
+                requestedMethod = request.Method;
+                requestedPlugins = JsonConvert.DeserializeObject<InstalledPluginRequest[]>(
+                    request.Content!.ReadAsStringAsync().GetAwaiter().GetResult());
+                return TestHttpMessageHandler.JsonResponse("""
+                                                           [{
+                                                               "projectSlug": "loaded-plugin",
+                                                               "buildId": 1,
+                                                               "manifestInfo": {
+                                                                   "identifier": "loadedplugin",
+                                                                   "name": "Loaded Plugin",
+                                                                   "version": "1.1.0"
+                                                               },
+                                                               "buildInfo": {}
+                                                           }]
+                                                           """);
+            }))
+            {
+                BaseAddress = new Uri("https://plugins.example/")
+            };
+            var pluginService = CreatePluginService(
+                Path.GetTempPath(),
+                [MakeLoadedPlugin("LoadedPlugin"), systemPlugin],
+                httpClient,
+                new PoliciesSettings { PluginPreReleases = true });
+
+            var updates = await pluginService.GetLatestVersionsForInstalledPlugins(
+                new Dictionary<string, Version>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["loadedplugin"] = new Version(0, 9, 0),
+                    ["DisabledPlugin"] = new Version(2, 0, 0),
+                    ["UnknownVersionPlugin"] = null
+                });
+
+            Assert.Equal(1, requestCount);
+            Assert.NotNull(requestedUri);
+            Assert.Equal(HttpMethod.Post, requestedMethod);
+            Assert.Equal("/api/v1/plugins/updates", requestedUri.AbsolutePath);
+            var query = QueryHelpers.ParseQuery(requestedUri.Query);
+            Assert.Equal(
+                BTCPayServerEnvironment.GetInformationalVersion().TrimStart('v').Split('+')[0],
+                query["btcpayVersion"].ToString());
+            Assert.True(bool.Parse(query["includePreRelease"].ToString()));
+            Assert.NotNull(requestedPlugins);
+            Assert.Equal(2, requestedPlugins.Length);
+            Assert.Single(requestedPlugins, plugin => plugin.Identifier == "LoadedPlugin" && plugin.Version == "1.0.0");
+            Assert.Single(requestedPlugins, plugin => plugin.Identifier == "DisabledPlugin" && plugin.Version == "2.0.0");
+            Assert.DoesNotContain(requestedPlugins, plugin => plugin.Identifier == "SystemPlugin");
+            Assert.DoesNotContain(requestedPlugins, plugin => plugin.Identifier == "UnknownVersionPlugin");
+
+            var update = Assert.Single(updates);
+            Assert.Equal("loadedplugin", update.Identifier);
+            Assert.Equal(new Version(1, 1, 0), update.Version);
+        }
+
+        [Fact]
+        public async Task LatestVersionsForInstalledPlugins_DoesNotCallBuilderWhenNoEligiblePlugins()
+        {
+            var systemPlugin = MakeLoadedPlugin("SystemPlugin");
+            systemPlugin.SystemPlugin = true;
+            using var httpClient = new HttpClient(new TestHttpMessageHandler(_ =>
+                throw new InvalidOperationException("The plugin builder should not be called.")))
+            {
+                BaseAddress = new Uri("https://plugins.example/")
+            };
+            var pluginService = CreatePluginService(Path.GetTempPath(), [systemPlugin], httpClient);
+
+            var updates = await pluginService.GetLatestVersionsForInstalledPlugins(
+                new Dictionary<string, Version> { ["UnknownVersionPlugin"] = null });
+
+            Assert.Empty(updates);
+        }
+
+        [Fact]
+        public async Task LatestVersionsForInstalledPlugins_PropagatesCancellation()
+        {
+            var handler = new BlockingHttpMessageHandler();
+            using var httpClient = new HttpClient(handler);
+            httpClient.BaseAddress = new Uri("https://plugins.example/");
+            var pluginService = CreatePluginService(
+                Path.GetTempPath(),
+                [MakeLoadedPlugin("TestPlugin")],
+                httpClient);
+            using var cancellationTokenSource = new CancellationTokenSource();
+
+            var lookupTask = pluginService.GetLatestVersionsForInstalledPlugins(
+                new Dictionary<string, Version>(),
+                cancellationToken: cancellationTokenSource.Token);
+            await handler.RequestStarted.Task.WaitAsync(TimeSpan.FromSeconds(1), cancellationTokenSource.Token);
+            await cancellationTokenSource.CancelAsync();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+                lookupTask.WaitAsync(TimeSpan.FromSeconds(1)));
         }
 
         private static PluginService.AvailablePlugin MakeAvailablePlugin(
@@ -641,13 +802,27 @@ namespace BTCPayServer.Tests
             PoliciesSettings policiesSettings = null)
         {
             policiesSettings ??= new PoliciesSettings();
-            var pluginService = new PluginService(
+            var pluginService = CreatePluginService(
+                pluginDir,
+                loadedPlugins,
+                httpClient,
+                policiesSettings);
+            return new UIPluginManagerController(pluginService, policiesSettings, null);
+        }
+
+        private PluginService CreatePluginService(
+            string pluginDir,
+            IEnumerable<IBTCPayServerPlugin> loadedPlugins,
+            HttpClient httpClient,
+            PoliciesSettings policiesSettings = null)
+        {
+            policiesSettings ??= new PoliciesSettings();
+            return new PluginService(
                 loadedPlugins,
                 new PluginBuilderClient(httpClient),
                 Options.Create(new DataDirectories { PluginDir = pluginDir }),
                 policiesSettings,
                 new BTCPayServerEnvironment(null, CreateNetworkProvider(ChainName.Regtest), null, new BTCPayServerOptions()));
-            return new UIPluginManagerController(pluginService, policiesSettings, null);
         }
 
         private static void WritePluginState(
@@ -689,6 +864,21 @@ namespace BTCPayServer.Tests
 
             Directory.CreateDirectory(Path.GetDirectoryName(manifestPath)!);
             File.WriteAllText(manifestPath, JsonConvert.SerializeObject(pendingManifest));
+        }
+
+        private sealed class BlockingHttpMessageHandler : HttpMessageHandler
+        {
+            public TaskCompletionSource<bool> RequestStarted { get; } = new(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+
+            protected override async Task<HttpResponseMessage> SendAsync(
+                HttpRequestMessage request,
+                CancellationToken cancellationToken)
+            {
+                RequestStarted.TrySetResult(true);
+                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                throw new InvalidOperationException("The request should have been cancelled.");
+            }
         }
 
         private sealed class TestPlugin(

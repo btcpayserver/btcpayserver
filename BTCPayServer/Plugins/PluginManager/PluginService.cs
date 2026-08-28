@@ -61,44 +61,43 @@ namespace BTCPayServer.Plugins
         internal string GetShortBtcpayVersion() => Env.Version.TrimStart('v').Split('+')[0];
         internal Uri GetPluginSourceBaseUri() => _pluginBuilderClient.HttpClient.BaseAddress;
 
-        public async Task<AvailablePlugin[]> GetRemotePlugins(string searchPluginName, CancellationToken cancellationToken = default)
+        internal async Task<AvailablePlugin[]> GetLatestVersionsForInstalledPlugins(
+            IReadOnlyDictionary<string, Version> disabledPlugins,
+            IEnumerable<string> pendingPluginIdentifiers = null,
+            CancellationToken cancellationToken = default)
         {
-            string btcpayVersion = GetShortBtcpayVersion();
-            var versions = await _pluginBuilderClient.GetPublishedVersions(
-                btcpayVersion, _policiesSettings.PluginPreReleases, searchPluginName, cancellationToken: cancellationToken);
+            var pluginUpdateRequests = LoadedPlugins
+                .Where(plugin => !plugin.SystemPlugin)
+                .Select(plugin => new InstalledPluginRequest(plugin.Identifier, plugin.Version.ToString()))
+                .Concat(disabledPlugins
+                    .Where(plugin => plugin.Value is not null)
+                    .Select(plugin => new InstalledPluginRequest(plugin.Key, plugin.Value.ToString())))
+                .Concat((pendingPluginIdentifiers ?? [])
+                    .Where(identifier => !string.IsNullOrWhiteSpace(identifier))
+                    .Select(identifier => new InstalledPluginRequest(identifier, "0.0.0")))
+                .DistinctBy(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
 
-            var plugins = versions
-                .Select(MapToAvailablePlugin)
-                .Where(p => p is not null)
-                .Select(p => p!)
-                .ToList();
-
-            var listedIds = new HashSet<string>(
-                plugins.Select(p => p.Identifier),
-                StringComparer.OrdinalIgnoreCase);
-
-            var loadedToCheck = LoadedPlugins
-                .Where(p => !p.SystemPlugin && !listedIds.Contains(p.Identifier))
-                .Select(p => new InstalledPluginRequest(p.Identifier, p.Version.ToString()))
-                .ToList();
-
-            if (loadedToCheck.Count <= 0) return plugins.ToArray();
+            if (pluginUpdateRequests.Length == 0)
+                return [];
 
             var updates = await _pluginBuilderClient.GetInstalledPluginsUpdates(
-                btcpayVersion,
+                GetShortBtcpayVersion(),
                 _policiesSettings.PluginPreReleases,
-                loadedToCheck, cancellationToken: cancellationToken);
+                pluginUpdateRequests,
+                cancellationToken);
 
-            if (updates is { Length: > 0 })
+            return updates.Select(update =>
             {
-                plugins.AddRange(
-                    updates.Select(MapToAvailablePlugin)
-                        .Where(p => p is not null)
-                        .Select(p => p!)
-                );
-            }
+                if (update is null)
+                    throw new InvalidDataException("Plugin updates response contained a null entry.");
 
-            return plugins.ToArray();
+                var plugin = MapToAvailablePlugin(update);
+                if (plugin is null || string.IsNullOrWhiteSpace(plugin.Identifier) || plugin.Version is null)
+                    throw new InvalidDataException($"Plugin manifest not found or invalid. BuildId: {update.BuildId} PluginSlug: {update.ProjectSlug}");
+
+                return plugin;
+            }).ToArray();
         }
 
         internal async Task<AvailablePlugin> GetDirectoryPluginBySlug(string pluginSlug)

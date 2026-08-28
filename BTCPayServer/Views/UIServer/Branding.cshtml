@@ -15,14 +15,19 @@
 }
 
 <form method="post" enctype="multipart/form-data">
-    <div class="sticky-header">
-        <vc:title-header />
+    <div class="sticky-header align-items-start">
+        <div class="d-flex flex-column gap-1 flex-grow-1">
+            <h2 class="mb-0" text-translate="true">Branding</h2>
+            <p class="text-secondary mb-0" text-translate="true">Customize your server's name, contact link, logo, and theme.</p>
+        </div>
 		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save" text-translate="true">Save</button>
     </div>
     <partial name="_StatusMessage" />
 
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
+            <h3 class="settings-section__heading" text-translate="true">General</h3>
+            <div class="settings-section">
             <div class="form-group">
                 <label asp-for="ServerName" class="form-label"></label>
                 <input asp-for="ServerName" class="form-control" />
@@ -75,7 +80,9 @@
                 }
             </div>
 
-			<h3 class="mt-5 mb-3" text-translate="true">Theme</h3>
+            </div>
+            <h3 class="settings-section__heading" text-translate="true">Theme</h3>
+            <div class="settings-section">
             <p text-translate="true">Use the default Light or Dark Themes, or provide a custom CSS theme file below.</p>
 
             <div class="d-flex align-items-center mb-3">
@@ -123,6 +130,7 @@
                         <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
                     }
                 </div>
+            </div>
             </div>
         </div>
     </div>

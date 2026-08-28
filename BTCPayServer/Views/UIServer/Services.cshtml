@@ -5,13 +5,17 @@
 }
 
 <div class="sticky-header">
-	<h2 class="my-1">@ViewData["Title"]</h2>
+    <div class="d-flex flex-column gap-1">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <p class="text-secondary mb-0" text-translate="true">External and Tor-exposed services connected to your server.</p>
+    </div>
 </div>
 <partial name="_StatusMessage" />
 
-<div class="mb-5">
-    <h4 class="mb-3" text-translate="true">Crypto services exposed by your server</h4>
-    <table class="table table-hover mt-2">
+<h3 class="settings-section__heading" text-translate="true">Crypto services exposed by your server</h3>
+<div class="settings-section">
+<div class="table-responsive settings-section__table">
+    <table class="table table-hover mb-0">
         <thead>
             <tr>
                 <th text-translate="true">Crypto</th>
@@ -40,13 +44,14 @@
         </tbody>
     </table>
 </div>
+</div>
 
 @if (Model.OtherExternalServices.Count != 0 || Model.ExternalServices.Any(service => string.IsNullOrEmpty(service.CryptoCode)))
 {
-    <div class="mb-5">
-        <h4 class="mb-3" text-translate="true">Other external services</h4>
-
-        <table class="table table-hover mt-2">
+    <h3 class="settings-section__heading" text-translate="true">Other external services</h3>
+    <div class="settings-section">
+    <div class="table-responsive settings-section__table">
+        <table class="table table-hover mb-0">
             <thead>
                 <tr>
                     <th text-translate="true">Name</th>
@@ -78,14 +83,15 @@
             </tbody>
         </table>
     </div>
+    </div>
 }
 
 @if (Model.TorHttpServices.Count != 0)
 {
-    <div class="mb-5">
-        <h4 class="mb-3" text-translate="true">HTTP-based Tor hidden services</h4>
-
-        <table class="table table-hover mt-2">
+    <h3 class="settings-section__heading" text-translate="true">HTTP-based Tor hidden services</h3>
+    <div class="settings-section">
+    <div class="table-responsive settings-section__table">
+        <table class="table table-hover mb-0">
             <thead>
                 <tr>
                     <th text-translate="true">Name</th>
@@ -105,14 +111,15 @@
             </tbody>
         </table>
     </div>
+    </div>
 }
 
 @if (Model.TorOtherServices.Count != 0)
 {
-    <div class="mb-5">
-        <h4 class="mb-3" text-translate="true">Other Tor hidden services</h4>
-
-        <table class="table table-hover mt-2">
+    <h3 class="settings-section__heading" text-translate="true">Other Tor hidden services</h3>
+    <div class="settings-section">
+    <div class="table-responsive settings-section__table">
+        <table class="table table-hover mb-0">
             <thead>
                 <tr>
                     <th text-translate="true">Name</th>
@@ -131,6 +138,7 @@
             }
             </tbody>
         </table>
+    </div>
     </div>
 }
 

@@ -21,6 +21,7 @@ Write pull request descriptions for the people who need to understand the change
 - Mention limitations, compatibility concerns, or follow-up work if users or operators should know about them.
 - Do not repeat a file-by-file or commit-by-commit summary that reviewers can already see in the diff.
 - Do not describe purely internal implementation choices unless they affect how someone uses, deploys, reviews, or tests BTCPay Server.
+- Do not include routine verification commands or a `Verified:` section. Mention testing only when it explains a user-visible limitation, manual QA evidence, or the user explicitly asks for it.
 
 ## Greenfield API Changes
 

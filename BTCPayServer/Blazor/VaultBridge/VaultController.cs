@@ -1,9 +1,11 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Blazor.VaultBridge.Elements;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Blazor.VaultBridge;
 
+[NonController]
 public abstract class VaultController : IController
 {
     protected abstract string VaultUri { get; }

@@ -192,7 +192,7 @@ namespace BTCPayServer.Tests
                         e => e.CurrencyPair == new CurrencyPair("BTC", "NGN") &&
                              e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 NGN
                 }
-                else if (name == "cryptomarket")
+                else if (name == "notbank")
                 {
                     Assert.Contains(exchangeRates.ByExchange[name],
                         e => e.CurrencyPair == new CurrencyPair("BTC", "CLP") &&

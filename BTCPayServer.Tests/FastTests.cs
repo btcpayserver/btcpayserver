@@ -2042,7 +2042,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             {
                 Assert.Equal(test.Expected, rules.GetRuleFor(CurrencyPair.Parse(test.Pair)).ToString());
             }
-            rules.Spread = 0.2m;
+            rules = rules.ChangeSpread(0.2m);
             Assert.Equal("(bitpay(DOGE_BTC) * kraken(BTC_USD) * 1.1) * (0.8, 1.2)", rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD")).ToString());
             ////////////////
 
@@ -2111,7 +2111,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             builder.AppendLine("BTC_USD = -3 + coinbase(BTC_CAD) + 50 - 5");
             builder.AppendLine("DOGE_BTC = 2000");
             Assert.True(RateRules.TryParse(builder.ToString(), out rules));
-            rules.Spread = 0.1m;
+            rules = rules.ChangeSpread(0.1m);
 
             rule2 = rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD"));
             Assert.Equal("(2000 * (-3 + coinbase(BTC_CAD) + 50 - 5)) * (0.9, 1.1)", rule2.ToString());

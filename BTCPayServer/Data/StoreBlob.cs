@@ -131,17 +131,12 @@ namespace BTCPayServer.Data
                 else
                 {
                     preferredSource = false;
-                    rules.Spread = spread;
-                    return rules;
+                    return rules.ChangeSpread(spread);
                 }
             }
 
             public RateRules GetDefaultRateRules(DefaultRulesCollection defaultRules, decimal spread)
-            {
-                var rules = defaultRules.WithPreferredExchange(PreferredExchange);
-                rules.Spread = spread;
-                return rules;
-            }
+            => defaultRules.WithPreferredExchange(PreferredExchange).ChangeSpread(spread);
         }
 
         #nullable  enable

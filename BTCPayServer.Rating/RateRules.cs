@@ -107,31 +107,27 @@ namespace BTCPayServer.Rating
 
         readonly SyntaxNode root;
         readonly RuleList ruleList;
-
-        decimal _Spread;
         private const string ImplicitSatsRule = "SATS_X = SATS_BTC * BTC_X;\nSATS_BTC = 0.00000001;\n";
 
-        public decimal Spread
-        {
-            get
-            {
-                return _Spread;
-            }
-            set
-            {
-                if (value > 1.0m || value < 0.0m)
-                    throw new ArgumentOutOfRangeException(paramName: nameof(value), message: "The spread should be between 0 and 1");
-                _Spread = value;
-            }
-        }
+        public RateRules ChangeSpread(decimal spread)
+        => spread == Spread ? this : new RateRules(root, spread);
 
-        RateRules(SyntaxNode root)
+        public decimal Spread { get; }
+
+        // ReSharper disable once IntroduceOptionalParameters.Local
+        RateRules(SyntaxNode root) : this(root, 0.0m) { }
+
+        RateRules(SyntaxNode root, decimal spread)
         {
+            if (spread > 1.0m || spread < 0.0m)
+                throw new ArgumentOutOfRangeException(paramName: nameof(spread), message: "The spread should be between 0 and 1");
+            Spread = spread;
             ruleList = new RuleList();
             ruleList.Visit(root);
             // Remove every irrelevant statements
             this.root = ruleList.GetSyntaxNode();
         }
+
         public static bool TryParse(string str, [MaybeNullWhen(false)] out RateRules rules)
         {
             return TryParse(str, out rules, out var unused);

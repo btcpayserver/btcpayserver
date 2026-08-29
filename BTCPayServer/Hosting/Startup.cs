@@ -101,7 +101,7 @@ namespace BTCPayServer.Hosting
                 .PersistKeysToFileSystem(new DirectoryInfo(new DataDirectories().Configure(Configuration).DataDir));
 
             services.AddScoped<ISecurityStampValidator, BTCPayServerSecurityStampValidator>();
-            services.AddSingleton<BTCPayServerSecurityStampValidator.DisabledUsers>();
+            services.AddSingleton<BTCPayServerSecurityStampValidator.SecurityStampInvalidator>();
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders()

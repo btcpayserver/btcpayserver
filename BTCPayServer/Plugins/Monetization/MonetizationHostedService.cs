@@ -24,7 +24,7 @@ public class MonetizationHostedService(
     EventAggregator eventAggregator,
     SettingsRepository settingsRepository,
     UserService userService,
-    BTCPayServerSecurityStampValidator.DisabledUsers disabledUsers,
+    BTCPayServerSecurityStampValidator.SecurityStampInvalidator securityStampInvalidator,
     ISettingsAccessor<MonetizationSettings> monetizationSettingsAccessor,
     IServiceScopeFactory serviceScopeFactory,
     Logs logger) : EventHostedServiceBase(eventAggregator, logger)
@@ -113,7 +113,6 @@ public class MonetizationHostedService(
                 if (userSub is not null)
                 {
                     await userService.SetDisabled(changed.User.Id, false);
-                    disabledUsers.Remove(changed.User.Id);
                     EventAggregator.Publish(new MonetizationLockoutUpdated([(changed.User.Id, false)]));
                 }
             }
@@ -127,7 +126,7 @@ public class MonetizationHostedService(
                     if (shouldBeLocked)
                     {
                         await userService.SetDisabled(changed.User.Id, true);
-                        disabledUsers.Add(changed.User.Id);
+                        securityStampInvalidator.Invalidate(changed.User.Id);
                         EventAggregator.Publish(new MonetizationLockoutUpdated([(changed.User.Id, true)]));
                     }
                 }
@@ -394,9 +393,7 @@ public class MonetizationHostedService(
                 })).ToArray();
         foreach (var update in updated)
             if (update.LockoutEnabled)
-                disabledUsers.Add(update.UserId);
-            else
-                disabledUsers.Remove(update.UserId);
+                securityStampInvalidator.Invalidate(update.UserId);
 
         await ctx.Users.UpdateStoreNoActiveUserForUsers(updated.Select(u => u.UserId).ToArray());
         EventAggregator.Publish(new MonetizationLockoutUpdated(updated));

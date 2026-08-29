@@ -22,7 +22,6 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,12 +65,8 @@ namespace BTCPayServer.Tests
         public async Task MakeAdmin(bool isAdmin = true)
         {
             using var scope = parent.PayTester.ServiceProvider.CreateScope();
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            var u = await userManager.FindByIdAsync(UserId);
-            if (isAdmin)
-                await userManager.AddToRoleAsync(u, Roles.ServerAdmin);
-            else
-                await userManager.RemoveFromRoleAsync(u, Roles.ServerAdmin);
+            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+            await userService.SetAdminUser(UserId, isAdmin);
             IsAdmin = isAdmin;
         }
 

@@ -10,56 +10,63 @@ using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Services;
 
-public class BTCPayServerSecurityStampValidator(
-    IOptions<SecurityStampValidatorOptions> options,
-    SignInManager<ApplicationUser> signInManager,
-    ILoggerFactory logger,
-    BTCPayServerSecurityStampValidator.DisabledUsers disabledUsers)
-    : SecurityStampValidator<ApplicationUser>(options, signInManager, logger)
+public class BTCPayServerSecurityStampValidator : SecurityStampValidator<ApplicationUser>
 {
-    public class DisabledUsers
+    private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly SecurityStampInvalidator _securityStampInvalidator;
+
+    public BTCPayServerSecurityStampValidator(
+        IOptions<SecurityStampValidatorOptions> options,
+        SignInManager<ApplicationUser> signInManager,
+        ILoggerFactory logger,
+        SecurityStampInvalidator securityStampInvalidator) : base(options, signInManager, logger)
     {
-        ConcurrentDictionary<string, DateTimeOffset> _DisabledUsers = new ConcurrentDictionary<string, DateTimeOffset>();
-        public bool HasAny => !_DisabledUsers.IsEmpty;
+        _signInManager = signInManager;
+        _securityStampInvalidator = securityStampInvalidator;
+    }
+
+    /// <summary>
+    /// Security stamps are normally revalidated every <see cref="SecurityStampValidatorOptions.ValidationInterval"/>.
+    /// This forces earlier validation for selected users, so cookie claims such as roles are refreshed immediately.
+    /// </summary>
+    public class SecurityStampInvalidator
+    {
+        ConcurrentDictionary<string, DateTimeOffset> _InvalidatedStamps = new ConcurrentDictionary<string, DateTimeOffset>();
+        public bool HasAny => !_InvalidatedStamps.IsEmpty;
 
         /// <summary>
-        /// Note that you also need to invalidate the security stamp of the user
+        /// Forces the logged-in user's cookie claims, such as roles, to be refreshed immediately.
         /// </summary>
         /// <param name="user"></param>
-        public void Add(string user)
-        {
-            _DisabledUsers.TryAdd(user, DateTimeOffset.UtcNow);
-        }
-
-        public void Remove(string user)
-        {
-            _DisabledUsers.TryRemove(user, out _);
-        }
-
-        public bool Contains(string id) => _DisabledUsers.ContainsKey(id);
+        public void Invalidate(string user) => _InvalidatedStamps.AddOrUpdate(user, _ => DateTimeOffset.UtcNow, (_, _) => DateTimeOffset.UtcNow);
 
         public void Cleanup(TimeSpan validationInterval)
         {
-            if (_DisabledUsers.IsEmpty)
+            if (_InvalidatedStamps.IsEmpty)
                 return;
             var now = DateTimeOffset.UtcNow;
-            foreach (var kv in _DisabledUsers)
+            foreach (var kv in _InvalidatedStamps)
             {
                 if (now - kv.Value > validationInterval)
-                    Remove(kv.Key);
+                    _InvalidatedStamps.TryRemove(kv.Key, out _);
             }
         }
+
+        public bool TryGetValue(string id, out DateTimeOffset invalidatedAt)
+        => _InvalidatedStamps.TryGetValue(id, out invalidatedAt);
     }
 
     public override async Task ValidateAsync(CookieValidatePrincipalContext context)
     {
-        if (disabledUsers.HasAny &&
+        if (_securityStampInvalidator.HasAny &&
             context.Principal.GetIdOrNull() is string id &&
-            disabledUsers.Contains(id))
+            _securityStampInvalidator.TryGetValue(id, out var invalidatedAt) &&
+            context.Properties.IssuedUtc is {} issuedAt &&
+            issuedAt < invalidatedAt)
         {
             context.Properties.IssuedUtc = null;
         }
-        disabledUsers.Cleanup(Options.ValidationInterval);
+        _securityStampInvalidator.Cleanup(Options.ValidationInterval);
         await base.ValidateAsync(context);
     }
 }

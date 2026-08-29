@@ -26,7 +26,7 @@ namespace BTCPayServer.Services
         private readonly FileService _fileService;
         private readonly EventAggregator _eventAggregator;
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
-        private readonly BTCPayServerSecurityStampValidator.DisabledUsers _disabledUsers;
+        private readonly BTCPayServerSecurityStampValidator.SecurityStampInvalidator _securityStampInvalidator;
         private readonly IEnumerable<LoginExtension> _loginExtensions;
         private readonly ILogger<UserService> _logger;
 
@@ -36,7 +36,7 @@ namespace BTCPayServer.Services
             FileService fileService,
             EventAggregator eventAggregator,
             ApplicationDbContextFactory applicationDbContextFactory,
-            BTCPayServerSecurityStampValidator.DisabledUsers disabledUsers,
+            BTCPayServerSecurityStampValidator.SecurityStampInvalidator securityStampInvalidator,
             IEnumerable<LoginExtension> loginExtensions,
             ILogger<UserService> logger)
         {
@@ -45,7 +45,7 @@ namespace BTCPayServer.Services
             _fileService = fileService;
             _eventAggregator = eventAggregator;
             _applicationDbContextFactory = applicationDbContextFactory;
-            _disabledUsers = disabledUsers;
+            _securityStampInvalidator = securityStampInvalidator;
             _loginExtensions = loginExtensions;
             _logger = logger;
         }
@@ -212,19 +212,15 @@ namespace BTCPayServer.Services
 
             var lockedOutDeadline = disabled ? DateTimeOffset.MaxValue : (DateTimeOffset?)null;
             var res = await userManager.SetLockoutEndDateAsync(user, lockedOutDeadline);
-            // Without this, the user won't be logged out automatically when his authentication ticket expires
-            if (disabled)
-            {
-                await userManager.UpdateSecurityStampAsync(user);
-                _disabledUsers.Add(userId);
-            }
-            else
-            {
-                _disabledUsers.Remove(userId);
-            }
 
             if (res.Succeeded)
             {
+                if (disabled)
+                {
+                    await userManager.UpdateSecurityStampAsync(user);
+                    // Force immediate cookie revalidation instead of waiting for the stamp validation interval.
+                    _securityStampInvalidator.Invalidate(user.Id);
+                }
                 await using var ctx = _applicationDbContextFactory.CreateContext();
                 await ctx.Users.UpdateStoreNoActiveUserForUsers([userId]);
             }
@@ -262,6 +258,7 @@ namespace BTCPayServer.Services
 
             if (res.Succeeded)
             {
+                _securityStampInvalidator.Invalidate(user.Id);
                 _logger.LogInformation("Successfully set admin status for user {Email}", user.Email);
             }
             else

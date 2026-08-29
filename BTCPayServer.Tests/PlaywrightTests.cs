@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using BTCPayServer.Abstractions.Models;
@@ -753,13 +754,23 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage(partialText: "Password successfully set");
             user.Password = "Password@1!";
 
-            var userPage = await s.Browser.NewPageAsync();
+            await using var userContext = await s.Browser.NewContextAsync();
+            var userPage = await userContext.NewPageAsync();
             await using (await s.SwitchPage(userPage, false))
             {
                 await s.GoToLogin();
                 await s.LogIn(user.Email, user.Password);
                 await s.SkipWizard();
             }
+
+            await SetManagedUserAdmin(false);
+            await AssertCanAccessServerSettings(userPage, false);
+            await SetManagedUserAdmin(true);
+            await AssertCanAccessServerSettings(userPage, true);
+            await SetManagedUserAdmin(false);
+            await AssertCanAccessServerSettings(userPage, false);
+            await s.GoToServer(ServerNavPages.Users);
+
             // Manage user status (disable and enable)
             // Disable user
             await s.Page.Locator("#SearchTerm").ClearAsync();
@@ -774,7 +785,8 @@ namespace BTCPayServer.Tests
 
             await using (await s.SwitchPage(userPage, false))
             {
-                await s.Page.ReloadAsync();
+                await s.Page.GotoAsync(s.Link("/server/policies"), new() { WaitUntil = WaitUntilState.Commit });
+                await s.GoToLogin();
                 await s.LogIn(user.Email, user.Password);
                 await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning, partialText: "Your user account is currently disabled");
             }
@@ -822,6 +834,40 @@ namespace BTCPayServer.Tests
             await s.Page.ClickAsync("#ConfirmContinue");
             await s.FindAlertMessage(partialText: "User deleted");
             await s.Page.AssertNoError();
+
+            async Task SetManagedUserAdmin(bool isAdmin)
+            {
+                await s.GoToServer(ServerNavPages.Users);
+                await s.Page.Locator("#SearchTerm").ClearAsync();
+                await s.Page.FillAsync("#SearchTerm", user.RegisterDetails.Email);
+                await s.Page.Locator("#SearchTerm").PressAsync("Enter");
+                var rows = s.Page.Locator("#UsersList tr.user-overview-row");
+                await Expect(rows).ToHaveCountAsync(1);
+                await Expect(rows.First).ToContainTextAsync(user.RegisterDetails.Email);
+                await rows.First.Locator(".user-edit").ClickAsync();
+                var adminCheckbox = s.Page.Locator("#IsAdmin");
+                if (await adminCheckbox.IsCheckedAsync() == isAdmin)
+                    return;
+                await adminCheckbox.SetCheckedAsync(isAdmin);
+                await s.ClickPagePrimary();
+                await s.FindAlertMessage(partialText: "User successfully updated");
+            }
+
+            async Task AssertCanAccessServerSettings(IPage page, bool expected)
+            {
+                await using (await s.SwitchPage(page, false))
+                {
+                    await s.Page.GotoAsync(s.Link("/server/policies"), new() { WaitUntil = WaitUntilState.Commit });
+                    if (expected)
+                    {
+                        await Expect(s.Page).ToHaveURLAsync(s.Link("/server/policies"));
+                    }
+                    else
+                    {
+                        await Expect(s.Page).ToHaveURLAsync(new Regex("/errors/403"));
+                    }
+                }
+            }
         }
 
 

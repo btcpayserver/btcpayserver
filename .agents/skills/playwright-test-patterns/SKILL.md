@@ -22,6 +22,19 @@ Use these patterns when writing or refactoring Playwright tests in BTCPayServer.
 - Keep PMOs focused on reusable components or page flows.
 - Do not add abstraction layers that only wrap one obvious Playwright call unless it meaningfully improves readability or removes repetition.
 
+## Test Through Real Interfaces
+
+- Prefer using Playwright and/or `BTCPayServerClient` over reproducing application behavior by manually instantiating controllers.
+- Use controller instantiation only when the test is specifically about controller internals and a browser/API flow would not exercise the behavior clearly.
+
+## Assertions
+
+- Prefer Playwright's built-in `Expect` API over manually fetching elements and asserting on their state.
+- Playwright assertions automatically wait for the expected condition, making tests less verbose and less prone to flakiness.
+- Prefer `await Expect(locator).ToHaveCountAsync(1)` over `Assert.Equal(1, await locator.CountAsync())`.
+- Prefer `await Expect(locator).ToContainTextAsync(text)` over `Assert.Contains(text, await locator.TextContentAsync())`.
+- Prefer `await Expect(page).ToHaveURLAsync(...)` over direct assertions on `page.Url`.
+
 ## Selector Guidance
 
 - Prefer BEM class selectors for reusable UI hooks.

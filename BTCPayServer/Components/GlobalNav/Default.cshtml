@@ -89,12 +89,6 @@
                 <li>
                     <a id="menu-item-@nameof(ServerNavPages.Translations)" class="dropdown-item@(activePage == nameof(ServerNavPages.Translations) ? " active" : "")" asp-area="@TranslationsPlugin.Area" asp-controller="UITranslation" asp-action="ListTranslations" text-translate="true">Translations</a>
                 </li>
-                @if (Model.DockerDeployment)
-                {
-                    <li>
-                        <a id="menu-item-@nameof(ServerNavPages.Maintenance)" class="dropdown-item@(activePage == nameof(ServerNavPages.Maintenance) ? " active" : "")" asp-controller="UIServer" asp-action="Maintenance" text-translate="true">Maintenance</a>
-                    </li>
-                }
                 <li>
                     <a id="menu-item-@nameof(ServerNavPages.Logs)" class="dropdown-item@(activePage == nameof(ServerNavPages.Logs) ? " active" : "")" asp-controller="UIServer" asp-action="LogsView" text-translate="true">Logs</a>
                 </li>

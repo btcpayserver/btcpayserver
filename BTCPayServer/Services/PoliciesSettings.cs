@@ -81,8 +81,6 @@ namespace BTCPayServer.Services
         [Display(Name = "Show plugins in pre-release")]
         public bool PluginPreReleases { get; set; }
 
-        public bool DisableSSHService { get; set; }
-
         [Display(Name = "Display app on website root")]
         public string RootAppId { get; set; }
         public string RootAppType { get; set; }

@@ -77,9 +77,6 @@ namespace BTCPayServer.Tests
             PayTester.HostName = GetEnvironment("TESTS_HOSTNAME", "127.0.0.1");
             PayTester.InContainer = bool.Parse(GetEnvironment("TESTS_INCONTAINER", "false"));
 
-            PayTester.SSHPassword = GetEnvironment("TESTS_SSHPASSWORD", "opD3i2282D");
-            PayTester.SSHKeyFile = GetEnvironment("TESTS_SSHKEYFILE", "");
-            PayTester.SSHConnection = GetEnvironment("TESTS_SSHCONNECTION", "root@127.0.0.1:21622");
             PayTester.SocksEndpoint = GetEnvironment("TESTS_SOCKSENDPOINT", "localhost:9050");
         }
 
@@ -310,6 +307,64 @@ namespace BTCPayServer.Tests
             http.BaseAddress = new Uri($"http://{MailPitSettings.Hostname}:{MailPitSettings.HttpPort}");
             var mailPitClient = new MailPitClient(http);
             return mailPitClient;
+        }
+
+        public async Task InstallHostCommands()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                var btcpayHostCmd = Path.Combine(_Directory, "btcpay-host.cmd");
+                await File.WriteAllTextAsync(btcpayHostCmd, """
+                    @echo off
+                    if "%~1" == "commands" (
+                        echo ["showauthorizedkeys","setauthorizedkeys"]
+                        exit /b 0
+                    )
+                    if "%~1" == "showauthorizedkeys" (
+                        powershell -NoProfile -Command "if (Test-Path '%~dp0authorized_keys') { Get-Content -Raw '%~dp0authorized_keys' | ConvertTo-Json -Compress } else { '' | ConvertTo-Json -Compress }"
+                        exit /b 0
+                    )
+                    if "%~1" == "setauthorizedkeys" (
+                        <nul set /p="%~2" > "%~dp0authorized_keys"
+                        exit /b 0
+                    )
+                    echo Unsupported host command: %~1 1>&2
+                    exit /b 1
+                    """);
+                PayTester.btcpayHostExecutable = btcpayHostCmd;
+            }
+            else
+            {
+                var btcpayHost = Path.Combine(_Directory, "btcpay-host");
+                await File.WriteAllTextAsync(btcpayHost, """
+                    #!/usr/bin/env bash
+                    set -euo pipefail
+
+                    authorized_keys_file="$(dirname "$0")/authorized_keys"
+
+                    case "$1" in
+                        commands)
+                            printf '["showauthorizedkeys","setauthorizedkeys"]\n'
+                            ;;
+                        showauthorizedkeys)
+                            value="$(cat "$authorized_keys_file" 2>/dev/null || true)"
+                            value="${value//\\/\\\\}"
+                            value="${value//\"/\\\"}"
+                            value="${value//$'\n'/\\n}"
+                            printf '"%s"\n' "$value"
+                            ;;
+                        setauthorizedkeys)
+                            printf '%s' "$2" > "$authorized_keys_file"
+                            ;;
+                        *)
+                            echo "Unsupported host command: $1" >&2
+                            exit 1
+                            ;;
+                    esac
+                    """);
+                File.SetUnixFileMode(btcpayHost, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+                PayTester.btcpayHostExecutable = btcpayHost;
+            }
         }
     }
 }

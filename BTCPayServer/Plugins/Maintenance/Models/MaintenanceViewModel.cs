@@ -1,10 +1,11 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace BTCPayServer.Models.ServerViewModels;
+namespace BTCPayServer.Plugins.Maintenance.Models;
 
 public class MaintenanceViewModel
 {
     [Display(Name = "Domain name")]
     public string DNSDomain { get; set; }
-    public bool CanUseSSH { get; internal set; }
+    public HashSet<string> SupportedCommands { get; set; }
 }

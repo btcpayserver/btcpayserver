@@ -172,24 +172,6 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
             new ActionResultItemViewModel
             {
                 RequiredPolicy = Policies.CanModifyServerSettings,
-                Title = "Go to the maintenance page",
-                Action = nameof(UIServerController.Maintenance),
-                Controller = "UIServer",
-                Category = "Server",
-                Keywords = ["Server", "Settings", "Maintenance"]
-            },
-            new ActionResultItemViewModel
-            {
-                RequiredPolicy = Policies.CanModifyServerSettings,
-                Title = "Update the server",
-                Action = nameof(UIServerController.Maintenance),
-                Controller = "UIServer",
-                Category = "Server",
-                Keywords = ["Server", "Settings", "Maintenance"]
-            },
-            new ActionResultItemViewModel
-            {
-                RequiredPolicy = Policies.CanModifyServerSettings,
                 Title = "View the logs",
                 Action = nameof(UIServerController.LogsView),
                 Controller = "UIServer",

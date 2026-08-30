@@ -1,11 +1,13 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions;
 using BTCPayServer.Abstractions.Constants;
@@ -14,12 +16,12 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
-using BTCPayServer.Fido2;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Plugins.Emails.Services;
+using BTCPayServer.Plugins.Maintenance;
 using BTCPayServer.Plugins.Monetization;
 using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services;
@@ -33,13 +35,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using Renci.SshNet;
 using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.AuthenticationSchemes;
 
 namespace BTCPayServer.Controllers
@@ -49,6 +49,7 @@ namespace BTCPayServer.Controllers
     public partial class UIServerController : Controller
     {
         private readonly ISettingsAccessor<MonetizationSettings> _monetizationSettings;
+        private readonly ProcessRunner _processRunner;
         private readonly UserManager<ApplicationUser> _UserManager;
         private readonly UserService _userService;
         readonly SettingsRepository _SettingsRepository;
@@ -59,7 +60,7 @@ namespace BTCPayServer.Controllers
         private readonly TorServices _torServices;
         private readonly BTCPayServerOptions _Options;
         private readonly AppService _AppService;
-        private readonly CheckConfigurationHostedService _sshState;
+        private readonly CheckHostCommandsHostedService _hostCommandState;
         private readonly EventAggregator _eventAggregator;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
         private readonly Logs Logs;
@@ -89,21 +90,20 @@ namespace BTCPayServer.Controllers
             TorServices torServices,
             StoreRepository storeRepository,
             AppService appService,
-            CheckConfigurationHostedService sshState,
+            CheckHostCommandsHostedService hostCommandState,
             EventAggregator eventAggregator,
             IOptions<ExternalServicesOptions> externalServiceOptions,
             Logs logs,
             CallbackGenerator callbackGenerator,
             UriResolver uriResolver,
-            IHostApplicationLifetime applicationLifetime,
             IHtmlHelper html,
             TransactionLinkProviders transactionLinkProviders,
             LocalizerService localizer,
             IStringLocalizer stringLocalizer,
             ViewLocalizer viewLocalizer,
             BTCPayServerEnvironment environment,
-            LanguagePackUpdateService languagePackUpdateService,
-            ISettingsAccessor<MonetizationSettings> monetizationSettings
+            ISettingsAccessor<MonetizationSettings> monetizationSettings,
+            ProcessRunner processRunner
         )
         {
             _policiesSettings = policiesSettings;
@@ -119,17 +119,17 @@ namespace BTCPayServer.Controllers
             _LnConfigProvider = lnConfigProvider;
             _torServices = torServices;
             _AppService = appService;
-            _sshState = sshState;
+            _hostCommandState = hostCommandState;
             _eventAggregator = eventAggregator;
             _externalServiceOptions = externalServiceOptions;
             Logs = logs;
             _emailSenderFactory = emailSenderFactory;
             _callbackGenerator = callbackGenerator;
             _uriResolver = uriResolver;
-            ApplicationLifetime = applicationLifetime;
             Html = html;
             _transactionLinkProviders = transactionLinkProviders;
             _monetizationSettings = monetizationSettings;
+            _processRunner = processRunner;
             _localizer = localizer;
             Environment = environment;
             StringLocalizer = stringLocalizer;
@@ -156,189 +156,7 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        [HttpGet("server/maintenance")]
-        public IActionResult Maintenance()
-        {
-            var vm = new MaintenanceViewModel
-            {
-                CanUseSSH = _sshState.CanUseSSH,
-                DNSDomain = Request.Host.Host
-            };
-
-            if (!vm.CanUseSSH)
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Maintenance feature requires access to SSH properly configured in BTCPay Server configuration."].Value;
-            if (IPAddress.TryParse(vm.DNSDomain, out var unused))
-                vm.DNSDomain = null;
-
-            return View(vm);
-        }
-
-        [HttpPost("server/maintenance")]
-        public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
-        {
-            vm.CanUseSSH = _sshState.CanUseSSH;
-            if (command != "soft-restart" && !vm.CanUseSSH)
-            {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Maintenance feature requires access to SSH properly configured in BTCPay Server configuration."].Value;
-                return View(vm);
-            }
-            if (!ModelState.IsValid)
-                return View(vm);
-
-            if (command == "changedomain")
-            {
-                if (string.IsNullOrWhiteSpace(vm.DNSDomain))
-                {
-                    ModelState.AddModelError(nameof(vm.DNSDomain), $"Required field");
-                    return View(vm);
-                }
-                vm.DNSDomain = vm.DNSDomain.Trim().ToLowerInvariant();
-                if (vm.DNSDomain.Equals(this.Request.Host.Host, StringComparison.OrdinalIgnoreCase))
-                    return View(vm);
-                if (IPAddress.TryParse(vm.DNSDomain, out var unused))
-                {
-                    ModelState.AddModelError(nameof(vm.DNSDomain), $"This should be a domain name");
-                    return View(vm);
-                }
-                if (vm.DNSDomain.Equals(this.Request.Host.Host, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    ModelState.AddModelError(nameof(vm.DNSDomain), $"The server is already set to use this domain");
-                    return View(vm);
-                }
-                if (Uri.CheckHostName(vm.DNSDomain) != UriHostNameType.Dns)
-                {
-                    ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid hostname");
-                    return View(vm);
-                }
-                var builder = new UriBuilder();
-                try
-                {
-                    builder.Scheme = this.Request.Scheme;
-                    builder.Host = vm.DNSDomain;
-                    var addresses1 = GetAddressAsync(this.Request.Host.Host);
-                    var addresses2 = GetAddressAsync(vm.DNSDomain);
-                    await Task.WhenAll(addresses1, addresses2);
-
-                    var addressesSet = addresses1.GetAwaiter().GetResult().Select(c => c.ToString()).ToHashSet();
-                    var hasCommonAddress = addresses2.GetAwaiter().GetResult().Select(c => c.ToString()).Any(s => addressesSet.Contains(s));
-                    if (!hasCommonAddress)
-                    {
-                        ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid host ({vm.DNSDomain} is not pointing to this BTCPay instance)");
-                        return View(vm);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    var messages = new List<object>();
-                    messages.Add(ex.Message);
-                    if (ex.InnerException != null)
-                        messages.Add(ex.InnerException.Message);
-                    ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid domain ({string.Join(", ", messages.ToArray())})");
-                    return View(vm);
-                }
-
-                var error = await RunSSH(vm, $"changedomain.sh {vm.DNSDomain}");
-                if (error != null)
-                    return error;
-
-                builder.Path = null;
-                builder.Query = null;
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Domain name changing... the server will restart, please use \"{0}\" (this page won't reload automatically)", builder.Uri.AbsoluteUri].Value;
-            }
-            else if (command == "update")
-            {
-                var error = await RunSSH(vm, $"btcpay-update.sh");
-                if (error != null)
-                    return error;
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The server might restart soon if an update is available... (this page won't reload automatically)"].Value;
-            }
-            else if (command == "clean")
-            {
-                var error = await RunSSH(vm, $"btcpay-clean.sh");
-                if (error != null)
-                    return error;
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The old docker images will be cleaned soon..."].Value;
-            }
-            else if (command == "restart")
-            {
-                var error = await RunSSH(vm, $"btcpay-restart.sh");
-                if (error != null)
-                    return error;
-                Logs.PayServer.LogInformation("A hard restart has been requested");
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["BTCPay will restart momentarily."].Value;
-            }
-            else if (command == "soft-restart")
-            {
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["BTCPay will restart momentarily."].Value;
-                Logs.PayServer.LogInformation("A soft restart has been requested");
-                _ = Task.Delay(3000).ContinueWith((t) => ApplicationLifetime.StopApplication());
-            }
-            else
-            {
-                return NotFound();
-            }
-            return RedirectToAction(nameof(Maintenance));
-        }
-
-        private Task<IPAddress[]> GetAddressAsync(string domainOrIP)
-        {
-            if (IPAddress.TryParse(domainOrIP, out var ip))
-                return Task.FromResult(new[] { ip });
-            return Dns.GetHostAddressesAsync(domainOrIP);
-        }
-
-        public static string RunId = Encoders.Hex.EncodeData(NBitcoin.RandomUtils.GetBytes(32));
-        [HttpGet]
-        [Route("runid")]
-        [AllowAnonymous]
-        public IActionResult SeeRunId(string? expected = null)
-        {
-            if (expected == RunId)
-                return Ok();
-            return BadRequest();
-        }
-
-        private async Task<IActionResult?> RunSSH(MaintenanceViewModel vm, string command)
-        {
-            SshClient? sshClient = null;
-
-            try
-            {
-                sshClient = await _Options.SSHSettings.ConnectAsync();
-            }
-            catch (Exception ex)
-            {
-                var message = ex.Message;
-                if (ex is AggregateException aggrEx && aggrEx.InnerException?.Message != null)
-                {
-                    message = aggrEx.InnerException.Message;
-                }
-                ModelState.AddModelError(string.Empty, $"Connection problem ({message})");
-                return View(vm);
-            }
-            _ = RunSSHCore(sshClient, $". /etc/profile.d/btcpay-env.sh && nohup {command} > /dev/null 2>&1 & disown");
-            return null;
-        }
-
-        private async Task RunSSHCore(SshClient sshClient, string ssh)
-        {
-            try
-            {
-                Logs.PayServer.LogInformation("Running SSH command: " + ssh);
-                var result = await sshClient.RunBash(ssh, TimeSpan.FromMinutes(1.0));
-                Logs.PayServer.LogInformation($"SSH command executed with exit status {result.ExitStatus}. Output: {result.Output}");
-            }
-            catch (Exception ex)
-            {
-                Logs.PayServer.LogWarning("Error while executing SSH command: " + ex.Message);
-            }
-            finally
-            {
-                sshClient.Dispose();
-            }
-        }
-
-        public IHostApplicationLifetime ApplicationLifetime { get; }
+        static TimeSpan ShortOperation = TimeSpan.FromSeconds(10);
         public IHtmlHelper Html { get; }
         public BTCPayServerEnvironment Environment { get; }
 
@@ -821,33 +639,17 @@ namespace BTCPayServer.Controllers
             if (!CanShowSSHService())
                 return NotFound();
 
-            var settings = _Options.SSHSettings;
-            var server = Extensions.IsLocalNetwork(settings.Server) ? this.Request.Host.Host : settings.Server;
             SSHServiceViewModel vm = new SSHServiceViewModel();
-            string port = settings.Port == 22 ? "" : $" -p {settings.Port}";
-            vm.CommandLine = $"ssh {settings.Username}@{server}{port}";
-            vm.Password = settings.Password;
-            vm.KeyFilePassword = settings.KeyFilePassword;
-            vm.HasKeyFile = !string.IsNullOrEmpty(settings.KeyFile);
 
-            //  Let's try to just read the authorized key file
-            if (CanAccessAuthorizedKeyFile())
+            if (_hostCommandState.SupportedCommands.Contains(HostCommands.ShowAuthorizedKeys))
             {
                 try
                 {
-                    vm.SSHKeyFileContent = await System.IO.File.ReadAllTextAsync(settings.AuthorizedKeysFile);
-                }
-                catch { }
-            }
-
-            // If that fail, just fallback to ssh
-            if (vm.SSHKeyFileContent == null && _sshState.CanUseSSH)
-            {
-                try
-                {
-                    using var sshClient = await _Options.SSHSettings.ConnectAsync();
-                    var result = await sshClient.RunBash("cat ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
-                    vm.SSHKeyFileContent = result.Output;
+                    var result = await _processRunner.RunHostCommand(HostCommands.ShowAuthorizedKeys, null, TimeSpan.FromSeconds(10));
+                    if (result.ExitCode == 0)
+                    {
+                        vm.SSHKeyFileContent = JsonSerializer.Deserialize<string>(result.Output) ?? string.Empty;
+                    }
                 }
                 catch { }
             }
@@ -855,15 +657,8 @@ namespace BTCPayServer.Controllers
         }
 
         bool CanShowSSHService()
-        {
-            return !_policiesSettings.DisableSSHService &&
-                   _Options.SSHSettings != null && (_sshState.CanUseSSH || CanAccessAuthorizedKeyFile());
-        }
-
-        private bool CanAccessAuthorizedKeyFile()
-        {
-            return _Options.SSHSettings?.AuthorizedKeysFile != null && System.IO.File.Exists(_Options.SSHSettings.AuthorizedKeysFile);
-        }
+        => _hostCommandState.SupportedCommands.Contains(HostCommands.ShowAuthorizedKeys) &&
+           _hostCommandState.SupportedCommands.Contains(HostCommands.SetAuthorizedKeys);
 
         [HttpPost("server/services/ssh")]
         public async Task<IActionResult> SSHService(SSHServiceViewModel viewModel, string? command = null)
@@ -876,39 +671,18 @@ namespace BTCPayServer.Controllers
                 string newContent = viewModel?.SSHKeyFileContent ?? string.Empty;
                 newContent = newContent.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase);
 
-                bool updated = false;
                 Exception? exception = null;
-                // Let's try to just write the file
-                if (CanAccessAuthorizedKeyFile())
+                try
                 {
-                    try
+                    var result = await _processRunner.RunHostCommand(HostCommands.SetAuthorizedKeys, [newContent], ShortOperation);
+                    if (result.ExitCode != 0)
                     {
-                        await System.IO.File.WriteAllTextAsync(_Options.SSHSettings.AuthorizedKeysFile, newContent);
-                        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["authorized_keys has been updated"].Value;
-                        updated = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        exception = ex;
+                        throw new InvalidOperationException(string.IsNullOrEmpty(result.Error) ? $"{HostCommands.SetAuthorizedKeys} failed with exit status {result.ExitCode}" : result.Error);
                     }
                 }
-
-                // If that fail, fallback to ssh
-                if (!updated && _sshState.CanUseSSH)
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        using (var sshClient = await _Options.SSHSettings.ConnectAsync())
-                        {
-                            await sshClient.RunBash($"mkdir -p ~/.ssh && echo '{newContent.EscapeSingleQuotes()}' > ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
-                        }
-                        updated = true;
-                        exception = null;
-                    }
-                    catch (Exception ex)
-                    {
-                        exception = ex;
-                    }
+                    exception = ex;
                 }
 
                 if (exception is null)
@@ -922,28 +696,7 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(SSHService));
             }
 
-            if (command is "disable")
-            {
-                return RedirectToAction(nameof(SSHServiceDisable));
-            }
-
             return NotFound();
-        }
-
-        [HttpGet("server/services/ssh/disable")]
-        public IActionResult SSHServiceDisable()
-        {
-            return View("Confirm", new ConfirmModel(StringLocalizer["Disable modification of SSH settings"], StringLocalizer["This action is permanent and will remove the ability to change the SSH settings via the BTCPay Server user interface."], StringLocalizer["Disable"]));
-        }
-
-        [HttpPost("server/services/ssh/disable")]
-        public async Task<IActionResult> SSHServiceDisablePost()
-        {
-            var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            policies.DisableSSHService = true;
-            await _SettingsRepository.UpdateSetting(policies);
-            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Changes to the SSH settings are now permanently disabled in the BTCPay Server user interface"].Value;
-            return RedirectToAction(nameof(Services));
         }
 
         [HttpGet("server/branding")]

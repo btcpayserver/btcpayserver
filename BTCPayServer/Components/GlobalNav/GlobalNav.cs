@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Components.MainNav;
-using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Identity;
@@ -12,8 +11,7 @@ namespace BTCPayServer.Components.GlobalNav
     public class GlobalNav(
         UserManager<ApplicationUser> userManager,
         UriResolver uriResolver,
-        SettingsRepository settingsRepository,
-        BTCPayServerOptions btcPayServerOptions)
+        SettingsRepository settingsRepository)
         : ViewComponent
     {
         public async Task<IViewComponentResult> InvokeAsync()
@@ -23,7 +21,6 @@ namespace BTCPayServer.Components.GlobalNav
             var vm = new GlobalNavViewModel
             {
                 ContactUrl = serverSettings.ContactUrl,
-                DockerDeployment = btcPayServerOptions.DockerDeployment,
                 CurrentStoreId = store?.Id,
                 MainNav = new MainNavViewModel
                 {

@@ -162,13 +162,8 @@ namespace BTCPayServer.Tests
             config.AppendLine($"socksendpoint={SocksEndpoint}");
             config.AppendLine($"debuglog=debug.log");
             config.AppendLine($"nocsp={NoCSP.ToString().ToLowerInvariant()}");
-
-            if (!string.IsNullOrEmpty(SSHPassword) && string.IsNullOrEmpty(SSHKeyFile))
-                config.AppendLine($"sshpassword={SSHPassword}");
-            if (!string.IsNullOrEmpty(SSHKeyFile))
-                config.AppendLine($"sshkeyfile={SSHKeyFile}");
-            if (!string.IsNullOrEmpty(SSHConnection))
-                config.AppendLine($"sshconnection={SSHConnection}");
+            if (btcpayHostExecutable is not null)
+                config.AppendLine($"btcpayhostexecutable={btcpayHostExecutable}");
 
             if (!String.IsNullOrEmpty(Postgres))
                 config.AppendLine($"postgres=" + Postgres);
@@ -189,6 +184,7 @@ namespace BTCPayServer.Tests
 #if DEBUG
             confBuilder.AddJsonFile("appsettings.dev.json", true, false);
 #endif
+
             if (LoadPluginsInDefaultAssemblyContext)
                 confBuilder.AddInMemoryCollection([new("TEST_RUNNER_ENABLED", "true")]);
             var conf = confBuilder.Build();
@@ -314,6 +310,8 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation("Site is now operational");
         }
         MockRateProvider coinAverageMock;
+        public string btcpayHostExecutable;
+
         private async Task WaitSiteIsOperational()
         {
             // Opportunistic call to wake up view compilation in debug mode, we don't need to await.
@@ -381,9 +379,6 @@ namespace BTCPayServer.Tests
 
         public IServiceProvider ServiceProvider => _Host.Services;
 
-        public string SSHPassword { get; internal set; }
-        public string SSHKeyFile { get; internal set; }
-        public string SSHConnection { get; set; }
         public bool NoCSP { get; set; }
         public string HostEnvironment { get; set; } = Environments.Development;
         public bool RuntimeCompilation { get; set; }

@@ -1,0 +1,15 @@
+@model BTCPayServer.Components.MainNav.MainNavViewModel
+@inject CheckHostCommandsHostedService HostCommands
+
+@if (HostCommands.BTCPayHostAvailable)
+{
+    <li permission="@Policies.CanModifyServerSettings">
+        <a
+            id="menu-item-@nameof(MaintenancePlugin)"
+            class="dropdown-item@(ViewData["ActivePage"]?.ToString() == nameof(MaintenancePlugin) ? " active" : "")"
+            asp-area="@MaintenancePlugin.Area"
+            asp-controller="UIMaintenance"
+            asp-action="Maintenance"
+            text-translate="true">Maintenance</a>
+    </li>
+}

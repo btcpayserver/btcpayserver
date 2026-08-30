@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# In the BTCPay Server Docker image, btcpay-host forwards host command calls
+# over SSH to BTCPAY_SSHCONNECTION, using BTCPAY_SSHKEYFILE when configured.
+
+connection="${BTCPAY_SSHCONNECTION:-}"
+if [[ -z "$connection" ]]; then
+    echo "BTCPAY_SSHCONNECTION must be set to forward btcpay-host commands over SSH" >&2
+    exit 1
+fi
+
+host="$connection"
+ssh_args=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new)
+
+# BTCPAY_SSHCONNECTION can be user@host, user@host:port,
+# user@IPv6, or user@[IPv6]:port.
+# OpenSSH expects the port to be passed separately through -p.
+if [[ "$connection" =~ ^(.+@)?\[([^]]+)\](:([^:]+))?$ ]]; then
+    host="${BASH_REMATCH[1]:-}${BASH_REMATCH[2]}"
+    if [[ -n "${BASH_REMATCH[4]:-}" ]]; then
+        ssh_args+=(-p "${BASH_REMATCH[4]}")
+    fi
+elif [[ "${connection##*@}" == \[* ]]; then
+    echo "Invalid BTCPAY_SSHCONNECTION. Use user@[IPv6]:port for bracketed IPv6 SSH connections." >&2
+    exit 1
+elif [[ "${connection##*@}" == *:* && "${connection##*@}" != *:*:* ]]; then
+    host="${connection%:*}"
+    ssh_args+=(-p "${connection##*:}")
+fi
+
+if [[ -n "${BTCPAY_SSHKEYFILE:-}" ]]; then
+    ssh_args+=(-i "$BTCPAY_SSHKEYFILE")
+fi
+
+# Send argv as JSON on stdin.
+# The host SSH forced command should deserialize it and call its own btcpay-host.
+json="$(jq -cn --args '$ARGS.positional' "$@")"
+exec ssh "${ssh_args[@]}" "$host" btcpay-host <<< "$json"

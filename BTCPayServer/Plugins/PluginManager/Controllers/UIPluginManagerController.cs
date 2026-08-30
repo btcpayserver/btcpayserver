@@ -36,10 +36,10 @@ public class UIPluginManagerController(
     [HttpGet("directory")]
     public async Task<IActionResult> PluginDirectory(string selectedSlug = null)
     {
-        var remotePlugins = string.IsNullOrWhiteSpace(selectedSlug)
-            ? []
-            : await LoadRemotePlugins();
-        var model = CreatePluginDirectoryViewModel(selectedSlug, remotePlugins);
+        var selectedPlugin = string.IsNullOrWhiteSpace(selectedSlug)
+            ? null
+            : await LoadSelectedPlugin(selectedSlug);
+        var model = CreatePluginDirectoryViewModel(selectedPlugin);
         var pluginSourceBaseUri = pluginService.GetPluginSourceBaseUri();
         var btcpayVersion = pluginService.GetShortBtcpayVersion();
         var preReleaseEnabled = policiesSettings.PluginPreReleases;
@@ -62,17 +62,17 @@ public class UIPluginManagerController(
         if (string.IsNullOrWhiteSpace(slug))
             return BadRequest();
 
-        AvailablePlugin[] remotePlugins;
+        AvailablePlugin selectedPlugin;
         try
         {
-            remotePlugins = await pluginService.GetRemotePlugins(null);
+            selectedPlugin = await pluginService.GetDirectoryPluginBySlug(slug);
         }
         catch
         {
             return StatusCode(StatusCodes.Status503ServiceUnavailable);
         }
 
-        var model = CreateSelectedPluginPanelViewModel(slug, remotePlugins, GetPluginRuntimeState());
+        var model = CreateSelectedPluginPanelViewModel(selectedPlugin, GetPluginRuntimeState());
         var pluginSourceBaseUri = pluginService.GetPluginSourceBaseUri();
         model.EmbeddedDetailsUrl = BuildPluginDetailsEmbedUrl(
             pluginSourceBaseUri,
@@ -281,9 +281,7 @@ public class UIPluginManagerController(
         };
     }
 
-    internal PluginDirectoryViewModel CreatePluginDirectoryViewModel(
-        string selectedSlug,
-        AvailablePlugin[] remotePlugins)
+    internal PluginDirectoryViewModel CreatePluginDirectoryViewModel(AvailablePlugin selectedPlugin)
     {
         var runtimeState = GetPluginRuntimeState();
 
@@ -297,25 +295,18 @@ public class UIPluginManagerController(
                 .OrderBy(identifier => identifier, StringComparer.OrdinalIgnoreCase)
                 .ToArray(),
             HasPendingActions = runtimeState.PendingCommands.Length > 0,
-            SelectedPluginPanel = CreateSelectedPluginPanelViewModel(selectedSlug, remotePlugins, runtimeState)
+            SelectedPluginPanel = CreateSelectedPluginPanelViewModel(selectedPlugin, runtimeState)
         };
     }
 
     private PluginSelectedPanelViewModel CreateSelectedPluginPanelViewModel(
-        string selectedSlug,
-        AvailablePlugin[] remotePlugins,
+        AvailablePlugin selectedPlugin,
         PluginRuntimeState runtimeState)
     {
-        if (string.IsNullOrEmpty(selectedSlug))
+        if (selectedPlugin is null)
             return new PluginSelectedPanelViewModel();
 
-        var selectedAvailable = remotePlugins.FirstOrDefault(plugin =>
-            plugin.CatalogSlug != null &&
-            plugin.CatalogSlug.Equals(selectedSlug, StringComparison.OrdinalIgnoreCase));
-        if (selectedAvailable is null)
-            return new PluginSelectedPanelViewModel();
-
-        var identifier = selectedAvailable.Identifier;
+        var identifier = selectedPlugin.Identifier;
         var loadedPlugin = runtimeState.VisibleLoadedPlugins.FirstOrDefault(plugin =>
             plugin.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
         runtimeState.DisabledVersions.TryGetValue(identifier, out var disabledVersion);
@@ -333,16 +324,15 @@ public class UIPluginManagerController(
 
         return new PluginSelectedPanelViewModel
         {
-            SelectedSlug = selectedAvailable.CatalogSlug,
+            SelectedSlug = selectedPlugin.CatalogSlug,
             PluginIdentifier = identifier,
-            PluginName = selectedAvailable.Name,
+            PluginName = selectedPlugin.Name,
             InstalledVersion = loadedPlugin?.Version,
             DisabledVersion = disabledVersion,
             PendingAction = pendingAction,
             PendingVersion = pendingVersion,
             InstallVersion = canInstall
-                ? GetBestCandidate(remotePlugins.Where(plugin =>
-                    plugin.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase)))?.Version?.ToString()
+                ? selectedPlugin.Version?.ToString()
                 : null
         };
     }
@@ -624,6 +614,23 @@ public class UIPluginManagerController(
                 Message = stringLocalizer["Remote plugins lookup failed. Try again later. Error: {0}", ex.Message].Value
             });
             return [];
+        }
+    }
+
+    private async Task<AvailablePlugin> LoadSelectedPlugin(string slug)
+    {
+        try
+        {
+            return await pluginService.GetDirectoryPluginBySlug(slug);
+        }
+        catch (Exception ex)
+        {
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                Message = stringLocalizer["Remote plugins lookup failed. Try again later. Error: {0}", ex.Message].Value
+            });
+            return null;
         }
     }
 

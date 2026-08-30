@@ -183,7 +183,11 @@ namespace BTCPayServer.Services
             if (succeeded)
             {
                 if (!approved)
+                {
+                    await userManager.UpdateSecurityStampAsync(user);
                     _securityStampInvalidator.Invalidate(user.Id);
+                }
+
                 _logger.LogInformation("User {Email} is now {Status}", user.Email, approved ? "approved" : "unapproved");
                 _eventAggregator.Publish(new UserEvent.Approved(user, loginLink));
             }

@@ -11,6 +11,6 @@ public partial class BTCPayServerClient
 {
     public virtual async Task<IEnumerable<PayoutProcessorData>> GetPayoutProcessors(CancellationToken token = default)
     {
-        return await SendHttpRequest<IEnumerable<PayoutProcessorData>>("api/v1/payout-processors", null, HttpMethod.Get, token);
+        return await SendHttpRequest<IEnumerable<PayoutProcessorData>>($"api/v1/payout-processors", null, HttpMethod.Get, token);
     }
 }

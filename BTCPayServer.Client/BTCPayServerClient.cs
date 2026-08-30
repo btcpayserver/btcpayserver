@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -78,7 +79,7 @@ public partial class BTCPayServerClient
         return JsonConvert.DeserializeObject<T>(str);
     }
 
-    public virtual async Task SendHttpRequest(string path,
+    public virtual async Task SendHttpRequest(FormattableString path,
         Dictionary<string, object> queryPayload = null,
         HttpMethod method = null, CancellationToken cancellationToken = default)
     {
@@ -86,7 +87,7 @@ public partial class BTCPayServerClient
         await HandleResponse(resp);
     }
 
-    public virtual async Task<T> SendHttpRequest<T>(string path,
+    public virtual async Task<T> SendHttpRequest<T>(FormattableString path,
         Dictionary<string, object> queryPayload = null,
         HttpMethod method = null, CancellationToken cancellationToken = default)
     {
@@ -94,7 +95,7 @@ public partial class BTCPayServerClient
         return await HandleResponse<T>(resp);
     }
 
-    public virtual async Task SendHttpRequest(string path,
+    public virtual async Task SendHttpRequest(FormattableString path,
         object bodyPayload = null,
         HttpMethod method = null, CancellationToken cancellationToken = default)
     {
@@ -102,15 +103,15 @@ public partial class BTCPayServerClient
         await HandleResponse(resp);
     }
 
-    protected virtual async Task<T> SendHttpRequest<T>(string path,
+    protected virtual async Task<T> SendHttpRequest<T>(FormattableString path,
         object bodyPayload = null,
         HttpMethod method = null, CancellationToken cancellationToken = default)
     {
         using var resp = await _httpClient.SendAsync(CreateHttpRequest(path: path, bodyPayload: bodyPayload, method: method), cancellationToken);
         return await HandleResponse<T>(resp);
     }
-        
-    protected virtual async Task<TRes> SendHttpRequest<TReq, TRes>(string path,
+
+    protected virtual async Task<TRes> SendHttpRequest<TReq, TRes>(FormattableString path,
         Dictionary<string, object> queryPayload = null,
         TReq bodyPayload = default, HttpMethod method = null, CancellationToken cancellationToken = default)
     {
@@ -118,12 +119,19 @@ public partial class BTCPayServerClient
         return await HandleResponse<TRes>(resp);
     }
 
-    protected virtual HttpRequestMessage CreateHttpRequest(string path,
+    protected virtual HttpRequestMessage CreateHttpRequest(FormattableString path,
         Dictionary<string, object> queryPayload = null,
         HttpMethod method = null)
     {
         var uriBuilder = new UriBuilder(_btcpayHost);
-        uriBuilder.Path += (uriBuilder.Path.EndsWith("/") || path.StartsWith("/") ? "" : "/") + path;
+        var encodedPath = EncodeUrlParameters(path).ToString();
+        var queryIndex = encodedPath.IndexOf('?');
+        if (queryIndex is not -1)
+        {
+            uriBuilder.Query = encodedPath[(queryIndex + 1)..];
+            encodedPath = encodedPath[..queryIndex];
+        }
+        uriBuilder.Path += (uriBuilder.Path.EndsWith("/") || encodedPath.StartsWith("/") ? "" : "/") + encodedPath;
         if (queryPayload != null && queryPayload.Any())
         {
             AppendPayloadToQuery(uriBuilder, queryPayload);
@@ -140,7 +148,7 @@ public partial class BTCPayServerClient
         return httpRequest;
     }
 
-    protected virtual HttpRequestMessage CreateHttpRequest<T>(string path,
+    protected virtual HttpRequestMessage CreateHttpRequest<T>(FormattableString path,
         Dictionary<string, object> queryPayload = null,
         T bodyPayload = default, HttpMethod method = null)
     {
@@ -153,7 +161,7 @@ public partial class BTCPayServerClient
         return request;
     }
 
-    protected virtual async Task<T> UploadFileRequest<T>(string apiPath, string filePath, string mimeType, string formFieldName, HttpMethod method = null, CancellationToken token = default)
+    protected virtual async Task<T> UploadFileRequest<T>(FormattableString apiPath, string filePath, string mimeType, string formFieldName, HttpMethod method = null, CancellationToken token = default)
     {
         using MultipartFormDataContent multipartContent = new();
         using var fileContent = new StreamContent(File.OpenRead(filePath));
@@ -164,6 +172,33 @@ public partial class BTCPayServerClient
         req.Content = multipartContent;
         using var resp = await _httpClient.SendAsync(req, token);
         return await HandleResponse<T>(resp);
+    }
+
+    private class RawStr
+    {
+        private readonly string _str;
+        public RawStr(string str)
+        {
+            _str = str;
+        }
+        public override string ToString() => _str;
+    }
+
+    private static RawStr Raw(string str) => new(str);
+
+    private static FormattableString EncodeUrlParameters(FormattableString url)
+    {
+        return FormattableStringFactory.Create(
+            url.Format,
+            url.GetArguments()
+                .Select(a =>
+                    a is RawStr ? a :
+                    a is FormattableString formattableString ? EncodeUrlParameters(formattableString) :
+                    Uri.EscapeDataString(a?.ToString() ?? string.Empty)
+                    )
+                // Avoid path transversal
+                .Select(v => v is "." or ".." ? string.Empty : v)
+                .ToArray());
     }
 
     public static void AppendPayloadToQuery(UriBuilder uri, KeyValuePair<string, object> keyValuePair)

@@ -9,7 +9,7 @@ public partial class BTCPayServerClient
 {
     public virtual async Task<FileData[]> GetFiles(CancellationToken token = default)
     {
-        return await SendHttpRequest<FileData[]>("api/v1/files", null, HttpMethod.Get, token);
+        return await SendHttpRequest<FileData[]>($"api/v1/files", null, HttpMethod.Get, token);
     }
 
     public virtual async Task<FileData> GetFile(string fileId, CancellationToken token = default)
@@ -19,7 +19,7 @@ public partial class BTCPayServerClient
 
     public virtual async Task<FileData> UploadFile(string filePath, string mimeType, CancellationToken token = default)
     {
-        return await UploadFileRequest<FileData>("api/v1/files", filePath, mimeType, "file", HttpMethod.Post, token);
+        return await UploadFileRequest<FileData>($"api/v1/files", filePath, mimeType, "file", HttpMethod.Post, token);
     }
 
     public virtual async Task DeleteFile(string fileId, CancellationToken token = default)

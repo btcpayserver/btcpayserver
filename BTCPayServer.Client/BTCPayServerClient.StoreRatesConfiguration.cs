@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
@@ -14,7 +15,7 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<StoreRateConfiguration>(path, null, HttpMethod.Get, token);
     }
 
-    private string GetRateConfigPath(string storeId, bool? fallback)
+    private FormattableString GetRateConfigPath(string storeId, bool? fallback)
     => fallback switch
     {
         null => $"api/v1/stores/{storeId}/rates/configuration",
@@ -24,7 +25,7 @@ public partial class BTCPayServerClient
 
     public virtual async Task<List<RateSource>> GetRateSources(CancellationToken token = default)
     {
-        return await SendHttpRequest<List<RateSource>>("misc/rate-sources", null, HttpMethod.Get, token);
+        return await SendHttpRequest<List<RateSource>>($"misc/rate-sources", null, HttpMethod.Get, token);
     }
 
     public virtual async Task<StoreRateConfiguration> UpdateStoreRateConfiguration(string storeId, StoreRateConfiguration request, bool? fallback = null, CancellationToken token = default)

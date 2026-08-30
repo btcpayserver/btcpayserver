@@ -21,7 +21,9 @@ public partial class BTCPayServerClient
 
     public virtual async Task<IEnumerable<LightningAutomatedPayoutSettings>> GetStoreLightningAutomatedPayoutProcessors(string storeId, string? payoutMethodId = null, CancellationToken token = default)
     {
-        return await SendHttpRequest<IEnumerable<LightningAutomatedPayoutSettings>>($"api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory{(payoutMethodId is null ? string.Empty : $"/{payoutMethodId}")}", null, HttpMethod.Get, token);
+        if (payoutMethodId is null)
+            return await SendHttpRequest<IEnumerable<LightningAutomatedPayoutSettings>>($"api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory", null, HttpMethod.Get, token);
+        return await SendHttpRequest<IEnumerable<LightningAutomatedPayoutSettings>>($"api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{payoutMethodId}", null, HttpMethod.Get, token);
     }
 
     public virtual async Task<LightningAutomatedPayoutSettings> UpdateStoreLightningAutomatedPayoutProcessors(string storeId, string payoutMethodId, LightningAutomatedPayoutSettings request, CancellationToken token = default)
@@ -36,6 +38,8 @@ public partial class BTCPayServerClient
 
     public virtual async Task<IEnumerable<OnChainAutomatedPayoutSettings>> GetStoreOnChainAutomatedPayoutProcessors(string storeId, string? paymentMethod = null, CancellationToken token = default)
     {
-        return await SendHttpRequest<IEnumerable<OnChainAutomatedPayoutSettings>>($"api/v1/stores/{storeId}/payout-processors/OnChainAutomatedPayoutSenderFactory{(paymentMethod is null ? string.Empty : $"/{paymentMethod}")}", null, HttpMethod.Get, token);
+        if (paymentMethod is null)
+            return await SendHttpRequest<IEnumerable<OnChainAutomatedPayoutSettings>>($"api/v1/stores/{storeId}/payout-processors/OnChainAutomatedPayoutSenderFactory", null, HttpMethod.Get, token);
+        return await SendHttpRequest<IEnumerable<OnChainAutomatedPayoutSettings>>($"api/v1/stores/{storeId}/payout-processors/OnChainAutomatedPayoutSenderFactory/{paymentMethod}", null, HttpMethod.Get, token);
     }
 }

@@ -879,10 +879,6 @@ namespace BTCPayServer.Tests
             await using var s = CreatePlaywrightTester();
             await s.Server.InstallHostCommands();
             await s.StartAsync();
-            var settings = s.Server.PayTester.GetService<SettingsRepository>();
-            var policies = await settings.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            policies.DisableSSHService = false;
-            await settings.UpdateSetting(policies);
             await s.RegisterNewUser(isAdmin: true);
             await s.GoToUrl("/server/services");
             await s.Page.WaitForLoadStateAsync();
@@ -906,20 +902,6 @@ namespace BTCPayServer.Tests
 
             text = await s.Page.Locator("#SSHKeyFileContent").TextContentAsync();
             Assert.DoesNotContain("test2", text);
-
-            // Let's try to disable it now
-            await s.Page.ClickAsync("#disable");
-            await s.Page.FillAsync("#ConfirmInput", "DISABLE");
-            await s.Page.ClickAsync("#ConfirmContinue");
-            await s.GoToUrl("/server/services/ssh", true);
-            Assert.True((await s.Page.ContentAsync()).Contains("404 - Page not found", StringComparison.OrdinalIgnoreCase));
-
-            policies = await settings.GetSettingAsync<PoliciesSettings>();
-            Assert.NotNull(policies);
-            Assert.True(policies.DisableSSHService);
-
-            policies.DisableSSHService = false;
-            await settings.UpdateSetting(policies);
         }
 
         [Fact]

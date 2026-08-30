@@ -657,8 +657,7 @@ namespace BTCPayServer.Controllers
         }
 
         bool CanShowSSHService()
-        => !_policiesSettings.DisableSSHService &&
-           _hostCommandState.SupportedCommands.Contains(HostCommands.ShowAuthorizedKeys) &&
+        => _hostCommandState.SupportedCommands.Contains(HostCommands.ShowAuthorizedKeys) &&
            _hostCommandState.SupportedCommands.Contains(HostCommands.SetAuthorizedKeys);
 
         [HttpPost("server/services/ssh")]
@@ -697,28 +696,7 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(SSHService));
             }
 
-            if (command is "disable")
-            {
-                return RedirectToAction(nameof(SSHServiceDisable));
-            }
-
             return NotFound();
-        }
-
-        [HttpGet("server/services/ssh/disable")]
-        public IActionResult SSHServiceDisable()
-        {
-            return View("Confirm", new ConfirmModel(StringLocalizer["Disable modification of SSH settings"], StringLocalizer["This action is permanent and will remove the ability to change the SSH settings via the BTCPay Server user interface."], StringLocalizer["Disable"]));
-        }
-
-        [HttpPost("server/services/ssh/disable")]
-        public async Task<IActionResult> SSHServiceDisablePost()
-        {
-            var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            policies.DisableSSHService = true;
-            await _SettingsRepository.UpdateSetting(policies);
-            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Changes to the SSH settings are now permanently disabled in the BTCPay Server user interface"].Value;
-            return RedirectToAction(nameof(Services));
         }
 
         [HttpGet("server/branding")]

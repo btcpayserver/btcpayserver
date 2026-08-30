@@ -98,6 +98,29 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task StoreScopedUnrestrictedKeyCannotMintUnscopedKey()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+
+            var accountClient = await user.CreateClient();
+            var scopedKey = await accountClient.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Label = "Store-scoped key",
+                Permissions = new[] { Permission.Create(Policies.Unrestricted, user.StoreId) }
+            });
+            var scopedClient = user.CreateClientFromAPIKey(scopedKey.ApiKey);
+
+            await AssertHttpError(403, () => scopedClient.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.Unrestricted) }
+            }));
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanUseMiscAPIs()
         {
             using (var tester = CreateServerTester())

@@ -40,6 +40,7 @@ namespace BTCPayServer.Client
         public const string CanViewPullPayments = "btcpay.store.canviewpullpayments";
         public const string CanCreateNonApprovedPullPayments = "btcpay.store.cancreatenonapprovedpullpayments";
         public const string Unrestricted = "unrestricted";
+        public const string UnrestrictedUnscoped = "unrestricted:";
     }
 
     public class PermissionSet

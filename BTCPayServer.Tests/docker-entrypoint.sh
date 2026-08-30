@@ -6,4 +6,4 @@ if [ ! -z "$TEST_FILTERS" ]; then
 FILTERS="--filter $TEST_FILTERS"
 fi
 
-dotnet test -c ${CONFIGURATION_NAME} $FILTERS --no-build -v n --output Normal < /dev/null
+dotnet test -c ${CONFIGURATION_NAME} $FILTERS --no-build -v n --output Normal --report-gh

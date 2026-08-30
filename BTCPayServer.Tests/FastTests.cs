@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Security;
 using System.Text;
@@ -52,6 +53,28 @@ namespace BTCPayServer.Tests
         public FastTests(ITestOutputHelper helper) : base(helper)
         {
         }
+
+        [Fact]
+        public void BTCPayServerClientEscapesPathIdentifiers()
+        {
+            var client = new RequestInspectingClient(new Uri("https://example.com/root/"));
+            var request = client.CreateRequest($"api/v1/stores/{"../users/me"}/webhooks/{"delivery/../x"}?email={"a+b@example.com"}");
+
+            Assert.Equal("https://example.com/root/api/v1/stores/..%2Fusers%2Fme/webhooks/delivery%2F..%2Fx?email=a%2Bb%40example.com", request.RequestUri!.AbsoluteUri);
+        }
+
+        private class RequestInspectingClient : BTCPayServerClient
+        {
+            public RequestInspectingClient(Uri btcpayHost) : base(btcpayHost)
+            {
+            }
+
+            public HttpRequestMessage CreateRequest(FormattableString path)
+            {
+                return CreateHttpRequest(path);
+            }
+        }
+
         class DockerImage
         {
             public string User { get; private set; }

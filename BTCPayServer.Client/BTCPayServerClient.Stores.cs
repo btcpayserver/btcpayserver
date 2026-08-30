@@ -11,7 +11,7 @@ public partial class BTCPayServerClient
 {
     public virtual async Task<IEnumerable<StoreData>> GetStores(CancellationToken token = default)
     {
-        return await SendHttpRequest<IEnumerable<StoreData>>("api/v1/stores", null, HttpMethod.Get, token);
+        return await SendHttpRequest<IEnumerable<StoreData>>($"api/v1/stores", null, HttpMethod.Get, token);
     }
 
     public virtual async Task<StoreData> GetStore(string storeId, CancellationToken token = default)
@@ -27,7 +27,7 @@ public partial class BTCPayServerClient
     public virtual async Task<StoreData> CreateStore(CreateStoreRequest request, CancellationToken token = default)
     {
         if (request == null) throw new ArgumentNullException(nameof(request));
-        return await SendHttpRequest<StoreData>("api/v1/stores", request, HttpMethod.Post, token);
+        return await SendHttpRequest<StoreData>($"api/v1/stores", request, HttpMethod.Post, token);
     }
 
     public async Task<StoreData> UpdateStore(string storeId, StoreData request, CancellationToken token = default)

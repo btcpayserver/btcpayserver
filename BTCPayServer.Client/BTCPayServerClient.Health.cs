@@ -9,6 +9,6 @@ public partial class BTCPayServerClient
 {
     public virtual async Task<ApiHealthData> GetHealth(CancellationToken token = default)
     {
-        return await SendHttpRequest<ApiHealthData>("api/v1/health", null, HttpMethod.Get, token);
+        return await SendHttpRequest<ApiHealthData>($"api/v1/health", null, HttpMethod.Get, token);
     }
 }

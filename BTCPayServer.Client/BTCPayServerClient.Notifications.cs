@@ -20,7 +20,7 @@ public partial class BTCPayServerClient
             queryPayload.Add(nameof(take), take);
         if (storeId != null)
             queryPayload.Add(nameof(storeId), storeId);
-        return await SendHttpRequest<IEnumerable<NotificationData>>("api/v1/users/me/notifications", queryPayload, HttpMethod.Get, token);
+        return await SendHttpRequest<IEnumerable<NotificationData>>($"api/v1/users/me/notifications", queryPayload, HttpMethod.Get, token);
     }
 
     public virtual async Task<NotificationData> GetNotification(string notificationId,
@@ -37,12 +37,12 @@ public partial class BTCPayServerClient
 
     public virtual async Task<NotificationSettingsData> GetNotificationSettings(CancellationToken token = default)
     {
-        return await SendHttpRequest<NotificationSettingsData>("api/v1/users/me/notification-settings", null, HttpMethod.Get, token);
+        return await SendHttpRequest<NotificationSettingsData>($"api/v1/users/me/notification-settings", null, HttpMethod.Get, token);
     }
 
     public virtual async Task<NotificationSettingsData> UpdateNotificationSettings(UpdateNotificationSettingsRequest request, CancellationToken token = default)
     {
-        return await SendHttpRequest<NotificationSettingsData>("api/v1/users/me/notification-settings", request, HttpMethod.Put, token);
+        return await SendHttpRequest<NotificationSettingsData>($"api/v1/users/me/notification-settings", request, HttpMethod.Put, token);
     }
 
     public virtual async Task RemoveNotification(string notificationId, CancellationToken token = default)

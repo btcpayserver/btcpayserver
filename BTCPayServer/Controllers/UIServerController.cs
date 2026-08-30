@@ -50,6 +50,7 @@ namespace BTCPayServer.Controllers
     {
         private readonly ISettingsAccessor<MonetizationSettings> _monetizationSettings;
         private readonly ProcessRunner _processRunner;
+        private readonly BTCPayServerSecurityStampValidator.SecurityStampInvalidator _securityStampInvalidator;
         private readonly UserManager<ApplicationUser> _UserManager;
         private readonly UserService _userService;
         readonly SettingsRepository _SettingsRepository;
@@ -103,7 +104,8 @@ namespace BTCPayServer.Controllers
             ViewLocalizer viewLocalizer,
             BTCPayServerEnvironment environment,
             ISettingsAccessor<MonetizationSettings> monetizationSettings,
-            ProcessRunner processRunner
+            ProcessRunner processRunner,
+            BTCPayServerSecurityStampValidator.SecurityStampInvalidator securityStampInvalidator
         )
         {
             _policiesSettings = policiesSettings;
@@ -130,6 +132,7 @@ namespace BTCPayServer.Controllers
             _transactionLinkProviders = transactionLinkProviders;
             _monetizationSettings = monetizationSettings;
             _processRunner = processRunner;
+            _securityStampInvalidator = securityStampInvalidator;
             _localizer = localizer;
             Environment = environment;
             StringLocalizer = stringLocalizer;

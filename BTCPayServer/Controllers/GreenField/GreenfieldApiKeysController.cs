@@ -33,7 +33,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpPost("~/api/v1/api-keys")]
-        [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.UnrestrictedUnscoped, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public Task<IActionResult> CreateAPIKey(CreateApiKeyRequest request)
         => CreateUserAPIKey(User.GetId(), request);
 

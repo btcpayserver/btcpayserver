@@ -19,7 +19,7 @@
         </button>
     }
 }
-<form asp-action="Pair" method="post" permissioned="@Policies.CanModifyStoreSettings">
+<form asp-action="Pair" method="post" permissioned="@Policies.CanManageStoreCredentials">
     <div class="sticky-header">
         <vc:title-header />
 		<button id="page-primary" type="submit" class="btn btn-primary mt-3" title="@StringLocalizer["Approve this pairing demand"]" text-translate="true">Approve</button>

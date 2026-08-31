@@ -11,6 +11,7 @@ namespace BTCPayServer.Migrations
     [Migration("20260831000000_AddCredentialManagementToManagerRole")]
     public partial class AddCredentialManagementToManagerRole : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql("""
@@ -22,6 +23,7 @@ namespace BTCPayServer.Migrations
                 """);
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
         }

@@ -22,6 +22,9 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
         AddDefaultStaticSearch(services);
     }
 
+    /// <summary>
+    /// Registers the built-in search entries with their corresponding authorization policies.
+    /// </summary>
     private static void AddDefaultStaticSearch(IServiceCollection services)
     {
         services.AddStaticSearch([

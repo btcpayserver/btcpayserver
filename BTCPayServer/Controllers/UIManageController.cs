@@ -45,6 +45,9 @@ namespace BTCPayServer.Controllers
         readonly StoreRepository _StoreRepository;
         public IStringLocalizer StringLocalizer { get; }
 
+        /// <summary>
+        /// Initializes the account-management controller and its credential authorization dependencies.
+        /// </summary>
         public UIManageController(
           UserManager<ApplicationUser> userManager,
           SignInManager<ApplicationUser> signInManager,

@@ -43,6 +43,9 @@ public class UIStoresTokenController(
     [TempData]
     public bool StoreNotConfigured { get; set; }
     public string? GeneratedPairingCode { get; set; }
+    /// <summary>
+    /// Lists legacy access tokens and API-key information for the current store.
+    /// </summary>
     [HttpGet("{storeId}/tokens")]
     [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ListTokens()
@@ -59,6 +62,9 @@ public class UIStoresTokenController(
         return View(model);
     }
 
+    /// <summary>
+    /// Displays the confirmation page for revoking a store access token.
+    /// </summary>
     [HttpGet("{storeId}/tokens/{tokenId}/revoke")]
     [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> RevokeToken(string tokenId)
@@ -69,6 +75,9 @@ public class UIStoresTokenController(
         return View("Confirm", new ConfirmModel(StringLocalizer["Revoke the token"], $"The access token with the label <strong>{html.Encode(token.Label)}</strong> will be revoked. Do you wish to continue?", "Revoke"));
     }
 
+    /// <summary>
+    /// Revokes a store access token after confirmation.
+    /// </summary>
     [HttpPost("{storeId}/tokens/{tokenId}/revoke")]
     [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> RevokeTokenConfirm(string tokenId)
@@ -83,6 +92,9 @@ public class UIStoresTokenController(
         return RedirectToAction(nameof(ListTokens), new { storeId = token?.StoreId });
     }
 
+    /// <summary>
+    /// Displays a store access token when it belongs to the current store.
+    /// </summary>
     [HttpGet("{storeId}/tokens/{tokenId}")]
     [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ShowToken(string tokenId)
@@ -93,6 +105,9 @@ public class UIStoresTokenController(
         return View(token);
     }
 
+    /// <summary>
+    /// Displays the access-token creation form for the selected store.
+    /// </summary>
     [HttpGet("{storeId}/tokens/create")]
     [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult CreateToken(string storeId)
@@ -104,6 +119,9 @@ public class UIStoresTokenController(
         return View(model);
     }
 
+    /// <summary>
+    /// Creates an access token after verifying credential-management permission for its store.
+    /// </summary>
     [HttpPost("{storeId}/tokens/create")]
     [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> CreateToken(string storeId, CreateTokenViewModel model)
@@ -158,6 +176,9 @@ public class UIStoresTokenController(
         });
     }
 
+    /// <summary>
+    /// Displays the account-level token creation form using stores the current user may manage.
+    /// </summary>
     [HttpGet("/api-tokens")]
     [AllowAnonymous]
     public async Task<IActionResult> CreateToken()
@@ -186,6 +207,9 @@ public class UIStoresTokenController(
         return CreateToken(model.StoreId, model);
     }
 
+    /// <summary>
+    /// Displays a pairing request limited to stores for which the user may manage credentials.
+    /// </summary>
     [HttpGet("/api-access-request")]
     [AllowAnonymous]
     public async Task<IActionResult> RequestPairing(string pairingCode, string? selectedStore = null)
@@ -224,6 +248,9 @@ public class UIStoresTokenController(
         });
     }
 
+    /// <summary>
+    /// Approves a pairing request for a store where the user may manage credentials.
+    /// </summary>
     [HttpPost("/api-access-request")]
     [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Pair(string pairingCode, string storeId)

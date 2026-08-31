@@ -84,6 +84,9 @@ namespace BTCPayServer.Hosting
             return services;
         }
 
+        /// <summary>
+        /// Registers BTCPay Server services, authorization policies, and application infrastructure.
+        /// </summary>
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration, Logs logs)
         {
             services.TryAddScoped<CallbackGenerator>();

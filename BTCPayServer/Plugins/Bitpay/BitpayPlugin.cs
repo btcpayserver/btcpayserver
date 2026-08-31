@@ -21,6 +21,7 @@ public class BitpayPlugin : BaseBTCPayServerPlugin
     public override string Name => "Bitpay";
     public override string Description => "Add a compatibility layer to the legacy Bitpay API";
 
+    /// <inheritdoc />
     public override void Execute(IServiceCollection services)
     {
         services.AddSingleton<IHostedService, BitpayIPNSender>();

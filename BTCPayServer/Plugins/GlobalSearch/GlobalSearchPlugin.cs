@@ -225,7 +225,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
             },
             new ActionResultItemViewModel
             {
-                RequiredPolicy = Policies.CanViewProfile,
+                RequiredPolicy = Policies.CanManageStoreCredentials,
                 Title = "Manage API Keys",
                 Action = nameof(UIManageController.APIKeys),
                 Controller = "UIManage",

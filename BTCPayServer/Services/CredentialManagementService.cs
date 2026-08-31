@@ -10,17 +10,26 @@ using BTCPayServer.Services.Stores;
 
 namespace BTCPayServer.Services;
 
+/// <summary>
+/// Applies the server policy and store-role boundary for API key and access-token management.
+/// </summary>
 public class CredentialManagementService(
     StoreRepository storeRepository,
     PermissionService permissionService,
     ISettingsAccessor<PoliciesSettings> policiesSettings)
 {
+    /// <summary>
+    /// Determines whether the server-wide policy permits the user to manage credentials.
+    /// </summary>
     public bool IsAllowedByServer(ClaimsPrincipal user)
     {
         return user.IsInRole(Roles.ServerAdmin) ||
                !policiesSettings.Settings.DisableNonAdminCredentialManagement;
     }
 
+    /// <summary>
+    /// Returns stores for which the user may manage credentials under both server and store policy.
+    /// </summary>
     public async Task<StoreData[]> GetManageableStores(ClaimsPrincipal user)
     {
         var userId = user.GetIdOrNull();
@@ -36,6 +45,9 @@ public class CredentialManagementService(
             .ToArray();
     }
 
+    /// <summary>
+    /// Determines whether the user may access account-level API key management.
+    /// </summary>
     public async Task<bool> CanManageAccountApiKeys(ClaimsPrincipal user)
     {
         var userId = user.GetIdOrNull();
@@ -49,6 +61,9 @@ public class CredentialManagementService(
             store.HasPolicy(userId, Policies.CanManageStoreCredentials, permissionService));
     }
 
+    /// <summary>
+    /// Determines whether the user may create an API key with the requested permissions and store scopes.
+    /// </summary>
     public async Task<bool> CanCreateApiKey(ClaimsPrincipal user, IEnumerable<Permission> requestedPermissions)
     {
         if (!await CanManageAccountApiKeys(user))

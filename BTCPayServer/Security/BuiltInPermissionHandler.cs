@@ -29,6 +29,9 @@ public class BuiltInPermissionHandler(
             Permission.Create(Policies.CanManageStoreCredentials)
         });
 
+    /// <summary>
+    /// Evaluates built-in server, user, and store permissions, including the server credential-management ceiling.
+    /// </summary>
     public async Task HandleAsync(AuthorizationHandlerContext authContext, PermissionAuthorizationContext permContext)
     {
         var isAdmin = authContext.User.IsInRole(Roles.ServerAdmin);

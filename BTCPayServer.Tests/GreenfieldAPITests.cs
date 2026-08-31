@@ -239,6 +239,9 @@ namespace BTCPayServer.Tests
             await newUserClient.GetInvoices(store.Id);
         }
 
+        /// <summary>
+        /// Verifies that server policy and store roles constrain credential management without restricting server administrators.
+        /// </summary>
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CredentialManagementRespectsServerAndStoreRoleLockdown()

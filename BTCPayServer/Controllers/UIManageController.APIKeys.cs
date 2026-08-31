@@ -20,6 +20,9 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIManageController
     {
+        /// <summary>
+        /// Lists API keys owned by the current user.
+        /// </summary>
         [HttpGet]
         [Authorize(Policy = Policies.CanManageStoreCredentials)]
         public async Task<IActionResult> APIKeys()
@@ -33,6 +36,9 @@ namespace BTCPayServer.Controllers
             });
         }
 
+        /// <summary>
+        /// Displays permission-usage details for an API key owned by the current user.
+        /// </summary>
         [HttpGet("~/api-keys/{id}/view-analysis")]
         [Authorize(Policy = Policies.CanManageStoreCredentials)]
         public async Task<IActionResult> APIKeyPermissionAnalysis(string id)
@@ -78,6 +84,9 @@ namespace BTCPayServer.Controllers
             });
         }
 
+        /// <summary>
+        /// Displays the confirmation page for deleting an API key owned by the current user.
+        /// </summary>
         [HttpGet("~/api-keys/{id}/delete")]
         [Authorize(Policy = Policies.CanManageStoreCredentials)]
         public async Task<IActionResult> DeleteAPIKey(string id)
@@ -96,6 +105,9 @@ namespace BTCPayServer.Controllers
             });
         }
 
+        /// <summary>
+        /// Deletes an API key owned by the current user.
+        /// </summary>
         [HttpPost("~/api-keys/{id}/delete")]
         [Authorize(Policy = Policies.CanManageStoreCredentials)]
         public async Task<IActionResult> DeleteAPIKeyPost(string id)
@@ -114,6 +126,9 @@ namespace BTCPayServer.Controllers
             return RedirectToAction("APIKeys");
         }
 
+        /// <summary>
+        /// Displays the API-key creation form with permissions limited to manageable stores.
+        /// </summary>
         [HttpGet]
         [Authorize(Policy = Policies.CanManageStoreCredentials)]
         public async Task<IActionResult> AddApiKey()
@@ -131,6 +146,9 @@ namespace BTCPayServer.Controllers
             return View("AddApiKey", await SetViewModelValues(new AddApiKeyViewModel()));
         }
 
+        /// <summary>
+        /// Displays an application's API-key authorization request within the caller's credential authority.
+        /// </summary>
         [HttpGet("~/api-keys/authorize")]
         [Authorize(Policy = Policies.CanManageStoreCredentials)]
         public async Task<IActionResult> AuthorizeAPIKey(string[] permissions, string applicationName = null, Uri redirect = null,
@@ -181,6 +199,9 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
+        /// <summary>
+        /// Processes an application's API-key authorization request after validating its permissions and scopes.
+        /// </summary>
         [HttpPost("~/api-keys/authorize")]
         [Authorize(Policy = Policies.CanManageStoreCredentials)]
         public async Task<IActionResult> AuthorizeAPIKey([FromForm] AuthorizeApiKeysViewModel viewModel)
@@ -287,6 +308,9 @@ namespace BTCPayServer.Controllers
             }
         }
 
+        /// <summary>
+        /// Creates an API key after validating the submitted permissions against the caller's manageable stores.
+        /// </summary>
         [HttpPost]
         [Authorize(Policy = Policies.CanManageStoreCredentials)]
         public async Task<IActionResult> AddApiKey(AddApiKeyViewModel viewModel)
@@ -319,6 +343,9 @@ namespace BTCPayServer.Controllers
             return RedirectToAction("APIKeys");
         }
 
+        /// <summary>
+        /// Finds an existing key that satisfies an application's requested permissions and the current authority boundary.
+        /// </summary>
         private async Task<APIKeyData> CheckForMatchingApiKey(IEnumerable<Permission> requestedPermissions, AuthorizeApiKeysViewModel vm)
         {
             if (string.IsNullOrEmpty(vm.ApplicationIdentifier) || vm.RedirectUrl == null)
@@ -451,6 +478,9 @@ namespace BTCPayServer.Controllers
         private bool IsStorePolicy(string policy)
         => Permission.TryGetPolicyType(policy) is PolicyType.Store;
 
+        /// <summary>
+        /// Applies interactive store-scope commands while preventing escalation to stores the user cannot manage.
+        /// </summary>
         private IActionResult HandleCommands(AddApiKeyViewModel viewModel)
         {
             if (string.IsNullOrEmpty(viewModel.Command))
@@ -556,6 +586,9 @@ namespace BTCPayServer.Controllers
             return permissions.Distinct();
         }
 
+        /// <summary>
+        /// Populates an API-key view model and removes posted store scopes outside the current user's authority.
+        /// </summary>
         private async Task<T> SetViewModelValues<T>(T viewModel) where T : AddApiKeyViewModel
         {
             var allStores = await _StoreRepository.GetStoresByUserId(User.GetId());

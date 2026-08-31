@@ -576,6 +576,15 @@ namespace BTCPayServer.Controllers
                     Forbidden = definition.Type is PolicyType.Server && !isAdmin
                 }).ToList();
 
+            foreach (var permissionValue in viewModel.PermissionValues.Where(value => value.IsStorePolicy))
+            {
+                permissionValue.SpecificStores ??= new List<string>();
+                permissionValue.SpecificStores = permissionValue.SpecificStores
+                    .Where(storeId => storeId is null || manageableStoreIds.Contains(storeId))
+                    .Distinct()
+                    .ToList();
+            }
+
             if (initializePermissions && !viewModel.CanUseAllStores)
             {
                 foreach (var permission in viewModel.PermissionValues.Where(value => value.IsStorePolicy))

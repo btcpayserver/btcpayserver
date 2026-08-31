@@ -24,12 +24,6 @@ namespace BTCPayServer.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql("""
-                UPDATE "StoreRoles"
-                SET "Permissions" = array_remove("Permissions", 'btcpay.store.canmanagestorecredentials')
-                WHERE "Id" = 'Manager'
-                  AND "StoreDataId" IS NULL;
-                """);
         }
     }
 }

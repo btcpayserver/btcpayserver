@@ -263,6 +263,23 @@ namespace BTCPayServer.Tests
             Assert.Contains(manageableStores, store => store.Id == firstStoreId);
             Assert.DoesNotContain(manageableStores, store => store.Id == lockedStoreId);
 
+            var apiKeyController = account.GetController<UIManageController>();
+            apiKeyController.ModelState.AddModelError("test", "Force the posted model to be rendered");
+            var viewResult = Assert.IsType<ViewResult>(await apiKeyController.AddApiKey(new UIManageController.AddApiKeyViewModel
+            {
+                PermissionValues = new List<UIManageController.AddApiKeyViewModel.PermissionValueItem>
+                {
+                    new()
+                    {
+                        Permission = Policies.CanViewInvoices,
+                        StoreMode = UIManageController.AddApiKeyViewModel.ApiKeyStoreMode.Specific,
+                        SpecificStores = new List<string> { firstStoreId, lockedStoreId }
+                    }
+                }
+            }));
+            var postedViewModel = Assert.IsType<UIManageController.AddApiKeyViewModel>(viewResult.Model);
+            Assert.Equal(new[] { firstStoreId }, Assert.Single(postedViewModel.PermissionValues).SpecificStores);
+
             var client = await account.CreateClient();
             await client.CreateAPIKey(new CreateApiKeyRequest
             {
@@ -279,6 +296,11 @@ namespace BTCPayServer.Tests
             await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
             {
                 Permissions = new[] { Permission.Create(Policies.CanViewInvoices) }
+            }));
+
+            await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.CanModifyServerSettings) }
             }));
 
             await storeRepository.AddOrUpdateStoreRole(lockedRole,
@@ -304,6 +326,10 @@ namespace BTCPayServer.Tests
             await client.CreateAPIKey(new CreateApiKeyRequest
             {
                 Permissions = new[] { Permission.Create(Policies.CanViewProfile) }
+            });
+            await client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.CanModifyServerSettings) }
             });
         }
 

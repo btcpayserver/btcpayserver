@@ -68,6 +68,9 @@ public class CredentialManagementService(
 
         foreach (var permission in requestedPermissions)
         {
+            if (permission.Type is PolicyType.Server)
+                return false;
+
             if (permission.Type is not PolicyType.Store && permission.Policy != Policies.Unrestricted)
                 continue;
 

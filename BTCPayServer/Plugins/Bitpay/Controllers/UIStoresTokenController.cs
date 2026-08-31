@@ -128,7 +128,7 @@ public class UIStoresTokenController(
             return Challenge(AuthenticationSchemes.Cookie);
 
         if (!(await authorizationService.AuthorizeAsync(User, store.Id, Policies.CanManageStoreCredentials)).Succeeded)
-            return Challenge(AuthenticationSchemes.Cookie);
+            return Forbid(AuthenticationSchemes.Cookie);
 
         var tokenRequest = new TokenRequest()
         {

@@ -6,6 +6,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Security.Greenfield;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -18,7 +19,10 @@ namespace BTCPayServer.Controllers.Greenfield
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
     [EnableCors(CorsPolicies.All)]
-    public class GreenfieldApiKeysController(APIKeyRepository apiKeyRepository, UserManager<ApplicationUser> userManager) : ControllerBase
+    public class GreenfieldApiKeysController(
+        APIKeyRepository apiKeyRepository,
+        UserManager<ApplicationUser> userManager,
+        CredentialManagementService credentialManagementService) : ControllerBase
     {
         [HttpGet("~/api/v1/api-keys/current")]
         public async Task<IActionResult> GetKey()
@@ -44,6 +48,9 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             request ??= new CreateApiKeyRequest();
             request.Permissions ??= System.Array.Empty<Permission>();
+
+            if (!await credentialManagementService.CanCreateApiKey(User, request.Permissions))
+                return this.CreateAPIPermissionError(Policies.CanManageStoreCredentials);
 
             var userId = (await userManager.FindByIdOrEmail(idOrEmail))?.Id;
             if (userId is null)
@@ -73,8 +80,12 @@ namespace BTCPayServer.Controllers.Greenfield
         }
         [HttpDelete("~/api/v1/api-keys/{apiKeyId}", Order = 1)]
         [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public Task<IActionResult> RevokeAPIKey(string apiKeyId)
-        => RevokeAPIKey(User.GetId(), apiKeyId);
+        public async Task<IActionResult> RevokeAPIKey(string apiKeyId)
+        {
+            if (!await credentialManagementService.CanManageAccountApiKeys(User))
+                return this.CreateAPIPermissionError(Policies.CanManageStoreCredentials);
+            return await RevokeAPIKey(User.GetId(), apiKeyId);
+        }
 
         [HttpDelete("~/api/v1/users/{idOrEmail}/api-keys/{apiKeyId}", Order = 1)]
         [Authorize(Policy = Policies.CanManageUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

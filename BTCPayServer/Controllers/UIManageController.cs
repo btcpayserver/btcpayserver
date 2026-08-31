@@ -41,6 +41,7 @@ namespace BTCPayServer.Controllers
         private readonly IFileService _fileService;
         private readonly EventAggregator _eventAggregator;
         private readonly PermissionService _permissionService;
+        private readonly CredentialManagementService _credentialManagementService;
         readonly StoreRepository _StoreRepository;
         public IStringLocalizer StringLocalizer { get; }
 
@@ -61,7 +62,8 @@ namespace BTCPayServer.Controllers
           IStringLocalizer stringLocalizer,
           IHtmlHelper htmlHelper,
           EventAggregator eventAggregator,
-          PermissionService permissionService)
+          PermissionService permissionService,
+          CredentialManagementService credentialManagementService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -80,6 +82,7 @@ namespace BTCPayServer.Controllers
             _StoreRepository = storeRepository;
             StringLocalizer = stringLocalizer;
             _permissionService = permissionService;
+            _credentialManagementService = credentialManagementService;
         }
 
         [HttpGet]

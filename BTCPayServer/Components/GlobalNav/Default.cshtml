@@ -161,7 +161,7 @@
                 <li>
                     <a id="menu-item-@nameof(ManageNavPages.Passkeys)" class="dropdown-item@(activePage == nameof(ManageNavPages.Passkeys) ? " active" : "")" asp-controller="UIManage" asp-action="Passkeys" text-translate="true">Passkeys</a>
                 </li>
-                <li>
+                <li permission="@Policies.CanManageStoreCredentials">
                     <a id="menu-item-@nameof(ManageNavPages.APIKeys)" class="dropdown-item@(activePage == nameof(ManageNavPages.APIKeys) ? " active" : "")" asp-controller="UIManage" asp-action="APIKeys" text-translate="true">API Keys</a>
                 </li>
                 <li>

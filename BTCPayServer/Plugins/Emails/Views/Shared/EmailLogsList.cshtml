@@ -1,0 +1,70 @@
+@using BTCPayServer.Data
+@using BTCPayServer.Plugins.Emails.Controllers
+@using BTCPayServer.Views.Server
+@model EmailLogsViewModel
+
+@{
+	if (Model.StoreId is null)
+	{
+		ViewData.SetLayoutModel(new LayoutModel("Server-" + nameof(ServerNavPages.Emails), StringLocalizer["Sent Emails"]).SetCategory(WellKnownCategories.Server));
+	}
+	else
+	{
+		ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer["Sent Emails"]).SetCategory(WellKnownCategories.Store));
+	}
+}
+
+<div class="sticky-header">
+	<nav aria-label="breadcrumb">
+		<ol class="breadcrumb">
+			<li class="breadcrumb-item">
+				@if (Model.StoreId is not null)
+				{
+					<a asp-controller="UIStoresEmail" asp-action="StoreEmailSettings" asp-route-storeId="@Model.StoreId" text-translate="true">Emails</a>
+				}
+				else
+				{
+					<a asp-controller="UIServerEmail" asp-action="ServerEmailSettings" text-translate="true">Server Emails</a>
+				}
+			</li>
+			<li class="breadcrumb-item active" aria-current="page">@ViewData.GetTitle()</li>
+		</ol>
+		<h2>@ViewData.GetTitle()</h2>
+	</nav>
+	@if (Model.Logs.Any())
+    {
+		<button type="submit" form="EmailLogsForm" class="btn btn-primary" permission="@Model.ModifyPermission" text-translate="true">
+			Resend selected emails
+		</button>
+    }
+</div>
+
+<partial name="_StatusMessage" />
+
+<p text-translate="true">A log of emails sent in the last 10 days.</p>
+
+@if (Model.Logs.Any())
+{
+	@if (Model.StoreId is not null)
+	{
+		<form id="EmailLogsForm" asp-controller="UIStoreEmailLogs" asp-action="ResendStoreEmails" asp-route-storeId="@Model.StoreId" method="post">
+			<partial name="_EmailLogsTable" model="@Model" />
+		</form>
+	}
+	else
+	{
+		<form id="EmailLogsForm" asp-controller="UIServerEmailLogs" asp-action="ResendServerEmails" method="post">
+			<partial name="_EmailLogsTable" model="@Model" />
+		</form>
+	}
+
+	<script>
+		document.getElementById("SelectAll").addEventListener("change", function () {
+			document.querySelectorAll(".row-checkbox").forEach(cb => cb.checked = this.checked);
+		});
+	</script>
+}
+else
+{
+	<p class="text-secondary" text-translate="true">No emails have been sent yet.</p>
+}

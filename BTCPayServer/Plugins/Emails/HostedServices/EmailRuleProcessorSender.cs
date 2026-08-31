@@ -87,7 +87,8 @@ public class StoreEmailRuleProcessorSender(
                         await triggEvent.Owner.BeforeSending(matchedContext);
                     if (matchedContext.To.Count == 0)
                         continue;
-                    sender.SendEmail(matchedContext.To.ToArray(), matchedContext.CC.ToArray(), matchedContext.BCC.ToArray(), subject.Render(triggEvent.Model), body.Render(triggEvent.Model));
+                    sender.SendEmail(matchedContext.To.ToArray(), matchedContext.CC.ToArray(), matchedContext.BCC.ToArray(), subject.Render(triggEvent.Model),
+                        body.Render(triggEvent.Model), triggEvent.StoreId, triggEvent.Trigger);
                 }
             }
         }

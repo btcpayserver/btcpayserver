@@ -30,6 +30,7 @@ using BTCPayServer.Payouts;
 using BTCPayServer.Plugins.Webhooks;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.Extensions.Localization;
+using BTCPayServer.Plugins.Webhooks.TriggerProviders;
 
 namespace BTCPayServer.Controllers
 {
@@ -58,6 +59,7 @@ namespace BTCPayServer.Controllers
         private readonly AppService _appService;
         private readonly UriResolver _uriResolver;
         private readonly PermissionService _permissionService;
+        private readonly InvoiceTriggerProvider _invoiceTriggerProvider;
 
         public WebhookSender WebhookNotificationManager { get; }
         public IEnumerable<IGlobalCheckoutModelExtension> GlobalCheckoutModelExtensions { get; }
@@ -91,7 +93,8 @@ namespace BTCPayServer.Controllers
             IStringLocalizer stringLocalizer,
             ViewLocalizer viewLocalizer,
             PrettyNameProvider prettyName,
-            PermissionService permissionService)
+            PermissionService permissionService,
+            InvoiceTriggerProvider invoiceTriggerProvider)
         {
             _displayFormatter = displayFormatter;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -120,6 +123,7 @@ namespace BTCPayServer.Controllers
             StringLocalizer = stringLocalizer;
             ViewLocalizer = viewLocalizer;
             _permissionService = permissionService;
+            _invoiceTriggerProvider = invoiceTriggerProvider;
         }
 
         internal async Task<InvoiceEntity> CreatePaymentRequestInvoice(Data.PaymentRequestData prData, decimal? amount, decimal amountDue, StoreData storeData, HttpRequest request, CancellationToken cancellationToken)

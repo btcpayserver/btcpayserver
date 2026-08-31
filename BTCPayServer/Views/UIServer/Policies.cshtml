@@ -140,6 +140,16 @@
 							<span asp-validation-for="AllowCreateColdWalletForAll" class="text-danger"></span>
 						</div>
 					</div>
+                    <div class="d-flex my-3">
+                        <input asp-for="EnableNonAdminCredentialManagement" type="checkbox" class="btcpay-toggle me-3"/>
+                        <div>
+                            <label asp-for="EnableNonAdminCredentialManagement" class="form-check-label"></label>
+                            <a href="https://docs.btcpayserver.org/CustomIntegration/" target="_blank" rel="noreferrer noopener">
+                                <vc:icon symbol="info" />
+                            </a>
+                            <span asp-validation-for="EnableNonAdminCredentialManagement" class="text-danger"></span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mb-5">

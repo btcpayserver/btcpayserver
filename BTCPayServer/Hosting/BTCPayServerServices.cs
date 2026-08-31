@@ -149,6 +149,7 @@ namespace BTCPayServer.Hosting
             services.AddSettingsAccessor<ServerSettings>();
             //
             services.AddSingleton<PermissionService>();
+            services.AddSingleton<CredentialManagementService>();
 
             AddOnchainWalletParsers(services);
 
@@ -535,6 +536,11 @@ namespace BTCPayServer.Hosting
                     Policies.CanSendStoreEmail,
                     new PermissionDisplay("Send store emails", "Allows sending emails on behalf of all your stores."),
                     new PermissionDisplay("Send selected stores' emails", "Allows sending emails on behalf of the selected stores.")),
+                new PolicyDefinition(
+                    Policies.CanManageStoreCredentials,
+                    new PermissionDisplay("Manage API keys and access tokens", "Allows managing API keys and access tokens for all your stores."),
+                    new PermissionDisplay("Manage selected stores' API keys and access tokens", "Allows managing API keys and access tokens for the selected stores."),
+                    includedByPermissions: new[] { Policies.CanModifyStoreSettings }),
                 new PolicyDefinition(
                     Policies.CanModifyServerSettings,
                     new PermissionDisplay("Manage your server", "Grants total control on the server settings of your server."),

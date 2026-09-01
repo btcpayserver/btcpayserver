@@ -100,6 +100,10 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return this.UserNotFound();
             }
+            if (request.Locked && await _userService.IsUserTheOnlyOneAdmin(new UserService.CanLoginContext(user)))
+            {
+                return this.CreateAPIError(403, "cannot-lock-only-admin", "This is the only enabled administrator and cannot be locked.");
+            }
 
             var success = await _userService.SetDisabled(user.Id, request.Locked);
             return success is not UserService.SetDisabledResult.Error  ? Ok() : this.CreateAPIError("invalid-state",

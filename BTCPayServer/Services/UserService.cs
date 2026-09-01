@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
+using static BTCPayServer.Events.UserEvent;
 
 namespace BTCPayServer.Services
 {
@@ -206,7 +207,9 @@ namespace BTCPayServer.Services
             public record Error(IdentityError[] Errors) : SetDisabledResult;
         }
 
-        public async Task<SetDisabledResult> SetDisabled(string userId, bool disabled)
+        public Task<SetDisabledResult> SetDisabled(string userId, bool disabled)
+        => SetDisabled(userId, disabled, null);
+        public async Task<SetDisabledResult> SetDisabled(string userId, bool disabled, string? source)
         {
             using var scope = _serviceProvider.CreateScope();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -229,6 +232,7 @@ namespace BTCPayServer.Services
                 }
                 await using var ctx = _applicationDbContextFactory.CreateContext();
                 await ctx.Users.UpdateStoreNoActiveUserForUsers([userId]);
+                _eventAggregator.Publish(new UserEvent.DisabledChanged(user, disabled, source));
             }
 
             return res.Succeeded ? new SetDisabledResult.Success() : new SetDisabledResult.Error(res.Errors.ToArray());

@@ -252,7 +252,8 @@ public partial class UIStoresController
             ? string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/payment.mp3")
             : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.PaymentSoundUrl);
         vm.HtmlTitle = storeBlob.HtmlTitle;
-        vm.SupportUrl = storeBlob.StoreSupportUrl;
+        vm.SupportUrl = storeBlob.StoreSupportUrl?.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase) is true
+            ? storeBlob.StoreSupportUrl["mailto:".Length..] : storeBlob.StoreSupportUrl;
         vm.CheckoutText = storeBlob.CheckoutText;
         vm.DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalMinutes;
         vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(storeBlob.ReceiptOptions);

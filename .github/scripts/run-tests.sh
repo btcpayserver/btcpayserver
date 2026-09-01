@@ -22,4 +22,4 @@ until [ "$n" -ge 10 ]; do
 done
 
 compose -f "docker-compose.altcoins.yml" build
-compose -f "docker-compose.altcoins.yml" run -e "TEST_FILTERS=$1" tests
+compose -f "docker-compose.altcoins.yml" run -e "TEST_FILTERS=$1" -e "GITHUB_ACTIONS=${GITHUB_ACTIONS:-false}" tests

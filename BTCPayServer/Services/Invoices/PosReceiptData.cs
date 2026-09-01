@@ -87,7 +87,13 @@ public class PosReceiptData
             var totalPrice = displayFormatter.Currency(cartItem.Price * cartItem.Count, currency, DisplayFormatter.CurrencyFormat.Symbol);
             var ident = selectedChoice.Title ?? selectedChoice.Id;
             var key = selectedChoice.PriceType == AppItemPriceType.Fixed ? ident : $"{ident} ({singlePrice})";
-            cartData.Add(key, $"{cartItem.Count} x {singlePrice} = {totalPrice}");
+            var value = $"{cartItem.Count} x {singlePrice} = {totalPrice}";
+            if (!cartData.TryAdd(key, value))
+            {
+                key = $"{ident} ({singlePrice})";
+                if (!cartData.TryAdd(key, value))
+                    cartData.Add($"{key} ({selectedChoice.Id})", value);
+            }
         }
 
         for (var i = 0; i < (jposData.Amounts ?? []).Length; i++)

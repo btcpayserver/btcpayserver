@@ -19,6 +19,7 @@ using Microsoft.Extensions.Localization;
 namespace BTCPayServer.Controllers
 {
     [Route("stores")]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class UIUserStoresController : Controller
     {
         private readonly StoreRepository _repo;
@@ -65,6 +66,84 @@ namespace BTCPayServer.Controllers
             };
             return View(vm);
         }
+
+        // Deliberately not gated on a store policy: the invitee is not a member of the store yet.
+        [HttpGet("~/invitations/{token}")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyProfile)]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> AcceptStoreInvitation(string token)
+        {
+            var vm = await BuildInvitationViewModel(token);
+            if (vm is null)
+                return NotFound();
+            return View(vm);
+        }
+
+        [HttpPost("~/invitations/{token}")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyProfile)]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> AcceptStoreInvitation(string token, string command)
+        {
+            var vm = await BuildInvitationViewModel(token);
+            if (vm is null)
+                return NotFound();
+            if (vm.IsForAnotherUser)
+                return View(vm);
+
+            if (command == "decline")
+            {
+                await _repo.DeleteStoreInvitationByToken(User.GetId(), token);
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Invitation declined."].Value;
+                return RedirectToAction(nameof(ListStores));
+            }
+
+            var result = await _repo.AcceptStoreInvitation(User.GetId(), token);
+            if (result is StoreRepository.AddOrUpdateStoreUserResult.Success or StoreRepository.AddOrUpdateStoreUserResult.DuplicateRole)
+            {
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["You have joined {0}.", vm.StoreName].Value;
+                var storeUser = await _repo.GetStoreUser(vm.StoreId, User.GetId());
+                var role = storeUser?.StoreRoleId is { } roleId ? await _repo.GetStoreRole(StoreRoleId.Parse(roleId)) : null;
+                return role?.Permissions.Contains(Policies.CanViewStoreSettings) is true
+                    ? RedirectToAction("Index", "UIStores", new { storeId = vm.StoreId })
+                    : RedirectToAction(nameof(ListStores));
+            }
+            if (result is null)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This invitation is no longer available."].Value;
+                return RedirectToAction(nameof(ListStores));
+            }
+            vm.Error = result.ToString();
+            return View(vm);
+        }
+
+        private async Task<StoreInvitationViewModel> BuildInvitationViewModel(string token)
+        {
+            // We do not pass the user id on purpose. The client verifies whether the invitation is valid for the current user.
+            var invitation = await _repo.GetStoreInvitationByToken(token);
+            if (invitation is null)
+                return null;
+
+            var vm = new StoreInvitationViewModel
+            {
+                Token = token,
+                StoreId = invitation.StoreId,
+                StoreName = invitation.StoreName,
+                InvitedEmail = invitation.UserEmail,
+            };
+            // Only the invited account may act on the link. Anyone else signed in, typically the
+            // owner testing their own link, gets told whose invitation it is rather than a 404.
+            if (invitation.UserId != User.GetId())
+            {
+                vm.InvitedEmail = invitation.UserEmail;
+                vm.IsForAnotherUser = true;
+                return vm;
+            }
+            vm.Role = StoreRoleId.Parse(invitation.RoleId).Role;
+            vm.Expiry = invitation.ExpiresAt;
+            vm.IsExpired = invitation.IsExpired();
+            return vm;
+        }
+
 
         [HttpGet("create")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]

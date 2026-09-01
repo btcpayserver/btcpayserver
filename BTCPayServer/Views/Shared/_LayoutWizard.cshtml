@@ -1,5 +1,7 @@
 @{
 	Layout = "_LayoutSimple";
+	// Pages that want a narrower or wider column than the wizard default can override this.
+	var mainClass = ViewData["WizardMainClass"] as string ?? "col-md-10 col-lg-8 col-xl-7";
 }
 
 @section PageHeadContent {
@@ -16,7 +18,7 @@
 </nav>
 
 <div class="row justify-content-md-center mt-5 pt-sm-3 pt-md-0">
-    <main class="col-md-10 col-lg-8 col-xl-7">
+    <main class="@mainClass">
         <partial name="_StatusMessage" />
         @RenderBody()
     </main>

@@ -65,6 +65,9 @@ namespace BTCPayServer.Services
         [Display(Name = "Non-admins cannot access the User Creation API Endpoint")]
         public bool DisableNonAdminCreateUserApi { get; set; }
 
+        [Display(Name = "Store owners can add users to their store without an invitation")]
+        public bool AllowStoreOwnersToSkipInvitation { get; set; }
+
         [JsonIgnore]
         [Display(Name = "Non-admins can access the User Creation API Endpoint")]
         public bool EnableNonAdminCreateUserApi

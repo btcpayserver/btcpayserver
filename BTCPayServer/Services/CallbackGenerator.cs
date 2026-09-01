@@ -33,6 +33,10 @@ namespace BTCPayServer.Services
         public RequestBaseUrl GetRequestBaseUrl()
         => BaseUrl ?? httpContextAccessor.HttpContext?.Request.GetRequestBaseUrl() ?? throw new InvalidOperationException($"You should be in a HttpContext to call this method");
 
+        public string StoreInvitationLink(string token)
+        => LinkGenerator.GetUriByAction(nameof(UIUserStoresController.AcceptStoreInvitation), "UIUserStores",
+            new { token }, GetRequestBaseUrl());
+
         public string StoreUsersLink(string storeId)
         => LinkGenerator.GetUriByAction(nameof(UIStoresController.StoreUsers), "UIStores",
             new { storeId }, GetRequestBaseUrl());

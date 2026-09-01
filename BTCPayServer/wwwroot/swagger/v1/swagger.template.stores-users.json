@@ -34,7 +34,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canviewstoresettings"
                         ],
                         "Basic": []
                     }
@@ -44,8 +44,8 @@
                 "tags": [
                     "Stores (Users)"
                 ],
-                "summary": "Add a store user",
-                "description": "Add a store user",
+                "summary": "Add or invite a store user",
+                "description": "Add a store user. By default, this creates a store invitation. To add the user directly, set `requireInvitation` to `false`; this requires server settings permission.",
                 "operationId": "Stores_AddStoreUser",
                 "parameters": [
                     {
@@ -57,7 +57,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/StoreUserData"
+                                "$ref": "#/components/schemas/AddStoreUserDataRequest"
                             }
                         }
                     },
@@ -66,7 +66,14 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "The user was added"
+                        "description": "The user was added, or an invitation was created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AddStoreUserResult"
+                                }
+                            }
+                        }
                     },
                     "400": {
                         "description": "A list of errors that occurred when adding the store user",
@@ -85,7 +92,7 @@
                         "description": "The store or user could not be found"
                     },
                     "409": {
-                        "description": "Error code: `duplicate-store-user-role`. Removing this user would result in the store having no owner.",
+                        "description": "Error codes: `already-store-user`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -103,22 +110,17 @@
                         "Basic": []
                     }
                 ]
-            }
-        },
-        "/api/v1/stores/{storeId}/users/{idOrEmail}": {
+            },
             "put": {
                 "tags": [
                     "Stores (Users)"
                 ],
-                "summary": "Updates a store user",
-                "description": "Updates a store user",
-                "operationId": "Stores_UpdateStoreUser",
+                "summary": "Update a store user role",
+                "description": "Update the role of an existing store user. The user id or email must be provided in the request body.",
+                "operationId": "Stores_UpdateStoreUserByRequest",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/StoreId"
-                    },
-                    {
-                        "$ref": "#/components/parameters/UserIdOrEmail"
                     }
                 ],
                 "requestBody": {
@@ -126,7 +128,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/StoreUserData"
+                                "$ref": "#/components/schemas/StoreUserDataRequest"
                             }
                         }
                     },
@@ -152,6 +154,282 @@
                     },
                     "404": {
                         "description": "The store or user could not be found"
+                    },
+                    "409": {
+                        "description": "Error codes: `store-user-role-orphaned`, `duplicate-store-user-role`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/users/invitations": {
+            "get": {
+                "tags": [
+                    "Stores (Users)"
+                ],
+                "summary": "Get pending store invitations",
+                "description": "View pending and expired invitations for the specified store.",
+                "operationId": "Stores_GetStoreInvitations",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The store invitations",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StoreInvitationDataList"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store's invitations"
+                    },
+                    "404": {
+                        "description": "The store could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/invitations/{token}": {
+            "get": {
+                "tags": [
+                    "Stores (Users)"
+                ],
+                "summary": "Get a store invitation",
+                "description": "Get invitation details from its token before accepting or declining it.",
+                "operationId": "Stores_GetStoreInvitation",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreInvitationToken"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The store invitation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StoreInvitationData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to modify your profile"
+                    },
+                    "404": {
+                        "description": "Error code: `store-invitation-not-found`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmodifyprofile"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Stores (Users)"
+                ],
+                "summary": "Accept a store invitation",
+                "description": "Accept the current user's pending invitation identified by its token.",
+                "operationId": "Stores_AcceptStoreInvitation",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreInvitationToken"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The invitation was accepted"
+                    },
+                    "400": {
+                        "description": "Error code: `invalid-role`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to modify your profile"
+                    },
+                    "404": {
+                        "description": "Error code: `store-invitation-not-found`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Error code: `already-store-user`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "410": {
+                        "description": "Error code: `store-invitation-expired`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmodifyprofile"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stores (Users)"
+                ],
+                "summary": "Decline a store invitation",
+                "description": "Decline the current user's invitation identified by its token.",
+                "operationId": "Stores_DeclineStoreInvitation",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreInvitationToken"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The invitation was declined"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to modify your profile"
+                    },
+                    "404": {
+                        "description": "Error code: `store-invitation-not-found`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmodifyprofile"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/users/{idOrEmail}": {
+            "put": {
+                "tags": [
+                    "Stores (Users)"
+                ],
+                "summary": "Update a store user role",
+                "description": "Update the role of an existing store user.",
+                "operationId": "Stores_UpdateStoreUser",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/UserIdOrEmail"
+                    }
+                ],
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreUserDataRequest"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "The user was updated"
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the store user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update store users"
+                    },
+                    "404": {
+                        "description": "The store or user could not be found"
+                    },
+                    "409": {
+                        "description": "Error codes: `store-user-role-orphaned`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -218,9 +496,113 @@
                     }
                 ]
             }
+        },
+        "/api/v1/stores/{storeId}/users/{idOrEmail}/invitation": {
+            "post": {
+                "tags": [
+                    "Stores (Users)"
+                ],
+                "summary": "Resend a store invitation",
+                "description": "Generate and deliver a new token for an existing pending store invitation.",
+                "operationId": "Stores_ResendStoreInvitation",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/UserIdOrEmail"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The replacement invitation token and link",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StoreInvitationResult"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to modify store users"
+                    },
+                    "404": {
+                        "description": "Error codes: `user-not-found`, `store-invitation-not-found`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stores (Users)"
+                ],
+                "summary": "Cancel a store invitation",
+                "description": "Cancel the specified user's pending store invitation.",
+                "operationId": "Stores_CancelStoreInvitation",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/UserIdOrEmail"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The invitation was cancelled"
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to modify store users"
+                    },
+                    "404": {
+                        "description": "Error codes: `user-not-found`, `store-invitation-not-found`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {
+        "parameters": {
+            "StoreInvitationToken": {
+                "name": "token",
+                "in": "path",
+                "required": true,
+                "description": "The raw store invitation token",
+                "schema": {
+                    "type": "string"
+                }
+            }
+        },
         "schemas": {
             "StoreUserDataList": {
                 "type": "array",
@@ -229,33 +611,144 @@
                 }
             },
             "StoreUserData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The id of the user",
+                        "nullable": false
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "The email of the user",
+                        "nullable": false
+                    },
+                    "roleId": {
+                        "type": "string",
+                        "description": "The store role id of the user",
+                        "nullable": false
+                    }
+                }
+            },
+            "StoreUserDataRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The id or email of the user",
+                        "nullable": false
+                    },
+                    "storeRole": {
+                        "type": "string",
+                        "description": "The role of the user. Default roles are `Owner`, `Manager`, `Employee` and `Guest`",
+                        "nullable": false
+                    }
+                }
+            },
+            "AddStoreUserDataRequest": {
                 "allOf": [
+                    {
+                        "$ref": "#/components/schemas/StoreUserDataRequest"
+                    },
                     {
                         "type": "object",
                         "properties": {
-                            "userId": {
-                                "type": "string",
-                                "description": "The id of the user (Deprecated, use `id` instead)",
-                                "nullable": false,
-                                "deprecated": true
-                            },
-                            "role": {
-                                "type": "string",
-                                "description": "The role of the user. Default roles are `Owner`, `Manager`, `Employee` and `Guest` (Deprecated, use `storeRole` instead)",
-                                "nullable": false,
-                                "deprecated": true
-                            },
-                            "storeRole": {
-                                "type": "string",
-                                "description": "The role of the user. Default roles are `Owner`, `Manager`, `Employee` and `Guest`",
-                                "nullable": false
+                            "requireInvitation": {
+                                "type": "boolean",
+                                "description": "Whether to create a store invitation instead of adding the user directly. Defaults to `true`. Setting this to `false` requires server settings permission.",
+                                "nullable": true
                             }
                         }
-                    },
-                    {
-                        "$ref": "#/components/schemas/ApplicationUserData"
                     }
                 ]
+            },
+            "AddStoreUserResult": {
+                "type": "object",
+                "properties": {
+                    "storeInvitation": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/StoreInvitationResult"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Invitation details when an invitation was created."
+                    }
+                }
+            },
+            "StoreInvitationResult": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "description": "The invitation token",
+                        "nullable": false
+                    },
+                    "link": {
+                        "type": "string",
+                        "description": "The invitation link",
+                        "nullable": false
+                    }
+                }
+            },
+            "StoreInvitationDataList": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/StoreInvitationData"
+                }
+            },
+            "StoreInvitationData": {
+                "type": "object",
+                "properties": {
+                    "storeId": {
+                        "type": "string",
+                        "description": "The id of the invited store",
+                        "nullable": false
+                    },
+                    "storeName": {
+                        "type": "string",
+                        "description": "The name of the invited store",
+                        "nullable": false
+                    },
+                    "userId": {
+                        "type": "string",
+                        "description": "The id of the invited user",
+                        "nullable": false
+                    },
+                    "userEmail": {
+                        "type": "string",
+                        "description": "The email of the invited user",
+                        "nullable": false
+                    },
+                    "roleId": {
+                        "type": "string",
+                        "description": "The store role assigned by the invitation",
+                        "nullable": false
+                    },
+                    "invitedByUserId": {
+                        "type": "string",
+                        "description": "The id of the user who created the invitation",
+                        "nullable": true
+                    },
+                    "created": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "The invitation creation time"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "The invitation expiration time"
+                    },
+                    "isExpired": {
+                        "type": "boolean",
+                        "description": "Whether the invitation has expired"
+                    },
+                    "isForCurrentUser": {
+                        "type": "boolean",
+                        "description": "Whether the invitation belongs to the authenticated user"
+                    }
+                }
             }
         }
     },

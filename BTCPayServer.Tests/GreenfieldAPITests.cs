@@ -235,7 +235,7 @@ namespace BTCPayServer.Tests
             await Assert.ThrowsAsync<GreenfieldAPIException>(() => newUserClient.GetInvoices(store.Id));
 
             // if user is a guest or owner, then it should be ok
-            await unrestricted.AddStoreUser(store.Id, new StoreUserData() { Id = newUser.Id });
+            await unrestricted.AddStoreUser(store.Id, new AddStoreUserDataRequest { Id = newUser.Id, RequireInvitation = false });
             await newUserClient.GetInvoices(store.Id);
         }
 
@@ -3289,18 +3289,16 @@ namespace BTCPayServer.Tests
             var users = await client.GetStoreUsers(user.StoreId);
             var storeUser = Assert.Single(users);
             Assert.Equal(user.UserId, storeUser.Id);
-            Assert.Equal(user.UserId, storeUser.AdditionalData["userId"].ToString());
-            Assert.Equal(ownerRole.Id, storeUser.StoreRole);
-            Assert.Equal(ownerRole.Id, storeUser.AdditionalData["role"].ToString());
+            Assert.Equal(ownerRole.Id, storeUser.RoleId);
             Assert.Equal(user.Email, storeUser.Email);
-            Assert.Equal("The Admin", storeUser.Name);
-            Assert.Equal("avatar.jpg", storeUser.ImageUrl);
             var manager = tester.NewAccount();
             await manager.GrantAccessAsync();
             var employee = tester.NewAccount();
             await employee.GrantAccessAsync();
             var guest = tester.NewAccount();
             await guest.GrantAccessAsync();
+            var invited = tester.NewAccount();
+            await invited.GrantAccessAsync();
 
             var managerClient = await manager.CreateClient(Policies.CanModifyStoreSettings);
             var employeeClient = await employee.CreateClient(Policies.CanModifyStoreSettings);
@@ -3309,53 +3307,121 @@ namespace BTCPayServer.Tests
             //test no access to api when unrelated to store at all
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await managerClient.GetStore(user.StoreId));
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await managerClient.GetStoreUsers(user.StoreId));
-            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await managerClient.AddStoreUser(user.StoreId, new StoreUserData()));
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await managerClient.AddStoreUser(user.StoreId, new AddStoreUserDataRequest()));
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await managerClient.RemoveStoreUser(user.StoreId, user.UserId));
 
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await employeeClient.GetStore(user.StoreId));
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await employeeClient.GetStoreUsers(user.StoreId));
-            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await employeeClient.AddStoreUser(user.StoreId, new StoreUserData()));
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await employeeClient.AddStoreUser(user.StoreId, new AddStoreUserDataRequest()));
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await employeeClient.RemoveStoreUser(user.StoreId, user.UserId));
 
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await guestClient.GetStore(user.StoreId));
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await guestClient.GetStoreUsers(user.StoreId));
-            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await guestClient.AddStoreUser(user.StoreId, new StoreUserData()));
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await guestClient.AddStoreUser(user.StoreId, new AddStoreUserDataRequest()));
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await guestClient.RemoveStoreUser(user.StoreId, user.UserId));
 
             // add users to store
-            await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = managerRole.Id, Id = manager.UserId });
-            await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = employeeRole.Id, Id = employee.UserId });
+            await client.AddStoreUser(user.StoreId, new AddStoreUserDataRequest { StoreRole = managerRole.Id, Id = manager.UserId, RequireInvitation = false });
+            await client.AddStoreUser(user.StoreId, new AddStoreUserDataRequest { StoreRole = employeeRole.Id, Id = employee.UserId, RequireInvitation = false });
 
             // add with email
-            await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = guestRole.Id, Id = guest.Email });
+            await client.AddStoreUser(user.StoreId, new AddStoreUserDataRequest { StoreRole = guestRole.Id, Id = guest.Email, RequireInvitation = false });
+
+            // invite and accept with profile permission
+            var invitedClient = await invited.CreateClient(Policies.CanModifyProfile, Policies.CanViewStoreSettings);
+            var invitedClientWithoutProfilePermission = await invited.CreateClient(Policies.CanViewStoreSettings);
+            await AssertPermissionError(Policies.CanViewStoreSettings, async () => await invitedClient.GetStoreUsers(user.StoreId));
+            var invite = await client.AddStoreUser(user.StoreId, new AddStoreUserDataRequest { StoreRole = managerRole.Id, Id = invited.UserId });
+            var pending = Assert.Single(await client.GetStoreInvitations(user.StoreId));
+            Assert.Equal(invited.UserId, pending.UserId);
+            Assert.Equal(invited.Email, pending.UserEmail);
+            Assert.Equal(managerRole.Id, pending.RoleId);
+            Assert.False(pending.IsExpired);
+
+            var invitationDetails = await invitedClient.GetStoreInvitation(invite.StoreInvitation.Token);
+            Assert.Equal(user.StoreId, invitationDetails.StoreId);
+            Assert.Equal(invited.UserId, invitationDetails.UserId);
+            Assert.True(invitationDetails.IsForCurrentUser);
+
+            var otherProfileClient = await guest.CreateClient(Policies.CanModifyProfile);
+            await AssertAPIError("store-invitation-not-found", async () => await otherProfileClient.GetStoreInvitation(invite.StoreInvitation.Token));
+            await AssertAPIError("store-invitation-not-found", async () => await otherProfileClient.AcceptStoreInvitation(invite.StoreInvitation.Token));
+            await AssertAPIError("store-invitation-not-found", async () => await otherProfileClient.DeclineStoreInvitation(invite.StoreInvitation.Token));
+
+            var resent = await client.ResendStoreInvitation(user.StoreId, invited.UserId);
+            Assert.NotEqual(invite.StoreInvitation.Token, resent.Token);
+            await AssertAPIError("store-invitation-not-found", async () => await invitedClient.GetStoreInvitation(invite.StoreInvitation.Token));
+            await AssertAPIError("store-invitation-not-found", async () => await invitedClient.DeclineStoreInvitation(invite.StoreInvitation.Token));
+            await invitedClient.DeclineStoreInvitation(resent.Token);
+            Assert.Empty(await client.GetStoreInvitations(user.StoreId));
+
+            invite = await client.AddStoreUser(user.StoreId, new AddStoreUserDataRequest { StoreRole = managerRole.Id, Id = invited.UserId });
+            await AssertPermissionError(Policies.CanModifyProfile, async () => await invitedClientWithoutProfilePermission.AcceptStoreInvitation(invite.StoreInvitation.Token));
+            await invitedClient.AcceptStoreInvitation(invite.StoreInvitation.Token);
+            var storeUsersAfterInvitation = await invitedClient.GetStoreUsers(user.StoreId);
+            var invitedStoreUser = storeUsersAfterInvitation.Single(u => u.Id == invited.UserId);
+            Assert.Equal(managerRole.Id, invitedStoreUser.RoleId);
+
+            var cancelled = tester.NewAccount();
+            await cancelled.GrantAccessAsync();
+            await client.AddStoreUser(user.StoreId, new AddStoreUserDataRequest { StoreRole = guestRole.Id, Id = cancelled.UserId });
+            await client.CancelStoreInvitation(user.StoreId, cancelled.UserId);
+            Assert.Empty(await client.GetStoreInvitations(user.StoreId));
+
+            // A failed membership insert must not consume the invitation.
+            var conflicting = tester.NewAccount();
+            await conflicting.GrantAccessAsync();
+            var conflictingClient = await conflicting.CreateClient(Policies.CanModifyProfile);
+            var conflictingInvite = await client.AddStoreUser(user.StoreId,
+                new AddStoreUserDataRequest { StoreRole = guestRole.Id, Id = conflicting.UserId });
+            await using (var ctx = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext())
+            {
+                ctx.UserStore.Add(new UserStore
+                {
+                    StoreDataId = user.StoreId,
+                    ApplicationUserId = conflicting.UserId,
+                    StoreRoleId = guestRole.Id
+                });
+                await ctx.SaveChangesAsync();
+            }
+            await AssertAPIError("already-store-user", async () =>
+                await conflictingClient.AcceptStoreInvitation(conflictingInvite.StoreInvitation.Token));
+            Assert.Equal(conflicting.UserId, Assert.Single(await client.GetStoreInvitations(user.StoreId)).UserId);
+            await client.CancelStoreInvitation(user.StoreId, conflicting.UserId);
+
+            var unknownEmail = $"{Guid.NewGuid():N}@example.com";
+            await client.AddStoreUser(user.StoreId, new AddStoreUserDataRequest { StoreRole = guestRole.Id, Id = unknownEmail });
+            var unknownInvitation = Assert.Single(await client.GetStoreInvitations(user.StoreId));
+            Assert.Equal(unknownEmail, unknownInvitation.UserEmail);
+            await client.CancelStoreInvitation(user.StoreId, unknownInvitation.UserId);
 
             // test unknown user
-            await AssertAPIError("user-not-found", async () => await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = managerRole.Id, Id = "unknown" }));
-            await AssertAPIError("user-not-found", async () => await client.UpdateStoreUser(user.StoreId, "unknown", new StoreUserData { StoreRole = ownerRole.Id }));
+            await AssertAPIError("user-not-found", async () => await client.AddStoreUser(user.StoreId, new AddStoreUserDataRequest { StoreRole = managerRole.Id, Id = "unknown" }));
+            await AssertAPIError("user-not-found", async () => await client.UpdateStoreUser(user.StoreId, "unknown", new StoreUserDataRequest { StoreRole = ownerRole.Id }));
             await AssertAPIError("user-not-found", async () => await client.RemoveStoreUser(user.StoreId, "unknown"));
 
             //test no access to api for employee
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await employeeClient.GetStore(user.StoreId));
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await employeeClient.GetStoreUsers(user.StoreId));
-            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await employeeClient.AddStoreUser(user.StoreId, new StoreUserData()));
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await employeeClient.AddStoreUser(user.StoreId, new AddStoreUserDataRequest()));
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await employeeClient.RemoveStoreUser(user.StoreId, user.UserId));
 
             //test no access to api for guest
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await guestClient.GetStore(user.StoreId));
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await guestClient.GetStoreUsers(user.StoreId));
-            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await guestClient.AddStoreUser(user.StoreId, new StoreUserData()));
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await guestClient.AddStoreUser(user.StoreId, new AddStoreUserDataRequest()));
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await guestClient.RemoveStoreUser(user.StoreId, user.UserId));
 
             //test access to api for manager
             await managerClient.GetStore(user.StoreId);
             await managerClient.GetStoreUsers(user.StoreId);
-            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await managerClient.AddStoreUser(user.StoreId, new StoreUserData()));
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await managerClient.AddStoreUser(user.StoreId, new AddStoreUserDataRequest()));
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await managerClient.RemoveStoreUser(user.StoreId, user.UserId));
 
             // updates
-            await client.UpdateStoreUser(user.StoreId, employee.UserId, new StoreUserData { StoreRole = managerRole.Id });
+            await client.UpdateStoreUser(user.StoreId, employee.UserId, new StoreUserDataRequest { StoreRole = managerRole.Id });
             await employeeClient.GetStore(user.StoreId);
-            await AssertAPIError("store-user-role-orphaned", async () => await client.UpdateStoreUser(user.StoreId, user.UserId, new StoreUserData { StoreRole = managerRole.Id }));
+            await AssertAPIError("store-user-role-orphaned", async () => await client.UpdateStoreUser(user.StoreId, user.UserId, new StoreUserDataRequest { StoreRole = managerRole.Id }));
 
             // remove
             await client.RemoveStoreUser(user.StoreId, employee.UserId);
@@ -3363,16 +3429,16 @@ namespace BTCPayServer.Tests
             await AssertAPIError("store-user-role-orphaned", async () => await client.RemoveStoreUser(user.StoreId, user.UserId));
 
             // test duplicate add
-            await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = ownerRole.Id, Id = employee.UserId });
-            await AssertAPIError("duplicate-store-user-role", async () =>
-                 await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = ownerRole.Id, Id = employee.UserId }));
+            await client.AddStoreUser(user.StoreId, new AddStoreUserDataRequest { StoreRole = ownerRole.Id, Id = employee.UserId, RequireInvitation = false });
+            await AssertAPIError("already-store-user", async () =>
+                 await client.AddStoreUser(user.StoreId, new AddStoreUserDataRequest { StoreRole = ownerRole.Id, Id = employee.UserId, RequireInvitation = false }));
             await employeeClient.RemoveStoreUser(user.StoreId, user.UserId);
 
             //test no access to api when unrelated to store at all
             await user.MakeAdmin(false);
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await client.GetStore(user.StoreId));
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await client.GetStoreUsers(user.StoreId));
-            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await client.AddStoreUser(user.StoreId, new StoreUserData()));
+            await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await client.AddStoreUser(user.StoreId, new AddStoreUserDataRequest()));
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await client.RemoveStoreUser(user.StoreId, user.UserId));
 
             await AssertAPIError("store-user-role-orphaned", async () => await employeeClient.RemoveStoreUser(user.StoreId, employee.UserId));

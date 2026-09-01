@@ -77,6 +77,14 @@
                                     </div>
                                 </div>
                                 <div class="d-flex my-3">
+                                    <input asp-for="AllowStoreOwnersToSkipInvitation" type="checkbox" class="btcpay-toggle me-3"/>
+                                    <div>
+                                        <label asp-for="AllowStoreOwnersToSkipInvitation" class="form-check-label"></label>
+                                        <span asp-validation-for="AllowStoreOwnersToSkipInvitation" class="text-danger"></span>
+                                        <div class="text-secondary" text-translate="true">Otherwise only server admins can do so, and store owners must send an invitation the user has to accept.</div>
+                                    </div>
+                                </div>
+                                <div class="d-flex my-3">
                                     <input asp-for="EnableNonAdminCreateUserApi" type="checkbox" class="btcpay-toggle me-3"/>
                                     <div>
                                         <label asp-for="EnableNonAdminCreateUserApi" class="form-check-label"></label>

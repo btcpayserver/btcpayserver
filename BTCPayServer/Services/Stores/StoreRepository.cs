@@ -24,7 +24,7 @@ using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.Services.Stores
 {
-    public class StoreRepository : IStoreRepository
+    public partial class StoreRepository : IStoreRepository
     {
         private readonly ApplicationDbContextFactory _ContextFactory;
         private readonly EventAggregator _eventAggregator;
@@ -342,6 +342,7 @@ namespace BTCPayServer.Services.Stores
             {
                 await ctx.SaveChangesAsync();
                 await ctx.Users.UpdateStoreNoActiveUserForStores([storeId]);
+                await DeleteStoreInvitation(storeId, userId);
                 _eventAggregator.Publish(new StoreUserEvent.Added(storeId, userId, roleId.Id));
                 return true;
             }
@@ -366,8 +367,17 @@ namespace BTCPayServer.Services.Stores
             {
                 public override string ToString() => $"The user already has the role {RoleId}.";
             }
+            public record Expired : AddOrUpdateStoreUserResult
+            {
+                public override string ToString() => "The invitation has expired.";
+            }
+            public record NotFound : AddOrUpdateStoreUserResult
+            {
+                public override string ToString() => "The user does not have access to this store.";
+            }
         }
-        public async Task<AddOrUpdateStoreUserResult> AddOrUpdateStoreUser(string storeId, string userId, StoreRoleId? roleId = null)
+
+        public async Task<AddOrUpdateStoreUserResult> UpdateStoreUserRole(string storeId, string userId, StoreRoleId? roleId = null)
         {
             ArgumentNullException.ThrowIfNull(storeId);
             AssertStoreRoleIfNeeded(storeId, roleId);
@@ -379,15 +389,11 @@ namespace BTCPayServer.Services.Stores
             await using var ctx = _ContextFactory.CreateContext();
             var userStore = await ctx.UserStore.Include(store => store.StoreRole)
                 .FirstOrDefaultAsync(u => u.ApplicationUserId == userId && u.StoreDataId == storeId);
-            var added = false;
             if (userStore is null)
-            {
-                userStore = new UserStore { StoreDataId = storeId, ApplicationUserId = userId };
-                ctx.UserStore.Add(userStore);
-                added = true;
-            }
+                return new AddOrUpdateStoreUserResult.NotFound();
+
             // ensure the last owner doesn't get downgraded
-            else if (userStore.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings))
+            if (userStore.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings))
             {
                 if (storeRole.Permissions.Contains(Policies.CanModifyStoreSettings) is false && !await EnsureRemainingOwner(ctx.UserStore, storeId, userId))
                     return new AddOrUpdateStoreUserResult.LastOwner();
@@ -400,16 +406,30 @@ namespace BTCPayServer.Services.Stores
             try
             {
                 await ctx.SaveChangesAsync();
-                StoreUserEvent evt = added
-                    ? new StoreUserEvent.Added(storeId, userId, userStore.StoreRoleId)
-                    : new StoreUserEvent.Updated(storeId, userId, userStore.StoreRoleId);
-                _eventAggregator.Publish(evt);
+                await DeleteStoreInvitation(storeId, userId);
+                _eventAggregator.Publish(new StoreUserEvent.Updated(storeId, userId, userStore.StoreRoleId));
                 return new AddOrUpdateStoreUserResult.Success();
             }
             catch (DbUpdateException)
             {
                 return new AddOrUpdateStoreUserResult.DuplicateRole(roleId);
             }
+        }
+
+        public async Task<AddOrUpdateStoreUserResult> AddOrUpdateStoreUser(string storeId, string userId, StoreRoleId? roleId = null)
+        {
+            ArgumentNullException.ThrowIfNull(storeId);
+            AssertStoreRoleIfNeeded(storeId, roleId);
+            roleId ??= await GetDefaultRole();
+            if (await GetStoreRole(roleId) is null)
+                return new AddOrUpdateStoreUserResult.InvalidRole();
+
+            if (await GetStoreUser(storeId, userId) is not null)
+                return await UpdateStoreUserRole(storeId, userId, roleId);
+
+            return await AddStoreUser(storeId, userId, roleId)
+                ? (AddOrUpdateStoreUserResult)new AddOrUpdateStoreUserResult.Success()
+                : new AddOrUpdateStoreUserResult.DuplicateRole(roleId);
         }
 
         static void AssertStoreRoleIfNeeded(string storeId, StoreRoleId? roleId)

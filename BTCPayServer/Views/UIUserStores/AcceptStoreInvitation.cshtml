@@ -1,0 +1,61 @@
+@model BTCPayServer.Models.StoreViewModels.StoreInvitationViewModel
+@{
+    Layout = "_LayoutWizard";
+    ViewData["WizardMainClass"] = "col-md-10 col-lg-8 col-xl-4";
+    ViewData.SetTitle(StringLocalizer["Join {0}", Model.StoreName]);
+}
+
+@section Navbar {
+    <a asp-action="ListStores" id="CancelWizard" class="cancel">
+        <vc:icon symbol="cross" />
+    </a>
+}
+
+<header class="text-center">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+</header>
+
+<div class="store-invitation">
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+        <div class="alert alert-danger" role="alert">@Model.Error</div>
+    }
+
+    @if (Model.IsForAnotherUser)
+    {
+        <p class="text-center store-invitation__wrong-user">
+            @if (string.IsNullOrEmpty(Model.InvitedEmail))
+            {
+                <span text-translate="true">This invitation belongs to a different account.</span>
+            }
+            else
+            {
+                @ViewLocalizer["This invitation was sent to <strong>{0}</strong>. Sign in with that account to accept it.", Html.Encode(Model.InvitedEmail)]
+            }
+        </p>
+        <div class="d-grid gap-3 mt-4">
+            <a asp-controller="UIAccount" asp-action="Logout" class="btn btn-primary" text-translate="true">Sign in as another user</a>
+            <a asp-action="ListStores" class="btn btn-secondary" text-translate="true">Back to stores</a>
+        </div>
+    }
+    else if (Model.IsExpired)
+    {
+        <p class="text-center text-secondary" text-translate="true">This invitation has expired. Ask the store owner to send you a new one.</p>
+        <div class="d-grid mt-4">
+            <a asp-action="ListStores" class="btn btn-secondary" text-translate="true">Back to stores</a>
+        </div>
+    }
+    else
+    {
+        <p class="text-center">
+            @ViewLocalizer["You have been invited to join <strong>{0}</strong> as {1}.", Html.Encode(Model.StoreName), Html.Encode(Model.Role)]
+        </p>
+        <p class="text-center text-secondary store-invitation__expiry">
+            @StringLocalizer["This invitation expires {0}.", Model.Expiry.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)]
+        </p>
+        <form method="post" class="d-grid gap-3 mt-4">
+            <button type="submit" name="command" value="accept" class="btn btn-primary store-invitation__accept" text-translate="true">Accept invitation</button>
+            <button type="submit" name="command" value="decline" class="btn btn-secondary store-invitation__decline" text-translate="true">Decline</button>
+        </form>
+    }
+</div>

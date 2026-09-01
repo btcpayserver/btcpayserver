@@ -247,7 +247,7 @@ namespace BTCPayServer.Controllers
                         Html = StringLocalizer["API key generated!"].Value + $" <code class='alert-link'>{key.Id}</code>"
                     });
 
-                    return RedirectToAction("APIKeys", new { key = key.Id });
+                    return RedirectToAction("APIKeys");
 
                 default:
                     var perms = viewModel.Permissions?.Split(';').ToArray() ?? Array.Empty<string>();

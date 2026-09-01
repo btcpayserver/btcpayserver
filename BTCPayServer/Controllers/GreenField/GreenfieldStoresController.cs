@@ -352,6 +352,11 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.BrandColor), "Brand color is not a valid HEX Color (e.g. #F7931A)");
             }
+            if (!string.IsNullOrEmpty(request.SupportUrl) &&
+                (!Uri.TryCreate(request.SupportUrl, UriKind.Absolute, out var supportUri) || supportUri.Scheme is not ("http" or "https" or "mailto")))
+            {
+                ModelState.AddModelError(nameof(request.SupportUrl), "Support URL is not a valid url");
+            }
             if (request.InvoiceExpiration < TimeSpan.FromMinutes(1) && request.InvoiceExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.InvoiceExpiration), "InvoiceExpiration can only be between 1 and 34560 mins");
             if (request.DisplayExpirationTimer < TimeSpan.FromMinutes(1) && request.DisplayExpirationTimer > TimeSpan.FromMinutes(60 * 24 * 24))

@@ -334,6 +334,16 @@ public partial class UIStoresController
             needUpdate = true;
         }
 
+        var supportUrl = model.SupportUrl?.Trim();
+        if (string.IsNullOrEmpty(supportUrl))
+            blob.StoreSupportUrl = null;
+        else if (supportUrl.IsValidEmail())
+            blob.StoreSupportUrl = $"mailto:{supportUrl}";
+        else if (Uri.TryCreate(supportUrl, UriKind.Absolute, out var supportUri) && supportUri.Scheme is "http" or "https")
+            blob.StoreSupportUrl = supportUrl;
+        else
+            ModelState.AddModelError(nameof(model.SupportUrl), "Support URL is not a valid url");
+
         if (!ModelState.IsValid)
         {
             return View(model);
@@ -387,7 +397,6 @@ public partial class UIStoresController
         blob.RedirectAutomatically = model.RedirectAutomatically;
         blob.ReceiptOptions = model.ReceiptOptions.ToDTO();
         blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
-        blob.StoreSupportUrl = string.IsNullOrWhiteSpace(model.SupportUrl) ? null : model.SupportUrl.IsValidEmail() ? $"mailto:{model.SupportUrl}" : model.SupportUrl;
         blob.CheckoutText = string.IsNullOrWhiteSpace(model.CheckoutText) ? null : model.CheckoutText;
         blob.DisplayExpirationTimer = TimeSpan.FromMinutes(model.DisplayExpirationTimer);
         blob.AutoDetectLanguage = model.AutoDetectLanguage;

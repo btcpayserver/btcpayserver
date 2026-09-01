@@ -1194,8 +1194,10 @@ goodies:
             var vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
             vmpos.Currency = "USD";
             vmpos.Template = AppService.SerializeTemplate([
+                new AppItem { Id = "collision-label", Title = "Variant ($2.00) (variant-c)", PriceType = AppItemPriceType.Fixed, Price = 3 },
                 new AppItem { Id = "variant-a", Title = "Variant", PriceType = AppItemPriceType.Fixed, Price = 1 },
-                new AppItem { Id = "variant-b", Title = "Variant", PriceType = AppItemPriceType.Fixed, Price = 2 }
+                new AppItem { Id = "variant-b", Title = "Variant", PriceType = AppItemPriceType.Fixed, Price = 2 },
+                new AppItem { Id = "variant-c", Title = "Variant", PriceType = AppItemPriceType.Fixed, Price = 2 }
             ]);
             Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
 
@@ -1224,6 +1226,41 @@ goodies:
                 receiptCart.Properties().Select(property => property.Name).ToArray());
             Assert.Equal(new[] { "1 x $1.00 = $1.00", "1 x $2.00 = $2.00" },
                 receiptCart.Properties().Select(property => property.Value.Value<string>()).ToArray());
+
+            var collisionRequest = new HttpRequestMessage(HttpMethod.Post, uri);
+            collisionRequest.Headers.Add("Accept", "application/json");
+            collisionRequest.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["posData"] = "{\"cart\":[{\"id\":\"collision-label\",\"count\":1,\"price\":3},{\"id\":\"variant-a\",\"count\":1,\"price\":1},{\"id\":\"variant-b\",\"count\":1,\"price\":2},{\"id\":\"variant-c\",\"count\":1,\"price\":2}]}"
+            });
+            var collisionResponse = await tester.PayTester.HttpClient.SendAsync(collisionRequest);
+
+            Assert.Equal(HttpStatusCode.OK, collisionResponse.StatusCode);
+            var collisionJson = JObject.Parse(await collisionResponse.Content.ReadAsStringAsync());
+            var collisionInvoiceId = collisionJson["invoiceId"]?.Value<string>();
+            Assert.NotNull(collisionInvoiceId);
+            var collisionInvoice = await user.BitPay.GetInvoiceAsync(collisionInvoiceId);
+            Assert.Equal(8m, collisionInvoice.Price);
+            var collisionInvoiceEntity = await tester.PayTester.InvoiceRepository.GetInvoice(collisionInvoiceId);
+            Assert.NotNull(collisionInvoiceEntity);
+            Assert.NotNull(collisionInvoiceEntity.Metadata);
+            var collisionReceiptData = Assert.IsType<JObject>(collisionInvoiceEntity.Metadata.AdditionalData["receiptData"]);
+            var collisionReceiptCart = Assert.IsType<JObject>(collisionReceiptData["cart"] ?? collisionReceiptData["Cart"]);
+            Assert.Equal(4, collisionReceiptCart.Count);
+            Assert.Equal(new[]
+            {
+                "Variant",
+                "Variant ($2.00)",
+                "Variant ($2.00) (variant-c)",
+                "Variant ($2.00) (variant-c) (2)"
+            }, collisionReceiptCart.Properties().Select(property => property.Name).ToArray());
+            Assert.Equal(new[]
+            {
+                "1 x $1.00 = $1.00",
+                "1 x $2.00 = $2.00",
+                "1 x $3.00 = $3.00",
+                "1 x $2.00 = $2.00"
+            }, collisionReceiptCart.Properties().Select(property => property.Value.Value<string>()).ToArray());
         }
 
         private async Task<(string invoiceId, string error)> PosJsonRequest(ServerTester tester, string appId, string query)

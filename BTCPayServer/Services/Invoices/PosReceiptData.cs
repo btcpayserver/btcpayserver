@@ -92,7 +92,11 @@ public class PosReceiptData
             {
                 key = $"{ident} ({singlePrice})";
                 if (!cartData.TryAdd(key, value))
-                    cartData.Add($"{key} ({selectedChoice.Id})", value);
+                {
+                    key = $"{key} ({selectedChoice.Id})";
+                    for (var suffix = 2; !cartData.TryAdd(key, value); suffix++)
+                        key = $"{ident} ({singlePrice}) ({selectedChoice.Id}) ({suffix})";
+                }
             }
         }
 

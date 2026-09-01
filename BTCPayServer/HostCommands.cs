@@ -1,11 +1,26 @@
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 namespace BTCPayServer;
+
+public class BTCPayHostEnvironment
+{
+    [JsonProperty("deploymentType")]
+    public string DeploymentType { get; set; }
+
+    [JsonProperty("commands")]
+    public string[] Commands { get; set; }
+    [JsonExtensionData]
+    IDictionary<string, JToken> AdditionalData { get; set; }
+}
 
 public static class HostCommands
 {
     /// <summary>
-    /// Lists the host commands supported by the current deployment.
+    /// Returns metadata about the current deployment and its supported host commands.
     /// </summary>
-    public const string Commands = "commands";
+    public const string Env = "env";
     /// <summary>
     /// Returns the current authorized SSH public keys so they can be displayed in the server UI.
     /// </summary>

@@ -316,8 +316,8 @@ namespace BTCPayServer.Tests
                 var btcpayHostCmd = Path.Combine(_Directory, "btcpay-host.cmd");
                 await File.WriteAllTextAsync(btcpayHostCmd, """
                     @echo off
-                    if "%~1" == "commands" (
-                        echo ["showauthorizedkeys","setauthorizedkeys"]
+                    if "%~1" == "env" (
+                        echo {"deploymentType":"tests","commands":["showauthorizedkeys","setauthorizedkeys"]}
                         exit /b 0
                     )
                     if "%~1" == "showauthorizedkeys" (
@@ -343,8 +343,8 @@ namespace BTCPayServer.Tests
                     authorized_keys_file="$(dirname "$0")/authorized_keys"
 
                     case "$1" in
-                        commands)
-                            printf '["showauthorizedkeys","setauthorizedkeys"]\n'
+                        env)
+                            printf '{"deploymentType":"tests","commands":["showauthorizedkeys","setauthorizedkeys"]}\n'
                             ;;
                         showauthorizedkeys)
                             value="$(cat "$authorized_keys_file" 2>/dev/null || true)"

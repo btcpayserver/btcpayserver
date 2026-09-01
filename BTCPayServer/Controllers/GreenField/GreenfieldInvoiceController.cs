@@ -301,7 +301,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(ToPaymentMethodModels(invoice, onlyAccountedPayments, includeSensitive));
         }
 
-        [Authorize(Policy = Policies.CanViewInvoices,
+        [Authorize(Policy = Policies.CanModifyInvoices,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate")]
         [HttpPost("~/api/v1/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate")]

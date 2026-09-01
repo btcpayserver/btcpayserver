@@ -61,6 +61,11 @@ public class UserEvent(ApplicationUser user)
         public bool Bypass { get; } = bypass;
         public RequestBaseUrl RequestBaseUrl { get; } = requestBaseUrl;
     }
+    public class DisabledChanged(ApplicationUser user, bool disabled, string? source = null) : UserEvent(user)
+    {
+        public bool Disabled { get; } = disabled;
+        public string? Source { get; } = source;
+    }
     public class Approved(ApplicationUser user, string loginLink) : UserEvent(user)
     {
         public string LoginLink { get; set; } = loginLink;

@@ -3,7 +3,6 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
@@ -27,6 +26,7 @@ public class MonetizationHostedService(
     BTCPayServerSecurityStampValidator.SecurityStampInvalidator securityStampInvalidator,
     ISettingsAccessor<MonetizationSettings> monetizationSettingsAccessor,
     IServiceScopeFactory serviceScopeFactory,
+    SubscriptionHostedService subsService,
     Logs logger) : EventHostedServiceBase(eventAggregator, logger)
 {
     public class MonetizationLockoutUpdated((string UserId, bool LockoutEnabled)[] updated)
@@ -44,6 +44,7 @@ public class MonetizationHostedService(
         this.SubscribeAny<UserEvent.BypassMonetizationChanged>();
         this.SubscribeAny<UserEvent.Registered>();
         this.SubscribeAny<UserEvent.Deleted>();
+        this.SubscribeAny<UserEvent.DisabledChanged>();
     }
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
@@ -112,7 +113,7 @@ public class MonetizationHostedService(
                 var userSub = await ctx.Subscribers.GetBySelector(byPassOfferingId, CustomerSelector.ByIdentity(SubscriberDataExtensions.IdentityType, changed.User.Id));
                 if (userSub is not null)
                 {
-                    await userService.SetDisabled(changed.User.Id, false);
+                    await userService.SetDisabled(changed.User.Id, false, nameof(MonetizationHostedService));
                     EventAggregator.Publish(new MonetizationLockoutUpdated([(changed.User.Id, false)]));
                 }
             }
@@ -125,7 +126,7 @@ public class MonetizationHostedService(
                     var shouldBeLocked = !userSub.IsActive || userSub.Phase == SubscriberData.PhaseTypes.Expired;
                     if (shouldBeLocked)
                     {
-                        await userService.SetDisabled(changed.User.Id, true);
+                        await userService.SetDisabled(changed.User.Id, true, nameof(MonetizationHostedService));
                         securityStampInvalidator.Invalidate(changed.User.Id);
                         EventAggregator.Publish(new MonetizationLockoutUpdated([(changed.User.Id, true)]));
                     }
@@ -148,6 +149,17 @@ public class MonetizationHostedService(
             }
         }
 
+        if (evt is UserEvent.DisabledChanged { Disabled: true, Source: not nameof(MonetizationHostedService) } disabledChanged &&
+            monetizationSettingsAccessor.Settings is { OfferingId: { } dcOfferingId })
+        {
+            await using var ctx = dbContextFactory.CreateContext();
+            var sub = await ctx.Subscribers.GetBySelector(dcOfferingId,
+                CustomerSelector.ByIdentity(SubscriberDataExtensions.IdentityType, disabledChanged.User.Id));
+            if (sub is { IsSuspended: false })
+            {
+                await subsService.Suspend(sub.Id, "Account disabled by administrator");
+            }
+        }
 
         if (evt is UserEvent.Registered reg && monetizationSettingsAccessor.Settings is
             {
@@ -198,7 +210,7 @@ public class MonetizationHostedService(
         var userId = evt.Subscriber.GetApplicationUserId();
         var user = await userManager.FindByIdAsync(userId ?? "");
         if (user is not null &&
-            await userService.SetDisabled(user.Id, !activated) is not UserService.SetDisabledResult.Error)
+            await userService.SetDisabled(user.Id, !activated, nameof(MonetizationHostedService)) is not UserService.SetDisabledResult.Error)
         {
             EventAggregator.Publish(new MonetizationLockoutUpdated([(user.Id, !activated)]));
         }

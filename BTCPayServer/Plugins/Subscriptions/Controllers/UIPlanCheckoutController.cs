@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
@@ -7,6 +7,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Views.UIStoreMembership;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;

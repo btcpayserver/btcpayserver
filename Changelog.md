@@ -1,5 +1,47 @@
 # Changelog
 
+## 2.4.4
+
+### Breaking changes
+
+* Invoices: Reject fixed zero-amount invoices by default, with a store setting to allow them when needed (#7514) @NicolasDorier
+* Boltcards: Remove the desktop smartcard setup flow and always open the Boltcard app instead (#7515) @NicolasDorier
+* Greenfield: Create pending invitations by default when adding existing store users, and update the store-user API and client contracts (#7519) @dstrukt
+
+### New features
+
+* Stores: Add expiring store-user invitations with accept, decline, resend, cancel, notification, email, and Greenfield API support (#7519) @dstrukt
+
+### Fixes
+
+* Crowdfund: Preserve the main image and last-updated date after contribution updates (#7487) @inauman
+* Reports: Show short values correctly and hide unavailable explorer links (#7506) @Psycarlo
+* Monetization: Show a useful error instead of a 404 when users without subscriptions open Manage billing (#7516) @NicolasDorier
+* Invoices: Require invoice modification permission when changing an invoice state (#7514) @NicolasDorier
+* Point of Sale: Use the store-configured notification URL for invoices instead of accepting one from the caller @Kukks
+* Wallet: Return an empty label instead of falling back to the derivation scheme (#7521) @TChukwuleta
+* Plugins: Show details and installation actions for unlisted plugins opened through search or direct links (#7524) @thgO-O
+* Rates: Replace the unavailable CryptoMarket provider with Notbank and migrate existing rate rules (#7526) @NicolasDorier
+* Rates: Ignore invalid BTCTurk tickers whose bid exceeds their ask @NicolasDorier
+* Payment Requests: Do not add an empty reference ID to invoice search terms @NicolasDorier
+* Immediately invalidate active sessions when users are demoted, disabled, unapproved, or have their email confirmation revoked (#7529) @NicolasDorier
+* Prevent monetization subscriptions from re-enabling accounts disabled by a server administrator (#7523) @TChukwuleta
+* Greenfield: Enforce API key scope when creating additional API keys (#7531) @NicolasDorier
+* Greenfield: Prevent locking the last enabled server administrator (#7541) @TChukwuleta
+* Maintenance: Reject malformed hostnames before attempting a domain change @NicolasDorier
+
+### Improvements
+
+* Reports: Return invoice report rows in ascending creation-date order (#7512) @kevin-ta
+* Rates: Limit Kraken ticker requests to relevant currency pairs (#7472) @ZenulAbidin
+* Plugins: Allow payment-method handlers to validate configuration against the store being configured (#7513) @NicolasDorier
+* Greenfield SDK: Encode dynamic route and query values consistently (#7530) @NicolasDorier
+* Hide redundant breadcrumbs when they only repeat the page title (#7517) @NicolasDorier
+
+### Miscellaneous
+
+* Server administration: Replace direct SSH host management with deployment-provided `btcpay-host` commands and remove legacy SSH configuration (#7511) @NicolasDorier
+
 ## 2.4.3
 
 This is a security release; updating is recommended for servers shared with many users.

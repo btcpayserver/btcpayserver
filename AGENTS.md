@@ -7,3 +7,7 @@ Repository-specific agent guidance has moved to project skills:
 - `.agents/skills/btcpayserver-pr-descriptions/SKILL.md`
 
 Load the relevant skill when creating migrations, updating/reviewing `Changelog.md`, or writing/reviewing pull request descriptions.
+
+## JSON Serialization
+
+Prefer `Newtonsoft.Json` over `System.Text.Json` when adding or modifying JSON serialization code.

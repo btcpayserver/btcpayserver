@@ -5,7 +5,7 @@
 ### Breaking changes
 
 * **Checkout**: NFC payments are now disabled by default. Enable them under Store Settings > Checkout Experience. This change was introduced in 2.4.3 but was missing from its release notes. @rockstardev
-* **Invoices**: Block fixed zero-amount invoices by default. Stores can allow them in their settings (#7514) @NicolasDorier
+* **Invoices**: Block zero-amount invoices by default. Stores can allow them in their settings (#7514) @NicolasDorier
 * **Boltcards**: Remove the desktop smartcard setup and open the Boltcard app instead (#7515) @NicolasDorier
 * **Store users**: Users must accept an invitation before joining a store (#7519) @dstrukt
 * **Point of Sale**: Remove the per-request `notificationUrl`. Invoices now use the app's configured notification URL @Kukks

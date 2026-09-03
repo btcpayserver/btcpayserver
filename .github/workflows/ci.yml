@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - name: Run fast and third-party tests
         run: bash .github/scripts/run-tests.sh "Fast=Fast|ThirdParty=ThirdParty"
       - name: Check Bitcoin-only build
@@ -33,6 +35,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - name: Run Playwright tests
         run: bash .github/scripts/run-tests.sh "Playwright=Playwright"
       - name: Collect artifacts
@@ -55,6 +59,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - name: Run Playwright 2 tests
         run: bash .github/scripts/run-tests.sh "Playwright=Playwright-2"
       - name: Collect artifacts
@@ -77,5 +83,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - name: Run integration tests
         run: bash .github/scripts/run-tests.sh "Integration=Integration"

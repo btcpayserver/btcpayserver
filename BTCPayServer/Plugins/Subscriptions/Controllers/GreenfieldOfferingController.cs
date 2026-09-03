@@ -434,6 +434,8 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             return await GetPlanCheckout(checkoutId);
         }
 
+        // Intentional: expired sessions still return data so the client can show
+        // "expired" data are cleaned up monthly.
         [AllowAnonymous]
         [HttpGet("~/api/v1/plan-checkout/{checkoutId}")]
         public async Task<IActionResult> GetPlanCheckout(string checkoutId)
@@ -512,6 +514,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         [HttpGet("~/api/v1/subscriber-portal/{portalSessionId}")]
         public async Task<IActionResult> GetPortalSession(string portalSessionId)
         {
+            // Uses GetById, not GetActiveById: expired sessions gets cleaned up every month
             var session = await ctx.PortalSessions.GetById(portalSessionId);
             if (session is null)
                 return PortalSessionNotFound();

@@ -22,4 +22,18 @@ until [ "$n" -ge 10 ]; do
 done
 
 compose -f "docker-compose.altcoins.yml" build
-compose -f "docker-compose.altcoins.yml" run -e "TEST_FILTERS=$1" -e "GITHUB_ACTIONS=${GITHUB_ACTIONS:-false}" tests
+
+test_container_args=(
+  -e "TEST_FILTERS=$1"
+  -e "GITHUB_ACTIONS=${GITHUB_ACTIONS:-false}"
+)
+
+if [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+  test_container_args+=(
+    -e "GITHUB_STEP_SUMMARY=/tmp/github-step-summary"
+    -e "GITHUB_WORKSPACE=/source"
+    -v "${GITHUB_STEP_SUMMARY}:/tmp/github-step-summary"
+  )
+fi
+
+compose -f "docker-compose.altcoins.yml" run "${test_container_args[@]}" tests

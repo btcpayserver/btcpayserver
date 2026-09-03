@@ -9,12 +9,12 @@
 * **Boltcards**: Remove the desktop smartcard setup flow and always open the Boltcard app instead (#7515) @NicolasDorier
 * Adding users to your store now requires them to accept the invitation. (#7519) @dstrukt
 * **Point of Sale**: Remove the per-request `notificationUrl`; invoices now use the app's configured notification URL @Kukks
-* **Server administration**: Remove legacy SSH configuration and require deployment-provided `btcpay-host` integration, including the new `btcpay-host env` discovery contract ([documentation](TODO)) (#7511 #7543) @NicolasDorier
+* **Server administration**: Remove legacy SSH configuration and allow deployment-provided `btcpay-host` integration, including the new `btcpay-host env` discovery contract ([documentation](TODO)) (#7511 #7543) @NicolasDorier
 
 ### New features
 
 * **Stores**: Adding users to your store now requires them to accept the invitation. (#7519) @dstrukt
-* **Email Rules**: Add `SRV-StoreInvitePending` and `StoreUserJoined` triggers for store invitations (#7519) @dstrukt
+* **Email Rules**: Add `StoreInvitePending` and `StoreUserJoined` triggers for store invitations (#7519) @dstrukt
 
 ### Fixes
 

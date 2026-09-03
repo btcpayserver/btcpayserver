@@ -163,7 +163,10 @@ namespace BTCPayServer.Tests
             config.AppendLine($"debuglog=debug.log");
             config.AppendLine($"nocsp={NoCSP.ToString().ToLowerInvariant()}");
             if (btcpayHostExecutable is not null)
+            {
                 config.AppendLine($"btcpayhostexecutable={btcpayHostExecutable}");
+                config.AppendLine("btcpayhostenabled=true");
+            }
 
             if (!String.IsNullOrEmpty(Postgres))
                 config.AppendLine($"postgres=" + Postgres);

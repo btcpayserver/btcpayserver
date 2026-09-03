@@ -38,6 +38,8 @@ namespace BTCPayServer.Configuration
             app.Option("--nocsp", $"Disable CSP (default false)", CommandOptionType.BoolValue);
             app.Option("--deprecated", $"Allow deprecated settings (default:false)", CommandOptionType.BoolValue);
             app.Option("--externalservices", $"Links added to external services inside Server Settings / Services under the format service1:path2;service2:path2.(default: empty)", CommandOptionType.SingleValue);
+            app.Option("--btcpayhostenabled", "Enable the btcpay-host integration (default: false)", CommandOptionType.BoolValue);
+            app.Option("--btcpayhostexecutable", "Path to the btcpay-host executable (default: btcpay-host)", CommandOptionType.SingleValue);
             app.Option("--rootpath", "The root path in the URL to access BTCPay (default: /)", CommandOptionType.SingleValue);
             app.Option("--torrcfile", "Path to torrc file containing hidden services directories (default: empty)", CommandOptionType.SingleValue);
             app.Option("--torservices", "Tor hostnames of available services added to Server Settings (and sets onion header for btcpay). Format: btcpayserver:host.onion:80;btc-p2p:host2.onion:81,BTC-RPC:host3.onion:82,UNKNOWN:host4.onion:83. (default: empty)", CommandOptionType.SingleValue);
@@ -127,6 +129,10 @@ namespace BTCPayServer.Configuration
             builder.AppendLine("#bind=127.0.0.1");
             builder.AppendLine("#httpscertificatefilepath=devtest.pfx");
             builder.AppendLine("#httpscertificatefilepassword=toto");
+            builder.AppendLine();
+            builder.AppendLine("### Host integration ###");
+            builder.AppendLine("#btcpayhostenabled=false");
+            builder.AppendLine("#btcpayhostexecutable=btcpay-host");
             builder.AppendLine();
             builder.AppendLine("### Database ###");
             builder.AppendLine("#postgres=User ID=root;Password=myPassword;Host=localhost;Port=5432;Database=myDataBase;");

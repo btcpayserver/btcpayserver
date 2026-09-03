@@ -7,17 +7,16 @@
 * Checkout: Make NFC payments opt-in per store under Store Settings > Checkout Experience. Unless enabled, checkout hides the Pay by NFC button and the NFC endpoint. This change was introduced in 2.4.3 but omitted from its release notes. @rockstardev
 * Invoices: Reject fixed zero-amount invoices by default, with a store setting to allow them when needed (#7514) @NicolasDorier
 * Boltcards: Remove the desktop smartcard setup flow and always open the Boltcard app instead (#7515) @NicolasDorier
-* Greenfield: Create pending invitations by default when adding existing store users, and update the store-user API and client contracts (#7519) @dstrukt
+* Adding users to your store now requires them to accept the invitation. (#7519) @dstrukt
 
 ### New features
 
-* Stores: Add expiring store-user invitations with accept, decline, resend, cancel, notification, email, and Greenfield API support (#7519) @dstrukt
+* Stores: Adding users to your store now requires them to accept the invitation. (#7519) @dstrukt
 
 ### Fixes
 
 * Crowdfund: Preserve the main image and last-updated date after contribution updates (#7487) @inauman
 * Reports: Show short values correctly and hide unavailable explorer links (#7506) @Psycarlo
-* Monetization: Show a useful error instead of a 404 when users without subscriptions open Manage billing (#7516) @NicolasDorier
 * Invoices: Require invoice modification permission when changing an invoice state (#7514) @NicolasDorier
 * Point of Sale: Use the store-configured notification URL for invoices instead of accepting one from the caller @Kukks
 * Wallet: Return an empty label instead of falling back to the derivation scheme (#7521) @TChukwuleta
@@ -40,6 +39,7 @@
 * Plugins: Allow payment-method handlers to validate configuration against the store being configured (#7513) @NicolasDorier
 * Greenfield SDK: Encode dynamic route and query values consistently (#7530) @NicolasDorier
 * Hide redundant breadcrumbs when they only repeat the page title (#7517) @NicolasDorier
+* Monetization: Show a useful error instead of a 404 when users without subscriptions open Manage billing (#7516) @NicolasDorier
 
 ### Miscellaneous
 

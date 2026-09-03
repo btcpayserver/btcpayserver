@@ -4,6 +4,7 @@
 
 ### Breaking changes
 
+* Checkout: Make NFC payments opt-in per store under Store Settings > Checkout Experience. Unless enabled, checkout hides the Pay by NFC button and the NFC endpoint. This change was introduced in 2.4.3 but omitted from its release notes. @rockstardev
 * Invoices: Reject fixed zero-amount invoices by default, with a store setting to allow them when needed (#7514) @NicolasDorier
 * Boltcards: Remove the desktop smartcard setup flow and always open the Boltcard app instead (#7515) @NicolasDorier
 * Greenfield: Create pending invitations by default when adding existing store users, and update the store-user API and client contracts (#7519) @dstrukt

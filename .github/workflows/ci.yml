@@ -20,7 +20,9 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - name: Run fast and third-party tests
         run: bash .github/scripts/run-tests.sh "Fast=Fast|ThirdParty=ThirdParty"
       - name: Check Bitcoin-only build
@@ -32,7 +34,9 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - name: Run Playwright tests
         run: bash .github/scripts/run-tests.sh "Playwright=Playwright"
       - name: Collect artifacts
@@ -42,7 +46,7 @@ jobs:
           docker run --rm -v "${COMPOSE_PROJECT_NAME}_tests_datadir:/data" -v /tmp/Artifacts:/host alpine sh -c "cp -r /data/. /host/" || true
       - name: Upload artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-tests-artifacts
           path: /tmp/Artifacts
@@ -54,7 +58,9 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - name: Run Playwright 2 tests
         run: bash .github/scripts/run-tests.sh "Playwright=Playwright-2"
       - name: Collect artifacts
@@ -64,7 +70,7 @@ jobs:
           docker run --rm -v "${COMPOSE_PROJECT_NAME}_tests_datadir:/data" -v /tmp/Artifacts:/host alpine sh -c "cp -r /data/. /host/" || true
       - name: Upload artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-2-tests-artifacts
           path: /tmp/Artifacts
@@ -76,6 +82,8 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - name: Run integration tests
         run: bash .github/scripts/run-tests.sh "Integration=Integration"

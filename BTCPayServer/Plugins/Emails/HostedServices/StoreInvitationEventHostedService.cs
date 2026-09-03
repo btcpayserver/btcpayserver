@@ -73,7 +73,7 @@ public class StoreInvitationEventHostedService(
                 ["Link"] = evt.InvitationsLink
             }
         };
-        EventAggregator.Publish(new TriggerEvent(null, ServerMailTriggers.StoreInvitePending, model, null));
+        EventAggregator.Publish(new TriggerEvent(evt.Invitation.StoreId, StoreMailTriggers.StoreInvitePending, model, null));
     }
 
     private async Task OnAccepted(StoreUserInvitationEvent.Accepted evt)

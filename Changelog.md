@@ -4,44 +4,44 @@
 
 ### Breaking changes
 
-* **Checkout**: Make NFC payments opt-in per store under Store Settings > Checkout Experience. Unless enabled, checkout hides the Pay by NFC button and the NFC endpoint. This change was introduced in 2.4.3 but omitted from its release notes. @rockstardev
-* **Invoices**: Reject fixed zero-amount invoices by default, with a store setting to allow them when needed (#7514) @NicolasDorier
-* **Boltcards**: Remove the desktop smartcard setup flow and always open the Boltcard app instead (#7515) @NicolasDorier
-* Adding users to your store now requires them to accept the invitation. (#7519) @dstrukt
-* **Point of Sale**: Remove the per-request `notificationUrl`; invoices now use the app's configured notification URL @Kukks
-* **Server administration**: Remove legacy SSH configuration and allow deployment-provided `btcpay-host` integration, including the new `btcpay-host env` discovery contract ([documentation](TODO)) (#7511 #7543) @NicolasDorier
+* **Checkout**: NFC payments are now disabled by default. Enable them under Store Settings > Checkout Experience. This change was introduced in 2.4.3 but was missing from its release notes. @rockstardev
+* **Invoices**: Block fixed zero-amount invoices by default. Stores can allow them in their settings (#7514) @NicolasDorier
+* **Boltcards**: Remove the desktop smartcard setup and open the Boltcard app instead (#7515) @NicolasDorier
+* **Store users**: Users must accept an invitation before joining a store (#7519) @dstrukt
+* **Point of Sale**: Remove the per-request `notificationUrl`. Invoices now use the app's configured notification URL @Kukks
+* **Server administration**: Remove legacy SSH settings and add deployment-provided `btcpay-host` integration, including `btcpay-host env` ([documentation](TODO)) (#7511 #7543) @NicolasDorier
 
 ### New features
 
-* **Stores**: Adding users to your store now requires them to accept the invitation. (#7519) @dstrukt
-* **Email Rules**: Add `StoreInvitePending` and `StoreUserJoined` triggers for store invitations (#7519) @dstrukt
+* **Stores**: Add invitations for store users (#7519) @dstrukt
+* **Email Rules**: Add `StoreInvitePending` and `StoreUserJoined` triggers (#7519) @dstrukt
 
 ### Fixes
 
-* **Crowdfund**: Preserve the main image and last-updated date after contribution updates (#7487) @inauman
-* **Reports**: Show short values correctly and hide unavailable explorer links (#7506) @Psycarlo
-* **Invoices**: Require invoice modification permission when changing an invoice state (#7514) @NicolasDorier
-* **Wallet**: Return an empty label instead of falling back to the derivation scheme (#7521) @TChukwuleta
-* **Plugins**: Show details and installation actions for unlisted plugins opened through search or direct links (#7524) @thgO-O
-* **Rates**: Replace the unavailable CryptoMarket provider with Notbank and migrate existing rate rules (#7526) @NicolasDorier
-* **Rates**: Ignore invalid BTCTurk tickers whose bid exceeds their ask @NicolasDorier
-* **Payment Requests**: Do not add an empty reference ID to invoice search terms @NicolasDorier
-* Immediately invalidate active sessions when users are demoted, disabled, unapproved, or have their email confirmation revoked (#7529) @NicolasDorier
-* Prevent monetization subscriptions from re-enabling accounts disabled by a server administrator (#7523) @TChukwuleta
-* **Greenfield**: Enforce API key scope when creating additional API keys (#7531) @NicolasDorier
-* **Greenfield**: Prevent locking the last enabled server administrator (#7541) @TChukwuleta
-* **Greenfield**: Reject unsafe store support URL schemes to prevent script injection (#7537) @TChukwuleta
-* **API Keys**: Prevent exposing newly created API keys in authorization redirect URLs (#7542) @TChukwuleta
-* **Maintenance**: Reject malformed hostnames before attempting a domain change @NicolasDorier
+* **Crowdfund**: Keep the main image and last-updated date when contributions change (#7487) @inauman
+* **Reports**: Display short values correctly and hide broken explorer links (#7506) @Psycarlo
+* **Invoices**: Require permission to change an invoice's state (#7514) @NicolasDorier
+* **Wallet**: Show an empty label instead of the wallet derivation scheme (#7521) @TChukwuleta
+* **Plugins**: Show details and install actions for unlisted plugins found through search or direct links (#7524) @thgO-O
+* **Rates**: Replace the unavailable CryptoMarket provider with Notbank and update existing rate rules (#7526) @NicolasDorier
+* **Rates**: Ignore invalid BTCTurk prices where the bid is higher than the ask @NicolasDorier
+* **Payment Requests**: Do not add empty reference IDs to invoice searches @NicolasDorier
+* Log users out immediately when they are demoted, disabled, unapproved, or have their email confirmation revoked (#7529) @NicolasDorier
+* Keep monetization subscriptions from re-enabling accounts disabled by an administrator (#7523) @TChukwuleta
+* **Greenfield**: Prevent restricted API keys from creating unrestricted keys (#7531) @NicolasDorier
+* **Greenfield**: Prevent disabling the last active server administrator (#7541) @TChukwuleta
+* **Stores**: Block unsafe support links to prevent script injection (#7537) @TChukwuleta
+* **API Keys**: Keep new API keys out of authorization redirect URLs (#7542) @TChukwuleta
+* **Maintenance**: Validate hostnames before changing a domain @NicolasDorier
 
 ### Improvements
 
-* **Reports**: Return invoice report rows in ascending creation-date order (#7512) @kevin-ta
-* **Rates**: Limit Kraken ticker requests to relevant currency pairs (#7472) @ZenulAbidin
-* **Plugins**: Allow payment-method handlers to validate configuration against the store being configured (#7513) @NicolasDorier
-* **Greenfield SDK**: Encode dynamic route and query values consistently (#7530) @NicolasDorier
-* Hide redundant breadcrumbs when they only repeat the page title (#7517) @NicolasDorier
-* **Monetization**: Show a useful error instead of a 404 when users without subscriptions open Manage billing (#7516) @NicolasDorier
+* **Reports**: Sort invoice report rows from oldest to newest (#7512) @kevin-ta
+* **Rates**: Request only supported currency pairs from Kraken (#7472) @ZenulAbidin
+* **Plugins**: Allow payment methods to validate settings for the current store (#7513) @NicolasDorier
+* **Greenfield SDK**: Safely encode values in API URLs (#7530) @NicolasDorier
+* Hide breadcrumbs that only repeat the page title (#7517) @NicolasDorier
+* **Monetization**: Show a useful message instead of a 404 when Manage billing is unavailable (#7516) @NicolasDorier
 
 ## 2.4.3
 

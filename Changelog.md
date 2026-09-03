@@ -9,7 +9,7 @@
 * **Boltcards**: Remove the desktop smartcard setup and open the Boltcard app instead (#7515) @NicolasDorier
 * **Store users**: Users must accept an invitation before joining a store (#7519) @dstrukt
 * **Point of Sale**: Remove the per-request `notificationUrl`. Invoices now use the app's configured notification URL @Kukks
-* **Server administration**: Remove legacy SSH settings and add deployment-provided `btcpay-host` integration, including `btcpay-host env` ([documentation](TODO)) (#7511 #7543) @NicolasDorier
+* **Server administration**: Remove legacy SSH settings and add deployment-provided `btcpay-host` integration, including `btcpay-host env` ([documentation](https://docs.btcpayserver.org/Development/HostIntegration/)) (#7511 #7543) @NicolasDorier
 
 ### New features
 

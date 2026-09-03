@@ -23,6 +23,16 @@ jobs:
         uses: actions/checkout@v4
       - name: Run fast and third-party tests
         run: bash .github/scripts/run-tests.sh "Fast=Fast|ThirdParty=ThirdParty"
+      - name: Collect artifacts
+        if: always()
+        run: bash .github/scripts/collect-artifacts.sh
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fast-tests-artifacts
+          path: /tmp/Artifacts
+          if-no-files-found: ignore
       - name: Check Bitcoin-only build
         run: bash .github/scripts/can-build.sh
 
@@ -37,9 +47,7 @@ jobs:
         run: bash .github/scripts/run-tests.sh "Playwright=Playwright"
       - name: Collect artifacts
         if: always()
-        run: |
-          mkdir -p /tmp/Artifacts
-          docker run --rm -v "${COMPOSE_PROJECT_NAME}_tests_datadir:/data" -v /tmp/Artifacts:/host alpine sh -c "cp -r /data/. /host/" || true
+        run: bash .github/scripts/collect-artifacts.sh
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -59,9 +67,7 @@ jobs:
         run: bash .github/scripts/run-tests.sh "Playwright=Playwright-2"
       - name: Collect artifacts
         if: always()
-        run: |
-          mkdir -p /tmp/Artifacts
-          docker run --rm -v "${COMPOSE_PROJECT_NAME}_tests_datadir:/data" -v /tmp/Artifacts:/host alpine sh -c "cp -r /data/. /host/" || true
+        run: bash .github/scripts/collect-artifacts.sh
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -79,3 +85,13 @@ jobs:
         uses: actions/checkout@v4
       - name: Run integration tests
         run: bash .github/scripts/run-tests.sh "Integration=Integration"
+      - name: Collect artifacts
+        if: always()
+        run: bash .github/scripts/collect-artifacts.sh
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-tests-artifacts
+          path: /tmp/Artifacts
+          if-no-files-found: ignore

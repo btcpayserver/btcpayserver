@@ -36,6 +36,18 @@ jobs:
         uses: actions/checkout@v4
       - name: Run pre-release checks
         run: bash .github/scripts/run-tests.sh "PreReleaseCheck=PreReleaseCheck"
+      - name: Collect artifacts
+        if: always()
+        run: |
+          mkdir -p /tmp/Artifacts
+          docker run --rm -v "${COMPOSE_PROJECT_NAME}_tests_datadir:/data" -v /tmp/Artifacts:/host alpine sh -c "cp -r /data/. /host/" || true
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-checks-artifacts
+          path: /tmp/Artifacts
+          if-no-files-found: ignore
 
   plugin_compatibility:
     name: Plugin Compatibility

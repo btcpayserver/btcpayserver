@@ -4,44 +4,44 @@
 
 ### Breaking changes
 
-* Checkout: Make NFC payments opt-in per store under Store Settings > Checkout Experience. Unless enabled, checkout hides the Pay by NFC button and the NFC endpoint. This change was introduced in 2.4.3 but omitted from its release notes. @rockstardev
-* Invoices: Reject fixed zero-amount invoices by default, with a store setting to allow them when needed (#7514) @NicolasDorier
-* Boltcards: Remove the desktop smartcard setup flow and always open the Boltcard app instead (#7515) @NicolasDorier
+* **Checkout**: Make NFC payments opt-in per store under Store Settings > Checkout Experience. Unless enabled, checkout hides the Pay by NFC button and the NFC endpoint. This change was introduced in 2.4.3 but omitted from its release notes. @rockstardev
+* **Invoices**: Reject fixed zero-amount invoices by default, with a store setting to allow them when needed (#7514) @NicolasDorier
+* **Boltcards**: Remove the desktop smartcard setup flow and always open the Boltcard app instead (#7515) @NicolasDorier
 * Adding users to your store now requires them to accept the invitation. (#7519) @dstrukt
-* Point of Sale: Remove the per-request `notificationUrl`; invoices now use the app's configured notification URL @Kukks
-* Server administration: Remove legacy SSH configuration and require deployment-provided `btcpay-host` integration, including the new `btcpay-host env` discovery contract ([documentation](TODO)) (#7511 #7543) @NicolasDorier
+* **Point of Sale**: Remove the per-request `notificationUrl`; invoices now use the app's configured notification URL @Kukks
+* **Server administration**: Remove legacy SSH configuration and require deployment-provided `btcpay-host` integration, including the new `btcpay-host env` discovery contract ([documentation](TODO)) (#7511 #7543) @NicolasDorier
 
 ### New features
 
-* Stores: Adding users to your store now requires them to accept the invitation. (#7519) @dstrukt
-* Email Rules: Add `SRV-StoreInvitePending` and `StoreUserJoined` triggers for store invitations (#7519) @dstrukt
+* **Stores**: Adding users to your store now requires them to accept the invitation. (#7519) @dstrukt
+* **Email Rules**: Add `SRV-StoreInvitePending` and `StoreUserJoined` triggers for store invitations (#7519) @dstrukt
 
 ### Fixes
 
-* Crowdfund: Preserve the main image and last-updated date after contribution updates (#7487) @inauman
-* Reports: Show short values correctly and hide unavailable explorer links (#7506) @Psycarlo
-* Invoices: Require invoice modification permission when changing an invoice state (#7514) @NicolasDorier
-* Wallet: Return an empty label instead of falling back to the derivation scheme (#7521) @TChukwuleta
-* Plugins: Show details and installation actions for unlisted plugins opened through search or direct links (#7524) @thgO-O
-* Rates: Replace the unavailable CryptoMarket provider with Notbank and migrate existing rate rules (#7526) @NicolasDorier
-* Rates: Ignore invalid BTCTurk tickers whose bid exceeds their ask @NicolasDorier
-* Payment Requests: Do not add an empty reference ID to invoice search terms @NicolasDorier
+* **Crowdfund**: Preserve the main image and last-updated date after contribution updates (#7487) @inauman
+* **Reports**: Show short values correctly and hide unavailable explorer links (#7506) @Psycarlo
+* **Invoices**: Require invoice modification permission when changing an invoice state (#7514) @NicolasDorier
+* **Wallet**: Return an empty label instead of falling back to the derivation scheme (#7521) @TChukwuleta
+* **Plugins**: Show details and installation actions for unlisted plugins opened through search or direct links (#7524) @thgO-O
+* **Rates**: Replace the unavailable CryptoMarket provider with Notbank and migrate existing rate rules (#7526) @NicolasDorier
+* **Rates**: Ignore invalid BTCTurk tickers whose bid exceeds their ask @NicolasDorier
+* **Payment Requests**: Do not add an empty reference ID to invoice search terms @NicolasDorier
 * Immediately invalidate active sessions when users are demoted, disabled, unapproved, or have their email confirmation revoked (#7529) @NicolasDorier
 * Prevent monetization subscriptions from re-enabling accounts disabled by a server administrator (#7523) @TChukwuleta
-* Greenfield: Enforce API key scope when creating additional API keys (#7531) @NicolasDorier
-* Greenfield: Prevent locking the last enabled server administrator (#7541) @TChukwuleta
-* Greenfield: Reject unsafe store support URL schemes to prevent script injection (#7537) @TChukwuleta
-* API Keys: Prevent exposing newly created API keys in authorization redirect URLs (#7542) @TChukwuleta
-* Maintenance: Reject malformed hostnames before attempting a domain change @NicolasDorier
+* **Greenfield**: Enforce API key scope when creating additional API keys (#7531) @NicolasDorier
+* **Greenfield**: Prevent locking the last enabled server administrator (#7541) @TChukwuleta
+* **Greenfield**: Reject unsafe store support URL schemes to prevent script injection (#7537) @TChukwuleta
+* **API Keys**: Prevent exposing newly created API keys in authorization redirect URLs (#7542) @TChukwuleta
+* **Maintenance**: Reject malformed hostnames before attempting a domain change @NicolasDorier
 
 ### Improvements
 
-* Reports: Return invoice report rows in ascending creation-date order (#7512) @kevin-ta
-* Rates: Limit Kraken ticker requests to relevant currency pairs (#7472) @ZenulAbidin
-* Plugins: Allow payment-method handlers to validate configuration against the store being configured (#7513) @NicolasDorier
-* Greenfield SDK: Encode dynamic route and query values consistently (#7530) @NicolasDorier
+* **Reports**: Return invoice report rows in ascending creation-date order (#7512) @kevin-ta
+* **Rates**: Limit Kraken ticker requests to relevant currency pairs (#7472) @ZenulAbidin
+* **Plugins**: Allow payment-method handlers to validate configuration against the store being configured (#7513) @NicolasDorier
+* **Greenfield SDK**: Encode dynamic route and query values consistently (#7530) @NicolasDorier
 * Hide redundant breadcrumbs when they only repeat the page title (#7517) @NicolasDorier
-* Monetization: Show a useful error instead of a 404 when users without subscriptions open Manage billing (#7516) @NicolasDorier
+* **Monetization**: Show a useful error instead of a 404 when users without subscriptions open Manage billing (#7516) @NicolasDorier
 
 ## 2.4.3
 

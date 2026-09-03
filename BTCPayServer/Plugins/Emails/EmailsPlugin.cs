@@ -212,25 +212,6 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
         };
         vms.Add(vm);
 
-        vm = new EmailTriggerViewModel()
-        {
-            Trigger = ServerMailTriggers.StoreInvitePending,
-            DefaultEmail = new()
-            {
-                To = ["{User.MailboxAddress}"],
-                Subject = "Invitation to join {StoreInvitation.StoreName}",
-                Body = CreateEmailBody($"You have been invited to join <b>{{StoreInvitation.StoreName}}</b> as {{StoreInvitation.Role}}.<br/><br/>{CallToAction("View invitation", "{StoreInvitation.Link}")}"),
-            },
-            PlaceHolders = new()
-            {
-                new ("{StoreInvitation.StoreName}", "The name of the store the user is invited to"),
-                new ("{StoreInvitation.Role}", "The role the user is invited with"),
-                new ("{StoreInvitation.Link}", "The link where the user can accept or decline the invitation"),
-            },
-            Description = "User: Store invitation",
-        };
-        vms.Add(vm);
-
         var commonPlaceholders = new List<EmailTriggerViewModel.PlaceHolder>()
         {
             new("{Admins.MailboxAddresses}", "The email addresses of the admins separated by a comma"),

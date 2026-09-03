@@ -1,5 +1,7 @@
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Plugins.Emails;
+using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Services;
 using BTCPayServer.Views.Stores;
 using Microsoft.Playwright;
@@ -36,7 +38,11 @@ public class StoreInvitationTests(ITestOutputHelper testOutputHelper) : UnitTest
         await Expect(s.Page.Locator(".store-users__require-invitation")).ToHaveCountAsync(0);
 
         // Sending an invite lands on a wizard-layout confirmation carrying the link and QR.
-        var invitationUrl = await InviteToStore(s, invitee);
+        var invitationUrl = string.Empty;
+        var trigger = await s.Server.WaitForEvent<TriggerEvent>(async () =>
+            invitationUrl = await InviteToStore(s, invitee),
+            evt => evt.Trigger == StoreMailTriggers.StoreInvitePending);
+        Assert.Equal(storeId, trigger.StoreId);
         Assert.Contains("/invitations/", invitationUrl);
 
         // The owner is not the invitee, so their own link explains itself instead of 404ing.

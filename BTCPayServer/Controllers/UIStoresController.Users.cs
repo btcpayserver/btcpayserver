@@ -106,7 +106,7 @@ public partial class UIStoresController
                     Email = user.Email,
                     Role = roleId.Role,
                     InvitationUrl = link,
-                    EmailSent = await _emailSenderFactory.IsComplete(),
+                    EmailSent = await _emailSenderFactory.IsComplete(CurrentStore.Id),
                     Expiry = created.Invitation.Invitation.ExpiresAt,
                     JustSent = true
                 });
@@ -192,7 +192,7 @@ public partial class UIStoresController
             Email = invitedUser?.Email,
             Role = StoreRoleId.Parse(invitation.Invitation.RoleId).Role,
             InvitationUrl = link,
-            EmailSent = await _emailSenderFactory.IsComplete(),
+            EmailSent = await _emailSenderFactory.IsComplete(storeId),
             Expiry = invitation.Invitation.ExpiresAt,
             JustSent = true
         });

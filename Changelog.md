@@ -29,6 +29,8 @@
 * Prevent monetization subscriptions from re-enabling accounts disabled by a server administrator (#7523) @TChukwuleta
 * Greenfield: Enforce API key scope when creating additional API keys (#7531) @NicolasDorier
 * Greenfield: Prevent locking the last enabled server administrator (#7541) @TChukwuleta
+* Greenfield: Reject unsafe store support URL schemes to prevent script injection (#7537) @TChukwuleta
+* API Keys: Prevent exposing newly created API keys in authorization redirect URLs (#7542) @TChukwuleta
 * Maintenance: Reject malformed hostnames before attempting a domain change @NicolasDorier
 
 ### Improvements

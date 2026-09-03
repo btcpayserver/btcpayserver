@@ -19,6 +19,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{29290EC7-0
 		Docker\btcpay-host = Docker\btcpay-host
 		Dockerfile = Dockerfile
 		Build\Version.csproj = Build\Version.csproj
+		.github\FUNDING.yml = .github\FUNDING.yml
+		.github\ISSUE_TEMPLATE\config.yml = .github\ISSUE_TEMPLATE\config.yml
+		.github\ISSUE_TEMPLATE\bug_report.yml = .github\ISSUE_TEMPLATE\bug_report.yml
+		.github\workflows\codeql.yml = .github\workflows\codeql.yml
+		.github\scripts\Kukks.asc = .github\scripts\Kukks.asc
+		.github\scripts\can-build.sh = .github\scripts\can-build.sh
+		.github\scripts\check-btcpay-plugin-compat.sh = .github\scripts\check-btcpay-plugin-compat.sh
+		.github\scripts\nicolasdorier.asc = .github\scripts\nicolasdorier.asc
+		.github\scripts\rockstardev.asc = .github\scripts\rockstardev.asc
+		.github\scripts\run-tests.sh = .github\scripts\run-tests.sh
+		.github\scripts\verify-signed-commit.sh = .github\scripts\verify-signed-commit.sh
+		.github\scripts\collect-artifacts.sh = .github\scripts\collect-artifacts.sh
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Rating", "BTCPayServer.Rating\BTCPayServer.Rating.csproj", "{6DC77459-D52F-45EE-B3F3-315043D33A1B}"

@@ -419,6 +419,7 @@ public class EmailsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.FindAlertMessage();
         // we now have a rule
         Assert.DoesNotContain("There are no rules yet.", await s.Page.ContentAsync());
+        await Assertions.Expect(s.Page.Locator(".table")).ToContainTextAsync("test@gmail.com");
         Assert.Contains("test@gmail.com", await s.Page.ContentAsync());
 
         await s.GoToStore(StoreNavPages.Emails);

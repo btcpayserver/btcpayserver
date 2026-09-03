@@ -8,17 +8,19 @@
 * Invoices: Reject fixed zero-amount invoices by default, with a store setting to allow them when needed (#7514) @NicolasDorier
 * Boltcards: Remove the desktop smartcard setup flow and always open the Boltcard app instead (#7515) @NicolasDorier
 * Adding users to your store now requires them to accept the invitation. (#7519) @dstrukt
+* Point of Sale: Remove the per-request `notificationUrl`; invoices now use the app's configured notification URL @Kukks
+* Server administration: Remove legacy SSH configuration and require deployment-provided `btcpay-host` integration, including the new `btcpay-host env` discovery contract ([documentation](TODO)) (#7511 #7543) @NicolasDorier
 
 ### New features
 
 * Stores: Adding users to your store now requires them to accept the invitation. (#7519) @dstrukt
+* Email Rules: Add `SRV-StoreInvitePending` and `StoreUserJoined` triggers for store invitations (#7519) @dstrukt
 
 ### Fixes
 
 * Crowdfund: Preserve the main image and last-updated date after contribution updates (#7487) @inauman
 * Reports: Show short values correctly and hide unavailable explorer links (#7506) @Psycarlo
 * Invoices: Require invoice modification permission when changing an invoice state (#7514) @NicolasDorier
-* Point of Sale: Use the store-configured notification URL for invoices instead of accepting one from the caller @Kukks
 * Wallet: Return an empty label instead of falling back to the derivation scheme (#7521) @TChukwuleta
 * Plugins: Show details and installation actions for unlisted plugins opened through search or direct links (#7524) @thgO-O
 * Rates: Replace the unavailable CryptoMarket provider with Notbank and migrate existing rate rules (#7526) @NicolasDorier
@@ -40,10 +42,6 @@
 * Greenfield SDK: Encode dynamic route and query values consistently (#7530) @NicolasDorier
 * Hide redundant breadcrumbs when they only repeat the page title (#7517) @NicolasDorier
 * Monetization: Show a useful error instead of a 404 when users without subscriptions open Manage billing (#7516) @NicolasDorier
-
-### Miscellaneous
-
-* Server administration: Replace direct SSH host management with deployment-provided `btcpay-host` commands and remove legacy SSH configuration (#7511) @NicolasDorier
 
 ## 2.4.3
 

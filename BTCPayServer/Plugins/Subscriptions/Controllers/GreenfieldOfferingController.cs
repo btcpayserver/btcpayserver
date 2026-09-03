@@ -441,6 +441,8 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
             if (checkout is null)
                 return CheckoutNotFound();
+            if (checkout.IsExpired)
+                return CheckoutExpired();
             return Ok(Mapper.MapPlanCheckout(checkout));
         }
 
@@ -512,7 +514,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         [HttpGet("~/api/v1/subscriber-portal/{portalSessionId}")]
         public async Task<IActionResult> GetPortalSession(string portalSessionId)
         {
-            var session = await ctx.PortalSessions.GetById(portalSessionId);
+            var session = await ctx.PortalSessions.GetActiveById(portalSessionId);
             if (session is null)
                 return PortalSessionNotFound();
             return Ok(Mapper.MapPortalSession(session));

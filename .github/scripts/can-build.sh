@@ -9,6 +9,6 @@ compose() {
   fi
 }
 
-echo "Checking if it is possible to build Bitcoin only..."
+echo "Checking whether it is possible to build Bitcoin only..."
 cd "$(dirname "$0")/../../BTCPayServer.Tests"
 compose -f "docker-compose.yml" build

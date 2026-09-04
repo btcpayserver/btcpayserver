@@ -15,15 +15,23 @@ namespace BTCPayServer.Security;
 public class BuiltInPermissionHandler(
     StoreRepository storeRepository,
     PermissionService permissionService,
-    APIKeyRepository apiKeyRepository) : IPermissionHandler
+    APIKeyRepository apiKeyRepository,
+    CredentialManagementService credentialManagementService) : IPermissionHandler
 {
     public const string StoreKey = "BuiltInPermissionHandler-Store";
     public const string StoresKey = "BuiltInPermissionHandler-Stores";
 
     //TODO: In the future, we will add these store permissions to actual aspnet roles and remove this class.
     private static readonly PermissionSet ServerAdminRolePermissions =
-        new PermissionSet(new[] { Permission.Create(Policies.CanViewStoreSettings) });
+        new PermissionSet(new[]
+        {
+            Permission.Create(Policies.CanViewStoreSettings),
+            Permission.Create(Policies.CanManageStoreCredentials)
+        });
 
+    /// <summary>
+    /// Evaluates built-in server, user, and store permissions, including the server credential-management ceiling.
+    /// </summary>
     public async Task HandleAsync(AuthorizationHandlerContext authContext, PermissionAuthorizationContext permContext)
     {
         var isAdmin = authContext.User.IsInRole(Roles.ServerAdmin);
@@ -33,6 +41,12 @@ public class BuiltInPermissionHandler(
         switch (permContext.Permission)
         {
             case { Type: PolicyType.Store }:
+                var managesCredentials = permContext.Permission.Policy == Policies.CanManageStoreCredentials;
+                if (managesCredentials && !credentialManagementService.IsAllowedByServer(authContext.User))
+                {
+                    success = false;
+                    break;
+                }
                 if (permContext.Permission.Scope is { } storeId)
                 {
                     var store = await GetStoreData(permContext, storeId, isAdmin);
@@ -61,7 +75,7 @@ public class BuiltInPermissionHandler(
                             permContext.HttpContext.AddCachedStoreData(store);
                         }
                     }
-                    success = true;
+                    success = !managesCredentials || isAdmin || stores.Length is 0 || permissionedStores.Count is not 0;
                 }
                 break;
             case { Type: PolicyType.Server }:

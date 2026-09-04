@@ -76,6 +76,19 @@ namespace BTCPayServer.Services
             set { DisableNonAdminCreateUserApi = !value; }
         }
 
+        /// <summary>
+        /// Gets or sets whether non-administrators may manage credentials, using the inverse persisted lockdown flag.
+        /// </summary>
+        [Display(Name = "Non-admins can manage API keys and access tokens for their Store")]
+        [JsonIgnore]
+        public bool EnableNonAdminCredentialManagement
+        {
+            get => !DisableNonAdminCredentialManagement;
+            set { DisableNonAdminCredentialManagement = !value; }
+        }
+
+        public bool DisableNonAdminCredentialManagement { get; set; }
+
         public const string DefaultPluginSource = "https://plugin-builder.btcpayserver.org";
         [UriAttribute]
         [Display(Name = "Plugin server")]

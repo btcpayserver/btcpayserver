@@ -239,6 +239,103 @@ namespace BTCPayServer.Tests
             await newUserClient.GetInvoices(store.Id);
         }
 
+        /// <summary>
+        /// Verifies that server policy and store roles constrain credential management without restricting server administrators.
+        /// </summary>
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CredentialManagementRespectsServerAndStoreRoleLockdown()
+        {
+            TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var account = tester.NewAccount();
+            await account.GrantAccessAsync();
+            var firstStoreId = account.StoreId;
+            await account.CreateStoreAsync();
+            var lockedStoreId = account.StoreId;
+
+            var storeRepository = tester.PayTester.GetService<StoreRepository>();
+            var lockedRole = new StoreRoleId(lockedStoreId, "No credential management");
+            await storeRepository.AddOrUpdateStoreRole(lockedRole, new[] { Policies.CanViewStoreSettings });
+            await storeRepository.AddOrUpdateStoreUser(lockedStoreId, account.UserId, lockedRole);
+
+            var credentialManagementService = tester.PayTester.GetService<CredentialManagementService>();
+            var principal = account.GetController<UIStoresController>().User;
+            var manageableStores = await credentialManagementService.GetManageableStores(principal);
+            Assert.Contains(manageableStores, store => store.Id == firstStoreId);
+            Assert.DoesNotContain(manageableStores, store => store.Id == lockedStoreId);
+
+            var apiKeyController = account.GetController<UIManageController>();
+            apiKeyController.ModelState.AddModelError("test", "Force the posted model to be rendered");
+            var viewResult = Assert.IsType<ViewResult>(await apiKeyController.AddApiKey(new UIManageController.AddApiKeyViewModel
+            {
+                PermissionValues = new List<UIManageController.AddApiKeyViewModel.PermissionValueItem>
+                {
+                    new()
+                    {
+                        Permission = Policies.CanViewInvoices,
+                        StoreMode = UIManageController.AddApiKeyViewModel.ApiKeyStoreMode.Specific,
+                        SpecificStores = new List<string> { firstStoreId, lockedStoreId }
+                    }
+                }
+            }));
+            var postedViewModel = Assert.IsType<UIManageController.AddApiKeyViewModel>(viewResult.Model);
+            Assert.Equal(new[] { firstStoreId }, Assert.Single(postedViewModel.PermissionValues).SpecificStores);
+
+            var client = await account.CreateClient();
+            await client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.CanViewInvoices, firstStoreId) }
+            });
+
+            var error = await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.CanViewInvoices, lockedStoreId) }
+            }));
+            Assert.Equal(Policies.CanManageStoreCredentials,
+                Assert.IsType<GreenfieldPermissionAPIError>(error.APIError).MissingPermission);
+
+            await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.CanViewInvoices) }
+            }));
+
+            await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.CanModifyServerSettings) }
+            }));
+
+            await storeRepository.AddOrUpdateStoreRole(lockedRole,
+                new[] { Policies.CanViewStoreSettings, Policies.CanManageStoreCredentials });
+            Assert.Equal(2, (await credentialManagementService.GetManageableStores(principal)).Length);
+            await client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.CanViewInvoices) }
+            });
+
+            var settingsRepository = tester.PayTester.GetService<SettingsRepository>();
+            await settingsRepository.UpdateSetting(new PoliciesSettings
+            {
+                DisableNonAdminCredentialManagement = true
+            });
+            Assert.Empty(await credentialManagementService.GetManageableStores(principal));
+            await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.CanViewProfile) }
+            }));
+
+            await account.MakeAdmin();
+            await client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.CanViewProfile) }
+            });
+            await client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.CanModifyServerSettings) }
+            });
+        }
+
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanCreateReadAndDeleteFiles()

@@ -24,7 +24,7 @@ namespace BTCPayServer.Plugins.Bitpay.Controllers;
 
 [Route("stores")]
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+[Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Area(BitpayPlugin.Area)]
 public class UIStoresTokenController(
     TokenRepository tokenRepository,
@@ -33,8 +33,8 @@ public class UIStoresTokenController(
     StoreRepository storeRepository,
     IHtmlHelper html,
     PaymentMethodHandlerDictionary handlers,
-    PermissionService permissionService,
-    IAuthorizationService authorizationService) : Controller
+    IAuthorizationService authorizationService,
+    CredentialManagementService credentialManagementService) : Controller
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
     public StoreData CurrentStore => HttpContext.GetStoreDataOrNull() ?? throw new InvalidOperationException("Store not found");
@@ -43,8 +43,11 @@ public class UIStoresTokenController(
     [TempData]
     public bool StoreNotConfigured { get; set; }
     public string? GeneratedPairingCode { get; set; }
+    /// <summary>
+    /// Lists legacy access tokens and API-key information for the current store.
+    /// </summary>
     [HttpGet("{storeId}/tokens")]
-    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ListTokens()
     {
         var model = new TokensViewModel();
@@ -57,22 +60,16 @@ public class UIStoresTokenController(
             Id = t.Value
         }).ToArray();
 
-        var userId = GetUserId();
-        var canModify = userId != null && (await authorizationService.AuthorizeAsync(User, CurrentStore.Id, Policies.CanModifyStoreSettings)).Succeeded;
-        if (canModify)
-        {
-            model.ApiKey = (await tokenRepository.GetLegacyAPIKeys(CurrentStore.Id)).FirstOrDefault();
-            model.EncodedApiKey = model.ApiKey == null ? "*API Key*" : Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(model.ApiKey));
-        }
-        else
-        {
-            model.EncodedApiKey = "*API Key*";
-        }
+        model.ApiKey = (await tokenRepository.GetLegacyAPIKeys(CurrentStore.Id)).FirstOrDefault();
+        model.EncodedApiKey = model.ApiKey == null ? "*API Key*" : Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(model.ApiKey));
         return View(model);
     }
 
+    /// <summary>
+    /// Displays the confirmation page for revoking a store access token.
+    /// </summary>
     [HttpGet("{storeId}/tokens/{tokenId}/revoke")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> RevokeToken(string tokenId)
     {
         var token = await tokenRepository.GetToken(tokenId);
@@ -81,8 +78,11 @@ public class UIStoresTokenController(
         return View("Confirm", new ConfirmModel(StringLocalizer["Revoke the token"], $"The access token with the label <strong>{html.Encode(token.Label)}</strong> will be revoked. Do you wish to continue?", "Revoke"));
     }
 
+    /// <summary>
+    /// Revokes a store access token after confirmation.
+    /// </summary>
     [HttpPost("{storeId}/tokens/{tokenId}/revoke")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> RevokeTokenConfirm(string tokenId)
     {
         var token = await tokenRepository.GetToken(tokenId);
@@ -95,8 +95,11 @@ public class UIStoresTokenController(
         return RedirectToAction(nameof(ListTokens), new { storeId = token?.StoreId });
     }
 
+    /// <summary>
+    /// Displays a store access token when it belongs to the current store.
+    /// </summary>
     [HttpGet("{storeId}/tokens/{tokenId}")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ShowToken(string tokenId)
     {
         var token = await tokenRepository.GetToken(tokenId);
@@ -105,8 +108,11 @@ public class UIStoresTokenController(
         return View(token);
     }
 
+    /// <summary>
+    /// Displays the access-token creation form for the selected store.
+    /// </summary>
     [HttpGet("{storeId}/tokens/create")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult CreateToken(string storeId)
     {
         var model = new CreateTokenViewModel();
@@ -116,8 +122,11 @@ public class UIStoresTokenController(
         return View(model);
     }
 
+    /// <summary>
+    /// Creates an access token after verifying credential-management permission for its store.
+    /// </summary>
     [HttpPost("{storeId}/tokens/create")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> CreateToken(string storeId, CreateTokenViewModel model)
     {
         if (!ModelState.IsValid)
@@ -131,13 +140,13 @@ public class UIStoresTokenController(
         var store = model.StoreId switch
         {
             null => CurrentStore,
-            _ => await storeRepository.FindStore(storeId, userId)
+            _ => await storeRepository.FindStore(storeId, User, true)
         };
         if (store == null)
             return Challenge(AuthenticationSchemes.Cookie);
 
-        if (!(await authorizationService.AuthorizeAsync(User, store.Id, Policies.CanModifyStoreSettings)).Succeeded)
-            return Challenge(AuthenticationSchemes.Cookie);
+        if (!(await authorizationService.AuthorizeAsync(User, store.Id, Policies.CanManageStoreCredentials)).Succeeded)
+            return Forbid(AuthenticationSchemes.Cookie);
 
         var tokenRequest = new TokenRequest()
         {
@@ -170,6 +179,9 @@ public class UIStoresTokenController(
         });
     }
 
+    /// <summary>
+    /// Displays the account-level token creation form using stores the current user may manage.
+    /// </summary>
     [HttpGet("/api-tokens")]
     [AllowAnonymous]
     public async Task<IActionResult> CreateToken()
@@ -180,7 +192,7 @@ public class UIStoresTokenController(
         var model = new CreateTokenViewModel();
         ViewBag.HidePublicKey = true;
         ViewBag.ShowStores = true;
-        var stores = (await storeRepository.GetStoresByUserId(userId)).Where(data => data.HasPolicy(userId, Policies.CanModifyStoreSettings, permissionService)).ToArray();
+        var stores = await credentialManagementService.GetManageableStores(User);
 
         model.Stores = new SelectList(stores, nameof(CurrentStore.Id), nameof(CurrentStore.StoreName));
         if (!model.Stores.Any())
@@ -198,8 +210,11 @@ public class UIStoresTokenController(
         return CreateToken(model.StoreId, model);
     }
 
+    /// <summary>
+    /// Generates or revokes the selected store's legacy API key.
+    /// </summary>
     [HttpPost("{storeId}/tokens/apikey")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> GenerateAPIKey(string storeId, string command = "")
     {
         var store = HttpContext.GetStoreDataOrNull();
@@ -222,6 +237,9 @@ public class UIStoresTokenController(
         });
     }
 
+    /// <summary>
+    /// Displays a pairing request limited to stores for which the user may manage credentials.
+    /// </summary>
     [HttpGet("/api-access-request")]
     [AllowAnonymous]
     public async Task<IActionResult> RequestPairing(string pairingCode, string? selectedStore = null)
@@ -230,11 +248,12 @@ public class UIStoresTokenController(
         if (userId == null)
             return Challenge(AuthenticationSchemes.Cookie);
 
+        var stores = await credentialManagementService.GetManageableStores(User);
         if (selectedStore != null)
         {
-            var store = await storeRepository.FindStore(selectedStore, userId);
+            var store = stores.SingleOrDefault(candidate => candidate.Id == selectedStore);
             if (store == null)
-                return NotFound();
+                return Forbid(AuthenticationSchemes.Cookie);
             HttpContext.SetStoreData(store);
         }
 
@@ -245,7 +264,6 @@ public class UIStoresTokenController(
             return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
         }
 
-        var stores = (await storeRepository.GetStoresByUserId(userId)).Where(data => data.HasPolicy(userId, Policies.CanModifyStoreSettings, permissionService)).ToArray();
         return View(new PairingModel
         {
             Id = pairing.Id,
@@ -260,8 +278,11 @@ public class UIStoresTokenController(
         });
     }
 
+    /// <summary>
+    /// Approves a pairing request for a store where the user may manage credentials.
+    /// </summary>
     [HttpPost("/api-access-request")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Pair(string pairingCode, string storeId)
     {
         var store = CurrentStore;

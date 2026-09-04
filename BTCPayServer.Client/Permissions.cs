@@ -14,6 +14,7 @@ namespace BTCPayServer.Client
         public const string CanUseLightningNodeInStore = "btcpay.store.canuselightningnode";
         public const string CanModifyServerSettings = "btcpay.server.canmodifyserversettings";
         public const string CanModifyStoreSettings = "btcpay.store.canmodifystoresettings";
+        public const string CanManageStoreCredentials = "btcpay.store.canmanagestorecredentials";
         public const string CanModifyWebhooks = "btcpay.store.webhooks.canmodifywebhooks";
         public const string CanSendStoreEmail = "btcpay.store.cansendstoreemails";
         public const string CanModifyStoreSettingsUnscoped = "btcpay.store.canmodifystoresettings:";

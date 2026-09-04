@@ -6,6 +6,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Security.Greenfield;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -18,7 +19,10 @@ namespace BTCPayServer.Controllers.Greenfield
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
     [EnableCors(CorsPolicies.All)]
-    public class GreenfieldApiKeysController(APIKeyRepository apiKeyRepository, UserManager<ApplicationUser> userManager) : ControllerBase
+    public class GreenfieldApiKeysController(
+        APIKeyRepository apiKeyRepository,
+        UserManager<ApplicationUser> userManager,
+        CredentialManagementService credentialManagementService) : ControllerBase
     {
         [HttpGet("~/api/v1/api-keys/current")]
         public async Task<IActionResult> GetKey()
@@ -37,12 +41,18 @@ namespace BTCPayServer.Controllers.Greenfield
         public Task<IActionResult> CreateAPIKey(CreateApiKeyRequest request)
         => CreateUserAPIKey(User.GetId(), request);
 
+        /// <summary>
+        /// Creates an API key when the caller may manage every requested permission and store scope.
+        /// </summary>
         [HttpPost("~/api/v1/users/{idOrEmail}/api-keys")]
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> CreateUserAPIKey(string idOrEmail, CreateApiKeyRequest request)
         {
             request ??= new CreateApiKeyRequest();
             request.Permissions ??= System.Array.Empty<Permission>();
+
+            if (!await credentialManagementService.CanCreateApiKey(User, request.Permissions))
+                return this.CreateAPIPermissionError(Policies.CanManageStoreCredentials);
 
             var userId = (await userManager.FindByIdOrEmail(idOrEmail))?.Id;
             if (userId is null)
@@ -74,10 +84,17 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             return RevokeAPIKey(apiKey);
         }
+        /// <summary>
+        /// Revokes one of the current user's API keys when account credential management is allowed.
+        /// </summary>
         [HttpDelete("~/api/v1/api-keys/{apikey}", Order = 1)]
         [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public Task<IActionResult> RevokeAPIKey(string apikey)
-        => RevokeAPIKey(User.GetId(), apikey);
+        public async Task<IActionResult> RevokeAPIKey(string apikey)
+        {
+            if (!await credentialManagementService.CanManageAccountApiKeys(User))
+                return this.CreateAPIPermissionError(Policies.CanManageStoreCredentials);
+            return await RevokeAPIKey(User.GetId(), apikey);
+        }
 
         [HttpDelete("~/api/v1/users/{idOrEmail}/api-keys/{apikey}", Order = 1)]
         [Authorize(Policy = Policies.CanManageUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

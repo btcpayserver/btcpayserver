@@ -84,7 +84,10 @@
                                         <small class="text-muted text-break d-block my-2 d-lg-inline-block my-lg-0">@Model.PermissionValues[i].Permission</small>
                                     </h5>
                                     <div class="text-muted">@Model.PermissionValues[i].Description</div>
-                                    <button type="submit" class="btn btn-link p-0" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">Give permission to all stores instead</button>
+                                    @if (Model.CanUseAllStores)
+                                    {
+                                        <button type="submit" class="btn btn-link p-0" name="command" value="@($"{Model.PermissionValues[i].Permission}:change-store-mode")">Give permission to all stores instead</button>
+                                    }
 
                                     @if (!Model.Stores.Any())
                                     {

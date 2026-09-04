@@ -21,6 +21,7 @@ public class BitpayPlugin : BaseBTCPayServerPlugin
     public override string Name => "Bitpay";
     public override string Description => "Add a compatibility layer to the legacy Bitpay API";
 
+    /// <inheritdoc />
     public override void Execute(IServiceCollection services)
     {
         services.AddSingleton<IHostedService, BitpayIPNSender>();
@@ -41,7 +42,7 @@ public class BitpayPlugin : BaseBTCPayServerPlugin
 
         services.AddStaticSearch(new ActionResultItemViewModel()
         {
-            RequiredPolicy = Policies.CanViewStoreSettings,
+            RequiredPolicy = Policies.CanManageStoreCredentials,
             Title = "View the access tokens (for legacy API access)",
             Action = nameof(UIStoresTokenController.ListTokens),
             Controller = "UIStoresToken",

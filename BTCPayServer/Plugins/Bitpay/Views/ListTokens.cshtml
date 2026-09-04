@@ -31,11 +31,12 @@
 </div>
 
 <partial name="_StatusMessage" />
+<partial name="_CredentialManagementAdminNotice" />
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
         <div class="settings-section__heading d-flex align-items-center justify-content-between">
             <h3 class="mb-0">@ViewData["Title"]</h3>
-            <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings" text-translate="true">
+            <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanManageStoreCredentials" text-translate="true">
                 Create Token
             </a>
         </div>
@@ -54,7 +55,7 @@
                     <thead>
                     <tr>
                         <th text-translate="true">Label</th>
-                        <th class="text-end" permission="@Policies.CanModifyStoreSettings" text-translate="true">Actions</th>
+                        <th class="text-end" permission="@Policies.CanManageStoreCredentials" text-translate="true">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -62,7 +63,7 @@
                     {
                     <tr>
                         <td>@token.Label</td>
-                        <td class="text-end" permission="@Policies.CanModifyStoreSettings">
+                        <td class="text-end" permission="@Policies.CanManageStoreCredentials">
                             <a asp-action="ShowToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id" text-translate="true">See information</a> -
                             <a asp-action="RevokeToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The access token with the label <strong>@Html.Encode(token.Label)</strong> will be revoked." data-confirm-input="REVOKE" text-translate="true">Revoke</a>
                         </td>
@@ -83,9 +84,9 @@
         <h3 class="settings-section__heading settings-section__heading--spaced" text-translate="true">Legacy API Keys</h3>
         <div class="settings-section">
         <p text-translate="true">Alternatively, you can use the invoice API by including the following HTTP Header in your requests:</p>
-		<p permission="@Policies.CanModifyStoreSettings"><code>Authorization: Basic @Model.EncodedApiKey</code></p>
+		<p permission="@Policies.CanManageStoreCredentials"><code>Authorization: Basic @Model.EncodedApiKey</code></p>
 
-        <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings">
+        <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanManageStoreCredentials">
             <div class="form-group mb-0">
                 <label asp-for="ApiKey" class="form-label"></label>
                 <div class="d-flex">
@@ -106,4 +107,4 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Revoke access token"], StringLocalizer["The access token will be revoked. Do you wish to continue?"], StringLocalizer["Revoke"]))" permission="@Policies.CanModifyStoreSettings" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Revoke access token"], StringLocalizer["The access token will be revoked. Do you wish to continue?"], StringLocalizer["Revoke"]))" permission="@Policies.CanManageStoreCredentials" />

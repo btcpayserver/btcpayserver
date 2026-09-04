@@ -22,6 +22,9 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
         AddDefaultStaticSearch(services);
     }
 
+    /// <summary>
+    /// Registers the built-in search entries with their corresponding authorization policies.
+    /// </summary>
     private static void AddDefaultStaticSearch(IServiceCollection services)
     {
         services.AddStaticSearch([
@@ -225,7 +228,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
             },
             new ActionResultItemViewModel
             {
-                RequiredPolicy = Policies.CanViewProfile,
+                RequiredPolicy = Policies.CanManageStoreCredentials,
                 Title = "Manage API Keys",
                 Action = nameof(UIManageController.APIKeys),
                 Controller = "UIManage",

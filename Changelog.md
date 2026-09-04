@@ -23,6 +23,7 @@
 * **Invoices**: Require permission to change an invoice's state (#7514) @NicolasDorier
 * **Wallet**: Show an empty label instead of the wallet derivation scheme (#7521) @TChukwuleta
 * **Plugins**: Show details and install actions for unlisted plugins found through search or direct links (#7524) @thgO-O
+* **Point of Sale**: Fix checkout when products share the same title (#7540) @comwanga
 * **Rates**: Replace the unavailable CryptoMarket provider with Notbank and update existing rate rules (#7526) @NicolasDorier
 * **Rates**: Ignore invalid BTCTurk prices where the bid is higher than the ask @NicolasDorier
 * **Payment Requests**: Do not add empty reference IDs to invoice searches @NicolasDorier

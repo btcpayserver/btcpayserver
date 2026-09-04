@@ -30,6 +30,8 @@ When asked to update or review the changelog, focus on user-visible changes and 
 
 - Use short bullet points under sections such as `New features`, `Fixes`, `Improvements`, and `Miscellaneous`.
 - Prefer imperative phrasing: `Add`, `Fix`, `Allow`, `Improve`, `Remove`, `Deprecate`.
+- Prefer short, simple sentences and plain language. Keep technical details only when users need them to understand compatibility, configuration, or API changes.
+- When an entry starts with a title followed by a colon, bold only the title, for example `* **Boltcards**: Remove ...`.
 - Keep capitalization consistent with existing entries.
 - Use product terminology consistently, for example `Point of Sale`, `Pull Payments`, `Pull Requests`, `Invoices`, `Apps`, `Keypad Point of Sale`, and `Greenfield API`.
 - Wrap code identifiers and permissions in backticks, for example `` `CanSendStoreEmail` ``.

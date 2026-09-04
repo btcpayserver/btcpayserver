@@ -1,5 +1,49 @@
 # Changelog
 
+## 2.4.4
+
+### Breaking changes
+
+* **Checkout**: NFC payments are now disabled by default. Enable them under Store Settings > Checkout Experience. This change was introduced in 2.4.3 but was missing from its release notes. @rockstardev
+* **Invoices**: Block zero-amount invoices by default. Stores can allow them in their settings (#7514) @NicolasDorier
+* **Boltcards**: Remove the desktop smartcard setup and open the Boltcard app instead (#7515) @NicolasDorier
+* **Store users**: Users must accept an invitation before joining a store (#7519) @dstrukt
+* **Point of Sale**: Remove the per-request `notificationUrl`. Invoices now use the app's configured notification URL @Kukks
+* **Server administration**: Remove legacy SSH settings and add deployment-provided `btcpay-host` integration, including `btcpay-host env` ([documentation](https://docs.btcpayserver.org/Development/HostIntegration/)) (#7511 #7543) @NicolasDorier
+
+### New features
+
+* **Stores**: Add invitations for store users (#7519) @dstrukt
+* **Email Rules**: Add `StoreInvitePending` and `StoreUserJoined` triggers (#7519) @dstrukt
+
+### Fixes
+
+* **Crowdfund**: Keep the main image and last-updated date when contributions change (#7487) @inauman
+* **Reports**: Display short values correctly and hide broken explorer links (#7506) @Psycarlo
+* **Invoices**: Require permission to change an invoice's state (#7514) @NicolasDorier
+* **Wallet**: Show an empty label instead of the wallet derivation scheme (#7521) @TChukwuleta
+* **Plugins**: Show details and install actions for unlisted plugins found through search or direct links (#7524) @thgO-O
+* **Point of Sale**: Fix checkout when products share the same title (#7540) @comwanga
+* **Rates**: Replace the unavailable CryptoMarket provider with Notbank and update existing rate rules (#7526) @NicolasDorier
+* **Rates**: Ignore invalid BTCTurk prices where the bid is higher than the ask @NicolasDorier
+* **Payment Requests**: Do not add empty reference IDs to invoice searches @NicolasDorier
+* Log users out immediately when they are demoted, disabled, unapproved, or have their email confirmation revoked (#7529) @NicolasDorier
+* Keep monetization subscriptions from re-enabling accounts disabled by an administrator (#7523) @TChukwuleta
+* **Greenfield**: Prevent restricted API keys from creating unrestricted keys (#7531) @NicolasDorier
+* **Greenfield**: Prevent disabling the last active server administrator (#7541) @TChukwuleta
+* **Stores**: Block unsafe support links to prevent script injection (#7537) @TChukwuleta
+* **API Keys**: Keep new API keys out of authorization redirect URLs (#7542) @TChukwuleta
+* **Maintenance**: Validate hostnames before changing a domain @NicolasDorier
+
+### Improvements
+
+* **Reports**: Sort invoice report rows from oldest to newest (#7512) @kevin-ta
+* **Rates**: Request only supported currency pairs from Kraken (#7472) @ZenulAbidin
+* **Plugins**: Allow payment methods to validate settings for the current store (#7513) @NicolasDorier
+* **Greenfield SDK**: Safely encode values in API URLs (#7530) @NicolasDorier
+* Hide breadcrumbs that only repeat the page title (#7517) @NicolasDorier
+* **Monetization**: Show a useful message instead of a 404 when Manage billing is unavailable (#7516) @NicolasDorier
+
 ## 2.4.3
 
 This is a security release; updating is recommended for servers shared with many users.

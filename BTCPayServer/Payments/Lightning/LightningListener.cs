@@ -189,7 +189,7 @@ namespace BTCPayServer.Payments.Lightning
                 if (o.Details is not LigthningPaymentPromptDetails { InvoiceId: not null } ligthningDetails)
                     continue;
                 listenedInvoices.Add(new ListenedInvoice(
-                    invoice.ExpirationTime,
+                    invoice.MonitoringExpiration.AddSeconds(-1),
                     ligthningDetails,
                     o.PaymentPrompt,
                     ((IHasNetwork)o.Handler).Network,
@@ -374,7 +374,7 @@ namespace BTCPayServer.Payments.Lightning
                             await paymentContext.ActivatingPaymentPrompt();
                             var details = lightningHandler.ParsePaymentPromptDetails(paymentPrompt.Details);
                             instanceListener.AddListenedInvoice(new ListenedInvoice(
-                                invoice.ExpirationTime,
+                                invoice.MonitoringExpiration.AddSeconds(-1),
                                 details,
                                 paymentPrompt,
                                 network,

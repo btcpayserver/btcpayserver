@@ -16,6 +16,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -221,7 +223,19 @@ namespace BTCPayServer.Controllers.Greenfield
 				FormResponse = blob.FormId != request.FormId ? null : blob.FormResponse,
                 RequestBaseUrl = Request.GetRequestBaseUrl().ToString()
 			});
-			pr = await _paymentRequestRepository.CreateOrUpdatePaymentRequest(pr);
+			try
+			{
+				pr = await _paymentRequestRepository.CreateOrUpdatePaymentRequest(pr);
+			}
+			catch (DbUpdateException e) when (e.InnerException is PostgresException
+				{
+					SqlState: PostgresErrorCodes.UniqueViolation,
+					ConstraintName: "ix_paymentrequests_storedataid_referenceid"
+				})
+			{
+				return this.CreateAPIError(409, "duplicate-reference-id",
+					"A payment request with this reference ID already exists for this store.");
+			}
 			return Ok(FromModel(pr));
 		}
 

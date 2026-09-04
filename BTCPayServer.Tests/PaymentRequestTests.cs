@@ -55,6 +55,9 @@ namespace BTCPayServer.Tests
             });
             var newPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
                 new() { Title = "A", Currency = "USD", Amount = 1, ReferenceId = "1234"});
+            await AssertEx.AssertApiError(409, "duplicate-reference-id", () =>
+                client.CreatePaymentRequest(user.StoreId,
+                    new() { Title = "B", Currency = "USD", Amount = 1, ReferenceId = "1234" }));
 
             //list payment request
             var paymentRequests = (await viewOnly.GetPaymentRequests(user.StoreId)).ToArray();

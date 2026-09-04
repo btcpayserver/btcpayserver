@@ -79,6 +79,16 @@
                     },
                     "403": {
                         "description": "If you are authenticated but forbidden to add new payment requests"
+                    },
+                    "409": {
+                        "description": "Error codes: `duplicate-reference-id`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "requestBody": {
@@ -236,6 +246,16 @@
                     },
                     "403": {
                         "description": "If you are authenticated but forbidden to update the payment request"
+                    },
+                    "409": {
+                        "description": "Error codes: `duplicate-reference-id`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
                     }
                 },
                 "requestBody": {

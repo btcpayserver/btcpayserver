@@ -22,6 +22,12 @@ namespace BTCPayServer.Plugins.Maintenance
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            if (!processRunner.BTCPayHostEnabled)
+            {
+                Logs.PayServer.LogInformation("Host integration is disabled");
+                return Task.CompletedTask;
+            }
+
             _testingConnection = TestConnection();
             return Task.CompletedTask;
         }

@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -17,6 +18,7 @@ namespace BTCPayServer.Services;
 public sealed record HostCommandResult(int ExitCode, string Output, string Error);
 public class ProcessRunner(ILoggerFactory loggerFactory, IConfiguration conf)
 {
+    public bool BTCPayHostEnabled { get; set; } = conf.GetOrDefault("btcpayhostenabled", false);
     public string BTCPayHostExecutable { get; set; } = conf["btcpayhostexecutable"] ?? "btcpay-host";
     private readonly ILogger _logger = loggerFactory.CreateLogger("BTCPayServer.ProcessRunner");
 

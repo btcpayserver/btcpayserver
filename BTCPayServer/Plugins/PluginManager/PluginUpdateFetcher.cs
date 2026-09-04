@@ -76,12 +76,9 @@ namespace BTCPayServer.HostedServices
             var disabledPlugins = NormalizeVersions(pluginService.GetDisabledPlugins());
 
             var installedPlugins = pluginService.Installed;
-            var remotePlugins = await pluginService.GetRemotePlugins(null, cancellationToken);
-            var latestRemotePlugins = remotePlugins
-                .GroupBy(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase)
-                .Select(group => group.OrderByDescending(plugin => plugin.Version).First())
-                .Where(pair => installedPlugins.ContainsKey(pair.Identifier) || disabledPlugins.ContainsKey(pair.Identifier))
-                .ToArray();
+            var latestRemotePlugins = await pluginService.GetLatestVersionsForInstalledPlugins(
+                disabledPlugins,
+                cancellationToken: cancellationToken);
             foreach (var plugin in latestRemotePlugins)
             {
                 if (dh.LastVersions.TryGetValue(plugin.Identifier, out var lastVersion) && lastVersion >= plugin.Version)

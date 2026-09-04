@@ -304,37 +304,6 @@ namespace BTCPayServer.Tests
 
 
         [Fact]
-        public async Task CanChangeUserMail()
-        {
-            await using var s = CreatePlaywrightTester();
-            await s.StartAsync();
-            var tester = s.Server;
-            var u1 = tester.NewAccount();
-            await u1.GrantAccessAsync();
-            await u1.MakeAdmin(false);
-            var u2 = tester.NewAccount();
-            await u2.GrantAccessAsync();
-            await u2.MakeAdmin(false);
-            await s.GoToLogin();
-            await s.LogIn(u1.RegisterDetails.Email, u1.RegisterDetails.Password);
-            await s.GoToProfile();
-            await s.Page.Locator("#Email").ClearAsync();
-            await s.Page.FillAsync("#Email", u2.RegisterDetails.Email);
-            await s.ClickPagePrimary();
-            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, partialText: "The email address is already in use with an other account.");
-            await s.GoToProfile();
-            await s.Page.Locator("#Email").ClearAsync();
-            var changedEmail = Guid.NewGuid() + "@lol.com";
-            await s.Page.FillAsync("#Email", changedEmail);
-            await s.ClickPagePrimary();
-            await s.FindAlertMessage();
-            using var scope = tester.PayTester.ServiceProvider.CreateScope();
-            var manager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            Assert.NotNull(await manager.FindByNameAsync(changedEmail));
-            Assert.NotNull(await manager.FindByEmailAsync(changedEmail));
-        }
-
-        [Fact]
         [Trait("Playwright", "Playwright")]
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLNURL()
@@ -990,12 +959,15 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public async Task ChangingAccountEmailRequiresCurrentPassword()
+        public async Task CanChangeUserMail()
         {
             await using var s = CreatePlaywrightTester();
             await s.StartAsync();
             var oldEmail = await s.RegisterNewUser();
             var newEmail = $"{RandomUtils.GetUInt256().ToString()[..20]}@example.com";
+            var otherUser = s.Server.NewAccount();
+            await otherUser.GrantAccessAsync();
+            await otherUser.MakeAdmin(false);
             await s.SkipWizard();
             await s.GoToUrl("/account");
 
@@ -1012,11 +984,23 @@ namespace BTCPayServer.Tests
 
             await s.GoToUrl("/account");
             await Expect(s.Page.Locator("#Email")).ToHaveValueAsync(oldEmail);
+            await s.Page.FillAsync("#Email", otherUser.RegisterDetails.Email);
+            await s.Page.FillAsync("#CurrentPassword", "123456");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error, partialText: "The email address is already in use with an other account.");
+
+            await s.GoToUrl("/account");
+            await Expect(s.Page.Locator("#Email")).ToHaveValueAsync(oldEmail);
             await s.Page.FillAsync("#Email", newEmail);
             await s.Page.FillAsync("#CurrentPassword", "123456");
             await s.ClickPagePrimary();
             await s.FindAlertMessage(partialText: "Your profile has been updated");
             await Expect(s.Page.Locator("#Email")).ToHaveValueAsync(newEmail);
+
+            using var scope = s.Server.PayTester.ServiceProvider.CreateScope();
+            var manager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            Assert.NotNull(await manager.FindByNameAsync(newEmail));
+            Assert.NotNull(await manager.FindByEmailAsync(newEmail));
 
             await s.Logout();
             await s.LogIn(newEmail, "123456");

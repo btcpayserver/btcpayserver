@@ -87,7 +87,8 @@ public class PosReceiptData
             var totalPrice = displayFormatter.Currency(cartItem.Price * cartItem.Count, currency, DisplayFormatter.CurrencyFormat.Symbol);
             var ident = selectedChoice.Title ?? selectedChoice.Id;
             var key = selectedChoice.PriceType == AppItemPriceType.Fixed ? ident : $"{ident} ({singlePrice})";
-            cartData.Add(key, $"{cartItem.Count} x {singlePrice} = {totalPrice}");
+            // Duplicate receipt keys are intentionally ignored to prevent checkout from failing.
+            cartData.TryAdd(key, $"{cartItem.Count} x {singlePrice} = {totalPrice}");
         }
 
         for (var i = 0; i < (jposData.Amounts ?? []).Length; i++)

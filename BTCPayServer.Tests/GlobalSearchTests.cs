@@ -91,8 +91,7 @@ public class GlobalSearchTests(ITestOutputHelper helper) : UnitTestBase(helper)
         {
             TestLogs.LogInformation($"Navigating to {item.Url}");
             await s.GoToUrl(item.Url);
-            if (item.Url != "/server/plugins")
-                await s.Page.AssertNoError();
+            await s.Page.AssertNoError();
         }
 
         async Task SearchAndOpenInvoice(string query)

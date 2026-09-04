@@ -428,7 +428,7 @@ namespace BTCPayServer.Tests
             await Page.ClickAsync($"#globalNavServerMenu #menu-item-{navPages}");
         }
 
-        public async Task ClickOnAllSectionLinks(string sectionSelector = "#menu-item", params string[] linksAllowedToHaveErrors)
+        public async Task ClickOnAllSectionLinks(string sectionSelector = "#menu-item")
         {
             List<string> links = [];
             var linkLocator = Page.Locator($"{sectionSelector} a.nav-link");
@@ -447,12 +447,9 @@ namespace BTCPayServer.Tests
             Assert.NotEmpty(links);
             foreach (var link in links)
             {
+                TestLogs.LogInformation($"Checking no error on {link}");
                 await GoToUrl(link);
-                if (!linksAllowedToHaveErrors.Contains(link))
-                {
-                    TestLogs.LogInformation($"Checking no error on {link}");
-                    await Page.AssertNoError();
-                }
+                await Page.AssertNoError();
             }
         }
 

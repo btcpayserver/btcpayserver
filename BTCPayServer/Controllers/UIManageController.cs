@@ -88,17 +88,7 @@ namespace BTCPayServer.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return NotFound();
-            var blob = user.GetBlob() ?? new();
-            var model = new IndexViewModel
-            {
-                Email = user.Email,
-                Name = blob.Name,
-                ImageUrl = string.IsNullOrEmpty(blob.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
-                EmailConfirmed = user.EmailConfirmed,
-                RequiresEmailConfirmation = user.RequiresEmailConfirmation,
-                AllowGreenfieldBasicAuth = blob.AllowGreenfieldBasicAuth
-            };
-            return View(model);
+            return View(await GetIndexViewModel(user));
         }
 
         [HttpGet]
@@ -154,7 +144,15 @@ namespace BTCPayServer.Controllers
 
             bool needUpdate = false;
             var email = user.Email;
-            if (model.Email != email)
+            var setNewEmail = model.Email != email && ModelState.IsValid;
+            if (setNewEmail && (string.IsNullOrEmpty(model.CurrentPassword) ||
+                                !await _userManager.CheckPasswordAsync(user, model.CurrentPassword)))
+            {
+                ModelState.AddModelError(nameof(model.CurrentPassword), StringLocalizer["The current password is not correct."].Value);
+                return View(await GetIndexViewModel(user, model));
+            }
+
+            if (setNewEmail)
             {
                 if (!(await _userManager.FindByEmailAsync(model.Email) is null))
                 {
@@ -354,6 +352,21 @@ namespace BTCPayServer.Controllers
         }
 
         #region Helpers
+
+        private async Task<IndexViewModel> GetIndexViewModel(ApplicationUser user, IndexViewModel model = null)
+        {
+            var blob = user.GetBlob() ?? new();
+            model ??= new IndexViewModel
+            {
+                Email = user.Email,
+                Name = blob.Name,
+                AllowGreenfieldBasicAuth = blob.AllowGreenfieldBasicAuth
+            };
+            model.ImageUrl = string.IsNullOrEmpty(blob.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl));
+            model.EmailConfirmed = user.EmailConfirmed;
+            model.RequiresEmailConfirmation = user.RequiresEmailConfirmation;
+            return model;
+        }
 
         private void AddErrors(IdentityResult result)
         {

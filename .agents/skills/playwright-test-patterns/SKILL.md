@@ -33,7 +33,10 @@ Use these patterns when writing or refactoring Playwright tests in BTCPayServer.
 - Playwright assertions automatically wait for the expected condition, making tests less verbose and less prone to flakiness.
 - Prefer `await Expect(locator).ToHaveCountAsync(1)` over `Assert.Equal(1, await locator.CountAsync())`.
 - Prefer `await Expect(locator).ToContainTextAsync(text)` over `Assert.Contains(text, await locator.TextContentAsync())`.
+- Prefer `await Expect(locator).ToHaveValueAsync(value)` over `Assert.Equal(value, await locator.InputValueAsync())`.
 - Prefer `await Expect(page).ToHaveURLAsync(...)` over direct assertions on `page.Url`.
+- Do not call `WaitForLoadStateAsync` before a Playwright assertion; the `Expect` API waits for the expected state.
+- Add `using static Microsoft.Playwright.Assertions;` when using `Expect`.
 
 ## Selector Guidance
 

@@ -990,6 +990,40 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public async Task ChangingAccountEmailRequiresCurrentPassword()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            var oldEmail = await s.RegisterNewUser();
+            var newEmail = $"{RandomUtils.GetUInt256().ToString()[..20]}@example.com";
+            await s.SkipWizard();
+            await s.GoToUrl("/account");
+
+            await s.Page.FillAsync("#Email", newEmail);
+            await s.ClickPagePrimary();
+            await Expect(s.Page.Locator("[data-valmsg-for=CurrentPassword]")).ToContainTextAsync("The current password is not correct.");
+
+            await s.GoToUrl("/account");
+            await Expect(s.Page.Locator("#Email")).ToHaveValueAsync(oldEmail);
+            await s.Page.FillAsync("#Email", newEmail);
+            await s.Page.FillAsync("#CurrentPassword", "incorrect");
+            await s.ClickPagePrimary();
+            await Expect(s.Page.Locator("[data-valmsg-for=CurrentPassword]")).ToContainTextAsync("The current password is not correct.");
+
+            await s.GoToUrl("/account");
+            await Expect(s.Page.Locator("#Email")).ToHaveValueAsync(oldEmail);
+            await s.Page.FillAsync("#Email", newEmail);
+            await s.Page.FillAsync("#CurrentPassword", "123456");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Your profile has been updated");
+            await Expect(s.Page.Locator("#Email")).ToHaveValueAsync(newEmail);
+
+            await s.Logout();
+            await s.LogIn(newEmail, "123456");
+            await s.Page.AssertNoError();
+        }
+
+        [Fact]
         public async Task CanUseStoreTemplate()
         {
             await using var s = CreatePlaywrightTester(newDb: true);

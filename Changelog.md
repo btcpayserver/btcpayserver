@@ -34,6 +34,7 @@
 * **Stores**: Block unsafe support links to prevent script injection (#7537) @TChukwuleta
 * **API Keys**: Keep new API keys out of authorization redirect URLs (#7542) @TChukwuleta
 * **Maintenance**: Validate hostnames before changing a domain @NicolasDorier
+* **Account security**: Require the current password when changing an account email (low impact, reported by llen)
 
 ### Improvements
 

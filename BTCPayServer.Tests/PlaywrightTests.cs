@@ -55,7 +55,7 @@ namespace BTCPayServer.Tests
             await s.SkipWizard();
             await s.GoToServer();
             await s.Page.AssertNoError();
-            await s.ClickOnAllSectionLinks("#mainNavSettings", "/server/plugins");
+            await s.ClickOnAllSectionLinks("#mainNavSettings");
             await s.GoToServer(ServerNavPages.Services);
             s.TestLogs.LogInformation("Let's check if we can access the logs");
             await s.GoToServer(ServerNavPages.Logs);

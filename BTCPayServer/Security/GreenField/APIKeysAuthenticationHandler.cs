@@ -49,7 +49,7 @@ namespace BTCPayServer.Security.Greenfield
             if (!Context.Request.HttpContext.GetAPIKey(out var apiKey) || string.IsNullOrEmpty(apiKey))
                 return AuthenticateResult.NoResult();
 
-            var key = await apiKeyRepository.GetKey(apiKey, true);
+            var key = await apiKeyRepository.GetKey(new APIKeyRepository.Selector.ByApiKey(apiKey), true);
             if (key is null)
                 return Fail($"ApiKey authentication failed: Unknown API Key");
             var loggingContext = new UserService.CanLoginContext(key.User, baseUrl: Request.GetRequestBaseUrl());

@@ -190,8 +190,8 @@ namespace BTCPayServer.Tests
                     Permissions = new Permission[] { Permission.Create(Policies.CanViewProfile) }
                 }));
 
-            await unrestricted.RevokeAPIKey(apiKey.ApiKey);
-            await AssertAPIError("apikey-not-found", () => unrestricted.RevokeAPIKey(apiKey.ApiKey));
+            await unrestricted.RevokeAPIKey(apiKey.Id);
+            await AssertAPIError("apikey-not-found", () => unrestricted.RevokeAPIKey(apiKey.Id));
 
 
             // Admin create API key to new user
@@ -215,7 +215,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("New User", newUser.Name);
             Assert.Equal("avatar.jpg", newUser.ImageUrl);
             // Admin delete it
-            await unrestricted.RevokeAPIKey(newUser.Id, newUserAPIKey.ApiKey);
+            await unrestricted.RevokeAPIKey(newUser.Id, newUserAPIKey.Id);
             await Assert.ThrowsAsync<GreenfieldAPIException>(() => newUserClient.GetCurrentUser());
 
             // Admin create store

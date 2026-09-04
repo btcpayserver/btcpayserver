@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
-using NBitcoin.DataEncoders;
 using NBitpayClient.Extensions;
 using Newtonsoft.Json;
 
@@ -20,7 +19,6 @@ using Newtonsoft.Json;
 namespace BTCPayServer.Plugins.Bitpay.Security
 {
     public class BitpayAuthenticationHandler(
-        TokenRepository tokenRepository,
         IOptionsMonitor<BitpayAuthenticationOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder)
@@ -48,13 +46,6 @@ namespace BTCPayServer.Plugins.Bitpay.Security
                 if (sin == null)
                     return Fail("BitId authentication failed");
                 return Success(BitpayClaims.SIN, sin, BitpayAuthenticationTypes.SinAuthentication);
-            }
-            else if (!string.IsNullOrEmpty(bitpayAuth.Authorization))
-            {
-                var storeId = await GetStoreIdFromAuth(bitpayAuth.Authorization);
-                if (storeId == null)
-                    return Fail("ApiKey authentication failed");
-                return Success(BitpayClaims.ApiKeyStoreId, storeId, BitpayAuthenticationTypes.ApiKeyAuthentication);
             }
             else
             {
@@ -100,26 +91,6 @@ namespace BTCPayServer.Plugins.Bitpay.Security
             }
             catch { }
             return null;
-        }
-
-        private async Task<string> GetStoreIdFromAuth(string auth)
-        {
-            var splitted = auth.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (splitted.Length != 2 || !splitted[0].Equals("Basic", StringComparison.OrdinalIgnoreCase))
-            {
-                return null;
-            }
-
-            string apiKey = null;
-            try
-            {
-                apiKey = Encoders.ASCII.EncodeData(Encoders.Base64.DecodeData(splitted[1]));
-            }
-            catch
-            {
-                return null;
-            }
-            return await tokenRepository.GetStoreIdFromAPIKey(apiKey);
         }
     }
 }

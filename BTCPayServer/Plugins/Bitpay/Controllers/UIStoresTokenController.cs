@@ -56,18 +56,6 @@ public class UIStoresTokenController(
             SIN = t.SIN,
             Id = t.Value
         }).ToArray();
-
-        var userId = GetUserId();
-        var canModify = userId != null && (await authorizationService.AuthorizeAsync(User, CurrentStore.Id, Policies.CanModifyStoreSettings)).Succeeded;
-        if (canModify)
-        {
-            model.ApiKey = (await tokenRepository.GetLegacyAPIKeys(CurrentStore.Id)).FirstOrDefault();
-            model.EncodedApiKey = model.ApiKey == null ? "*API Key*" : Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(model.ApiKey));
-        }
-        else
-        {
-            model.EncodedApiKey = "*API Key*";
-        }
         return View(model);
     }
 
@@ -196,30 +184,6 @@ public class UIStoresTokenController(
     public Task<IActionResult> CreateToken2(CreateTokenViewModel model)
     {
         return CreateToken(model.StoreId, model);
-    }
-
-    [HttpPost("{storeId}/tokens/apikey")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> GenerateAPIKey(string storeId, string command = "")
-    {
-        var store = HttpContext.GetStoreDataOrNull();
-        if (store == null)
-            return NotFound();
-        if (command == "revoke")
-        {
-            await tokenRepository.RevokeLegacyAPIKeys(CurrentStore.Id);
-            TempData[WellKnownTempData.SuccessMessage] = "API Key revoked";
-        }
-        else
-        {
-            await tokenRepository.GenerateLegacyAPIKey(CurrentStore.Id);
-            TempData[WellKnownTempData.SuccessMessage] = "API Key re-generated";
-        }
-
-        return RedirectToAction(nameof(ListTokens), new
-        {
-            storeId
-        });
     }
 
     [HttpGet("/api-access-request")]

@@ -10,6 +10,8 @@
 * **Store users**: Users must accept an invitation before joining a store (#7519) @dstrukt
 * **Point of Sale**: Remove the per-request `notificationUrl`. Invoices now use the app's configured notification URL @Kukks
 * **Server administration**: Remove legacy SSH settings and add deployment-provided `btcpay-host` integration, including `btcpay-host env` ([documentation](https://docs.btcpayserver.org/Development/HostIntegration/)) (#7511 #7543) @NicolasDorier
+* **API Keys**: Use API key IDs instead of secrets for Greenfield API revocation (#7561) @NicolasDorier
+* **Bitpay API**: Remove legacy BitPay Basic-auth API keys (#7561) @NicolasDorier
 
 ### New features
 
@@ -44,6 +46,7 @@
 * **Greenfield SDK**: Safely encode values in API URLs (#7530) @NicolasDorier
 * Hide breadcrumbs that only repeat the page title (#7517) @NicolasDorier
 * **Monetization**: Show a useful message instead of a 404 when Manage billing is unavailable (#7516) @NicolasDorier
+* **API Keys**: Store API key hashes instead of plaintext secrets and show key IDs and creation dates (#7561) @NicolasDorier
 
 ## 2.4.3
 

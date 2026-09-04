@@ -30,15 +30,15 @@ public partial class BTCPayServerClient
         await SendHttpRequest($"api/v1/api-keys/current", null, HttpMethod.Delete, token);
     }
 
-    public virtual async Task RevokeAPIKey(string apikey, CancellationToken token = default)
+    public virtual async Task RevokeAPIKey(string apiKeyId, CancellationToken token = default)
     {
-        if (apikey == null) throw new ArgumentNullException(nameof(apikey));
-        await SendHttpRequest($"api/v1/api-keys/{apikey}", null, HttpMethod.Delete, token);
+        if (apiKeyId == null) throw new ArgumentNullException(nameof(apiKeyId));
+        await SendHttpRequest($"api/v1/api-keys/{apiKeyId}", null, HttpMethod.Delete, token);
     }
-    public virtual async Task RevokeAPIKey(string userId, string apikey, CancellationToken token = default)
+    public virtual async Task RevokeAPIKey(string userId, string apiKeyId, CancellationToken token = default)
     {
-        if (apikey == null) throw new ArgumentNullException(nameof(apikey));
+        if (apiKeyId == null) throw new ArgumentNullException(nameof(apiKeyId));
         if (userId is null) throw new ArgumentNullException(nameof(userId));
-        await SendHttpRequest($"api/v1/users/{userId}/api-keys/{apikey}", null, HttpMethod.Delete, token);
+        await SendHttpRequest($"api/v1/users/{userId}/api-keys/{apiKeyId}", null, HttpMethod.Delete, token);
     }
 }

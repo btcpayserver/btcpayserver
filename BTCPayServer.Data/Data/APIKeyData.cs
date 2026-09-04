@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -7,16 +6,17 @@ namespace BTCPayServer.Data
 {
     public class APIKeyData : IHasBlob<APIKeyBlob>
     {
-        [MaxLength(50)]
+        public const string IdPrefix = "akid";
+        public DateTimeOffset? CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         public string Id { get; set; }
+        public string Hash { get; set; }
 
-        [MaxLength(50)]
+        public string Key { get; set; }
+        public string Prefix { get; set; }
+
         public string StoreId { get; set; }
 
-        [MaxLength(50)]
         public string UserId { get; set; }
-
-        public APIKeyType Type { get; set; } = APIKeyType.Legacy;
 
         [Obsolete("Use Blob2 instead")]
         public byte[] Blob { get; set; }
@@ -28,6 +28,8 @@ namespace BTCPayServer.Data
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
+            builder.Entity<APIKeyData>().Property(x => x.CreatedAt).HasColumnName("CreatedAt").HasColumnType("timestamptz")
+                .HasDefaultValueSql("now()");
             builder.Entity<APIKeyData>()
                    .HasOne(o => o.StoreData)
                    .WithMany(i => i.APIKeys)
@@ -45,6 +47,9 @@ namespace BTCPayServer.Data
                 .Property(o => o.Blob2)
                 .HasColumnType("JSONB");
         }
+
+        public static bool IsId(string apiKeyId)
+        => apiKeyId.StartsWith(APIKeyData.IdPrefix + "_", StringComparison.OrdinalIgnoreCase);
     }
 
     public class APIKeyBlob
@@ -53,11 +58,5 @@ namespace BTCPayServer.Data
         public string ApplicationIdentifier { get; set; }
         public string ApplicationAuthority { get; set; }
 
-    }
-
-    public enum APIKeyType
-    {
-        Legacy,
-        Permanent
     }
 }

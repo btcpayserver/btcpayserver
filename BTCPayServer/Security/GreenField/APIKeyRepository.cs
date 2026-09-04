@@ -1,37 +1,86 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using Npgsql;
 
 namespace BTCPayServer.Security.Greenfield
 {
-    public class APIKeyRepository
+    public class APIKeyRepository(ApplicationDbContextFactory applicationDbContextFactory)
     {
-        private readonly ApplicationDbContextFactory _applicationDbContextFactory;
-
-        public APIKeyRepository(ApplicationDbContextFactory applicationDbContextFactory)
+        public static APIKeyData New()
         {
-            _applicationDbContextFactory = applicationDbContextFactory;
+            APIKeyData k = new()
+            {
+                Key = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20))
+            };
+            var apiKey = new Selector.ByApiKey(k.Key);
+            k.Hash = apiKey.GetHash();
+            k.Id = apiKey.GetId();
+            k.Prefix = k.Key.Substring(0, 6);
+            return k;
         }
 
-        public async Task<APIKeyData> GetKey(string apiKey, bool includeUser = false)
+        public abstract record Selector
         {
-            await using var context = _applicationDbContextFactory.CreateContext();
-            if (includeUser)
+            public abstract string GetId();
+
+            public record ById(string ApiKeyId) : Selector
             {
-                return await context.ApiKeys.Include(data => data.User).SingleOrDefaultAsync(data => data.Id == apiKey && data.Type != APIKeyType.Legacy);
+                public override string GetId() => APIKeyData.IsId(ApiKeyId) ? ApiKeyId : "???";
             }
-            return await context.ApiKeys.SingleOrDefaultAsync(data => data.Id == apiKey && data.Type != APIKeyType.Legacy);
+
+            public record ByApiKey(string ApiKey) : Selector
+            {
+                public string GetHash()
+                {
+                    try
+                    {
+                        return Encoders.Hex.EncodeData(SHA256.HashData(Encoding.UTF8.GetBytes(ApiKey)));
+                    }
+                    catch
+                    {
+                        return "???";
+                    }
+                }
+                public override string GetId()
+                {
+                    try
+                    {
+                        var hash = SHA256.HashData(SHA256.HashData(Encoding.UTF8.GetBytes(ApiKey)));
+                        return APIKeyData.IdPrefix + "_" + Encoders.Hex.EncodeData(hash)[..16];
+                    }
+                    catch
+                    {
+                        return "???";
+                    }
+                }
+            }
+
+        }
+
+        public async Task<APIKeyData> GetKey(Selector selector, bool includeUser = false)
+        {
+            var id = selector.GetId();
+            await using var context = applicationDbContextFactory.CreateContext();
+            var result = includeUser ?
+                await context.ApiKeys.Include(data => data.User).SingleOrDefaultAsync(data => data.Id == id) :
+                await context.ApiKeys.SingleOrDefaultAsync(data => data.Id == id);
+            if (result != null && selector is Selector.ByApiKey apiKey && apiKey.GetHash() != result.Hash)
+                result = null;
+            return result;
         }
 
         public async Task<List<APIKeyData>> GetKeys(APIKeyQuery query)
         {
-            using var context = _applicationDbContextFactory.CreateContext();
+            using var context = applicationDbContextFactory.CreateContext();
             var queryable = context.ApiKeys.AsQueryable();
             if (query != null)
             {
@@ -46,73 +95,51 @@ namespace BTCPayServer.Security.Greenfield
 
         public async Task CreateKey(APIKeyData key)
         {
-            if (key.Type == APIKeyType.Legacy || !string.IsNullOrEmpty(key.StoreId) || string.IsNullOrEmpty(key.UserId))
-            {
-                throw new InvalidOperationException("cannot save a bitpay legacy api key with this repository");
-            }
-            using var context = _applicationDbContextFactory.CreateContext();
+            using var context = applicationDbContextFactory.CreateContext();
             await context.ApiKeys.AddAsync(key);
             await context.SaveChangesAsync();
         }
 
-        public async Task UpdateKey(string id, Permission[] permissions, string label, string userId)
+        public async Task<bool> Remove(Selector selector, string getUserId)
         {
-            using var context = _applicationDbContextFactory.CreateContext();
-            var key = await EntityFrameworkQueryableExtensions.SingleOrDefaultAsync(context.ApiKeys,
-                data => data.Id == id && data.UserId == userId);
-            if (key != null)
-            {
-                var keyBlob = key.GetBlob();
-                key.Label = label;
-                key.SetBlob(new APIKeyBlob
-                {
-                    Permissions = permissions.Select(p => p.ToString()).ToArray(),
-                    ApplicationAuthority = keyBlob.ApplicationAuthority,
-                    ApplicationIdentifier = keyBlob.ApplicationIdentifier
-                });
-                context.ApiKeys.Update(key);
-                await context.SaveChangesAsync();
-            }
-        }
-
-        public async Task<bool> Remove(string id, string getUserId)
-        {
-            using (var context = _applicationDbContextFactory.CreateContext())
+            var id = selector.GetId();
+            using (var context = applicationDbContextFactory.CreateContext())
             {
                 var key = await EntityFrameworkQueryableExtensions.SingleOrDefaultAsync(context.ApiKeys,
                     data => data.Id == id && data.UserId == getUserId);
                 if (key == null)
                     return false;
-
-                await context.ApiKeyPermissionUsages.Where(u => u.Id.StartsWith(id)).ExecuteDeleteAsync();
+                await context.ApiKeyPermissionUsages.Where(u => u.ApiKeyId == id).ExecuteDeleteAsync();
                 context.ApiKeys.Remove(key);
                 await context.SaveChangesAsync();
             }
             return true;
         }
 
-        public async Task RecordPermissionUsage(string apiKey, Permission permission)
+        public async Task RecordPermissionUsage(Selector selector, Permission permission)
         {
-            using var context = _applicationDbContextFactory.CreateContext();
+            var id = selector.GetId();
+            using var context = applicationDbContextFactory.CreateContext();
             var sql = @"
-            INSERT INTO ""ApiKeyPermissionUsages"" (""Id"", ""ApiKey"", ""Permission"", ""LastUsed"", ""UsageCount"")
-            VALUES (@Id, @ApiKey, @Permission, @LastUsed, 1)
+            INSERT INTO ""ApiKeyPermissionUsages"" (""Id"", ""ApiKeyId"", ""Permission"", ""LastUsed"", ""UsageCount"")
+            VALUES (@Id, @ApiKeyId, @Permission, @LastUsed, 1)
             ON CONFLICT (""Id"")
             DO UPDATE SET
                 ""LastUsed"" = @LastUsed,
                 ""UsageCount"" = ""ApiKeyPermissionUsages"".""UsageCount"" + 1";
 
             await context.Database.ExecuteSqlRawAsync(sql,
-                new NpgsqlParameter("@Id", $"{apiKey}-{permission}"),
-                new NpgsqlParameter("@ApiKey", apiKey),
+                new NpgsqlParameter("@Id", $"{id}-{permission}"),
+                new NpgsqlParameter("@ApiKeyId", id),
                 new NpgsqlParameter("@Permission", permission.Policy),
                 new NpgsqlParameter("@LastUsed", DateTimeOffset.UtcNow));
         }
 
-        public async Task<List<ApiKeyPermissionUsage>> GetAPIPermissionUsageRecords(string apiKey)
+        public async Task<List<ApiKeyPermissionUsage>> GetAPIPermissionUsageRecords(Selector selector)
         {
-            await using var ctx = _applicationDbContextFactory.CreateContext();
-            var entity = ctx.ApiKeyPermissionUsages.Where(c => c.ApiKey == apiKey).ToList();
+            var id = selector.GetId();
+            await using var ctx = applicationDbContextFactory.CreateContext();
+            var entity = ctx.ApiKeyPermissionUsages.Where(c => c.ApiKeyId == id).ToList();
             return entity.Any() ? entity : new List<ApiKeyPermissionUsage>();
         }
 

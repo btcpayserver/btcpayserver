@@ -142,6 +142,10 @@ namespace BTCPayServer.Controllers.Greenfield
                     ModelState.AddModelError(nameof(request.PayoutMethods), "At least one payout method is required");
                 }
             }
+            else if (supported.Count is 0)
+            {
+                ModelState.AddModelError(nameof(request.PayoutMethods), "At least one payout method is required");
+            }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 

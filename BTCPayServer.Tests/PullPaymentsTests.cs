@@ -640,6 +640,14 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         acc.RegisterLightningNode("BTC", LightningTestImplementation.CoreLightning, false);
         var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
         var client = await acc.CreateClient();
+        var storeWithoutWallet = await client.CreateStore(new CreateStoreRequest { Name = "No wallet" });
+        await AssertEx.AssertValidationError(new[] { "PayoutMethods" }, async () =>
+            await client.CreatePullPayment(storeWithoutWallet.Id, new CreatePullPaymentRequest
+            {
+                Amount = 12.3m,
+                Currency = "BTC"
+            }));
+
         var result = await client.CreatePullPayment(storeId, new CreatePullPaymentRequest()
         {
             Name = "Test",

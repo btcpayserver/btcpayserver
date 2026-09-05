@@ -355,7 +355,7 @@ namespace BTCPayServer.Payments.Lightning
                         }
 
                         var paymentContext = new PaymentMethodContext(store, store.GetStoreBlob(),
-                            JToken.FromObject(lnConfig, _handlers.GetLightningHandler(network).Serializer), lightningHandler, invoice, logs);
+                            JToken.FromObject(lnConfig, _handlers.GetLightningHandler(network).Serializer), lightningHandler, invoice, logs, _InvoiceRepository);
                         var paymentPrompt = paymentContext.Prompt;
                         await paymentContext.BeforeFetchingRates();
                         await paymentContext.CreatePaymentPrompt();

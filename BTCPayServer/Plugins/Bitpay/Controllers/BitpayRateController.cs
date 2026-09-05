@@ -64,7 +64,7 @@ public class BitpayRateController : ControllerBase
         }
         var inv = _invoiceRepository.CreateNewInvoice(store.Id);
         inv.Currency = baseCurrency;
-        var ctx = new InvoiceCreationContext(store, store.GetStoreBlob(), inv, new Logging.InvoiceLogs(), _handlers, null);
+        var ctx = new InvoiceCreationContext(store, store.GetStoreBlob(), inv, new Logging.InvoiceLogs(), _handlers, null, _invoiceRepository);
         ctx.SetLazyActivation(true);
         await ctx.BeforeFetchingRates();
         var currencyCodes = ctx

@@ -22,11 +22,7 @@ public class BitpayAuthorizationHandler(
             return;
         var httpContext = httpContextAccessor.HttpContext;
         string storeId = null;
-        if (context.User.Identity is { AuthenticationType: BitpayAuthenticationTypes.ApiKeyAuthentication })
-        {
-            storeId = context.User.Claims.Where(c => c.Type == BitpayClaims.ApiKeyStoreId).Select(c => c.Value).First();
-        }
-        else if (context.User.Identity is { AuthenticationType: BitpayAuthenticationTypes.SinAuthentication })
+        if (context.User.Identity is { AuthenticationType: BitpayAuthenticationTypes.SinAuthentication })
         {
             var sin = context.User.Claims.Where(c => c.Type == BitpayClaims.SIN).Select(c => c.Value).First();
             var bitToken = (await tokenRepository.GetTokens(sin)).FirstOrDefault();

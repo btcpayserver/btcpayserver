@@ -1,6 +1,6 @@
 {
     "paths": {
-        "/api/v1/api-keys/{apikey}": {
+        "/api/v1/api-keys/{apiKeyId}": {
             "delete": {
                 "operationId": "ApiKeys_DeleteApiKey",
                 "tags": [
@@ -10,10 +10,10 @@
                 "description": "Revoke the current API key so that it cannot be used anymore",
                 "parameters": [
                     {
-                        "name": "apikey",
+                        "name": "apiKeyId",
                         "in": "path",
                         "required": true,
-                        "description": "The API Key to revoke",
+                        "description": "The ID of the API Key to revoke",
                         "schema": {
                             "type": "string"
                         }
@@ -37,7 +37,7 @@
                 ]
             }
         },
-        "/api/v1/users/{idOrEmail}/api-keys/{apikey}": {
+        "/api/v1/users/{idOrEmail}/api-keys/{apiKeyId}": {
             "delete": {
                 "operationId": "ApiKeys_DeleteUserApiKey",
                 "tags": [
@@ -50,10 +50,10 @@
                         "$ref": "#/components/parameters/UserIdOrEmail"
                     },
                     {
-                        "name": "apikey",
+                        "name": "apiKeyId",
                         "in": "path",
                         "required": true,
-                        "description": "The API Key to revoke",
+                        "description": "The ID of the API Key to revoke",
                         "schema": {
                             "type": "string"
                         }
@@ -316,6 +316,11 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The ID of the API Key, used to revoke it without sending the secret",
+                        "nullable": false
+                    },
                     "apiKey": {
                         "type": "string",
                         "description": "The API Key to use for API Key Authentication",
@@ -325,6 +330,13 @@
                         "type": "string",
                         "description": "The label given by the user to this API Key",
                         "nullable": false
+                    },
+                    "created": {
+                        "type": "integer",
+                        "format": "unix-time",
+                        "description": "Timestamp when the API Key was created. (null if created before 2.4.4)",
+                        "example": 1710598234,
+                        "nullable": true
                     },
                     "permissions": {
                         "type": "array",

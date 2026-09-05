@@ -26,47 +26,6 @@ namespace BTCPayServer.Tests;
 [Collection(nameof(NonParallelizableCollectionDefinition))]
 public class BitpayTests(ITestOutputHelper log) : UnitTestBase(log)
 {
-       [Fact]
-       [Trait("Integration", "Integration")]
-        public async Task CanThrowBitpay404Error()
-        {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            await user.GrantAccessAsync();
-            user.RegisterDerivationScheme("BTC");
-
-            var invoice = await user.BitPay.CreateInvoiceAsync(
-                new Invoice()
-                {
-                    Buyer = new Buyer() { email = "test@fwf.com" },
-                    Price = 5000.0m,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
-
-            try
-            {
-                await user.BitPay.GetInvoiceAsync(invoice.Id + "123");
-            }
-            catch (BitPayException ex)
-            {
-                Assert.Equal("Object not found", ex.Errors.First());
-            }
-
-            var req = new HttpRequestMessage(HttpMethod.Get, "/invoices/Cy9jfK82eeEED1T3qhwF3Y");
-            req.Headers.TryAddWithoutValidation("Authorization", "Basic dGVzdA==");
-            req.Content = new StringContent("{}", Encoding.UTF8, "application/json");
-            var result = await tester.PayTester.HttpClient.SendAsync(req);
-            Assert.Equal(HttpStatusCode.Unauthorized, result.StatusCode);
-            var err = await result.Content.ReadAsStringAsync();
-            var errModel = JsonConvert.DeserializeObject<BitpayErrorsModel>(err);
-            Assert.Equal("ApiKey authentication failed", errModel.Errors[0].Error);
-        }
-
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanUseServerInitiatedPairingCode()
@@ -259,36 +218,6 @@ public class BitpayTests(ITestOutputHelper log) : UnitTestBase(log)
             var resp = await client.SendAsync(req);
             resp.EnsureSuccessStatusCode();
 
-            // Can generate API Key
-            var repo = tester.PayTester.GetService<TokenRepository>();
-            Assert.Empty(await repo.GetLegacyAPIKeys(user.StoreId));
-            Assert.IsType<RedirectToActionResult>(await user.GetController<UIStoresTokenController>()
-                .GenerateAPIKey(user.StoreId));
-
-            var apiKey = Assert.Single(await repo.GetLegacyAPIKeys(user.StoreId));
-            ///////
-
-            // Generating a new one remove the previous
-            Assert.IsType<RedirectToActionResult>(await user.GetController<UIStoresTokenController>()
-                .GenerateAPIKey(user.StoreId));
-            var apiKey2 = Assert.Single(await repo.GetLegacyAPIKeys(user.StoreId));
-            Assert.NotEqual(apiKey, apiKey2);
-            ////////
-
-            apiKey = apiKey2;
-
-            // Can create an invoice with this new API Key
-            var message = new HttpRequestMessage(HttpMethod.Post,
-                tester.PayTester.ServerUri.AbsoluteUri + "invoices");
-            message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic",
-                Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(apiKey)));
-            var invoice = new Invoice() { Price = 5000.0m, Currency = "USD" };
-            message.Content = new StringContent(JsonConvert.SerializeObject(invoice), Encoding.UTF8,
-                "application/json");
-            var result = await client.SendAsync(message);
-            result.EnsureSuccessStatusCode();
-            /////////////////////
-
             // Have error 403 with a bad signature
             client = new HttpClient();
             var mess =
@@ -299,7 +228,7 @@ public class BitpayTests(ITestOutputHelper log) : UnitTestBase(log)
             mess.Headers.Add("x-identity",
                 "04b4d82095947262dd70f94c0a0e005ec3916e3f5f2181c176b8b22a52db22a8c436c4703f43a9e8884104854a11e1eb30df8fdf116e283807a1f1b8fe4c182b99");
             mess.Method = HttpMethod.Get;
-            result = await client.SendAsync(mess);
+            var result = await client.SendAsync(mess);
             Assert.Equal(HttpStatusCode.Unauthorized, result.StatusCode);
 
             //

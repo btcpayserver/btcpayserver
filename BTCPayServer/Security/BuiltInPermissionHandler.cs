@@ -77,7 +77,7 @@ public class BuiltInPermissionHandler(
         {
             if (permContext.HttpContext.GetAPIKey(out var apiKey))
             {
-                _ = apiKeyRepository.RecordPermissionUsage(apiKey, permContext.Permission);
+                _ = apiKeyRepository.RecordPermissionUsage(new APIKeyRepository.Selector.ByApiKey(apiKey), permContext.Permission);
             }
             authContext.Succeed(permContext.Requirement);
             if (permissionedStore is not null)

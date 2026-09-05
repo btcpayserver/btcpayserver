@@ -411,6 +411,24 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
             services.AddSingleton<IHostedService, InvoiceEventSaverService>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
+            services.AddScheduledDbScript("API Key Cleanup",
+                """
+                WITH expired_api_keys AS (
+                    SELECT "Id"
+                    FROM "ApiKeys"
+                    WHERE "Key" IS NOT NULL
+                      AND ("CreatedAt" IS NULL OR "CreatedAt" < @now - INTERVAL '5 minutes')
+                    ORDER BY "CreatedAt" NULLS FIRST
+                    LIMIT 1000
+                ),
+                cleaned_api_keys AS (
+                    UPDATE "ApiKeys"
+                    SET "Key" = NULL
+                    WHERE "Id" IN (SELECT "Id" FROM expired_api_keys)
+                    RETURNING 1
+                )
+                SELECT COUNT(*) FROM cleaned_api_keys;
+                """);
             services.AddScheduledDbScript("Invoice Cleanup",
                 """
                 WITH useless_invoices AS (

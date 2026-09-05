@@ -28,12 +28,14 @@
         {
             <table class="table table-lg">
                 <thead>
-                    <tr>
-                        <th text-translate="true">Label</th>
-                        <th text-translate="true" class="w-125px">Key</th>
-                        <th text-translate="true">Permissions</th>
-                        <th class="actions-col"></th>
-                    </tr>
+                <tr>
+                    <vc:date-column></vc:date-column>
+                    <th text-translate="true">Id</th>
+                    <th text-translate="true">Label</th>
+                    <th text-translate="true" class="w-125px">Key</th>
+                    <th text-translate="true">Permissions</th>
+                    <th class="actions-col"></th>
+                </tr>
                 </thead>
                 <tbody>
                     @{
@@ -42,16 +44,25 @@
                     @foreach (var keyData in Model.ApiKeyDatas)
                     {
                         <tr>
+                            <td class="date-col">@keyData.CreatedAt?.ToBrowserDate()</td>
+                            <td><code>@keyData.Id</code></td>
                             <td>@keyData.Label</td>
                             <td>
-                                <code class="hide-when-js">@keyData.Id</code>
-                                <button type="button" class="btn btn-link only-for-js p-0" data-reveal-btn text-translate="true">Reveal</button>
-                                <div hidden class="gap-2 align-items-center">
-                                    <code>@keyData.Id</code>
-                                    <button type="button" class="btn btn-link d-flex p-0 clipboard-button" data-clipboard="@keyData.Id">
-                                        <vc:icon symbol="actions-copy" />
-                                    </button>
-                                </div>
+                                @if (keyData.Key is not null)
+                                {
+                                    <code class="hide-when-js">@keyData.Key</code>
+                                    <button type="button" class="btn btn-link only-for-js p-0" data-reveal-btn text-translate="true">Reveal</button>
+                                    <div hidden class="gap-2 align-items-center">
+                                        <code>@keyData.Key</code>
+                                        <button type="button" class="btn btn-link d-flex p-0 clipboard-button" data-clipboard="@keyData.Key">
+                                            <vc:icon symbol="actions-copy" />
+                                        </button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span>@(keyData.Prefix + "...")</span>
+                                }
                             </td>
                             <td>
                                 @{
@@ -60,7 +71,7 @@
                                 @if (!permissions.Any())
                                 {
                                     <span class="info-note text-warning">
-                                        <vc:icon symbol="warning"/>
+                                        <vc:icon symbol="warning" />
                                         <span text-translate="true">No permissions</span>
                                     </span>
                                 }
@@ -74,11 +85,14 @@
                             </td>
                             <td>
                                 <div class="d-flex align-items-center justify-content-end gap-1">
-                                    <a asp-action="DeleteAPIKey" asp-route-id="@keyData.Id" asp-controller="UIManage" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Any application using the API key <strong>@Html.Encode(keyData.Label ?? keyData.Id)</strong> will immediately lose access." data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Delete</a>
+                                    <a asp-action="DeleteAPIKey" asp-route-apiKeyId="@keyData.Id" asp-controller="UIManage" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Any application using the API key <strong>@Html.Encode(keyData.Label ?? (keyData.Prefix + "..."))</strong> will immediately lose access." data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Delete</a>
+                                    @if (keyData.Key is not null)
+                                    {
+                                        <span>-</span>
+                                        <button type="button" class="btn btn-link only-for-js p-0" data-qr="@index" text-translate="true">Show QR</button>
+                                    }
                                     <span>-</span>
-                                    <button type="button" class="btn btn-link only-for-js p-0" data-qr="@index" text-translate="true">Show QR</button>
-                                    <span>-</span>
-                                    <a id="viewusage-@keyData.Id" asp-action="APIKeyPermissionAnalysis" asp-route-id="@keyData.Id" asp-controller="UIManage" text-translate="true">View Usage</a>
+                                    <a class="api-key-list__view-usage" asp-action="APIKeyPermissionAnalysis" asp-route-apiKeyId="@keyData.Id" asp-controller="UIManage" text-translate="true">View Usage</a>
                                 </div>
                             </td>
                         </tr>
@@ -113,7 +127,7 @@
         document.addEventListener("DOMContentLoaded", function () {
             const apiKeys = @Safe.Json(Model.ApiKeyDatas.Select(data => new
                             {
-                                ApiKey = data.Id,
+                                ApiKey = data.Key,
                                 Host = Context.Request.GetAbsoluteRoot()
                             }));
             const qrApp = initQRShow({ title: "API Key QR" });

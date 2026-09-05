@@ -5,6 +5,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
@@ -300,6 +301,58 @@ namespace BTCPayServer.Tests
             public Task ProcessEventForTest(object evt)
             {
                 return base.ProcessEvent(evt, default);
+            }
+        }
+
+        [Fact]
+        public async Task CanMigrateApiKeys()
+        {
+            const string apiKey = "2683feeddb2277ce5f18e9ea2eb665aaec2bf700";
+            const string permission = "btcpay.store.canviewstoresettings";
+            const string permissionSuffix = "-btcpay.store.canviewstoresettings:Da7u4vBajRTAYg";
+            const string expectedHash = "ac79f0e4b7e453b6417eed4a13af18338128272fe35f758f0fa82e51ab204f86";
+            const string expectedApiKeyId = "akid_6f83c19078b05351";
+
+            var tester = CreateDBTester();
+            await tester.MigrateUntil("20260904133933_hardenapikey");
+            await using (var ctx = tester.CreateContext())
+            {
+                await ctx.Database.GetDbConnection().ExecuteAsync("""
+                    INSERT INTO "ApiKeys" ("Id", "Type", "Label", "Blob", "Blob2")
+                    VALUES (@apiKey, 1, 'New', '\x'::bytea, CAST(@blob AS JSONB));
+
+                    INSERT INTO "ApiKeyPermissionUsages" ("Id", "ApiKey", "Permission", "LastUsed", "UsageCount")
+                    VALUES (@usageId, @apiKey, @permission, '2026-05-01 16:47:11.537205+00', 1);
+
+                    INSERT INTO "ApiKeyPermissionUsages" ("Id", "ApiKey", "Permission", "LastUsed", "UsageCount")
+                    VALUES ('orphan-permission', 'orphan-api-key', @permission, '2026-05-01 16:47:11.537205+00', 1);
+                    """, new
+                {
+                    apiKey,
+                    usageId = apiKey + permissionSuffix,
+                    permission,
+                    blob = "{\"permissions\":[\"btcpay.store.canviewstoresettings:Da7u4vBajRTAYg\"]}"
+                });
+            }
+
+            await tester.CompleteMigrations();
+
+            var selector = new APIKeyRepository.Selector.ByApiKey(apiKey);
+            Assert.Equal(expectedHash, selector.GetHash());
+            Assert.Equal(expectedApiKeyId, selector.GetId());
+
+            await using (var ctx = tester.CreateContext())
+            {
+                var migratedApiKey = await ctx.ApiKeys.SingleAsync();
+                Assert.Equal(expectedApiKeyId, migratedApiKey.Id);
+                Assert.Equal(expectedHash, migratedApiKey.Hash);
+                Assert.Equal("2683fe", migratedApiKey.Prefix);
+                Assert.Null(migratedApiKey.Key);
+                Assert.NotNull(migratedApiKey.CreatedAt);
+
+                var usage = await ctx.ApiKeyPermissionUsages.SingleAsync();
+                Assert.Equal(expectedApiKeyId, usage.ApiKeyId);
+                Assert.Equal(expectedApiKeyId + permissionSuffix, usage.Id);
             }
         }
 

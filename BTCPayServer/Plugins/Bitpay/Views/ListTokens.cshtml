@@ -79,30 +79,6 @@
             </p>
         }
         </div>
-
-        <h3 class="settings-section__heading settings-section__heading--spaced" text-translate="true">Legacy API Keys</h3>
-        <div class="settings-section">
-        <p text-translate="true">Alternatively, you can use the invoice API by including the following HTTP Header in your requests:</p>
-		<p permission="@Policies.CanModifyStoreSettings"><code>Authorization: Basic @Model.EncodedApiKey</code></p>
-
-        <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings">
-            <div class="form-group mb-0">
-                <label asp-for="ApiKey" class="form-label"></label>
-                <div class="d-flex">
-                    <input asp-for="ApiKey" readonly class="form-control"/>
-                    @if (string.IsNullOrEmpty(Model.ApiKey))
-                    {
-                        <button class="btn btn-primary ms-3" type="submit" text-translate="true">Generate</button>
-                    }
-                    else
-                    {
-                        <button class="btn btn-danger ms-3" type="submit" name="command" value="revoke" text-translate="true">Revoke</button>
-                        <button class="btn btn-primary ms-3" type="submit" text-translate="true">Regenerate</button>
-                    }
-                </div>
-            </div>
-        </form>
-        </div>
     </div>
 </div>
 

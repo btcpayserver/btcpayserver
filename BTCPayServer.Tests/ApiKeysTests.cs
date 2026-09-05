@@ -74,7 +74,7 @@ namespace BTCPayServer.Tests
             await s.Page.SetCheckedAsync("#btcpay\\.store\\.canmodifystoresettings", true);
             await s.Page.SetCheckedAsync("#btcpay\\.user\\.canviewprofile", true);
             await s.ClickPagePrimary();
-            var superApiKey = await (await s.FindAlertMessage()).Locator("code").TextContentAsync();
+            var superApiKey = new APIKeyRepository.Selector.ByApiKey(await (await s.FindAlertMessage()).Locator("code").TextContentAsync());
 
             //this api key has access to everything
             await TestApiAgainstAccessToken(superApiKey, tester, user, Policies.CanModifyServerSettings, Policies.CanModifyStoreSettings,
@@ -83,14 +83,14 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             await s.Page.SetCheckedAsync("#btcpay\\.server\\.canmodifyserversettings", true);
             await s.ClickPagePrimary();
-            var serverOnlyApiKey = await (await s.FindAlertMessage()).Locator("code").TextContentAsync();
+            var serverOnlyApiKey = new APIKeyRepository.Selector.ByApiKey(await (await s.FindAlertMessage()).Locator("code").TextContentAsync());
             await TestApiAgainstAccessToken(serverOnlyApiKey, tester, user,
                 Policies.CanModifyServerSettings);
 
             await s.ClickPagePrimary();
             await s.Page.SetCheckedAsync("#btcpay\\.store\\.canmodifystoresettings", true);
             await s.ClickPagePrimary();
-            var allStoreOnlyApiKey = await (await s.FindAlertMessage()).Locator("code").TextContentAsync();
+            var allStoreOnlyApiKey = new APIKeyRepository.Selector.ByApiKey(await (await s.FindAlertMessage()).Locator("code").TextContentAsync());
             await TestApiAgainstAccessToken(allStoreOnlyApiKey, tester, user,
                 Policies.CanModifyStoreSettings);
 
@@ -103,13 +103,13 @@ namespace BTCPayServer.Tests
             getPermissionValueIndex = getPermissionValueIndex!.Replace(".Permission", ".SpecificStores[0]");
             await s.Page.SelectOptionAsync($"[name='{getPermissionValueIndex}']", user.StoreId);
             await s.ClickPagePrimary();
-            var selectiveStoreApiKey = await (await s.FindAlertMessage()).Locator("code").TextContentAsync();
+            var selectiveStoreApiKey = new APIKeyRepository.Selector.ByApiKey(await (await s.FindAlertMessage()).Locator("code").TextContentAsync());
             await TestApiAgainstAccessToken(selectiveStoreApiKey, tester, user,
                 Permission.Create(Policies.CanModifyStoreSettings, user.StoreId).ToString());
 
             await s.ClickPagePrimary(); // New API key
             await s.ClickPagePrimary(); // Generate
-            var noPermissionsApiKey = await (await s.FindAlertMessage()).Locator("code").TextContentAsync();
+            var noPermissionsApiKey = new APIKeyRepository.Selector.ByApiKey(await (await s.FindAlertMessage()).Locator("code").TextContentAsync());
             await TestApiAgainstAccessToken(noPermissionsApiKey, tester, user);
             await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
             {
@@ -283,8 +283,7 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             var apiKey = await (await s.FindAlertMessage()).Locator("code").TextContentAsync();
 
-            await s.GoToUrl($"api-keys/{apiKey}/view-analysis");
-            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            await s.Page.Locator(".api-key-list__view-usage").ClickAsync();
 
             var cards = await s.Page.Locator(".display-6.fw-bold").AllTextContentsAsync();
             Assert.Equal("2", cards[0].Trim());
@@ -349,19 +348,20 @@ namespace BTCPayServer.Tests
             await s.GoToProfile(ManageNavPages.APIKeys);
             await s.ClickPagePrimary();
             await s.ClickPagePrimary();
-            var user1ApiKey = await (await s.FindAlertMessage()).Locator("code").TextContentAsync();
+            var user1ApiKeyId =　new APIKeyRepository.Selector.ByApiKey( await (await s.FindAlertMessage()).Locator("code").TextContentAsync()).GetId();
             await s.Logout();
 
             await s.GoToLogin();
             await s.LogIn(user2.RegisterDetails.Email, user2.RegisterDetails.Password);
-            await s.GoToUrl($"api-keys/{user1ApiKey}/view-analysis", true);
+            await s.GoToUrl($"api-keys/{user1ApiKeyId}/view-analysis", true);
             await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             Assert.Contains("404", await s.Page.ContentAsync());
         }
 
-        async Task TestApiAgainstAccessToken(string accessToken, ServerTester tester, TestAccount testAccount,
+        async Task TestApiAgainstAccessToken(APIKeyRepository.Selector.ByApiKey selector, ServerTester tester, TestAccount testAccount,
             params string[] expectedPermissionsArr)
         {
+            var accessToken = selector.ApiKey;
             var expectedPermissions = Permission.ToPermissions(expectedPermissionsArr).ToArray();
             var apikeydata = await TestApiAgainstAccessToken<ApiKeyData>(accessToken, $"api/v1/api-keys/current", tester.PayTester.HttpClient);
             var permissions = apikeydata.Permissions;
@@ -532,11 +532,11 @@ namespace BTCPayServer.Tests
             return JsonConvert.DeserializeObject<T>(rawJson);
         }
 
-        private async Task<string> GetAccessTokenFromCallbackResult(PlaywrightTester tester)
+        private async Task<APIKeyRepository.Selector.ByApiKey> GetAccessTokenFromCallbackResult(PlaywrightTester tester)
         {
             var source = await tester.Page.Locator("body").TextContentAsync();
             var json = JObject.Parse(source ?? "{}");
-            return json.GetValue("apiKey")!.Value<string>();
+            return new(json.GetValue("apiKey")!.Value<string>());
         }
     }
 

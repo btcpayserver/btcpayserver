@@ -371,6 +371,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ShowItems = request.ShowItems ?? false,
                 ShowCustomAmount = request.ShowCustomAmount ?? false,
                 ShowDiscount = request.ShowDiscount ?? false,
+                DefaultDiscount = request.DefaultDiscount,
                 ShowSearch = request.ShowSearch ?? false,
                 ShowCategories = request.ShowCategories ?? false,
                 EnableTips = request.EnableTips ?? false,
@@ -435,6 +436,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ShowItems = settings.ShowItems,
                 ShowCustomAmount = settings.ShowCustomAmount,
                 ShowDiscount = settings.ShowDiscount,
+                DefaultDiscount = settings.DefaultDiscount,
                 ShowSearch = settings.ShowSearch,
                 ShowCategories = settings.ShowCategories,
                 EnableTips = settings.EnableTips,
@@ -459,6 +461,11 @@ namespace BTCPayServer.Controllers.Greenfield
             if (request.Currency != null && _currencies.GetCurrencyData(request.Currency, false) == null)
             {
                 ModelState.AddModelError(nameof(request.Currency), "Invalid currency");
+            }
+
+            if (request.DefaultDiscount is < 0 or > 100)
+            {
+                ModelState.AddModelError(nameof(request.DefaultDiscount), "Default discount must be between 0 and 100");
             }
 
             if (request.Template != null)

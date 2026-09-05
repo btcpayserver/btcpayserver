@@ -7,6 +7,7 @@ namespace BTCPayServer.Payments
         public static readonly PaymentType CHAIN = new("CHAIN");
         public static readonly PaymentType LN = new("LN");
         public static readonly PaymentType LNURL = new("LNURL");
+        public static readonly PaymentType EXTERNAL = new("EXTERNAL");
     }
     public class PaymentType
     {

@@ -57,7 +57,7 @@ services:
       - mailpit
 
   devlnd:
-    image: btcpayserver/bitcoin:31.1
+    image: btcpayserver/bitcoin:31.1-1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -110,9 +110,10 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:31.1
+    image: btcpayserver/bitcoin:31.1-1
     environment:
       BITCOIN_NETWORK: regtest
+      BITCOIN_RPCUSERS: lnd
       BITCOIN_WALLETDIR: "/data/wallets"
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
@@ -210,21 +211,21 @@ services:
       - "postgres_test_datadir:/var/lib/postgresql"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.21.3-beta
+    image: btcpayserver/lnd:v0.21.3-beta-1
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_REST_LISTEN_HOST: http://merchant_lnd:8080
+      RPCUSER_FILE: /deps/.bitcoin/RPCUsers/lnd
       LND_EXTRA_ARGS: |
         restlisten=merchant_lnd:8080
         rpclisten=127.0.0.1:10008
         rpclisten=merchant_lnd:10009
         bitcoin.node=bitcoind
         bitcoind.rpchost=bitcoind:43782
-        bitcoind.rpcuser=ceiwHEbqWI83
-        bitcoind.rpcpass=DwubwWsoo3
+        bitcoind.rpcuser=lnd
         bitcoind.zmqpubrawblock=tcp://bitcoind:28332
         bitcoind.zmqpubrawtx=tcp://bitcoind:28333
         externalip=merchant_lnd:9735
@@ -248,21 +249,21 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.21.3-beta
+    image: btcpayserver/lnd:v0.21.3-beta-1
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_REST_LISTEN_HOST: http://customer_lnd:8080
+      RPCUSER_FILE: /deps/.bitcoin/RPCUsers/lnd
       LND_EXTRA_ARGS: |
         restlisten=customer_lnd:8080
         rpclisten=127.0.0.1:10008
         rpclisten=customer_lnd:10009
         bitcoin.node=bitcoind
         bitcoind.rpchost=bitcoind:43782
-        bitcoind.rpcuser=ceiwHEbqWI83
-        bitcoind.rpcpass=DwubwWsoo3
+        bitcoind.rpcuser=lnd
         bitcoind.zmqpubrawblock=tcp://bitcoind:28332
         bitcoind.zmqpubrawtx=tcp://bitcoind:28333
         externalip=customer_lnd:9735

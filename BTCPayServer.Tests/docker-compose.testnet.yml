@@ -19,7 +19,7 @@ services:
       - tor
 
   devlnd:
-    image: btcpayserver/bitcoin:31.1
+    image: btcpayserver/bitcoin:31.1-1
     environment:
       BITCOIN_NETWORK: testnet
       BITCOIN_WALLETDIR: "/data/wallets"

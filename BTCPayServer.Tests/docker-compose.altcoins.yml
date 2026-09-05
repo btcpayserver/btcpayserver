@@ -125,7 +125,7 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:31.1
+    image: btcpayserver/bitcoin:31.1-1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_RPCUSERS: lnd

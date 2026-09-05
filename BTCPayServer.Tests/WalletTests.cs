@@ -1091,11 +1091,11 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
             });
 
         await s.GoToWalletTransactions(s.WalletId);
-        await SelectWalletDirection(s, "Outgoing");
+        await SelectWalletDirection(s, "Sent");
         await s.SearchFilters.SelectLabel(targetLabel);
         await s.Page.WaitForLoadStateAsync();
 
-        await AssertDirectionToggle(s, "Outgoing");
+        await AssertDirectionToggle(s, "Sent");
         await Expect(s.SearchFilters.LabelSelectorToggle).ToContainTextAsync(targetLabel);
 
         var hiddenSearchTerm = await s.SearchFilters.SearchTermValue();
@@ -1154,9 +1154,9 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.GoToWalletTransactions(s.WalletId);
         await s.SearchFilters.AssertSearchText(string.Empty);
 
-        await SelectWalletDirection(s, "Outgoing");
+        await SelectWalletDirection(s, "Sent");
 
-        await AssertDirectionToggle(s, "Outgoing");
+        await AssertDirectionToggle(s, "Sent");
         Assert.Contains("direction:out", await s.SearchFilters.SearchTermValue());
         await s.SearchFilters.AssertSearchText(string.Empty);
         await Expect(s.Page.Locator(".transaction-row .amount-col .text-danger").First).ToBeVisibleAsync();
@@ -1235,13 +1235,13 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await AssertDateRangeTimeZone(selectedTimeZone);
 
         await s.SearchFilters.FillSearchText(targetLabel);
-        await SelectWalletDirection(s, "Outgoing");
+        await SelectWalletDirection(s, "Sent");
 
         await s.SearchFilters.AssertSearchText(targetLabel);
         var searchTermWithFilters = await s.SearchFilters.SearchTermValue();
         Assert.Contains("direction:out", searchTermWithFilters);
         Assert.Contains($"timezone:{selectedTimeZone}", searchTermWithFilters);
-        await AssertDirectionToggle(s, "Outgoing");
+        await AssertDirectionToggle(s, "Sent");
         await Expect(s.Page.Locator(".transaction-row")).ToHaveCountAsync(1);
         await Expect(s.SearchFilters.ClearAllFiltersButton).ToHaveCountAsync(1);
 
@@ -1250,7 +1250,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.SearchFilters.AssertSearchText(string.Empty);
         await Expect(s.SearchFilters.SearchTerm).ToHaveValueAsync($"timezone:{selectedTimeZone}");
         await AssertDateRangeTimeZone(selectedTimeZone);
-        await AssertDirectionToggle(s, "All Directions");
+        await AssertDirectionToggle(s, "All");
         await Expect(s.SearchFilters.ClearAllFiltersButton).ToHaveCountAsync(0);
         Assert.True(await s.Page.Locator(".transaction-row").CountAsync() >= 2);
         await Expect(s.Page.Locator(".transaction-row .amount-col .text-danger").First).ToBeVisibleAsync();
@@ -1331,7 +1331,7 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.GoToWalletTransactions(s.WalletId);
         await s.SearchFilters.FillSearchText(targetSearchText);
 
-        await SelectWalletDirection(s, "Outgoing");
+        await SelectWalletDirection(s, "Sent");
 
         await s.SearchFilters.SelectLabel(targetLabel);
 

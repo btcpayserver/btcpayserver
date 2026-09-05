@@ -639,7 +639,7 @@ namespace BTCPayServer
             }
             if (IPAddress.TryParse(server, out var ip))
             {
-                return ip.IsLocal() || ip.IsRFC1918();
+                return ip.IsLocal() || ip.IsRFC1918() || ip.IsRFC3927() || ip.IsRFC4862();
             }
             return false;
         }

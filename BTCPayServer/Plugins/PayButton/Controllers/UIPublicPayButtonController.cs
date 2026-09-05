@@ -8,6 +8,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.PayButton.Models;
+using BTCPayServer.Plugins.Tax;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -25,6 +26,7 @@ namespace BTCPayServer.Plugins.PayButton.Controllers
         StoreRepository storeRepository,
         IStringLocalizer stringLocalizer,
         CurrencyNameTable currencyNameTable,
+        TaxRateResolver taxRateResolver,
         LinkGenerator linkGenerator)
         : Controller
     {
@@ -66,6 +68,19 @@ namespace BTCPayServer.Plugins.PayButton.Controllers
             InvoiceEntity invoice;
             try
             {
+                decimal? taxAmount = null;
+                var priceForInvoice = model.Price ?? 0m;
+                if (!string.IsNullOrEmpty(model.TaxRateId))
+                {
+                    var storeRate = taxRateResolver.Resolve(store.GetStoreBlob(), model.TaxRateId);
+                    if (storeRate != null)
+                    {
+                        var decimals = currencyNameTable.GetCurrencyData(model.Currency, false)?.Divisibility ?? 2;
+                        var result = TaxCalculator.Calculate(priceForInvoice, storeRate.Rate, taxIncluded: false, decimals);
+                        priceForInvoice = result.PriceTaxIncluded;
+                        taxAmount = result.Tax;
+                    }
+                }
                 invoice = await invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest()
                 {
                     Amount = model.Price,
@@ -73,7 +88,8 @@ namespace BTCPayServer.Plugins.PayButton.Controllers
                     Metadata = new InvoiceMetadata()
                     {
                         ItemDesc = model.CheckoutDesc,
-                        OrderId = model.OrderId
+                        OrderId = model.OrderId,
+                        TaxIncluded = taxAmount
                     }.ToJObject(),
                     Checkout = new ()
                     {

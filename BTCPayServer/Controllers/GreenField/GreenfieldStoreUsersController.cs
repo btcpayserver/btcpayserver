@@ -107,7 +107,8 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> AddStoreUser(string storeId, AddStoreUserDataRequest request)
         {
             var requireInvitation = request.RequireInvitation ?? true;
-            if (!requireInvitation && !(await authorizationService.AuthorizeAsync(User, null, Policies.CanModifyServerSettings)).Succeeded)
+            if (!requireInvitation && !policiesSettings.AllowStoreOwnersToSkipInvitation &&
+                !(await authorizationService.AuthorizeAsync(User, null, Policies.CanModifyServerSettings)).Succeeded)
                 return this.CreateAPIPermissionError(Policies.CanModifyServerSettings, "You are not allowed to add users without invitation");
 
             var (error, user, roleId) = await GetStoreUserRequest(storeId, request, null, createUser: true);

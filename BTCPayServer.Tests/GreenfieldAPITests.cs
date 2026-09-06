@@ -3447,6 +3447,34 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
+        public async Task StoreOwnerCanSkipInvitationThroughApiWhenAllowed()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+
+            var owner = tester.NewAccount();
+            await owner.GrantAccessAsync();
+            var invitee = tester.NewAccount();
+            await invitee.GrantAccessAsync();
+            var client = await owner.CreateClient(Policies.CanModifyStoreSettings);
+            var request = new AddStoreUserDataRequest
+            {
+                Id = invitee.UserId,
+                RequireInvitation = false
+            };
+
+            await AssertPermissionError(Policies.CanModifyServerSettings, async () =>
+                await client.AddStoreUser(owner.StoreId, request));
+
+            var settings = tester.PayTester.GetService<SettingsRepository>();
+            await settings.UpdateSetting(new PoliciesSettings { AllowStoreOwnersToSkipInvitation = true });
+            await client.AddStoreUser(owner.StoreId, request);
+
+            Assert.Contains(await client.GetStoreUsers(owner.StoreId), user => user.Id == invitee.UserId);
+        }
+
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
         public async Task DisabledEnabledUserTests()
         {
             using var tester = CreateServerTester();

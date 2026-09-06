@@ -1629,7 +1629,7 @@ namespace BTCPayServer.Plugins.Translations
   "selected": "",
   "Send": "",
   "Send {0}": "",
-  "Send a <code>GET</code> request to <code>https://btcpay.example.com/invoices/{invoiceId}</code> with <code>Content-Type: application/json; Authorization: Basic YourLegacyAPIkey\"</code>, Legacy API key can be created with Access Tokens in Store settings": "",
+  "Send a <code>GET</code> request to <code>https://btcpay.example.com/api/v1/invoices/{invoiceId}</code> with <code>Authorization: token YOUR_API_KEY</code>. Create the API key in Account settings and grant it the View invoices permission for this store.": "",
   "Send invitation email": "",
   "Send me everything": "",
   "Send requests": "",

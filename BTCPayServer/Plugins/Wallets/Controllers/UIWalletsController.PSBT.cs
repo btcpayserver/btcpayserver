@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -544,7 +545,7 @@ namespace BTCPayServer.Controllers
                     {
                         Severity = StatusMessageModel.StatusSeverity.Warning,
                         AllowDismiss = false,
-                        Html = $"The payjoin transaction could not be created.<br/>The original transaction was broadcasted instead ({psbt.ExtractTransaction().GetHash()})<br/><br/>" + error
+                        Html = $"The payjoin transaction could not be created.<br/>The original transaction was broadcasted instead ({psbt.ExtractTransaction().GetHash()})<br/><br/>" + HtmlEncoder.Default.Encode(error)
                     });
                     return await WalletPSBTReady(walletId, vm, "broadcast");
                 case "broadcast" when !psbt.IsAllFinalized() && !psbt.TryFinalize(out var errors):

@@ -218,7 +218,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var user = await userManager.FindByIdOrEmail(id);
             if (user is null && createUser && MailboxAddressValidator.IsMailboxAddress(id))
             {
-                if (policiesSettings.LockSubscription &&
+                if ((policiesSettings.LockSubscription || policiesSettings.DisableNonAdminCreateUserApi) &&
                     !(await authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser))).Succeeded)
                     return (this.CreateAPIPermissionError(Policies.CanCreateUser), null, null);
 

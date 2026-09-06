@@ -3447,6 +3447,36 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
+        public async Task StoreUserCreationRespectsNonAdminApiPolicy()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+
+            var owner = tester.NewAccount();
+            await owner.GrantAccessAsync();
+            var client = await owner.CreateClient(Policies.CanModifyStoreSettings);
+            var settings = tester.PayTester.GetService<SettingsRepository>();
+            await settings.UpdateSetting(new PoliciesSettings
+            {
+                LockSubscription = false,
+                DisableNonAdminCreateUserApi = true
+            });
+
+            var email = $"{Guid.NewGuid():N}@example.com";
+            await AssertPermissionError(Policies.CanCreateUser, async () =>
+                await client.AddStoreUser(owner.StoreId, new AddStoreUserDataRequest { Id = email }));
+
+            await settings.UpdateSetting(new PoliciesSettings
+            {
+                LockSubscription = false,
+                DisableNonAdminCreateUserApi = false
+            });
+            var result = await client.AddStoreUser(owner.StoreId, new AddStoreUserDataRequest { Id = email });
+            Assert.NotNull(result.StoreInvitation);
+        }
+
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
         public async Task DisabledEnabledUserTests()
         {
             using var tester = CreateServerTester();

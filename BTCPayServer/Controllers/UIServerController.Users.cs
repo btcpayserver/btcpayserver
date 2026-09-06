@@ -455,9 +455,7 @@ namespace BTCPayServer.Controllers
         {
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{userId}'.");
-            }
+                return NotFound();
 
             var callbackUrl = await _callbackGenerator.ForEmailConfirmation(user);
             _eventAggregator.Publish(new UserEvent.ConfirmationEmailRequested(user, callbackUrl));

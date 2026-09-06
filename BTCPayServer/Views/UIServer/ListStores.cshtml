@@ -16,6 +16,7 @@
             <tr>
                 <th text-translate="true">Store</th>
                 <th text-translate="true">Users</th>
+                <th class="actions-col" text-translate="true">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -34,7 +35,11 @@
                     </td>
                     <td>@store.Users.Count User@(store.Users.Count == 1 ? "" : "s")</td>
                     <td class="text-end">
-                        <div class="d-inline-flex align-items-center gap-2">
+                        <div class="d-inline-flex align-items-center gap-3">
+                            <form method="post" asp-action="ToggleStoreArchive" asp-route-storeId="@store.StoreId">
+                                <button type="submit" class="btn btn-link p-0 store-list__archive">@(store.Archived ? StringLocalizer["Unarchive"] : StringLocalizer["Archive"])</button>
+                            </form>
+                            <a asp-action="DeleteStore" asp-route-storeId="@store.StoreId" class="store-list__delete" id="DeleteStore-@store.StoreId" text-translate="true">Delete</a>
                             <button class="accordion-button collapsed only-for-js ms-0 d-inline-block" type="button" data-bs-toggle="collapse" data-bs-target="#@detailsId" aria-expanded="false" aria-controls="@detailsId">
                                 <vc:icon symbol="caret-down" />
                             </button>

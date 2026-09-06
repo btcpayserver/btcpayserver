@@ -119,7 +119,7 @@ namespace BTCPayServer
             var pmi = PayoutTypes.LN.GetPayoutMethodId(cryptoCode);
             var paymentMethodId = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
             var pp = await _pullPaymentHostedService.GetPullPayment(pullPaymentId, true);
-            if (!pp.IsRunning() || !pp.IsSupported(pmi) || !_payoutHandlers.TryGetValue(pmi, out var payoutHandler))
+            if (pp is null || !pp.IsRunning() || !pp.IsSupported(pmi) || !_payoutHandlers.TryGetValue(pmi, out var payoutHandler))
             {
                 return NotFound();
             }

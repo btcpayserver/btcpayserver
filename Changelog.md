@@ -33,6 +33,7 @@
 * Keep monetization subscriptions from re-enabling accounts disabled by an administrator (#7523) @TChukwuleta
 * **Greenfield**: Prevent restricted API keys from creating unrestricted keys (#7531) @NicolasDorier
 * **Greenfield**: Prevent disabling the last active server administrator (#7541) @TChukwuleta
+* **Greenfield**: Honor the server policy that lets store owners add users without invitations (#7565) @NicolasDorier
 * **Stores**: Block unsafe support links to prevent script injection (#7537) @TChukwuleta
 * **API Keys**: Keep new API keys out of authorization redirect URLs (#7542) @TChukwuleta
 * **Maintenance**: Validate hostnames before changing a domain @NicolasDorier

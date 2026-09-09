@@ -1,0 +1,12 @@
+@using BTCPayServer.Client
+@model BTCPayServer.Components.MainNav.MainNavViewModel
+
+@if (Model.Store != null)
+{
+    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+        <a layout-menu-item="TaxRates" asp-area="@BTCPayServer.Plugins.Tax.TaxPlugin.Area" asp-controller="UIStoreTaxRates" asp-action="TaxRates" asp-route-storeId="@Model.Store.Id">
+			<vc:icon symbol="pos-print" />
+            <span text-translate="true">Tax Rates</span>
+        </a>
+    </li>
+}

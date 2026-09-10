@@ -16,6 +16,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.Lightning;
@@ -40,6 +41,7 @@ using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Sdk;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
+using GreenfieldInvoiceController = BTCPayServer.Controllers.Greenfield.GreenfieldInvoiceController;
 using PayoutEvent = BTCPayServer.HostedServices.PayoutEvent;
 using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 
@@ -67,6 +69,18 @@ namespace BTCPayServer.Tests
 
             var client = await user.CreateClient(Policies.CanViewStoreSettings);
             await AssertAPIError("unsupported-in-v2", () => client.SendHttpRequest<object>($"api/v1/stores/{user.StoreId}/payment-methods/LightningNetwork"));
+        }
+
+        [Fact]
+        public void PublicPaymentMethodDetailsAreFailClosed()
+        {
+            var serializer = JsonSerializer.CreateDefault();
+            Assert.Null(GreenfieldInvoiceController.ToPublicPaymentMethodDetails("plugin-details", serializer));
+            Assert.Null(GreenfieldInvoiceController.ToPublicPaymentMethodDetails(new PluginBitcoinPaymentPromptDetails(), serializer));
+        }
+
+        private sealed class PluginBitcoinPaymentPromptDetails : BitcoinPaymentPromptDetails
+        {
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -2160,7 +2174,8 @@ namespace BTCPayServer.Tests
             Assert.Equal($"https://example.com/invoices/{newInvoice.Id}", checkoutInvoice.Checkout.RedirectURL);
             Assert.True(checkoutInvoice.Checkout.RedirectAutomatically);
             Assert.Single(checkoutInvoice.PaymentMethods);
-            Assert.Equal(JTokenType.Null, checkoutInvoice.PaymentMethods[0].AdditionalData["accountDerivation"]?.Type);
+            Assert.Equal(new[] { "feeMode", "payjoinEnabled", "paymentMethodFeeRate", "recommendedFeeRate" },
+                checkoutInvoice.PaymentMethods[0].AdditionalData.Children<JProperty>().Select(p => p.Name).OrderBy(p => p));
 
             var checkoutJson = await anonymous.SendHttpRequest<JObject>($"api/v1/invoices/{newInvoice.Id}/checkout");
             Assert.Equal(new[]

@@ -983,7 +983,7 @@
                     "paymentMethods": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/InvoicePaymentMethodDataModel"
+                            "$ref": "#/components/schemas/InvoiceCheckoutPaymentMethodDataModel"
                         }
                     }
                 }
@@ -1455,7 +1455,7 @@
                     },
                     "additionalData": {
                         "nullable": true,
-                        "description": "Additional data provided by the payment method. Sensitive wallet details are excluded from public checkout responses, including account derivations, Lightning preimages, and backend invoice identifiers.",
+                        "description": "Additional data provided by the payment method.",
                         "anyOf": [
                             {
                                 "type": "object",
@@ -1518,6 +1518,157 @@
                         ]
                     }
                 }
+            },
+            "InvoiceCheckoutPaymentMethodDataModel": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "paymentMethodId": {
+                        "$ref": "#/components/schemas/PaymentMethodId"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "The currency of the payment method (e.g., \"BTC\" or \"LTC\")",
+                        "example": "BTC"
+                    },
+                    "destination": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The destination the payment must be made to"
+                    },
+                    "paymentLink": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "A payment link that helps pay to the payment destination"
+                    },
+                    "rate": {
+                        "type": "string",
+                        "format": "decimal",
+                        "example": "64392.23",
+                        "description": "The rate between this payment method's currency and the invoice currency"
+                    },
+                    "paymentMethodPaid": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The amount paid by this payment method"
+                    },
+                    "totalPaid": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The total amount paid by all payment methods to the invoice, converted to this payment method's currency"
+                    },
+                    "due": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The total amount left to be paid, converted to this payment method's currency (will be negative if overpaid)"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The invoice amount, converted to this payment method's currency"
+                    },
+                    "paymentMethodFee": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The added merchant fee to pay for additional costs incurred by this payment method."
+                    },
+                    "payments": {
+                        "type": "array",
+                        "nullable": false,
+                        "items": {
+                            "$ref": "#/components/schemas/Payment"
+                        },
+                        "description": "Payments made with this payment method."
+                    },
+                    "activated": {
+                        "type": "boolean",
+                        "description": "If the payment method is activated (when lazy payments option is enabled"
+                    },
+                    "additionalData": {
+                        "$ref": "#/components/schemas/InvoiceCheckoutPaymentMethodDetails"
+                    }
+                }
+            },
+            "InvoiceCheckoutPaymentMethodDetails": {
+                "description": "Harmless details exposed for built-in payment methods. Details from other payment methods are omitted.",
+                "anyOf": [
+                    {
+                        "type": "object",
+                        "title": "*-LNURL",
+                        "additionalProperties": false,
+                        "properties": {
+                            "paymentHash": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "The Lightning payment hash."
+                            },
+                            "nodeInfo": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Public connection information for the Lightning node."
+                            },
+                            "bech32Mode": {
+                                "type": "boolean",
+                                "description": "Whether the LNURL payment link uses Bech32 encoding."
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "title": "*-LN",
+                        "additionalProperties": false,
+                        "properties": {
+                            "paymentHash": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "The Lightning payment hash."
+                            },
+                            "nodeInfo": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Public connection information for the Lightning node."
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "title": "*-CHAIN",
+                        "additionalProperties": false,
+                        "properties": {
+                            "feeMode": {
+                                "type": "string",
+                                "description": "How the payment method fee is calculated."
+                            },
+                            "paymentMethodFeeRate": {
+                                "type": "string",
+                                "format": "decimal",
+                                "nullable": true,
+                                "description": "The fee rate charged to the customer as part of the payment method fee."
+                            },
+                            "assetId": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "The public asset identifier for an asset-based payment method."
+                            },
+                            "payjoinEnabled": {
+                                "type": "boolean",
+                                "description": "If the payjoin feature is enabled for this payment method."
+                            },
+                            "recommendedFeeRate": {
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "The recommended fee rate for this payment method.",
+                                "example": "4.107"
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "nullable": true,
+                        "additionalProperties": false,
+                        "description": "No public details"
+                    }
+                ]
             },
             "Payment": {
                 "type": "object",

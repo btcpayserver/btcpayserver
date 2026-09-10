@@ -92,8 +92,8 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
 
                 var checkout = await anonymous.GetInvoiceCheckout((await invoices[i]).Id);
                 var publicDetails = Assert.IsType<JObject>(Assert.Single(checkout.PaymentMethods).AdditionalData);
-                Assert.Null(publicDetails.GetValue("preimage"));
-                Assert.Null(publicDetails.GetValue("invoiceId"));
+                Assert.Equal(new[] { "nodeInfo", "paymentHash" },
+                    publicDetails.Properties().Select(p => p.Name).OrderBy(p => p));
             });
         }
     }

@@ -11,6 +11,8 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payouts;
 using BTCPayServer.Rating;
 using BTCPayServer.Security.Greenfield;
@@ -23,6 +25,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
@@ -696,12 +699,9 @@ namespace BTCPayServer.Controllers.Greenfield
                         var detailsObj = handler.ParsePaymentPromptDetails(prompt.Details);
                         if (!includeSensitive)
                             handler.StripDetailsForNonOwner(detailsObj);
-                        details = JToken.FromObject(detailsObj, handler.Serializer.ForAPI());
-                        if (publicCheckout && details is JObject publicDetails)
-                        {
-                            publicDetails.Remove("preimage");
-                            publicDetails.Remove("invoiceId");
-                        }
+                        details = publicCheckout
+                            ? ToPublicPaymentMethodDetails(detailsObj, handler.Serializer.ForAPI())
+                            : JToken.FromObject(detailsObj, handler.Serializer.ForAPI());
                     }
                     return new InvoicePaymentMethodDataModel
                     {
@@ -720,6 +720,29 @@ namespace BTCPayServer.Controllers.Greenfield
                         AdditionalData = details
                     };
                 }).ToArray();
+        }
+
+        internal static JObject? ToPublicPaymentMethodDetails(object details, JsonSerializer serializer)
+        {
+            var detailsType = details.GetType();
+            string[]? publicProperties =
+                detailsType == typeof(LNURLPayPaymentMethodDetails) ? ["paymentHash", "nodeInfo", "bech32Mode"] :
+                detailsType == typeof(LigthningPaymentPromptDetails) ? ["paymentHash", "nodeInfo"] :
+                detailsType == typeof(BitcoinPaymentPromptDetails) ?
+                    ["feeMode", "paymentMethodFeeRate", "assetId", "payjoinEnabled", "recommendedFeeRate"] :
+                    null;
+            if (publicProperties is null)
+                return null;
+            if (JToken.FromObject(details, serializer) is not JObject serializedDetails)
+                return null;
+
+            var result = new JObject();
+            foreach (var property in publicProperties)
+            {
+                if (serializedDetails.TryGetValue(property, out var value))
+                    result[property] = value;
+            }
+            return result;
         }
 
         public static InvoicePaymentMethodDataModel.Payment ToPaymentModel(InvoiceEntity entity, PaymentEntity paymentEntity)

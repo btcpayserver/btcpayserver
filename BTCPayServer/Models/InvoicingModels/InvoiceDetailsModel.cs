@@ -87,6 +87,9 @@ namespace BTCPayServer.Models.InvoicingModels
         }
 
         public List<DeliveryViewModel> Deliveries { get; set; } = new ();
+
+        /// <summary>Lets the view tell "nothing fired" apart from "nothing is configured".</summary>
+        public bool StoreHasWebhooks { get; set; }
         public string TaxIncluded { get; set; }
 
         public string TransactionSpeed { get; set; }

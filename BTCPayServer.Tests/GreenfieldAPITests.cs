@@ -2134,6 +2134,7 @@ namespace BTCPayServer.Tests
             await user.SetupWebhook();
             var client = await user.CreateClient(Policies.Unrestricted);
             var viewOnly = await user.CreateClient(Policies.CanViewInvoices);
+            var basic = await user.CreateClient();
 
             //create
 
@@ -2353,6 +2354,9 @@ namespace BTCPayServer.Tests
             await client.ArchiveInvoice(invoice.Id);
             Assert.DoesNotContain(invoice.Id,
                 (await client.GetInvoices(user.StoreId)).Select(data => data.Id));
+            await AssertHttpError(404, () => anonymous.GetInvoiceCheckout(invoice.Id));
+            Assert.Equal(invoice.Id, (await viewOnly.GetInvoiceCheckout(invoice.Id)).Id);
+            Assert.Equal(invoice.Id, (await basic.GetInvoiceCheckout(invoice.Id)).Id);
 
             //unarchive
             await client.UnarchiveInvoice(invoice.Id);

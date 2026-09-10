@@ -20,6 +20,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
@@ -633,7 +634,19 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!invoice.Archived)
                 return invoice;
             var authorization = await _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanViewInvoices);
-            return authorization.Succeeded ? invoice : null;
+            if (authorization.Succeeded)
+                return invoice;
+            foreach (var scheme in new[] { AuthenticationSchemes.GreenfieldAPIKeys, AuthenticationSchemes.GreenfieldBasic })
+            {
+                var authentication = await HttpContext.AuthenticateAsync(scheme);
+                if (authentication is { Succeeded: true, Principal: { } principal })
+                {
+                    HttpContext.User = principal;
+                    authorization = await _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanViewInvoices);
+                    return authorization.Succeeded ? invoice : null;
+                }
+            }
+            return null;
         }
 
         private async Task<InvoiceCheckoutData> ToInvoiceCheckoutModel(InvoiceEntity entity)

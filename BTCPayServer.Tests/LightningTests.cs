@@ -43,6 +43,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         user.RegisterLightningNode("BTC", LightningTestImplementation.CoreLightning);
 
         var client = await user.CreateClient(Policies.Unrestricted);
+        var anonymous = new BTCPayServerClient(tester.PayTester.ServerUri);
         var invoices = new Task<Client.Models.InvoiceData>[5];
 
         // Create invoices
@@ -88,6 +89,11 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
                 Assert.True(pm[i].AdditionalData.HasValues);
                 Assert.Equal(resp.Details.PaymentHash.ToString(), ((JObject)pm[i].AdditionalData).GetValue("paymentHash"));
                 Assert.Equal(resp.Details.Preimage.ToString(), ((JObject)pm[i].AdditionalData).GetValue("preimage"));
+
+                var checkout = await anonymous.GetInvoiceCheckout((await invoices[i]).Id);
+                var publicDetails = Assert.IsType<JObject>(Assert.Single(checkout.PaymentMethods).AdditionalData);
+                Assert.Null(publicDetails.GetValue("preimage"));
+                Assert.Null(publicDetails.GetValue("invoiceId"));
             });
         }
     }

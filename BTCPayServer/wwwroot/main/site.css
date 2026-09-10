@@ -466,6 +466,142 @@ h2 .icon.icon-info {
     justify-content: space-between;
 }
 
+/* Crowdfund dashboard widget */
+.app-crowdfund .app-crowdfund__header {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    margin-bottom: var(--btcpay-space-l);
+}
+.app-crowdfund__heading {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--btcpay-space-m);
+}
+.app-crowdfund__actions {
+    display: flex;
+    gap: var(--btcpay-space-l);
+    flex-shrink: 0;
+}
+.app-crowdfund__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-s);
+}
+.app-crowdfund__badge {
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+.app-crowdfund__badge--onetime,
+.app-crowdfund__badge--recurring {
+    color: var(--btcpay-info-dim-text);
+    background-color: var(--btcpay-info-dim-bg);
+}
+.app-crowdfund__badge--completed,
+.app-crowdfund__badge--disabled {
+    color: var(--btcpay-secondary-dim-text);
+    background-color: var(--btcpay-secondary-dim-bg);
+}
+.app-crowdfund__badge--scheduled {
+    color: var(--btcpay-warning-dim-text);
+    background-color: var(--btcpay-warning-dim-bg);
+}
+.app-crowdfund__banner {
+    display: flex;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+    padding: var(--btcpay-space-s) var(--btcpay-space-m);
+    margin-bottom: var(--btcpay-space-m);
+    border-radius: var(--btcpay-border-radius);
+    background-color: var(--btcpay-neutral-200);
+    color: var(--btcpay-body-text-muted);
+}
+.app-crowdfund__banner--success {
+    background-color: var(--btcpay-success-dim-bg);
+    color: var(--btcpay-success-dim-text);
+}
+.app-crowdfund__progress {
+    margin-bottom: var(--btcpay-space-l);
+}
+.app-crowdfund__progress-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--btcpay-space-s);
+    margin-bottom: var(--btcpay-space-s);
+    font-size: var(--btcpay-font-size-l);
+}
+.app-crowdfund__progress-summary {
+    color: var(--btcpay-body-text-muted);
+}
+.app-crowdfund__progress-summary strong {
+    color: var(--btcpay-body-text);
+}
+.app-crowdfund__progress-pct {
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+.app-crowdfund__timing {
+    color: var(--btcpay-body-text-muted);
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+.app-crowdfund__bar {
+    height: 8px;
+    border-radius: 9999px;
+    background-color: var(--btcpay-neutral-300);
+    overflow: hidden;
+}
+.app-crowdfund__bar-fill {
+    height: 100%;
+    border-radius: inherit;
+    background-color: var(--btcpay-success);
+}
+.app-crowdfund__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--btcpay-space-m) var(--btcpay-space-l);
+    margin-bottom: var(--btcpay-space-m);
+}
+@media (min-width: 768px) {
+    .app-crowdfund__stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+.app-crowdfund__stat {
+    min-width: 0;
+}
+.app-crowdfund__stat-value {
+    font-size: var(--btcpay-font-size-l);
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+.app-crowdfund__stat-sub {
+    color: var(--btcpay-body-text-muted);
+    font-weight: 400;
+    font-size: var(--btcpay-font-size-m);
+}
+.app-crowdfund .app-crowdfund__section-label {
+    margin-bottom: var(--btcpay-space-s);
+    color: var(--btcpay-body-text);
+    font-size: var(--btcpay-font-size-l);
+}
+.app-crowdfund__perk {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--btcpay-space-s);
+    padding: var(--btcpay-space-s) var(--btcpay-space-m);
+    border-radius: var(--btcpay-border-radius);
+    background-color: var(--btcpay-neutral-100);
+    font-size: var(--btcpay-body-font-size);
+}
+.app-crowdfund__perk + .app-crowdfund__perk {
+    margin-top: var(--btcpay-space-xs);
+}
+.app-crowdfund__perk-count {
+    color: var(--btcpay-body-text);
+    white-space: nowrap;
+}
+
 .widget .btn-link {
     color: var(--btcpay-body-text-muted);
     padding: 0;

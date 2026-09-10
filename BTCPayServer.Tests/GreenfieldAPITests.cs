@@ -16,6 +16,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.Lightning;
@@ -40,6 +41,7 @@ using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Sdk;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
+using GreenfieldInvoiceController = BTCPayServer.Controllers.Greenfield.GreenfieldInvoiceController;
 using PayoutEvent = BTCPayServer.HostedServices.PayoutEvent;
 using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 
@@ -67,6 +69,18 @@ namespace BTCPayServer.Tests
 
             var client = await user.CreateClient(Policies.CanViewStoreSettings);
             await AssertAPIError("unsupported-in-v2", () => client.SendHttpRequest<object>($"api/v1/stores/{user.StoreId}/payment-methods/LightningNetwork"));
+        }
+
+        [Fact]
+        public void PublicPaymentMethodDetailsAreFailClosed()
+        {
+            var serializer = JsonSerializer.CreateDefault();
+            Assert.Null(GreenfieldInvoiceController.ToPublicPaymentMethodDetails("plugin-details", serializer));
+            Assert.Null(GreenfieldInvoiceController.ToPublicPaymentMethodDetails(new PluginBitcoinPaymentPromptDetails(), serializer));
+        }
+
+        private sealed class PluginBitcoinPaymentPromptDetails : BitcoinPaymentPromptDetails
+        {
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -2120,6 +2134,7 @@ namespace BTCPayServer.Tests
             await user.SetupWebhook();
             var client = await user.CreateClient(Policies.Unrestricted);
             var viewOnly = await user.CreateClient(Policies.CanViewInvoices);
+            var basic = await user.CreateClient();
 
             //create
 
@@ -2144,12 +2159,32 @@ namespace BTCPayServer.Tests
                     Metadata = JObject.Parse($"{{\"itemCode\": \"testitem\", \"orderId\": \"{origOrderId}\"}}"),
                     Checkout = new CreateInvoiceRequest.CheckoutOptions()
                     {
-                        RedirectAutomatically = true
+                        RedirectAutomatically = true,
+                        RedirectURL = "https://example.com/invoices/{InvoiceId}"
                     },
                     AdditionalSearchTerms = new string[] { "Banana" }
                 });
             Assert.True(newInvoice.Checkout.RedirectAutomatically);
             Assert.Equal(user.StoreId, newInvoice.StoreId);
+
+            var anonymous = new BTCPayServerClient(tester.PayTester.ServerUri);
+            var checkoutInvoice = await anonymous.GetInvoiceCheckout(newInvoice.Id);
+            Assert.Equal(newInvoice.Id, checkoutInvoice.Id);
+            Assert.Equal(newInvoice.Amount, checkoutInvoice.Amount);
+            Assert.Equal(newInvoice.Currency, checkoutInvoice.Currency);
+            Assert.Equal($"https://example.com/invoices/{newInvoice.Id}", checkoutInvoice.Checkout.RedirectURL);
+            Assert.True(checkoutInvoice.Checkout.RedirectAutomatically);
+            Assert.Single(checkoutInvoice.PaymentMethods);
+            Assert.Equal(new[] { "feeMode", "payjoinEnabled", "paymentMethodFeeRate", "recommendedFeeRate" },
+                checkoutInvoice.PaymentMethods[0].AdditionalData.Children<JProperty>().Select(p => p.Name).OrderBy(p => p));
+
+            var checkoutJson = await anonymous.SendHttpRequest<JObject>($"api/v1/invoices/{newInvoice.Id}/checkout");
+            Assert.Equal(new[]
+            {
+                "additionalStatus", "amount", "checkout", "checkoutLink", "createdTime", "currency", "expirationTime",
+                "id", "monitoringExpiration", "paidAmount", "paymentMethods", "receipt", "status", "type"
+            }, checkoutJson.Properties().Select(p => p.Name).OrderBy(p => p));
+            await AssertHttpError(404, () => anonymous.GetInvoiceCheckout("missing"));
             //list
             var invoices = await viewOnly.GetInvoices(user.StoreId);
 
@@ -2319,6 +2354,9 @@ namespace BTCPayServer.Tests
             await client.ArchiveInvoice(invoice.Id);
             Assert.DoesNotContain(invoice.Id,
                 (await client.GetInvoices(user.StoreId)).Select(data => data.Id));
+            await AssertHttpError(404, () => anonymous.GetInvoiceCheckout(invoice.Id));
+            Assert.Equal(invoice.Id, (await viewOnly.GetInvoiceCheckout(invoice.Id)).Id);
+            Assert.Equal(invoice.Id, (await basic.GetInvoiceCheckout(invoice.Id)).Id);
 
             //unarchive
             await client.UnarchiveInvoice(invoice.Id);
@@ -2419,14 +2457,26 @@ namespace BTCPayServer.Tests
             paymentMethods = await client.GetInvoicePaymentMethods(invoice.Id);
             Assert.Single(paymentMethods);
             Assert.False(paymentMethods.First().Activated);
-            await client.ActivateInvoicePaymentMethod(invoice.Id,
+            checkoutInvoice = await anonymous.GetInvoiceCheckout(invoice.Id);
+            Assert.Equal(JTokenType.Null, Assert.Single(checkoutInvoice.PaymentMethods).AdditionalData?.Type);
+            checkoutInvoice = await anonymous.ActivateInvoicePaymentMethodForCheckout(invoice.Id,
                 paymentMethods.First().PaymentMethodId);
+            Assert.True(Assert.Single(checkoutInvoice.PaymentMethods).Activated);
             invoiceObject = await client.GetOnChainWalletObject(user.StoreId, "BTC", new OnChainWalletObjectId("invoice", invoice.Id), false);
             Assert.Contains(invoiceObject.Links.Select(l => l.Type), t => t == "address");
 
             paymentMethods = await client.GetInvoicePaymentMethods(invoice.Id);
             Assert.Single(paymentMethods);
             Assert.True(paymentMethods.First().Activated);
+
+            var unavailableInvoice = await client.CreateInvoice(user.StoreId,
+                new CreateInvoiceRequest { Amount = 1, Currency = "USD" });
+            var unavailablePaymentMethod = Assert.Single(await client.GetInvoicePaymentMethods(unavailableInvoice.Id));
+            await client.MarkInvoiceStatus(unavailableInvoice.Id,
+                new MarkInvoiceStatusRequest { Status = InvoiceStatus.Invalid });
+            await AssertEx.AssertApiError(400, "payment-method-unavailable", () =>
+                anonymous.ActivateInvoicePaymentMethodForCheckout(unavailableInvoice.Id,
+                    unavailablePaymentMethod.PaymentMethodId));
 
             var invoiceWithDefaultPaymentMethodLN = await client.CreateInvoice(user.StoreId,
                 new CreateInvoiceRequest()
@@ -2509,6 +2559,9 @@ namespace BTCPayServer.Tests
                 var pm = Assert.Single(await client.GetInvoicePaymentMethods(invoice.Id));
                 Assert.Single(pm.Payments);
                 Assert.Equal(-0.0001m, pm.Due);
+
+                checkoutInvoice = await anonymous.GetInvoiceCheckout(invoice.Id);
+                Assert.Single(Assert.Single(checkoutInvoice.PaymentMethods).Payments);
 
                 invoiceObject = await client.GetOnChainWalletObject(user.StoreId, "BTC", new OnChainWalletObjectId("invoice", invoice.Id), false);
                 Assert.Contains(invoiceObject.Links.Select(l => l.Type), t => t == "tx");

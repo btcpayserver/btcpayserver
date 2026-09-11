@@ -11,8 +11,10 @@ using BTCPayServer.Logging;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -99,11 +101,12 @@ namespace BTCPayServer.Payments
 
     public class InvoiceCreationContext
     {
-        public InvoiceCreationContext(Data.StoreData store, Data.StoreBlob storeBlob, InvoiceEntity invoiceEntity, InvoiceLogs invoiceLogs, PaymentMethodHandlerDictionary handlers, IPaymentFilter? invoicePaymentMethodFilter)
+        public InvoiceCreationContext(Data.StoreData store, Data.StoreBlob storeBlob, InvoiceEntity invoiceEntity, InvoiceLogs invoiceLogs, PaymentMethodHandlerDictionary handlers, IPaymentFilter? invoicePaymentMethodFilter, InvoiceRepository invoiceRepository)
         {
             PaymentMethodContexts = new Dictionary<PaymentMethodId, PaymentMethodContext>();
             InvoiceEntity = invoiceEntity;
             Logs = invoiceLogs;
+            InvoiceRepository = invoiceRepository;
             StoreBlob = storeBlob;
             var excludeFilter = storeBlob.GetExcludedPaymentMethods(); // Here we can compose filters from other origin with PaymentFilter.Any()
             if (invoicePaymentMethodFilter != null)
@@ -115,7 +118,7 @@ namespace BTCPayServer.Payments
             {
                 if (!handlers.TryGetValue(paymentMethodConfig.Key, out var handler))
                     continue;
-                var ctx = new PaymentMethodContext(store, storeBlob, paymentMethodConfig.Value, handler, invoiceEntity, invoiceLogs);
+                var ctx = new PaymentMethodContext(store, storeBlob, paymentMethodConfig.Value, handler, invoiceEntity, invoiceLogs, invoiceRepository);
                 PaymentMethodContexts.Add(paymentMethodConfig.Key, ctx);
                 if (excludeFilter.Match(paymentMethodConfig.Key))
                     ctx.Status = PaymentMethodContext.ContextStatus.Excluded;
@@ -127,6 +130,7 @@ namespace BTCPayServer.Payments
         }
         public InvoiceEntity InvoiceEntity { get; }
         public InvoiceLogs Logs { get; }
+        InvoiceRepository InvoiceRepository { get; }
         public Data.StoreBlob StoreBlob { get; }
         public HashSet<string> AdditionalSearchTerms { get; set; } = new HashSet<string>();
 
@@ -140,9 +144,41 @@ namespace BTCPayServer.Payments
             return Task.WhenAll(PaymentMethodContexts.Select(c => c.Value.BeforeFetchingRates()));
         }
 
-        public Task CreatePaymentPrompts()
+        public async Task CreatePaymentPrompts()
         {
-            return Task.WhenAll(PaymentMethodContexts.Select(c => c.Value.CreatePaymentPrompt()));
+            await Task.WhenAll(PaymentMethodContexts.Select(c => c.Value.CreatePaymentPrompt(false)));
+            await CheckPaymentMethodConflicts(InvoiceEntity.Id, this.PaymentMethodContexts.Values.ToArray(), InvoiceRepository);
+        }
+
+        internal static async Task CheckPaymentMethodConflicts(string invoiceId, PaymentMethodContext[] contexts, InvoiceRepository invoiceRepository)
+        {
+            var tracked = contexts
+                .SelectMany(c => c.TrackedDestinations.Select(d => (pmi: c.PaymentMethodId, dest: d)))
+                .ToArray();
+            var pmis = tracked.Select(t => t.pmi.ToString()).ToList();
+            var addrs = tracked.Select(t => t.dest).ToList();
+
+            await using var ctx = invoiceRepository.DbContextFactory.CreateContext();
+            var conflicts = (await ctx.Database.GetDbConnection()
+                    .QueryAsync<string>("""
+                                        SELECT "PaymentMethodId" FROM "AddressInvoices"
+                                        JOIN unnest(@pmis, @addrs) AS t(pmi, addr)
+                                        ON t.pmi = "PaymentMethodId" AND t.addr = "Address"
+                                        WHERE "InvoiceDataId" != @invoiceId
+                                        GROUP BY 1
+                                        """, new { pmis, addrs, invoiceId }))
+                .ToHashSet();
+            if (conflicts.Count != 0)
+            {
+                foreach (var context in contexts.Where(p => conflicts.Contains(p.PaymentMethodId.ToString())))
+                {
+                    context.Logs.Write(
+                        "Destination is already tracked; disabling this payment method for the new invoice",
+                        InvoiceEventData.EventSeverity.Error);
+                    context.Status = PaymentMethodContext.ContextStatus.Failed;
+                }
+
+            }
         }
 
         public HashSet<CurrencyPair> GetCurrenciesToFetch()
@@ -258,6 +294,7 @@ namespace BTCPayServer.Payments
             Excluded
         }
         public InvoiceEntity InvoiceEntity { get; }
+        InvoiceRepository InvoiceRepository { get; }
         public PrefixedInvoiceLogs Logs { get; }
         public PaymentMethodId PaymentMethodId { get; }
         public JToken PaymentMethodConfig { get; }
@@ -271,11 +308,13 @@ namespace BTCPayServer.Payments
             JToken paymentMethodConfig,
             IPaymentMethodHandler handler,
             InvoiceEntity invoiceEntity,
-            InvoiceLogs invoiceLogs)
+            InvoiceLogs invoiceLogs,
+            InvoiceRepository invoiceRepository)
         {
             Store = store;
             StoreBlob = storeBlob;
             InvoiceEntity = invoiceEntity;
+            InvoiceRepository = invoiceRepository;
             PaymentMethodId = handler.PaymentMethodId;
             Logs = new PrefixedInvoiceLogs(invoiceLogs, $"{PaymentMethodId}: ");
             PaymentMethodConfig = paymentMethodConfig;
@@ -329,7 +368,9 @@ namespace BTCPayServer.Payments
             return Handler.ConfigurePrompt(this);
         }
 
-        public async Task CreatePaymentPrompt()
+        public Task CreatePaymentPrompt() => CreatePaymentPrompt(true);
+
+        public async Task CreatePaymentPrompt(bool checkPaymentMethodConflicts)
         {
             if (Status != ContextStatus.WaitingForCreation)
                 return;
@@ -372,6 +413,11 @@ namespace BTCPayServer.Payments
             {
                 Status = ContextStatus.Failed;
                 return;
+            }
+
+            if (Status == ContextStatus.Created && checkPaymentMethodConflicts)
+            {
+                await InvoiceCreationContext.CheckPaymentMethodConflicts(InvoiceEntity.Id, [this], InvoiceRepository);
             }
         }
         public ContextStatus Status { get; internal set; }

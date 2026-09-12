@@ -26,6 +26,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public bool ShowItems { get; set; }
         public bool ShowCustomAmount { get; set; }
         public bool ShowDiscount { get; set; }
+        public int? DefaultDiscount { get; set; }
         public bool ShowSearch { get; set; } = true;
         public bool ShowCategories { get; set; } = true;
         public bool EnableTips { get; set; }

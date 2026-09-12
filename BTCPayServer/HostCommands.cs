@@ -11,8 +11,21 @@ public class BTCPayHostEnvironment
 
     [JsonProperty("commands")]
     public string[] Commands { get; set; }
+
+    [JsonProperty("routes")]
+    public BTCPayHostRoutes Routes { get; set; }
+
     [JsonExtensionData]
     IDictionary<string, JToken> AdditionalData { get; set; }
+}
+
+public class BTCPayHostRoutes
+{
+    [JsonProperty("optionalRoutes")]
+    public string[] OptionalRoutes { get; set; }
+
+    [JsonProperty("enabledRoutes")]
+    public string[] EnabledRoutes { get; set; }
 }
 
 public static class HostCommands

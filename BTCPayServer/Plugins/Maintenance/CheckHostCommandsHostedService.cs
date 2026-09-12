@@ -1,5 +1,7 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
@@ -15,6 +17,8 @@ namespace BTCPayServer.Plugins.Maintenance
         public Logs Logs { get; } = logs;
 
         Task? _testingConnection;
+        PosixSignalRegistration? _signalRegistration;
+        readonly object _testingConnectionLock = new object();
         readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         public HashSet<string> SupportedCommands { get; private set; } = new HashSet<string>();
@@ -28,28 +32,51 @@ namespace BTCPayServer.Plugins.Maintenance
                 return Task.CompletedTask;
             }
 
-            _testingConnection = TestConnection();
+            QueueTestConnection();
+            if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+            {
+                _signalRegistration = PosixSignalRegistration.Create(PosixSignal.SIGHUP, context =>
+                {
+                    context.Cancel = true;
+                    QueueTestConnection();
+                });
+            }
             return Task.CompletedTask;
+        }
+
+        void QueueTestConnection()
+        {
+            lock (_testingConnectionLock)
+                _testingConnection = TestConnectionAfter(_testingConnection);
+        }
+
+        async Task TestConnectionAfter(Task? previousTest)
+        {
+            if (previousTest is not null)
+                await previousTest;
+            await TestConnection();
         }
 
         async Task TestConnection()
         {
             var supportedCommands = new HashSet<string>();
+            BTCPayHostEnvironment? hostEnvironment = null;
+            var hostAvailable = false;
             try
             {
                 var env = await processRunner.RunHostCommand(HostCommands.Env, null, _cancellationTokenSource.Token);
                 if (env.ExitCode == 0)
                 {
-                    BTCPayHostEnvironment = JsonConvert.DeserializeObject<BTCPayHostEnvironment>(env.Output) ??
-                                            throw new JsonException("btcpay-host env returned null");
-                    foreach (var command in BTCPayHostEnvironment.Commands ?? [])
+                    hostEnvironment = JsonConvert.DeserializeObject<BTCPayHostEnvironment>(env.Output) ??
+                                      throw new JsonException("btcpay-host env returned null");
+                    foreach (var command in hostEnvironment.Commands ?? [])
                     {
                         if (!string.IsNullOrWhiteSpace(command))
                             supportedCommands.Add(command.Trim());
                     }
-                    BTCPayHostAvailable = true;
+                    hostAvailable = true;
                     Logs.PayServer.LogInformation("Host deployment type: {deploymentType}. Supported host commands: {commands}",
-                        BTCPayHostEnvironment.DeploymentType, string.Join(", ", supportedCommands));
+                        hostEnvironment.DeploymentType, string.Join(", ", supportedCommands));
                 }
                 else
                 {
@@ -60,6 +87,8 @@ namespace BTCPayServer.Plugins.Maintenance
             {
                 Logs.PayServer.LogInformation("btcpay-host not supported by the host");
             }
+            BTCPayHostEnvironment = hostEnvironment;
+            BTCPayHostAvailable = hostAvailable;
             SupportedCommands = supportedCommands;
         }
 
@@ -67,6 +96,7 @@ namespace BTCPayServer.Plugins.Maintenance
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
+            _signalRegistration?.Dispose();
             _cancellationTokenSource.Cancel();
             try
             {

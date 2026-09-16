@@ -17,6 +17,7 @@
 
 * **Stores**: Add invitations for store users (#7519) @dstrukt
 * **Email Rules**: Add `StoreInvitePending` and `StoreUserJoined` triggers (#7519) @dstrukt
+* **Rates**: Support the Chilean Unidad de Fomento by recommending Bitpay for the `CLF` currency (#7522) @Shuaibu78
 
 ### Fixes
 

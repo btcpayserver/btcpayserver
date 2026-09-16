@@ -692,6 +692,7 @@ namespace BTCPayServer.Hosting
                          { "GBP", "kraken" },
                          { "CHF", "kraken" },
                          { "GTQ", "bitpay" },
+                         { "CLF", "bitpay" },
                          { "COP", "yadio" },
                          { "ARS", "yadio" },
                          { "JPY", "bitbank" },

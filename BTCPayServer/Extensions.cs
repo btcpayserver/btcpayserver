@@ -261,7 +261,7 @@ namespace BTCPayServer
         {
             if (client is IExtendedLightningClient { ServerUri: { } uri })
                 return uri;
-            var kv = client.ExtractValues(connectionString);
+            var kv = ExtractValues(connectionString);
             return !kv.TryGetValue("server", out var server) ? null : new Uri(server, UriKind.Absolute);
         }
 
@@ -276,7 +276,7 @@ namespace BTCPayServer
                 EclairLightningClient => "Eclair",
                 PhoenixdLightningClient => "Phoenix",
                 IExtendedLightningClient { DisplayName: { } n } => n,
-                _ when client.ExtractValues(connectionString).TryGetValue("type", out var t) => t,
+                _ when ExtractValues(connectionString).TryGetValue("type", out var t) => t,
                 _ => client.GetType().Name
             };
 
@@ -346,7 +346,7 @@ namespace BTCPayServer
             return true;
         }
 
-        static Dictionary<string, string> ExtractValues(this ILightningClient client, string connectionString)
+        static Dictionary<string, string> ExtractValues(string connectionString)
         {
             ArgumentNullException.ThrowIfNull(connectionString);
             if (TryParseLegacy(connectionString, out var legacy))
@@ -367,12 +367,11 @@ namespace BTCPayServer
 
         [Obsolete("Use IsSafe(this ILightningClient client, string connectionString) instead")]
         public static bool IsSafe(this ILightningClient client) => IsSafe(client, client.ToString());
-        public static bool IsSafe(this ILightningClient client, string connectionString)
+        public static bool IsSafe(this ILightningClient client, string connectionString) => IsSafeLightningConnectionString(connectionString);
+        public static bool IsSafeLightningConnectionString(string connectionString)
         {
-            var kv = client.ExtractValues(connectionString);
-            if (kv.TryGetValue("cookiefilepath", out _)  ||
-                kv.TryGetValue("macaroondirectorypath", out _)  ||
-                kv.TryGetValue("macaroonfilepath", out _) )
+            var kv = ExtractValues(connectionString);
+            if (kv.Keys.Any(k => k.EndsWith("filepath", StringComparison.OrdinalIgnoreCase) || k.EndsWith("directorypath", StringComparison.OrdinalIgnoreCase)))
                 return false;
 
             if (!kv.TryGetValue("server", out var server))

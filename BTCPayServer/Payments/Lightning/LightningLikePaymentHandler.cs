@@ -276,6 +276,18 @@ namespace BTCPayServer.Payments.Lightning
                 // Let's check the connection string can be parsed and is safe to use for non-admin.
                 try
                 {
+                    if (!BTCPayServer.Extensions.IsSafeLightningConnectionString(config.ConnectionString))
+                    {
+                        var canManage = (await validationContext.AuthorizationService.AuthorizeAsync(validationContext.User, null,
+                            new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
+                        if (!canManage)
+                        {
+                            validationContext.ModelState.AddModelError(nameof(config.ConnectionString),
+                                $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contain parameters ending in 'filepath' or 'directorypath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
+                            return;
+                        }
+                    }
+
                     var client = _lightningClientFactory.Create(config.ConnectionString, _Network);
                     if (client is IExtendedLightningClient vlc)
                     {
@@ -287,17 +299,6 @@ namespace BTCPayServer.Payments.Lightning
                         }
                     }
 
-                    if (!client.IsSafe(config.ConnectionString))
-                    {
-                        var canManage = (await validationContext.AuthorizationService.AuthorizeAsync(validationContext.User, null,
-                            new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
-                        if (!canManage)
-                        {
-                            validationContext.ModelState.AddModelError(nameof(config.ConnectionString),
-                                $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contain 'cookiefilepath', 'macaroondirectorypath', 'macaroonfilepath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
-                            return;
-                        }
-                    }
                 }
                 catch (FormatException ex)
                 {

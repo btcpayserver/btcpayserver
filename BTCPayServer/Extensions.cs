@@ -370,9 +370,7 @@ namespace BTCPayServer
         public static bool IsSafe(this ILightningClient client, string connectionString)
         {
             var kv = client.ExtractValues(connectionString);
-            if (kv.TryGetValue("cookiefilepath", out _)  ||
-                kv.TryGetValue("macaroondirectorypath", out _)  ||
-                kv.TryGetValue("macaroonfilepath", out _) )
+            if (kv.Keys.Any(k => k.EndsWith("filepath", StringComparison.OrdinalIgnoreCase) || k.EndsWith("directorypath", StringComparison.OrdinalIgnoreCase)))
                 return false;
 
             if (!kv.TryGetValue("server", out var server))

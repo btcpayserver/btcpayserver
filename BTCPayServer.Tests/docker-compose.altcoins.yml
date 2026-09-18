@@ -316,7 +316,7 @@ services:
 
   litecoind:
     restart: unless-stopped
-    image: btcpayserver/litecoin:0.21.5.6
+    image: btcpayserver/litecoin:0.21.5.8
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |-

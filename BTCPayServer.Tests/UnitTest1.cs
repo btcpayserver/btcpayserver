@@ -1275,6 +1275,80 @@ namespace BTCPayServer.Tests
         [Fact]
         [Trait("Lightning", "Lightning")]
         [Trait("Integration", "Integration")]
+        public async Task CanCreateInvoiceWhenOnChainDestinationIsAlreadyTracked()
+        {
+            using var tester = CreateServerTester();
+            tester.ActivateLightning();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync(true);
+            await user.RegisterDerivationSchemeAsync("BTC");
+            await user.RegisterLightningNodeAsync("BTC");
+
+            var client = await user.CreateClient();
+            var onChainPaymentMethod = PaymentTypes.CHAIN.GetPaymentMethodId("BTC").ToString();
+            var lightningPaymentMethod = PaymentTypes.LN.GetPaymentMethodId("BTC").ToString();
+
+            foreach (var lazy in new[] { true, false })
+            {
+                TestLogs.LogInformation($"Testing with lazy: {lazy}");
+                Task<BTCPayServer.Client.Models.InvoiceData> CreateInvoice()
+                {
+                    return client.CreateInvoice(user.StoreId, new CreateInvoiceRequest
+                    {
+                        Amount = 1m,
+                        Currency = "USD",
+                        Checkout = new CreateInvoiceRequest.CheckoutOptions
+                        {
+                            PaymentMethods = new[] { onChainPaymentMethod, lightningPaymentMethod },
+                            LazyPaymentMethods = lazy
+                        }
+                    });
+                }
+
+                var firstInvoice = await CreateInvoice();
+                if (lazy)
+                    await client.ActivateInvoicePaymentMethod(firstInvoice.Id, "BTC");
+                var firstPaymentMethods = await client.GetInvoicePaymentMethods(firstInvoice.Id);
+                Assert.Equal(
+                    new[] { onChainPaymentMethod, lightningPaymentMethod }.OrderBy(method => method),
+                    firstPaymentMethods.Select(method => method.PaymentMethodId).OrderBy(method => method));
+                var firstOnChainPaymentMethod = Assert.Single(firstPaymentMethods,
+                    method => method.PaymentMethodId == onChainPaymentMethod);
+                Assert.Single(firstPaymentMethods, method => method.PaymentMethodId == lightningPaymentMethod);
+
+                var keyPath = KeyPath.Parse(firstOnChainPaymentMethod.AdditionalData["keyPath"].Value<string>());
+                await tester.ExplorerClient.CancelReservationAsync(user.DerivationScheme, new[] { keyPath });
+
+                var secondInvoice = await CreateInvoice();
+                if (lazy)
+                    await client.ActivateInvoicePaymentMethod(secondInvoice.Id, "BTC");
+                var secondPaymentMethods = await client.GetInvoicePaymentMethods(secondInvoice.Id);
+
+                if (lazy)
+                {
+                    var btc = secondPaymentMethods.First(s => s.PaymentMethodId == "BTC-CHAIN");
+                    Assert.Null(btc.Destination);
+                }
+                else
+                {
+                    var remainingPaymentMethod = Assert.Single(secondPaymentMethods);
+                    Assert.Equal(lightningPaymentMethod, remainingPaymentMethod.PaymentMethodId);
+                }
+
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    var logs = await tester.PayTester.InvoiceRepository.GetInvoiceLogs(secondInvoice.Id);
+                    Assert.Contains(logs, log =>
+                        log.Severity == InvoiceEventData.EventSeverity.Error &&
+                        log.Message == $"{onChainPaymentMethod}: Destination is already tracked; disabling this payment method for the new invoice");
+                });
+            }
+        }
+
+        [Fact]
+        [Trait("Lightning", "Lightning")]
+        [Trait("Integration", "Integration")]
         public async Task CanSetPaymentMethodLimits()
         {
             using var tester = CreateServerTester();

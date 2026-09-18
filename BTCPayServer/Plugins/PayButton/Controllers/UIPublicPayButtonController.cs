@@ -60,6 +60,11 @@ namespace BTCPayServer.Plugins.PayButton.Controllers
             if (model.Price is decimal and <= 0)
                 ModelState.AddModelError("Price", StringLocalizer["Price must be greater than 0"]);
 
+            if (!string.IsNullOrEmpty(model.ServerIpn) &&
+                Uri.TryCreate(model.ServerIpn, UriKind.Absolute, out var serverIpn) &&
+                Extensions.IsLocalNetwork(serverIpn.DnsSafeHost))
+                ModelState.AddModelError(nameof(model.ServerIpn), StringLocalizer["Server IPN URL must not target a local network address"]);
+
             if (!ModelState.IsValid || store is null)
                 return View();
 

@@ -21,7 +21,7 @@ namespace BTCPayServer.Plugins.Maintenance.Controllers;
     AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Area(MaintenancePlugin.Area)]
 public class UIMaintenanceController(
-    CheckHostCommandsHostedService hostCommandState,
+    IHostIntegrationState hostIntegrationState,
     ProcessRunner processRunner,
     IHostApplicationLifetime applicationLifetime,
     Logs logs,
@@ -32,12 +32,13 @@ public class UIMaintenanceController(
     [HttpGet("server/maintenance")]
     public IActionResult Maintenance()
     {
-        if (!hostCommandState.BTCPayHostAvailable)
+        var hostIntegration = hostIntegrationState.Current;
+        if (!hostIntegration.Available)
             return NotFound();
 
         var vm = new MaintenanceViewModel
         {
-            SupportedCommands = hostCommandState.SupportedCommands,
+            SupportedCommands = hostIntegration.SupportedCommands.ToHashSet(),
             DNSDomain = Request.Host.Host
         };
 
@@ -50,8 +51,9 @@ public class UIMaintenanceController(
     [HttpPost("server/maintenance")]
     public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
     {
-        vm.SupportedCommands = hostCommandState.SupportedCommands;
-        if (command != "soft-restart" && !hostCommandState.BTCPayHostAvailable)
+        var hostIntegration = hostIntegrationState.Current;
+        vm.SupportedCommands = hostIntegration.SupportedCommands.ToHashSet();
+        if (command != "soft-restart" && !hostIntegration.Available)
         {
             TempData[WellKnownTempData.ErrorMessage] = stringLocalizer["Maintenance feature requires local BTCPay commands."].Value;
             return View("/Plugins/Maintenance/Views/Maintenance.cshtml", vm);

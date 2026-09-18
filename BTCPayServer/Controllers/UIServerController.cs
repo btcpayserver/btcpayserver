@@ -61,7 +61,7 @@ namespace BTCPayServer.Controllers
         private readonly TorServices _torServices;
         private readonly BTCPayServerOptions _Options;
         private readonly AppService _AppService;
-        private readonly CheckHostCommandsHostedService _hostCommandState;
+        private readonly IHostIntegrationState _hostIntegrationState;
         private readonly EventAggregator _eventAggregator;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
         private readonly Logs Logs;
@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers
             TorServices torServices,
             StoreRepository storeRepository,
             AppService appService,
-            CheckHostCommandsHostedService hostCommandState,
+            IHostIntegrationState hostIntegrationState,
             EventAggregator eventAggregator,
             IOptions<ExternalServicesOptions> externalServiceOptions,
             Logs logs,
@@ -121,7 +121,7 @@ namespace BTCPayServer.Controllers
             _LnConfigProvider = lnConfigProvider;
             _torServices = torServices;
             _AppService = appService;
-            _hostCommandState = hostCommandState;
+            _hostIntegrationState = hostIntegrationState;
             _eventAggregator = eventAggregator;
             _externalServiceOptions = externalServiceOptions;
             Logs = logs;
@@ -278,6 +278,7 @@ namespace BTCPayServer.Controllers
         public IActionResult Services([FromServices] IEnumerable<ServicesViewModel.OtherExternalService> otherExternalServices)
         {
             var result = new ServicesViewModel { ExternalServices = _externalServiceOptions.Value.ExternalServices.ToList() };
+            var hostIntegration = _hostIntegrationState.Current;
 
             // other services
             foreach (var externalService in _externalServiceOptions.Value.OtherExternalServices)
@@ -288,7 +289,7 @@ namespace BTCPayServer.Controllers
                     Link = Request.GetAbsoluteUriNoPathBase(externalService.Value).AbsoluteUri
                 });
             }
-            if (CanShowSSHService())
+            if (CanShowSSHService(hostIntegration))
             {
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
@@ -639,12 +640,13 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/services/ssh")]
         public async Task<IActionResult> SSHService()
         {
-            if (!CanShowSSHService())
+            var hostIntegration = _hostIntegrationState.Current;
+            if (!CanShowSSHService(hostIntegration))
                 return NotFound();
 
             SSHServiceViewModel vm = new SSHServiceViewModel();
 
-            if (_hostCommandState.SupportedCommands.Contains(HostCommands.ShowAuthorizedKeys))
+            if (hostIntegration.SupportedCommands.Contains(HostCommands.ShowAuthorizedKeys))
             {
                 try
                 {
@@ -659,14 +661,15 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        bool CanShowSSHService()
-        => _hostCommandState.SupportedCommands.Contains(HostCommands.ShowAuthorizedKeys) &&
-           _hostCommandState.SupportedCommands.Contains(HostCommands.SetAuthorizedKeys);
+        static bool CanShowSSHService(HostIntegrationSnapshot hostIntegration)
+        => hostIntegration.SupportedCommands.Contains(HostCommands.ShowAuthorizedKeys) &&
+           hostIntegration.SupportedCommands.Contains(HostCommands.SetAuthorizedKeys);
 
         [HttpPost("server/services/ssh")]
         public async Task<IActionResult> SSHService(SSHServiceViewModel viewModel, string? command = null)
         {
-            if (!CanShowSSHService())
+            var hostIntegration = _hostIntegrationState.Current;
+            if (!CanShowSSHService(hostIntegration))
                 return NotFound();
 
             if (command is "Save")

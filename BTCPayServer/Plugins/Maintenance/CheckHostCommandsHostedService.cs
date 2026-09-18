@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -14,6 +15,7 @@ namespace BTCPayServer.Plugins.Maintenance
 {
     public class CheckHostCommandsHostedService(
         ProcessRunner processRunner,
+        HostIntegrationState hostIntegrationState,
         EventAggregator eventAggregator,
         Logs logger)  : EventHostedServiceBase(eventAggregator, logger)
     {
@@ -67,14 +69,11 @@ namespace BTCPayServer.Plugins.Maintenance
             {
                 Logs.PayServer.LogInformation("btcpay-host not supported by the host");
             }
-            BTCPayHostEnvironment = hostEnvironment;
-            BTCPayHostAvailable = hostAvailable;
-            SupportedCommands = supportedCommands;
+            hostIntegrationState.Update(new HostIntegrationSnapshot(
+                hostAvailable,
+                supportedCommands.ToFrozenSet(),
+                HostEnvironmentSnapshot.From(hostEnvironment)));
         }
-
-        public HashSet<string> SupportedCommands { get; private set; } = new HashSet<string>();
-        public bool BTCPayHostAvailable { get; private set; }
-        public BTCPayHostEnvironment? BTCPayHostEnvironment { get; set; }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {

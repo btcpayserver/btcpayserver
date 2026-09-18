@@ -1,7 +1,10 @@
 @model BTCPayServer.Components.MainNav.MainNavViewModel
-@inject CheckHostCommandsHostedService HostCommands
+@inject IHostIntegrationState HostIntegrationState
+@{
+    var hostIntegration = HostIntegrationState.Current;
+}
 
-@if (HostCommands.BTCPayHostAvailable)
+@if (hostIntegration.Available)
 {
     <li permission="@Policies.CanModifyServerSettings">
         <a

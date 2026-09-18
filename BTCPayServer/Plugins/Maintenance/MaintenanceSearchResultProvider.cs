@@ -11,13 +11,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Plugins.Maintenance;
 
-public class MaintenanceSearchResultProvider(CheckHostCommandsHostedService hostCommands) : ISearchResultItemProvider
+public class MaintenanceSearchResultProvider(HostIntegrationState hostIntegrationState) : ISearchResultItemProvider
 {
     private static readonly string[] Keywords = ["Server", "Settings", "Maintenance"];
 
     public Task ProvideAsync(SearchResultItemProviderContext context, CancellationToken cancellationToken)
     {
-        if (context.UserQuery is not null || !hostCommands.BTCPayHostAvailable)
+        var hostIntegration = hostIntegrationState.Current;
+        if (context.UserQuery is not null || !hostIntegration.Available)
             return Task.CompletedTask;
 
         context.ItemResults.Add(new ResultItemViewModel
@@ -28,7 +29,7 @@ public class MaintenanceSearchResultProvider(CheckHostCommandsHostedService host
             Category = "Server",
             Keywords = Keywords
         });
-        if (hostCommands.SupportedCommands.Contains(HostCommands.Update))
+        if (hostIntegration.SupportedCommands.Contains(HostCommands.Update))
         {
             context.ItemResults.Add(new ResultItemViewModel
             {

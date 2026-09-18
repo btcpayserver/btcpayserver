@@ -221,6 +221,15 @@ namespace BTCPayServer.Controllers
                     var key = command == "authorize"
                         ? await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl?.AbsoluteUri))
                         : await _apiKeyRepository.GetKey(new APIKeyRepository.Selector.ByApiKey(viewModel.ApiKey));
+                    if (key is null)
+                    {
+                        TempData.SetStatusMessageModel(new StatusMessageModel
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Error,
+                            Message = StringLocalizer["The API key was not found"].Value
+                        });
+                        return RedirectToAction("APIKeys");
+                    }
                     key.Key ??= viewModel.ApiKey;
 
                     if (viewModel.RedirectUrl != null)

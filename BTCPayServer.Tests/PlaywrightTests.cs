@@ -876,10 +876,10 @@ namespace BTCPayServer.Tests
 
             if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
-                var hostIntegrationState = s.Server.PayTester.GetService<IHostIntegrationState>();
+                var hostIntegrationState = s.Server.PayTester.GetService<HostIntegrationState>();
                 var hostIntegration = hostIntegrationState.Current;
                 Assert.True(hostIntegration.Available);
-                Assert.Contains(HostCommands.ShowAuthorizedKeys, hostIntegration.SupportedCommands);
+                Assert.Contains(HostCommands.ShowAuthorizedKeys, hostIntegration.SupportedCommands.AsEnumerable());
                 Assert.Equal("tests", hostIntegration.Environment?.DeploymentType);
 
                 File.Delete(s.Server.PayTester.btcpayHostExecutable);

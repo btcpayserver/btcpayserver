@@ -14,7 +14,6 @@ public class MaintenancePlugin : BaseBTCPayServerPlugin
     public override void Execute(IServiceCollection services)
     {
         services.AddSingleton<HostIntegrationState>();
-        services.AddSingleton<IHostIntegrationState>(o => o.GetRequiredService<HostIntegrationState>());
         services.AddSingleton<IHostedService, CheckHostCommandsHostedService>();
         services.AddUIExtension("server-nav", "/Plugins/Maintenance/Views/NavExtension.cshtml");
         services.AddSearchResultItemProvider<MaintenanceSearchResultProvider>();

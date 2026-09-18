@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Plugins.Maintenance;
 
-public class MaintenanceSearchResultProvider(IHostIntegrationState hostIntegrationState) : ISearchResultItemProvider
+public class MaintenanceSearchResultProvider(HostIntegrationState hostIntegrationState) : ISearchResultItemProvider
 {
     private static readonly string[] Keywords = ["Server", "Settings", "Maintenance"];
 

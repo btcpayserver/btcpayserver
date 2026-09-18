@@ -61,7 +61,7 @@ namespace BTCPayServer.Controllers
         private readonly TorServices _torServices;
         private readonly BTCPayServerOptions _Options;
         private readonly AppService _AppService;
-        private readonly IHostIntegrationState _hostIntegrationState;
+        private readonly HostIntegrationState _hostIntegrationState;
         private readonly EventAggregator _eventAggregator;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
         private readonly Logs Logs;
@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers
             TorServices torServices,
             StoreRepository storeRepository,
             AppService appService,
-            IHostIntegrationState hostIntegrationState,
+            HostIntegrationState hostIntegrationState,
             EventAggregator eventAggregator,
             IOptions<ExternalServicesOptions> externalServiceOptions,
             Logs logs,

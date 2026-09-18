@@ -41,12 +41,7 @@ public sealed record HostRoutesSnapshot(
     ImmutableArray<string> OptionalRoutes,
     ImmutableArray<string> EnabledRoutes);
 
-public interface IHostIntegrationState
-{
-    HostIntegrationSnapshot Current { get; }
-}
-
-public sealed class HostIntegrationState : IHostIntegrationState
+public sealed class HostIntegrationState
 {
     private HostIntegrationSnapshot _current = HostIntegrationSnapshot.Unavailable;
 

@@ -21,7 +21,7 @@ namespace BTCPayServer.Plugins.Maintenance.Controllers;
     AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Area(MaintenancePlugin.Area)]
 public class UIMaintenanceController(
-    IHostIntegrationState hostIntegrationState,
+    HostIntegrationState hostIntegrationState,
     ProcessRunner processRunner,
     IHostApplicationLifetime applicationLifetime,
     Logs logs,

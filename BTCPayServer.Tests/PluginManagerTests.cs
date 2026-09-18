@@ -9,14 +9,19 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
+using BTCPayServer.Hosting;
 using BTCPayServer.Plugins;
 using BTCPayServer.Plugins.PluginManagement;
 using BTCPayServer.Plugins.PluginManagement.Controllers;
 using BTCPayServer.Plugins.PluginManagement.Models;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NBitcoin;
+using NBXplorer;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -27,6 +32,127 @@ namespace BTCPayServer.Tests
     {
         public PluginManagerTests(ITestOutputHelper helper) : base(helper)
         {
+        }
+
+        [Fact]
+        public void AddPluginsCompletesNBXplorerNetworkRegistration()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-registration-test-{Guid.NewGuid():N}");
+            var testPluginDir = Path.Combine(pluginDir, NetworkRegistrationPlugin.PluginIdentifier);
+            Directory.CreateDirectory(testPluginDir);
+            File.Copy(
+                typeof(PluginManagerTests).Assembly.Location,
+                Path.Combine(testPluginDir, NetworkRegistrationPlugin.PluginIdentifier + ".dll"));
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
+            {
+                { "network", "regtest" },
+                { "chains", "*" },
+                { "plugindir", pluginDir },
+                { "TEST_RUNNER_ENABLED", "true" }
+            }).Build();
+
+            try
+            {
+                using var bootstrap = Startup.CreateBootstrap(configuration);
+                var networkProvider = bootstrap.GetRequiredService<NBXplorerNetworkProvider>();
+                var bitcoin = networkProvider.GetBTC();
+                var bitcoinFactory = bitcoin.DerivationStrategyFactory;
+                Assert.Null(networkProvider.GetFromCryptoCode("SYN"));
+                var services = new ServiceCollection();
+                var mvcBuilder = services.AddMvc();
+                NetworkRegistrationPlugin.Executed = false;
+                NetworkRegistrationPlugin.BuiltInBitcoinAvailable = false;
+
+                mvcBuilder.AddPlugins(services, configuration, NullLoggerFactory.Instance, bootstrap);
+                services.AddSingleton(networkProvider);
+                services.AddSingleton<NetworkRegistrationConsumer>();
+                using var applicationServices = services.BuildServiceProvider();
+                var consumer = applicationServices.GetRequiredService<NetworkRegistrationConsumer>();
+
+                Assert.True(NetworkRegistrationPlugin.Executed);
+                Assert.True(NetworkRegistrationPlugin.BuiltInBitcoinAvailable);
+                Assert.Same(networkProvider.GetFromCryptoCode("SYN"), consumer.SyntheticNetwork);
+                Assert.Same(bitcoin, networkProvider.GetBTC());
+                Assert.Same(bitcoinFactory, networkProvider.GetBTC().DerivationStrategyFactory);
+                Assert.Throws<InvalidOperationException>(() => networkProvider.RegisterNetwork(
+                    new NBXplorerNetworkRegistration(new SyntheticNetworkSet("OTHER"))));
+            }
+            finally
+            {
+                if (Directory.Exists(pluginDir))
+                    Directory.Delete(pluginDir, true);
+            }
+        }
+
+        [Fact]
+        public void AddPluginsWithoutExternalNetworkRegistrationPreservesBuiltInNetworks()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-registration-empty-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
+            {
+                { "network", "regtest" },
+                { "chains", "*" },
+                { "plugindir", pluginDir },
+                { "TEST_RUNNER_ENABLED", "true" }
+            }).Build();
+
+            try
+            {
+                using var bootstrap = Startup.CreateBootstrap(configuration);
+                var networkProvider = bootstrap.GetRequiredService<NBXplorerNetworkProvider>();
+                var bitcoin = networkProvider.GetBTC();
+                var bitcoinFactory = bitcoin.DerivationStrategyFactory;
+                var services = new ServiceCollection();
+
+                services.AddMvc().AddPlugins(services, configuration, NullLoggerFactory.Instance, bootstrap);
+
+                Assert.Same(bitcoin, networkProvider.GetBTC());
+                Assert.Same(bitcoinFactory, networkProvider.GetBTC().DerivationStrategyFactory);
+                Assert.Throws<InvalidOperationException>(() => networkProvider.RegisterNetwork(
+                    new NBXplorerNetworkRegistration(new SyntheticNetworkSet("OTHER"))));
+            }
+            finally
+            {
+                if (Directory.Exists(pluginDir))
+                    Directory.Delete(pluginDir, true);
+            }
+        }
+
+        [Fact]
+        public void AddPluginsDoesNotCompleteRegistrationWhenPluginStartupFails()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-registration-failure-test-{Guid.NewGuid():N}");
+            var testPluginDir = Path.Combine(pluginDir, FailingNetworkRegistrationPlugin.PluginIdentifier);
+            Directory.CreateDirectory(testPluginDir);
+            File.Copy(
+                typeof(PluginManagerTests).Assembly.Location,
+                Path.Combine(testPluginDir, FailingNetworkRegistrationPlugin.PluginIdentifier + ".dll"));
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>
+            {
+                { "network", "regtest" },
+                { "chains", "*" },
+                { "plugindir", pluginDir },
+                { "TEST_RUNNER_ENABLED", "true" }
+            }).Build();
+
+            try
+            {
+                using var bootstrap = Startup.CreateBootstrap(configuration);
+                var networkProvider = bootstrap.GetRequiredService<NBXplorerNetworkProvider>();
+                var services = new ServiceCollection();
+
+                Assert.Throws<ConfigException>(() =>
+                    services.AddMvc().AddPlugins(services, configuration, NullLoggerFactory.Instance, bootstrap));
+                var registeredAfterFailure = networkProvider.RegisterNetwork(
+                    new NBXplorerNetworkRegistration(new SyntheticNetworkSet("AFTERFAILURE")));
+                Assert.Same(registeredAfterFailure, networkProvider.GetFromCryptoCode("AFTERFAILURE"));
+            }
+            finally
+            {
+                if (Directory.Exists(pluginDir))
+                    Directory.Delete(pluginDir, true);
+            }
         }
 
         [Fact]
@@ -878,6 +1004,58 @@ namespace BTCPayServer.Tests
                 RequestStarted.TrySetResult(true);
                 await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
                 throw new InvalidOperationException("The request should have been cancelled.");
+            }
+        }
+
+        private sealed class NetworkRegistrationConsumer(NBXplorerNetworkProvider networkProvider)
+        {
+            public NBXplorerNetwork SyntheticNetwork { get; } = networkProvider.GetFromCryptoCode("SYN");
+        }
+
+        private sealed class SyntheticNetworkSet(string cryptoCode) : INetworkSet
+        {
+            public string CryptoCode { get; } = cryptoCode;
+            public Network Mainnet => Network.Main;
+            public Network Testnet => Network.TestNet;
+            public Network Regtest => Network.RegTest;
+            public Network GetNetwork(ChainName chainName) => NBitcoin.Bitcoin.Instance.GetNetwork(chainName);
+        }
+
+        public sealed class NetworkRegistrationPlugin : BaseBTCPayServerPlugin
+        {
+            public const string PluginIdentifier = "NetworkRegistrationTestPlugin";
+            public static bool Executed { get; set; }
+            public static bool BuiltInBitcoinAvailable { get; set; }
+            public override string Identifier => PluginIdentifier;
+            public override string Name => PluginIdentifier;
+            public override Version Version => new(1, 0, 0);
+            public override string Description => PluginIdentifier;
+
+            public override void Execute(Microsoft.Extensions.DependencyInjection.IServiceCollection serviceCollection)
+            {
+                var services = (PluginServiceCollection)serviceCollection;
+                var networkProvider = services.BootstrapServices.GetRequiredService<NBXplorerNetworkProvider>();
+                BuiltInBitcoinAvailable = networkProvider.GetBTC() is not null;
+                networkProvider.GetAll().ToArray();
+                networkProvider.RegisterNetwork(new NBXplorerNetworkRegistration(new SyntheticNetworkSet("SYN")));
+                Executed = true;
+            }
+        }
+
+        public sealed class FailingNetworkRegistrationPlugin : BaseBTCPayServerPlugin
+        {
+            public const string PluginIdentifier = "FailingNetworkRegistrationTestPlugin";
+            public override string Identifier => PluginIdentifier;
+            public override string Name => PluginIdentifier;
+            public override Version Version => new(1, 0, 0);
+            public override string Description => PluginIdentifier;
+
+            public override void Execute(IServiceCollection serviceCollection)
+            {
+                var services = (PluginServiceCollection)serviceCollection;
+                var networkProvider = services.BootstrapServices.GetRequiredService<NBXplorerNetworkProvider>();
+                networkProvider.RegisterNetwork(new NBXplorerNetworkRegistration(new SyntheticNetworkSet("FAIL")));
+                throw new InvalidOperationException("Synthetic plugin startup failure.");
             }
         }
 

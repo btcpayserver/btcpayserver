@@ -22,6 +22,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using NBXplorer;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins
@@ -329,6 +330,7 @@ namespace BTCPayServer.Plugins
 				var crashedPluginsStr = string.Join(", ", toDisable);
 				throw new ConfigException($"The following plugin(s) crashed at startup, they will be disabled and the server will restart: {crashedPluginsStr}");
 			}
+            bootstrapServiceProvider.GetRequiredService<NBXplorerNetworkProvider>().CompleteRegistration();
 			return mvcBuilder;
         }
 

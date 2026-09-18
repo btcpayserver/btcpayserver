@@ -68,6 +68,7 @@ namespace BTCPayServer.Tests
             {
                 p.Execute(services);
             }
+            services.BootstrapServices.GetRequiredService<NBXplorerNetworkProvider>().CompleteRegistration();
             services.AddSingleton(services.BootstrapServices.GetRequiredService<SelectedChains>());
             services.AddSingleton(services.BootstrapServices.GetRequiredService<NBXplorerNetworkProvider>());
             services.AddSingleton(services.BootstrapServices.GetRequiredService<Logs>());

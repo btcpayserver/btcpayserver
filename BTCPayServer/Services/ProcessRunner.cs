@@ -51,7 +51,7 @@ public class ProcessRunner(ILoggerFactory loggerFactory, IConfiguration conf)
 
         int exitCode;
         var stopwatch = new Stopwatch();
-
+        cancellationToken.ThrowIfCancellationRequested();
         using (var process = CreateProcess(processSpec))
         using (var processState = new ProcessState(process, _logger))
         using (cancellationToken.Register(() => processState.TryKill()))

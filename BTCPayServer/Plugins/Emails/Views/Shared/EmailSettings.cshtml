@@ -10,9 +10,8 @@
         ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Emails), StringLocalizer["Email Rules"])
             .SetCategory(WellKnownCategories.Store));
     }
-    // Containerized section styling is applied on the store settings page only.
-    var sectionClass = Model.StoreId is not null ? "settings-section" : null;
-    var sectionHeadingClass = Model.StoreId is not null ? "settings-section__heading" : "my-3";
+    var sectionClass = "settings-section";
+    var sectionHeadingClass = "settings-section__heading";
 }
 
 <form method="post" autocomplete="off">
@@ -161,7 +160,7 @@
             </div>
         </div>
     </div>
-    <h3 class="@sectionHeadingClass @(Model.StoreId is not null ? "settings-section__heading--spaced" : "")" text-translate="true">Testing</h3>
+    <h3 class="@sectionHeadingClass settings-section__heading--spaced" text-translate="true">Testing</h3>
     <div class="row">
         <div class="col-xl-10 col-xxl-constrain">
             <div class="@sectionClass">

@@ -37,8 +37,11 @@
 
 }
 
-<div class="sticky-header">
-    <h2 class="my-1">@ViewData["Title"]</h2>
+<div class="sticky-header align-items-start">
+    <div class="d-flex flex-column gap-1 flex-grow-1">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
+        <p class="text-secondary mb-0" text-translate="true">Get paid for sharing your BTCPay Server instance with other users.</p>
+    </div>
     @if (Model.DefaultPlan is null)
     {
         await CreateNewOffering(true);
@@ -60,10 +63,9 @@
 </div>
 <partial name="_StatusMessage" />
 
-
-<p class="mb-0" text-translate="true">Monetization allows you to get paid for sharing your BTCPay Server instance with other users.</p>
-
 <div class="col-xxl-constrain col-xl-8">
+    <h3 class="settings-section__heading" text-translate="true">Setup</h3>
+    <div class="settings-section">
     <div class="accordion" id="accordion">
         <div class="accordion-item">
             <h2 class="accordion-header" id="activate-header">
@@ -202,6 +204,7 @@
             </div>
         </div>
 
+    </div>
     </div>
 </div>
 

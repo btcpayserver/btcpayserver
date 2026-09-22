@@ -17,6 +17,7 @@
 <div class="row">
     <div class="col-xl-10 col-xxl-constrain">
         <form method="post">
+            <div class="settings-section">
             <div class="form-group">
                 <label asp-for="ContainerName" class="form-label" text-translate="true">Container Name</label>
                 <input asp-for="ContainerName" class="form-control" />
@@ -30,6 +31,7 @@
 
             <button type="submit" class="btn btn-primary" name="command" value="Save" text-translate="true">Save</button>
             <a asp-action="Storage" asp-route-forceChoice="true" class="ms-2" text-translate="true">Change Storage provider</a>
+            </div>
         </form>
     </div>
 </div>

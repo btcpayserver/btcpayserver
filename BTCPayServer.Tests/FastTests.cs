@@ -308,6 +308,21 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void PaymentMethodIdHashCodeIsCaseInsensitive()
+        {
+            var uppercase = new PaymentMethodId("CUSTOM-PAYMENT");
+            var lowercase = new PaymentMethodId("custom-payment");
+            var paymentMethods = new Dictionary<PaymentMethodId, string>
+            {
+                [uppercase] = "handler"
+            };
+
+            Assert.Equal(uppercase, lowercase);
+            Assert.Equal(uppercase.GetHashCode(), lowercase.GetHashCode());
+            Assert.Equal("handler", paymentMethods[lowercase]);
+        }
+
+        [Fact]
         public async Task CheckExternalNoReferrerLinks()
         {
             var views = Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "Views");

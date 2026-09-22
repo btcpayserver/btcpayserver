@@ -83,9 +83,7 @@ namespace BTCPayServer.Payments
 
         public override int GetHashCode()
         {
-#pragma warning disable CA1307 // Specify StringComparison
-            return ToString().GetHashCode();
-#pragma warning restore CA1307 // Specify StringComparison
+            return StringComparer.OrdinalIgnoreCase.GetHashCode(ToString());
         }
 
         public override string ToString()

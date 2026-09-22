@@ -17,7 +17,8 @@ namespace BTCPayServer.Services
     public class CallbackGenerator(
         LinkGenerator linkGenerator,
         UserManager<ApplicationUser> userManager,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        ISettingsAccessor<ServerSettings> serverSettings)
     {
         public LinkGenerator LinkGenerator { get; } = linkGenerator;
         public UserManager<ApplicationUser> UserManager { get; } = userManager;
@@ -31,7 +32,16 @@ namespace BTCPayServer.Services
             GetRequestBaseUrl());
 
         public RequestBaseUrl GetRequestBaseUrl()
-        => BaseUrl ?? httpContextAccessor.HttpContext?.Request.GetRequestBaseUrl() ?? throw new InvalidOperationException($"You should be in a HttpContext to call this method");
+        {
+            if (BaseUrl is not null)
+                return BaseUrl;
+            var configuredBaseUrl = serverSettings.Settings.BaseUrl;
+            if (!string.IsNullOrEmpty(configuredBaseUrl) &&
+                RequestBaseUrl.TryFromUrl(configuredBaseUrl, out var baseUrl))
+                return baseUrl;
+            return httpContextAccessor.HttpContext?.Request.GetRequestBaseUrl() ??
+                   throw new InvalidOperationException($"You should be in a HttpContext to call this method");
+        }
 
         public string StoreInvitationLink(string token)
         => LinkGenerator.GetUriByAction(nameof(UIUserStoresController.AcceptStoreInvitation), "UIUserStores",

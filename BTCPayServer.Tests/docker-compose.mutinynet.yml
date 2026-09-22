@@ -247,9 +247,6 @@ services:
     container_name: tor
     environment:
         TOR_PASSWORD: btcpayserver
-    ports:
-        - "9050:9050" # SOCKS
-        - "9051:9051" # Tor Control
     volumes:
         - "tor_datadir:/home/tor/.tor"
         - "torrcdir:/usr/local/etc/tor"

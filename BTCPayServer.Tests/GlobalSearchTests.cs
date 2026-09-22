@@ -83,7 +83,10 @@ public class GlobalSearchTests(ITestOutputHelper helper) : UnitTestBase(helper)
         // Access UISearchController.Global route, and check that all the routes are accessible
         var response = await s.Page.Context.APIRequest.GetAsync(s.Link($"/search/global?storeId={s.StoreId}"));
         Assert.True(response.Ok, $"Global search endpoint returned {response.Status}: {await response.TextAsync()}");
-        var items = JsonConvert.DeserializeObject<List<ResultItemViewModel>>(await response.TextAsync());
+        var responseText = await response.TextAsync();
+        Assert.Contains("\"aliases\":", responseText);
+        Assert.DoesNotContain("\"keywords\":", responseText);
+        var items = JsonConvert.DeserializeObject<List<ResultItemViewModel>>(responseText);
         Assert.NotNull(items);
         Assert.NotEmpty(items);
 

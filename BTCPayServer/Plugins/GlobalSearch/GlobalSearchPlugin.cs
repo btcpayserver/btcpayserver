@@ -42,7 +42,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Controller = "UIStores",
                 Values = ctx => new { storeId = ctx.Store!.Id },
                 Category = "Store",
-                Keywords = ["Settings", "Branding"]
+                Aliases = ["Settings", "Branding"]
             },
             new ActionResultItemViewModel
             {
@@ -52,7 +52,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Controller = "UIStores",
                 Values = ctx => new { storeId = ctx.Store!.Id },
                 Category = "Store",
-                Keywords = ["Exchange", "Configure"]
+                Aliases = ["Exchange", "Configure"]
             },
             new ActionResultItemViewModel
             {
@@ -62,7 +62,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Controller = "UIStores",
                 Values = ctx => new { storeId = ctx.Store!.Id },
                 Category = "Store",
-                Keywords = ["Checkout", "Appearance", "Configure"]
+                Aliases = ["Checkout", "Appearance", "Configure"]
             },
             new ActionResultItemViewModel
             {
@@ -72,7 +72,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Controller = "UIStores",
                 Values = ctx => new { storeId = ctx.Store!.Id },
                 Category = "Store",
-                Keywords = ["Users", "View"]
+                Aliases = ["Users", "View"]
             },
             new ActionResultItemViewModel
             {
@@ -82,7 +82,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Controller = "UIStores",
                 Values = ctx => new { storeId = ctx.Store!.Id },
                 Category = "Store",
-                Keywords = ["Roles", "View"]
+                Aliases = ["Roles", "View"]
             },
             new ActionResultItemViewModel
             {
@@ -92,7 +92,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Controller = "UIPayoutProcessors",
                 Values = ctx => new { storeId = ctx.Store!.Id },
                 Category = "Store",
-                Keywords = ["Payout", "Processors", "Configure"]
+                Aliases = ["Payout", "Processors", "Configure"]
             },
             new ActionResultItemViewModel
             {
@@ -102,7 +102,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Controller = "UIPaymentRequest",
                 Values = ctx => new { storeId = ctx.Store!.Id },
                 Category = "Payments",
-                Keywords = ["Payment", "Requests", "View"]
+                Aliases = ["Payment", "Requests", "View"]
             },
             new ActionResultItemViewModel
             {
@@ -112,7 +112,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Controller = "UIStorePullPayments",
                 Values = ctx => new { storeId = ctx.Store!.Id },
                 Category = "Payments",
-                Keywords = ["Pull Payments", "Pull", "View"]
+                Aliases = ["Pull Payments", "Pull", "View"]
             },
             new ActionResultItemViewModel
             {
@@ -122,7 +122,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Controller = "UIStorePullPayments",
                 Values = ctx => new { storeId = ctx.Store!.Id },
                 Category = "Payments",
-                Keywords = ["Payouts", "View"]
+                Aliases = ["Payouts", "View"]
             },
             new ActionResultItemViewModel
             {
@@ -131,7 +131,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIServerController.Policies),
                 Controller = "UIServer",
                 Category = "Server",
-                Keywords = ["Server", "Settings", "Policies", "Configure"]
+                Aliases = ["Server", "Settings", "Policies", "Configure"]
             },
             new ActionResultItemViewModel
             {
@@ -140,7 +140,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIServerController.ListUsers),
                 Controller = "UIServer",
                 Category = "Server",
-                Keywords = ["Server", "Settings", "Users", "View"]
+                Aliases = ["Server", "Settings", "Users", "View"]
             },
             new ActionResultItemViewModel
             {
@@ -149,7 +149,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIServerController.ListRoles),
                 Controller = "UIServer",
                 Category = "Server",
-                Keywords = ["Server", "Settings", "Roles", "View"]
+                Aliases = ["Server", "Settings", "Roles", "View"]
             },
             new ActionResultItemViewModel
             {
@@ -158,7 +158,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIServerController.Services),
                 Controller = "UIServer",
                 Category = "Server",
-                Keywords = ["Server", "Settings", "Services", "View"]
+                Aliases = ["Server", "Settings", "Services", "View"]
             },
             new ActionResultItemViewModel
             {
@@ -167,7 +167,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIServerController.Branding),
                 Controller = "UIServer",
                 Category = "Server",
-                Keywords = ["Server", "Settings", "Branding", "Configure"]
+                Aliases = ["Server", "Settings", "Branding", "Configure"]
             },
             new ActionResultItemViewModel
             {
@@ -176,7 +176,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIServerController.LogsView),
                 Controller = "UIServer",
                 Category = "Server",
-                Keywords = ["Server", "Settings", "Logs", "View"]
+                Aliases = ["Server", "Settings", "Logs", "View"]
             },
             new ActionResultItemViewModel
             {
@@ -185,7 +185,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIServerController.Files),
                 Controller = "UIServer",
                 Category = "Server",
-                Keywords = ["Server", "Settings", "Files", "Storage", "Configure"]
+                Aliases = ["Server", "Settings", "Files", "Storage", "Configure"]
             },
             new ActionResultItemViewModel
             {
@@ -194,7 +194,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIManageController.Index),
                 Controller = "UIManage",
                 Category = "Account",
-                Keywords = ["Profile", "Account", "Manage"]
+                Aliases = ["Profile", "Account", "Manage"]
             },
             new ActionResultItemViewModel
             {
@@ -203,7 +203,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIManageController.ChangePassword),
                 Controller = "UIManage",
                 Category = "Account",
-                Keywords = ["Password", "Change"]
+                Aliases = ["Password", "Change"]
             },
             new ActionResultItemViewModel
             {
@@ -212,7 +212,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIManageController.TwoFactorAuthentication),
                 Controller = "UIManage",
                 Category = "Account",
-                Keywords = ["2FA Security", "Two-Factor", "Authentication"]
+                Aliases = ["2FA Security", "Two-Factor", "Authentication"]
             },
             new ActionResultItemViewModel
             {
@@ -221,7 +221,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIManageController.Passkeys),
                 Controller = "UIManage",
                 Category = "Account",
-                Keywords = ["Passkey", "Authentication"]
+                Aliases = ["Passkey", "Authentication"]
             },
             new ActionResultItemViewModel
             {
@@ -230,7 +230,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIManageController.APIKeys),
                 Controller = "UIManage",
                 Category = "Account",
-                Keywords = ["API", "Keys"]
+                Aliases = ["API", "Keys"]
             },
             new ActionResultItemViewModel
             {
@@ -239,7 +239,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIManageController.NotificationSettings),
                 Controller = "UIManage",
                 Category = "Account",
-                Keywords = ["Notifications", "Manage"]
+                Aliases = ["Notifications", "Manage"]
             },
             new ActionResultItemViewModel
             {
@@ -248,7 +248,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UINotificationsController.Index),
                 Controller = "UINotifications",
                 Category = "Account",
-                Keywords = ["Notifications", "View"]
+                Aliases = ["Notifications", "View"]
             },
             new ActionResultItemViewModel
             {
@@ -256,7 +256,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIHomeController.Index),
                 Controller = "UIHome",
                 Category = "General",
-                Keywords = ["Dashboard", "Overview"]
+                Aliases = ["Dashboard", "Overview"]
             },
             new ActionResultItemViewModel
             {
@@ -264,7 +264,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIUserStoresController.ListStores),
                 Controller = "UIUserStores",
                 Category = "Store",
-                Keywords = ["Stores", "List", "View"]
+                Aliases = ["Stores", "List", "View"]
             },
             new ActionResultItemViewModel
             {
@@ -272,7 +272,7 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
                 Action = nameof(UIHomeController.SwaggerDocs),
                 Controller = "UIHome",
                 Category = "General",
-                Keywords = ["Documentation", "API", "Docs", "Browse"]
+                Aliases = ["Documentation", "API", "Docs", "Browse"]
             }
         ]);
     }

@@ -47,7 +47,7 @@ public class BitpayPlugin : BaseBTCPayServerPlugin
             Controller = "UIStoresToken",
             Values = (ctx) => new { storeId = ctx.Store!.Id, area = Area },
             Category = "Store",
-            Keywords = new[] { "Tokens" }
+            Aliases = new[] { "Tokens" }
         });
     }
 }

@@ -33,7 +33,7 @@ public class FormsPlugin : BaseBTCPayServerPlugin
             Controller = "UIForms",
             Values = ctx => new { area = Area, storeId = ctx.Store!.Id },
             Category = "Store",
-            Keywords = ["Forms", "Configure"]
+            Aliases = ["Forms", "Configure"]
         });
     }
 }

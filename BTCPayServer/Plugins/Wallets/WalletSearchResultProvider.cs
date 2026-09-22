@@ -35,7 +35,7 @@ public class WalletSearchResultProvider(
             Title = StringLocalizer["List wallets"],
             Category = OnChainCategory,
             Url = context.Url.Action(nameof(UIWalletsController.ListWallets), "UIWallets", new { area = WalletsPlugin.Area }),
-            Keywords = ["List", "Wallets"],
+            Aliases = ["List", "Wallets"],
             RequiredPolicy = Policies.CanModifyStoreSettings
         });
 
@@ -59,7 +59,7 @@ public class WalletSearchResultProvider(
                         Title = StringLocalizer["Set up a wallet"].Value,
                         Category = category,
                         Url = context.Url.Action(nameof(UIStoreOnChainWalletsController.SetupWallet), "UIStoreOnChainWallets", new { area = WalletsPlugin.Area, storeId, cryptoCode = network.CryptoCode }),
-                        Keywords = ["Setup", "Wallets", network.CryptoCode, translated, untranslated],
+                        Aliases = ["Setup", "Wallets", network.CryptoCode, translated, untranslated],
                         RequiredPolicy = WalletPolicies.CanManageWalletSettings
                     });
                 }
@@ -71,7 +71,7 @@ public class WalletSearchResultProvider(
                             Title = StringLocalizer["Create a new transaction"].Value,
                             Category = category,
                             Url = context.Url.WalletSend(walletId),
-                            Keywords = ["Send", "Wallets", "Create", "transaction", network.CryptoCode, translated, untranslated],
+                            Aliases = ["Send", "Wallets", "Create", "transaction", network.CryptoCode, translated, untranslated],
                             RequiredPolicy = WalletPolicies.CanCreateWalletTransactions
                         });
                     context.ItemResults.Add(new ResultItemViewModel()
@@ -79,7 +79,7 @@ public class WalletSearchResultProvider(
                         Title = StringLocalizer["Get a deposit address"].Value,
                         Category = category,
                         Url = context.Url.WalletReceive(walletId),
-                        Keywords = ["Receive", "Deposit", "Address", "Wallets", network.CryptoCode, translated, untranslated],
+                        Aliases = ["Receive", "Deposit", "Address", "Wallets", network.CryptoCode, translated, untranslated],
                         RequiredPolicy = WalletPolicies.CanViewWallet
                     });
                     context.ItemResults.Add(new ResultItemViewModel()
@@ -87,7 +87,7 @@ public class WalletSearchResultProvider(
                         Title = StringLocalizer["Browse all deposit addresses"].Value,
                         Category = category,
                         Url = context.Url.WalletReservedAddresses(walletId),
-                        Keywords = ["Receive", "Deposit", "Address", "Wallets", network.CryptoCode, translated, untranslated],
+                        Aliases = ["Receive", "Deposit", "Address", "Wallets", network.CryptoCode, translated, untranslated],
                         RequiredPolicy = WalletPolicies.CanViewWallet
                     });
                     context.ItemResults.Add(new ResultItemViewModel()
@@ -95,7 +95,7 @@ public class WalletSearchResultProvider(
                         Title = StringLocalizer["View transactions"].Value,
                         Category = category,
                         Url = context.Url.WalletTransactions(walletId),
-                        Keywords = ["Transactions", "View", "Wallets", network.CryptoCode, translated, untranslated],
+                        Aliases = ["Transactions", "View", "Wallets", network.CryptoCode, translated, untranslated],
                         RequiredPolicy = WalletPolicies.CanViewWallet
                     });
                     context.ItemResults.Add(new ResultItemViewModel()
@@ -103,7 +103,7 @@ public class WalletSearchResultProvider(
                         Title = StringLocalizer["Go to wallet's settings"].Value,
                         Category = category,
                         Url = context.Url.WalletSettings(walletId),
-                        Keywords = ["Settings", "Wallets", network.CryptoCode, translated, untranslated],
+                        Aliases = ["Settings", "Wallets", network.CryptoCode, translated, untranslated],
                         RequiredPolicy = WalletPolicies.CanManageWalletSettings
                     });
                 }
@@ -127,7 +127,7 @@ public class WalletSearchResultProvider(
                         Title = StringLocalizer["Set up a Lightning node"].Value,
                         Category = category,
                         Url = context.Url.Action(nameof(UIStoresController.SetupLightningNode), "UIStores", new { storeId, cryptoCode = network.CryptoCode }),
-                        Keywords = ["Setup", "Wallets", network.CryptoCode, translated, untranslated, lntranslated, lnuntranslated, "Lightning"],
+                        Aliases = ["Setup", "Wallets", network.CryptoCode, translated, untranslated, lntranslated, lnuntranslated, "Lightning"],
                         RequiredPolicy = Policies.CanModifyStoreSettings
                     });
                 }
@@ -138,7 +138,7 @@ public class WalletSearchResultProvider(
                         Title = StringLocalizer["View the public node info"].Value,
                         Category = category,
                         Url = context.Url.Action(nameof(UIPublicLightningNodeInfoController.ShowLightningNodeInfo), "UIPublicLightningNodeInfo", new { storeId, cryptoCode = network.CryptoCode }),
-                        Keywords = ["Public", "Node", "Info", "View", translated, untranslated, lntranslated, lnuntranslated, "Lightning"],
+                        Aliases = ["Public", "Node", "Info", "View", translated, untranslated, lntranslated, lnuntranslated, "Lightning"],
                         RequiredPolicy = Policies.CanModifyStoreSettings
                     });
                 }

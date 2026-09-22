@@ -35,7 +35,7 @@ public class ResultItemViewModel
         Title = other.Title;
         Category = other.Category;
         Url = other.Url;
-        Keywords = other.Keywords?.ToArray();
+        Aliases = other.Aliases?.ToArray();
         Order = other.Order;
     }
     [JsonIgnore]
@@ -43,7 +43,15 @@ public class ResultItemViewModel
     public string Title { get; set; }
     public string Category { get; set; }
     public string Url { get; set; }
-    public string[] Keywords { get; set; }
+    public string[] Aliases { get; set; }
+
+    [Obsolete("Use Aliases instead")]
+    [JsonIgnore]
+    public string[] Keywords
+    {
+        get => Aliases;
+        set => Aliases = value;
+    }
 
     /// <summary>
     /// Lower order values appear first (higher up), and higher order values appear later (lower down).
@@ -51,4 +59,3 @@ public class ResultItemViewModel
     [JsonIgnore]
     public int Order { get; set; }
 }
-

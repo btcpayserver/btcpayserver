@@ -47,7 +47,7 @@ public class InvoiceSearchResultProvider(InvoiceRepository invoice,
                     Category = Category,
                     Title = StringLocalizer["Browse the invoices"],
                     Url = context.Url.Action(nameof(UIInvoiceController.ListInvoices), "UIInvoice", new { storeId = store.Id }),
-                    Keywords = ["Invoices", "List", "Browse"],
+                    Aliases = ["Invoices", "List", "Browse"],
                     RequiredPolicy = Policies.CanViewInvoices
                 },
                 new ResultItemViewModel
@@ -55,7 +55,7 @@ public class InvoiceSearchResultProvider(InvoiceRepository invoice,
                     Category = Category,
                     Title = StringLocalizer["Create Invoice"],
                     Url = context.Url.Action(nameof(UIInvoiceController.CreateInvoice), "UIInvoice", new { storeId = store.Id }),
-                    Keywords = ["Invoice"],
+                    Aliases = ["Invoice"],
                     RequiredPolicy = Policies.CanCreateInvoice
                 }]);
         }

@@ -27,7 +27,7 @@ public class DynamicDnsPlugin : BaseBTCPayServerPlugin
         services.AddStaticSearch(new ActionResultItemViewModel()
         {
             Title = "Setup Dynamic DNS",
-            Keywords = new[] { "Dynamic DNS", "DDNS", "DynDns", "DNS" },
+            Aliases = new[] { "Dynamic DNS", "DDNS", "DynDns", "DNS" },
             Action = nameof(UIDynamicDnsController.DynamicDnsService),
             Controller = "UIDynamicDns",
             Values = ctx => new { area = Area },

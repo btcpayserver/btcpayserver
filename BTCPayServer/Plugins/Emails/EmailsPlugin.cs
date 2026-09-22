@@ -68,7 +68,7 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
             Controller = "UIStoreEmailRules",
             Values = ctx => new { area = Area, storeId = ctx.Store!.Id },
             Category = "Store",
-            Keywords = ["Email", "Rules"]
+            Aliases = ["Email", "Rules"]
         });
         services.AddStaticSearch(new ActionResultItemViewModel()
         {
@@ -78,7 +78,7 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
             Controller = "UIServerEmailRules",
             Values = ctx => new { area = Area },
             Category = "Server",
-            Keywords = ["Email", "Rules"]
+            Aliases = ["Email", "Rules"]
         });
         services.AddStaticSearch(new ActionResultItemViewModel()
         {
@@ -88,7 +88,7 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
             Controller = "UIStoresEmail",
             Values = ctx => new { area = Area, storeId = ctx.Store!.Id },
             Category = "Store",
-            Keywords = ["Email", "Settings"]
+            Aliases = ["Email", "Settings"]
         });
         services.AddStaticSearch(new ActionResultItemViewModel()
         {
@@ -98,7 +98,7 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
             Controller = "UIServerEmail",
             Values = ctx => new { area = Area },
             Category = "Server",
-            Keywords = ["Email", "Settings"]
+            Aliases = ["Email", "Settings"]
         });
     }
 

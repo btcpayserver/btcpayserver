@@ -76,11 +76,11 @@ public class SearchResultItemProviders(
                 result.Title = stringLocalizer[result.Title];
             if (result.Category is not null)
                 result.Category = stringLocalizer[result.Category];
-            if (result.Keywords is not null)
+            if (result.Aliases is not null)
             {
-                for (int i = 0; i < result.Keywords.Length; i++)
+                for (int i = 0; i < result.Aliases.Length; i++)
                 {
-                    result.Keywords[i] = stringLocalizer[result.Keywords[i]];
+                    result.Aliases[i] = stringLocalizer[result.Aliases[i]];
                 }
             }
             result.Order = o.Order;

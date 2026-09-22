@@ -17,7 +17,7 @@ jobs:
   fast_tests:
     name: Fast Tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -41,7 +41,7 @@ jobs:
   playwright_tests:
     name: Playwright Tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -63,7 +63,7 @@ jobs:
   playwright_2_tests:
     name: Playwright 2 Tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -85,7 +85,7 @@ jobs:
   integration_tests:
     name: Integration Tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v5

@@ -477,7 +477,7 @@ namespace BTCPayServer
             where TDbContext : DbContext
             where TMigration : MigrationBase<TDbContext>
         {
-            services.TryAddSingleton<IMigrationExecutor, MigrationExecutor<TDbContext>>();
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IMigrationExecutor, MigrationExecutor<TDbContext>>());
             services.AddSingleton<MigrationBase<TDbContext>, TMigration>();
             return services;
         }

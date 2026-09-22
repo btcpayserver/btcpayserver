@@ -28,7 +28,7 @@ public class ReportingSearchResultProvider(IEnumerable<ReportProvider> reportPro
             RequiredPolicy = Policies.CanViewReports,
             Category = Category,
             Title = StringLocalizer["Go to Reports"],
-            Keywords = ["Reports", "Go"],
+            Aliases = ["Reports", "Go"],
             Url = context.Url.Action(nameof(UIReportsController.StoreReports), "UIReports", new { storeId = context.Store!.Id })
         });
 
@@ -37,7 +37,7 @@ public class ReportingSearchResultProvider(IEnumerable<ReportProvider> reportPro
             RequiredPolicy = Policies.CanViewReports,
             Category = Category,
             Url = context.Url.Action(nameof(UIReportsController.StoreReports), "UIReports", new { storeId = context.Store!.Id, viewName = provider.Name }),
-            Keywords = ["Reports", "View", provider.Name],
+            Aliases = ["Reports", "View", provider.Name],
             Title = StringLocalizer["View report '{0}'", provider.Name]
         }));
         return Task.CompletedTask;

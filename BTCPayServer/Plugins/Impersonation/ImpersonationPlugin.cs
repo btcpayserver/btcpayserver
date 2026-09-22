@@ -36,7 +36,7 @@ public class ImpersonationPlugin : BaseBTCPayServerPlugin
             Controller = "UIImpersonation",
             Values = ctx => new { area = Area },
             Category = "Account",
-            Keywords = ["Login", "Codes", "Login Codes", "QR", "Device", "Impersonate"]
+            Aliases = ["Login", "Codes", "Login Codes", "QR", "Device", "Impersonate"]
         });
     }
 }

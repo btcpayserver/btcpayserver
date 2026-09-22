@@ -63,7 +63,7 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
             Controller = "UIStoreWebhooks",
             Values = ctx => new { area = Area, storeId = ctx.Store!.Id },
             Category = "Store",
-            Keywords = ["Webhooks", "Configure"]
+            Aliases = ["Webhooks", "Configure"]
         });
 
         // Add built-in webhooks

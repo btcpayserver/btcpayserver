@@ -13,7 +13,7 @@ namespace BTCPayServer.Plugins.Maintenance;
 
 public class MaintenanceSearchResultProvider(HostIntegrationState hostIntegrationState) : ISearchResultItemProvider
 {
-    private static readonly string[] Keywords = ["Server", "Settings", "Maintenance"];
+    private static readonly string[] Aliases = ["Server", "Settings", "Maintenance"];
 
     public Task ProvideAsync(SearchResultItemProviderContext context, CancellationToken cancellationToken)
     {
@@ -27,7 +27,7 @@ public class MaintenanceSearchResultProvider(HostIntegrationState hostIntegratio
             Title = "Go to the maintenance page",
             Url = context.Url.Action(nameof(UIMaintenanceController.Maintenance), "UIMaintenance", new { area = MaintenancePlugin.Area }),
             Category = "Server",
-            Keywords = Keywords
+            Aliases = Aliases
         });
         if (hostIntegration.SupportedCommands.Contains(HostCommands.Update))
         {
@@ -37,7 +37,7 @@ public class MaintenanceSearchResultProvider(HostIntegrationState hostIntegratio
                 Title = "Update the server",
                 Url = context.Url.Action(nameof(UIMaintenanceController.Maintenance), "UIMaintenance", new { area = MaintenancePlugin.Area }),
                 Category = "Server",
-                Keywords = Keywords
+                Aliases = Aliases
             });
         }
         return Task.CompletedTask;

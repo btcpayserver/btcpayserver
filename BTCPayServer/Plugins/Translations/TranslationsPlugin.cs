@@ -36,7 +36,7 @@ public class TranslationsPlugin : BaseBTCPayServerPlugin
             Controller = "UITranslation",
             Values = _ => new { area = Area },
             Category = "Server",
-            Keywords = ["Server", "Settings", "Translations", "Language", "Dictionary", "Localization"]
+            Aliases = ["Server", "Settings", "Translations", "Language", "Dictionary", "Localization"]
         });
     }
 }

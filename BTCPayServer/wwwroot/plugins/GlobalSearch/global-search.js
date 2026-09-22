@@ -7,12 +7,12 @@
         if (initGlobalSearchInitiated) return;
         initGlobalSearchInitiated = true;
         // removeDups remove returns an array with no duplicates.
-        // it also merges the keywords of the same item.
+        // it also merges the aliases of the same item.
         function removeDups(localIndex) {
             var noDups = [];
             var localIndexMap = new Map();
             localIndex.forEach(item => {
-                item.keywords ??= [];
+                item.aliases ??= [];
                 var key = JSON.stringify({category: item.category, title: item.title});
                 if (!localIndexMap.has(key)) {
                     localIndexMap.set(key, item)
@@ -21,7 +21,7 @@
                 else
                 {
                     var existing = localIndexMap.get(key);
-                    item.keywords.forEach(keyword => {existing.keywords.push(keyword)})
+                    item.aliases.forEach(alias => {existing.aliases.push(alias)})
                 }
             });
             return noDups;
@@ -46,7 +46,7 @@
                 useExtendedSearch: true,
                 keys: [
                     {name: 'title', weight: 0.5},
-                    {name: 'keywords', weight: 0.35},
+                    {name: 'aliases', weight: 0.35},
                     {name: 'category', weight: 0.1},
                     {name: 'subtitle', weight: 0.05}
                 ]

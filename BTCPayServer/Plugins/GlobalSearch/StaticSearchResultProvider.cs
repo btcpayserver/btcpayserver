@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Plugins.GlobalSearch.Views;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Plugins.GlobalSearch;
 
@@ -19,7 +20,15 @@ public class ActionResultItemViewModel
     public required string Controller { get; set; }
     public Func<SearchResultItemProviderContext, object>? Values { get; set; }
     public string? Category { get; set; }
-    public string[]? Keywords { get; set; }
+    public string[]? Aliases { get; set; }
+
+    [Obsolete("Use Aliases instead")]
+    [JsonIgnore]
+    public string[]? Keywords
+    {
+        get => Aliases;
+        set => Aliases = value;
+    }
 }
 
 public class StaticSearchResultProvider(
@@ -39,8 +48,8 @@ public class StaticSearchResultProvider(
                     translations.Add(item.Title);
                 if (item.Category is not null)
                     translations.Add(item.Category);
-                if (item.Keywords is not null)
-                    translations.AddRange(item.Keywords);
+                if (item.Aliases is not null)
+                    translations.AddRange(item.Aliases);
             }
             foreach (var item in routeItems)
             {
@@ -49,8 +58,8 @@ public class StaticSearchResultProvider(
                     translations.Add(item.SubTitle);
                 if (item.Category is not null)
                     translations.Add(item.Category);
-                if (item.Keywords is not null)
-                    translations.AddRange(item.Keywords);
+                if (item.Aliases is not null)
+                    translations.AddRange(item.Aliases);
             }
             return Task.FromResult(translations.Select(s => KeyValuePair.Create(s, null as string)).ToArray());
         }
@@ -71,7 +80,7 @@ public class StaticSearchResultProvider(
                 RequiredPolicy = item.RequiredPolicy,
                 Category = item.Category,
                 Title = item.Title,
-                Keywords = item.Keywords,
+                Aliases = item.Aliases,
                 Url = context.Url.Action(item.Action, item.Controller, item.Values?.Invoke(context))
             });
         }

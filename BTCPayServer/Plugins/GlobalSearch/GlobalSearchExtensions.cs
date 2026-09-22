@@ -12,7 +12,7 @@ public static class GlobalSearchExtensions
         return services;
     }
     /// <summary>
-    /// Add a static search result, title, subtitle, category, keywords, will be exposed to translations.
+    /// Add a static search result; its title, subtitle, category, and aliases will be exposed to translations.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="vm"></param>
@@ -24,7 +24,7 @@ public static class GlobalSearchExtensions
     }
 
     /// <summary>
-    /// Add a static search result, title, subtitle, category, keywords, will be exposed to translations.
+    /// Add a static search result; its title, subtitle, category, and aliases will be exposed to translations.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="actionResultItem"></param>
@@ -35,7 +35,7 @@ public static class GlobalSearchExtensions
         return services;
     }
     /// <summary>
-    /// Add a static search result, title, subtitle, category, keywords, will be exposed to translations.
+    /// Add static search results; their titles, subtitles, categories, and aliases will be exposed to translations.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="vm"></param>
@@ -48,7 +48,7 @@ public static class GlobalSearchExtensions
     }
 
     /// <summary>
-    /// Add a static search result, title, subtitle, category, keywords, will be exposed to translations.
+    /// Add static search results; their titles, subtitles, categories, and aliases will be exposed to translations.
     /// </summary>
     /// <param name="services"></param>
     /// <param name="actionResultItem"></param>

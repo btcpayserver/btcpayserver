@@ -34,7 +34,7 @@ public class PluginManagerPlugin : BaseBTCPayServerPlugin
                 Controller = "UIPluginManager",
                 Values = _ => new { area = Area },
                 Category = "Server",
-                Keywords = ["Plugins", "Installed", "Update", "Configure"]
+                Aliases = ["Plugins", "Installed", "Update", "Configure"]
             },
             new ActionResultItemViewModel
             {
@@ -44,7 +44,7 @@ public class PluginManagerPlugin : BaseBTCPayServerPlugin
                 Controller = "UIPluginManager",
                 Values = _ => new { area = Area },
                 Category = "Server",
-                Keywords = ["Plugins", "Directory", "Install"]
+                Aliases = ["Plugins", "Directory", "Install"]
             }
         ]);
     }

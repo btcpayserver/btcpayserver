@@ -1,6 +1,6 @@
 ---
 name: playwright-test-patterns
-description: Use when writing or refactoring Playwright tests in BTCPayServer. Covers PMO/Page Model Object usage, selector encapsulation, and avoiding over-engineering.
+description: Use when writing, refactoring, running, or debugging Playwright tests in BTCPayServer. Covers local test setup, PMO/Page Model Object usage, selector encapsulation, and avoiding over-engineering.
 ---
 
 # Playwright Test Patterns
@@ -57,3 +57,10 @@ Use these patterns when writing or refactoring Playwright tests in BTCPayServer.
 ## Running And Debugging Tests
 
 - Before debugging BTCPay Server or running tests, start the test dependencies by running `docker-compose up -d dev` from the `BTCPayServer.Tests` directory.
+- Run tests directly on the host rather than through Docker Compose. From the repository root, run a specific test with:
+
+```sh
+dotnet test --project BTCPayServer.Tests/BTCPayServer.Tests.csproj --filter-method BTCPayServer.Tests.BitpayTests.CanUsePairing
+```
+
+- Replace the value passed to `--filter-method` with the fully qualified test method to run another test.

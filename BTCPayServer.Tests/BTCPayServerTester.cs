@@ -38,17 +38,31 @@ using NBXplorer;
 
 namespace BTCPayServer.Tests
 {
-    public class BTCPayServerTester : IDisposable
+    public class BTCPayServerTester : IDisposable, IAsyncDisposable
     {
         internal readonly string _Directory;
         public ILoggerProvider LoggerProvider { get; }
         public bool? BindAllInterfaces { get; set; }
         ILog TestLogs;
+        readonly CancellationToken _lifetimeToken;
+        readonly CancellationTokenRegistration _cancellationRegistration;
+        readonly TaskCompletionSource _disposeCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int _disposed;
+
         public BTCPayServerTester(ILog testLogs, ILoggerProvider loggerProvider, string scope)
+            : this(testLogs, loggerProvider, scope, CancellationToken.None)
+        {
+        }
+
+        public BTCPayServerTester(ILog testLogs, ILoggerProvider loggerProvider, string scope,
+            CancellationToken cancellationToken)
         {
             this.LoggerProvider = loggerProvider;
             this.TestLogs = testLogs;
             this._Directory = scope ?? throw new ArgumentNullException(nameof(scope));
+            _lifetimeToken = cancellationToken;
+            _cancellationRegistration = cancellationToken.Register(static state =>
+                _ = ((BTCPayServerTester)state).DisposeCoreAsync(true), this);
         }
 
         public Uri NBXplorerUri
@@ -107,6 +121,7 @@ namespace BTCPayServer.Tests
         public bool DisableRegistration { get; set; } = false;
         public async Task StartAsync()
         {
+            _lifetimeToken.ThrowIfCancellationRequested();
             if (_Host is not null)
                 return;
             if (!Directory.Exists(_Directory))
@@ -174,7 +189,7 @@ namespace BTCPayServer.Tests
             if (!string.IsNullOrEmpty(ExplorerPostgres))
                 config.AppendLine($"explorer.postgres=" + ExplorerPostgres);
             var confPath = Path.Combine(chainDirectory, "settings.config");
-            await File.WriteAllTextAsync(confPath, config.ToString());
+            await File.WriteAllTextAsync(confPath, config.ToString(), _lifetimeToken);
 
             ServerUri = new Uri("http://" + HostName + ":" + Port + "/");
             ServerUriWithIP = new Uri("http://127.0.0.1:" + Port + "/");
@@ -246,7 +261,12 @@ namespace BTCPayServer.Tests
                 })
                 .UseEnvironment(HostEnvironment)
                 .Build();
-            await _Host.StartWithTasksAsync();
+            if (_lifetimeToken.IsCancellationRequested)
+            {
+                Interlocked.Exchange(ref _Host, null)?.Dispose();
+                _lifetimeToken.ThrowIfCancellationRequested();
+            }
+            await _Host.StartWithTasksAsync(_lifetimeToken);
 
             var urls = _Host.GetServerFeatures<IServerAddressesFeature>().Addresses;
             foreach (var url in urls)
@@ -426,13 +446,69 @@ namespace BTCPayServer.Tests
 
         public void Dispose()
         {
-            if (_Host != null)
+            DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            _cancellationRegistration.Dispose();
+            _ = DisposeCoreAsync(false);
+            await _disposeCompletion.Task.ConfigureAwait(false);
+        }
+
+        async Task DisposeCoreAsync(bool abort)
+        {
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+                return;
+            try
             {
-                var app = _Host.Services.GetService<IHostApplicationLifetime>();
-                app.StopApplication();
-                _Host.WaitForShutdown();
-                _Host.Dispose();
+                var host = Interlocked.Exchange(ref _Host, null);
+                if (host is null)
+                {
+                    _disposeCompletion.TrySetResult();
+                    return;
+                }
+
+                if (abort)
+                {
+                    TestLogs.LogInformation("Aborting BTCPay Server test host...");
+                    try
+                    {
+                        await host.ForceStop();
+                    }
+                    catch (Exception ex)
+                    {
+                        TestLogs.LogInformation($"BTCPay Server test host abort failed: {ex.Message}");
+                    }
+                    finally
+                    {
+                        host.Dispose();
+                    }
+                }
+                else
+                {
+
+                    try
+                    {
+                        await host.ForceStop();
+                        TestLogs.LogInformation("BTCPay Server test host stopped");
+                    }
+                    catch (Exception ex)
+                    {
+                        TestLogs.LogInformation($"BTCPay Server test host did not stop. ({ex.Message})");
+                    }
+                    finally
+                    {
+                        host.Dispose();
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                _disposeCompletion.TrySetException(ex);
+                return;
+            }
+            _disposeCompletion.TrySetResult();
         }
 
         public void ChangeRate(string pair, BidAsk bidAsk)

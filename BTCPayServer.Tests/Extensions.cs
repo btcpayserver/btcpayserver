@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Playwright;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
@@ -15,6 +16,15 @@ namespace BTCPayServer.Tests
 {
     public static class Extensions
     {
+        public static async Task ForceStop(this IHost host)
+        {
+            var timeout = TimeSpan.FromSeconds(30);
+            using var cancellation = new CancellationTokenSource(timeout);
+            await host.StopAsync(cancellation.Token).WaitAsync(timeout).ConfigureAwait(false);
+            if (cancellation.IsCancellationRequested)
+                throw new TimeoutException();
+        }
+
         public static Task<NewTransactionEvent> WaitReceive(this NBXplorer.WebsocketNotificationSession notifications, DerivationStrategyBase target, Func<NewTransactionEvent, bool> predicate = null, CancellationToken cancellationToken = default)
         => WaitNext<NewTransactionEvent>(notifications, e => e.DerivationStrategy == target && (predicate is null || predicate(e)), cancellationToken);
         public static async Task<TEvent> WaitNext<TEvent>(this NBXplorer.WebsocketNotificationSession notifications, Func<TEvent, bool> predicate, CancellationToken cancellationToken = default) where TEvent : NewEventBase

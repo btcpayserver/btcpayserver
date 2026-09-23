@@ -22,18 +22,33 @@ using BTCPayServer.Services;
 
 namespace BTCPayServer.Tests
 {
-    public class ServerTester : IDisposable
+    public class ServerTester : IDisposable, IAsyncDisposable
     {
         public const string DefaultConnectionString = "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=btcpayserver";
         public (string Hostname, int SmtpPort, int HttpPort) MailPitSettings { get; set; }
         public List<IDisposable> Resources = new List<IDisposable>();
         readonly string _Directory;
+        readonly CancellationTokenSource _lifetimeCancellation;
+        readonly TaskCompletionSource _disposeCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int _disposed;
+
+        public CancellationToken LifetimeToken => _lifetimeCancellation.Token;
 
         public ILoggerProvider LoggerProvider { get; }
 
         internal ILog TestLogs;
-        public ServerTester(string scope, bool newDb, ILog testLogs, ILoggerProvider loggerProvider, BTCPayNetworkProvider networkProvider)
+        public ServerTester(string scope, bool newDb, ILog testLogs, ILoggerProvider loggerProvider,
+            BTCPayNetworkProvider networkProvider)
+            : this(scope, newDb, testLogs, loggerProvider, networkProvider, CancellationToken.None,
+                Timeout.InfiniteTimeSpan)
         {
+        }
+
+        public ServerTester(string scope, bool newDb, ILog testLogs, ILoggerProvider loggerProvider,
+            BTCPayNetworkProvider networkProvider, CancellationToken cancellationToken, TimeSpan timeout)
+        {
+            _lifetimeCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _lifetimeCancellation.CancelAfter(timeout);
             Scope = scope;
             LoggerProvider = loggerProvider;
             this.TestLogs = testLogs;
@@ -58,7 +73,7 @@ namespace BTCPayServer.Tests
                 ExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_BTCNBXPLORERURL", "http://127.0.0.1:32838/")));
             }
 
-            PayTester = new BTCPayServerTester(TestLogs, LoggerProvider, Path.Combine(_Directory, "pay"))
+            PayTester = new BTCPayServerTester(TestLogs, LoggerProvider, Path.Combine(_Directory, "pay"), LifetimeToken)
             {
                 NBXplorerUri = !noDefaultNode ? ExplorerClient.Address : null,
                 // TODO: The fact that we use same conn string as development database can cause huge problems with tests
@@ -263,19 +278,54 @@ namespace BTCPayServer.Tests
 
         public void Dispose()
         {
-            foreach (var r in this.Resources)
-                r.Dispose();
-            TestLogs.LogInformation("Disposing the BTCPayTester...");
-            if (DeleteStore)
+            DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (Interlocked.Exchange(ref _disposed, 1) == 0)
+                _ = DisposeCoreAsync();
+            await _disposeCompletion.Task.ConfigureAwait(false);
+        }
+
+        async Task DisposeCoreAsync()
+        {
+            try
             {
-                foreach (var store in Stores)
+                try
                 {
-                    Xunit.Assert.True(PayTester.StoreRepository.DeleteStore(store).GetAwaiter().GetResult());
+                    foreach (var r in this.Resources)
+                        r.Dispose();
+                    TestLogs.LogInformation("Disposing the BTCPayTester...");
+                    if (DeleteStore && !LifetimeToken.IsCancellationRequested)
+                    {
+                        foreach (var store in Stores)
+                        {
+                            Xunit.Assert.True(await PayTester.StoreRepository.DeleteStore(store).ConfigureAwait(false));
+                        }
+                    }
                 }
+                finally
+                {
+                    try
+                    {
+                        if (PayTester is not null)
+                        {
+                            await PayTester.DisposeAsync().ConfigureAwait(false);
+                        }
+                    }
+                    finally
+                    {
+                        _lifetimeCancellation.Dispose();
+                    }
+                }
+                TestLogs.LogInformation("BTCPayTester disposed");
+                _disposeCompletion.TrySetResult();
             }
-            if (PayTester != null)
-                PayTester.Dispose();
-            TestLogs.LogInformation("BTCPayTester disposed");
+            catch (Exception ex)
+            {
+                _disposeCompletion.TrySetException(ex);
+            }
         }
 
         public RPCClient GetExplorerNode(string cryptoCode) =>

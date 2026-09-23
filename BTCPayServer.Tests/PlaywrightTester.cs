@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
@@ -34,6 +35,11 @@ namespace BTCPayServer.Tests
         public Logging.ILog TestLogs => Server.TestLogs;
         public IPage Page { get; set; }
         public IBrowser Browser { get; private set; }
+        private IPlaywright _playwright;
+        private Task<IPlaywright> _playwrightCreation;
+        private CancellationTokenRegistration _cancellationRegistration;
+        private readonly TaskCompletionSource _disposeCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _disposed;
         public ServerTester Server { get; set; }
         public WalletId WalletId { get; set; }
         public string Password { get; private set; }
@@ -50,9 +56,20 @@ namespace BTCPayServer.Tests
             builder.AddUserSecrets("AB0AC1DD-9D26-485B-9416-56A33F268117");
             builder.AddEnvironmentVariables();
             var conf = builder.Build();
-            var playwright = await Playwright.CreateAsync();
+            var createPlaywright = Playwright.CreateAsync();
+            _playwrightCreation = createPlaywright;
+            _cancellationRegistration = Server.LifetimeToken.Register(static state =>
+                _ = ((PlaywrightTester)state).DisposeCoreAsync(true), this);
+            try
+            {
+                _playwright = await createPlaywright.WaitAsync(Server.LifetimeToken);
+            }
+            catch (OperationCanceledException) when (Server.LifetimeToken.IsCancellationRequested)
+            {
+                throw;
+            }
             var headless = conf["PLAYWRIGHT_HEADLESS"];
-            Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+            Browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
                 Headless = !string.IsNullOrEmpty(headless) && bool.Parse(headless),
                 ExecutablePath = conf["PLAYWRIGHT_EXECUTABLE"],
@@ -617,31 +634,77 @@ namespace BTCPayServer.Tests
 
         public async ValueTask DisposeAsync()
         {
-            static async Task Try(Func<Task> action)
+            _ = DisposeCoreAsync(false);
+            await _disposeCompletion.Task.ConfigureAwait(false);
+        }
+
+        async Task DisposeCoreAsync(bool abort)
+        {
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+                return;
+            try
             {
+                var timeout = TimeSpan.FromSeconds(30);
+                if (abort)
+                {
+                    TestLogs.LogInformation("Aborting PlaywrightTester");
+                    try
+                    {
+                        if (Browser is not null)
+                        {
+                            await Browser.CloseAsync().WaitAsync(timeout);
+                            Browser = null;
+                            Page = null;
+                        }
+                    }
+                    catch { }
+                }
+                else
+                {
+                    try
+                    {
+                        if (Page is not null)
+                        {
+                            await Page.CloseAsync().WaitAsync(timeout);
+                            Page = null;
+                        }
+                    }
+                    catch { }
+
+                    try
+                    {
+                        if (Browser is not null)
+                        {
+                            await Browser.CloseAsync().WaitAsync(timeout);
+                            Browser = null;
+                        }
+                    }
+                    catch { }
+                }
+
+                var playwright = Interlocked.Exchange(ref _playwright, null);
+                if (playwright is null && _playwrightCreation is not null)
+                {
+                    try
+                    {
+                        playwright = await _playwrightCreation.WaitAsync(timeout);
+                    }
+                    catch { }
+                }
                 try
                 {
-                    await action();
+                    playwright?.Dispose();
                 }
                 catch { }
+                _cancellationRegistration.Dispose();
+                if (Server is not null)
+                    await Server.DisposeAsync();
+                _disposeCompletion.TrySetResult();
             }
-
-            await Try(async () =>
+            catch (Exception ex)
             {
-                if (Page is null)
-                    return;
-                await Page.CloseAsync();
-                Page = null;
-            });
-
-            await Try(async () =>
-            {
-                if (Browser is null)
-                    return;
-                await Browser.CloseAsync();
-                Browser = null;
-            });
-            Server?.Dispose();
+                _disposeCompletion.TrySetException(ex);
+            }
         }
 
         public async Task<string> FundStoreWallet(WalletId walletId = null, int coins = 1, decimal denomination = 1m)

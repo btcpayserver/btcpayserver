@@ -8,7 +8,7 @@ Repository-specific agent guidance has moved to project skills:
 - `.agents/skills/btcpayserver-configuration/SKILL.md`
 - `.agents/skills/playwright-test-patterns/SKILL.md`
 
-Load the relevant skill when creating migrations, updating/reviewing `Changelog.md`, writing/reviewing pull request descriptions, adding/reviewing startup configuration options, or writing/refactoring Playwright tests.
+Load the relevant skill when creating migrations, updating/reviewing `Changelog.md`, writing/reviewing pull request descriptions, adding/reviewing startup configuration options, or writing, refactoring, running, or debugging Playwright tests.
 
 ## JSON Serialization
 

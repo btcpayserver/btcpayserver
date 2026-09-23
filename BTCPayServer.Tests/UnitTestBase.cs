@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
@@ -12,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 using NBitcoin;
 using Xunit;
+using Xunit.v3;
 
 namespace BTCPayServer.Tests
 {
@@ -87,13 +90,27 @@ namespace BTCPayServer.Tests
         public BTCPayServer.Logging.Logs BTCPayLogs { get; }
         public FuncLoggerFactory LoggerFactory { get; }
 
-        public ServerTester CreateServerTester([CallerMemberNameAttribute] string scope = null, bool newDb = false)
+        public ServerTester CreateServerTester([CallerMemberNameAttribute] string scope = null, bool newDb = false, TimeSpan? timeout = null)
         {
-            return new ServerTester(scope, newDb, TestLogs, TestLogProvider, CreateNetworkProvider());
+            return new ServerTester(scope, newDb, TestLogs, TestLogProvider, CreateNetworkProvider(),
+                TestContext.Current.CancellationToken, GetTesterTimeout(timeout));
         }
-        public PlaywrightTester CreatePlaywrightTester([CallerMemberNameAttribute] string scope = null, bool newDb = false)
+        public PlaywrightTester CreatePlaywrightTester([CallerMemberNameAttribute] string scope = null, bool newDb = false, TimeSpan? timeout = null)
         {
-            return new PlaywrightTester() { Server = new ServerTester(scope, newDb, TestLogs, TestLogProvider, CreateNetworkProvider()) };
+            return new PlaywrightTester
+            {
+                Server = new ServerTester(scope, newDb, TestLogs, TestLogProvider, CreateNetworkProvider(),
+                    TestContext.Current.CancellationToken, GetTesterTimeout(timeout))
+            };
+        }
+
+        TimeSpan GetTesterTimeout(TimeSpan? timeout)
+        {
+            if (timeout is not null)
+                return timeout.Value;
+
+            var testTimeout = TestContext.Current.Test?.TestCase is IXunitTestCase testCase ? testCase.Timeout : 0;
+            return TimeSpan.FromMilliseconds(testTimeout > 0 ? testTimeout : TestUtils.TestTimeout);
         }
     }
 }

@@ -4,7 +4,7 @@
     var hostIntegration = HostIntegrationState.Current;
 }
 
-@if (hostIntegration.Available)
+@if (hostIntegration is not null)
 {
     <li permission="@Policies.CanModifyServerSettings">
         <a

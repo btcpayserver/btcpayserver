@@ -878,9 +878,9 @@ namespace BTCPayServer.Tests
             {
                 var hostIntegrationState = s.Server.PayTester.GetService<HostIntegrationState>();
                 var hostIntegration = hostIntegrationState.Current;
-                Assert.True(hostIntegration.Available);
-                Assert.Contains(HostCommands.ShowAuthorizedKeys, hostIntegration.SupportedCommands.AsEnumerable());
-                Assert.Equal("tests", hostIntegration.Environment?.DeploymentType);
+                Assert.NotNull(hostIntegration);
+                Assert.Contains(HostCommands.ShowAuthorizedKeys, hostIntegration.Commands);
+                Assert.Equal("tests", hostIntegration.DeploymentType);
 
                 File.Delete(s.Server.PayTester.btcpayHostExecutable);
                 using var signal = Process.Start("kill", $"-HUP {Environment.ProcessId}");
@@ -890,10 +890,7 @@ namespace BTCPayServer.Tests
 
                 TestUtils.Eventually(() =>
                 {
-                    var current = hostIntegrationState.Current;
-                    Assert.False(current.Available);
-                    Assert.Empty(current.SupportedCommands);
-                    Assert.Null(current.Environment);
+                    Assert.Null(hostIntegrationState.Current);
                 });
             }
         }

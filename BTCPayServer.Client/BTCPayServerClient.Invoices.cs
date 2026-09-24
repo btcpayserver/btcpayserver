@@ -48,6 +48,12 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<InvoiceData>($"api/v1/invoices/{invoiceId}", queryPayload, HttpMethod.Get, token);
     }
 
+    public virtual async Task<InvoiceCheckoutData> GetInvoiceCheckout(string invoiceId, CancellationToken token = default)
+    {
+        if (invoiceId == null) throw new ArgumentNullException(nameof(invoiceId));
+        return await SendHttpRequest<InvoiceCheckoutData>($"api/v1/invoices/{invoiceId}/checkout", null, HttpMethod.Get, token);
+    }
+
     public virtual async Task<InvoicePaymentMethodDataModel[]> GetInvoicePaymentMethods(string invoiceId,
         bool onlyAccountedPayments = true, bool includeSensitive = false,
         CancellationToken token = default)
@@ -95,6 +101,12 @@ public partial class BTCPayServerClient
     public virtual async Task ActivateInvoicePaymentMethod(string invoiceId, string paymentMethod, CancellationToken token = default)
     {
         await SendHttpRequest($"api/v1/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate", null, HttpMethod.Post, token);
+    }
+
+    public virtual async Task<InvoiceCheckoutData> ActivateInvoicePaymentMethodForCheckout(string invoiceId,
+        string paymentMethod, CancellationToken token = default)
+    {
+        return await SendHttpRequest<InvoiceCheckoutData>($"api/v1/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate", null, HttpMethod.Post, token);
     }
 
     public virtual async Task<PullPaymentData> RefundInvoice(

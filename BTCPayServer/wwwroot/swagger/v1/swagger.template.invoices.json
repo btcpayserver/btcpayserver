@@ -342,6 +342,44 @@
                 ]
             }
         },
+        "/api/v1/invoices/{invoiceId}/checkout": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Get invoice checkout",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/InvoiceId"
+                    }
+                ],
+                "description": "View the public checkout information for the specified invoice, including all payment methods and payments. This endpoint does not require authentication; possession of the invoice ID grants access to this information.",
+                "operationId": "Invoices_GetInvoiceCheckout",
+                "responses": {
+                    "200": {
+                        "description": "Public invoice checkout information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceCheckoutData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The invoice was not found or is not publicly accessible",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
         "/api/v1/invoices/{invoiceId}/payment-methods": {
             "get": {
                 "tags": [
@@ -531,10 +569,27 @@
                 "operationId": "Invoices_ActivatePaymentMethod",
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "The refreshed public invoice checkout information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvoiceCheckoutData"
+                                }
+                            }
+                        }
                     },
                     "400": {
-                        "description": "A list of errors that occurred when updating the invoice",
+                        "description": "The payment method is invalid or could not be activated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "The payment method identifier is invalid",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -543,18 +598,11 @@
                             }
                         }
                     },
-                    "403": {
-                        "description": "If you are authenticated but forbidden to activate the invoice payment method"
+                    "404": {
+                        "description": "The invoice was not found or is not publicly accessible"
                     }
                 },
-                "security": [
-                    {
-                        "API_Key": [
-                            "btcpay.store.canviewinvoices"
-                        ],
-                        "Basic": []
-                    }
-                ]
+                "security": []
             }
         },
         "/api/v1/invoices/{invoiceId}/refund": {
@@ -864,6 +912,112 @@
                         }
                     }
                 ]
+            },
+            "InvoiceCheckoutData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": {
+                        "$ref": "#/components/schemas/InvoiceId"
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/InvoiceType"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "The currency of the invoice",
+                        "example": "USD"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The amount of the invoice.",
+                        "example": "5.00"
+                    },
+                    "paidAmount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The actual amount paid by the customer/buyer.",
+                        "example": "5.00"
+                    },
+                    "checkoutLink": {
+                        "type": "string",
+                        "description": "The link to the checkout page"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/InvoiceStatus"
+                    },
+                    "additionalStatus": {
+                        "$ref": "#/components/schemas/InvoiceAdditionalStatus"
+                    },
+                    "monitoringExpiration": {
+                        "description": "Expiration time for monitoring the invoice for changes",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
+                    },
+                    "expirationTime": {
+                        "description": "The expiration time of the invoice",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
+                    },
+                    "createdTime": {
+                        "description": "The creation time of the invoice",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
+                    },
+                    "checkout": {
+                        "$ref": "#/components/schemas/InvoiceCheckoutOptions"
+                    },
+                    "receipt": {
+                        "$ref": "#/components/schemas/ReceiptOptions"
+                    },
+                    "paymentMethods": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InvoiceCheckoutPaymentMethodDataModel"
+                        }
+                    }
+                }
+            },
+            "InvoiceCheckoutOptions": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "paymentMethods": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PaymentMethodId"
+                        },
+                        "description": "All payment methods available for this invoice."
+                    },
+                    "defaultPaymentMethod": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PaymentMethodId"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "The payment method selected by default for checkout."
+                    },
+                    "redirectURL": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The resolved URL to redirect the customer to after checkout."
+                    },
+                    "redirectAutomatically": {
+                        "type": "boolean",
+                        "description": "Whether checkout automatically redirects the customer when the invoice is settled."
+                    }
+                }
             },
             "InvoiceMetadata": {
                 "type": "object",
@@ -1248,6 +1402,7 @@
                     },
                     "destination": {
                         "type": "string",
+                        "nullable": true,
                         "description": "The destination the payment must be made to"
                     },
                     "paymentLink": {
@@ -1299,6 +1454,7 @@
                         "description": "If the payment method is activated (when lazy payments option is enabled"
                     },
                     "additionalData": {
+                        "nullable": true,
                         "description": "Additional data provided by the payment method.",
                         "anyOf": [
                             {
@@ -1336,6 +1492,7 @@
                                     },
                                     "accountDerivation": {
                                         "type": "string",
+                                        "nullable": true,
                                         "description": "The derivation scheme used to derive addresses (null if `includeSensitive` is `false`)",
                                         "example": "xpub6DVMcQAQCtGbNDTEjQGtR1GRoTKw7AzP6bVivX4gFnewcnRk1r1tbczpfsaYjKKVrmtyiwYqAEnALYzZ8yoTArVsKfZekmwLFqQp4MRgPhy"
                                     },
@@ -1355,11 +1512,163 @@
                             },
                             {
                                 "type": "object",
+                                "nullable": true,
                                 "description": "No additional information"
                             }
                         ]
                     }
                 }
+            },
+            "InvoiceCheckoutPaymentMethodDataModel": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "paymentMethodId": {
+                        "$ref": "#/components/schemas/PaymentMethodId"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "The currency of the payment method (e.g., \"BTC\" or \"LTC\")",
+                        "example": "BTC"
+                    },
+                    "destination": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The destination the payment must be made to"
+                    },
+                    "paymentLink": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "A payment link that helps pay to the payment destination"
+                    },
+                    "rate": {
+                        "type": "string",
+                        "format": "decimal",
+                        "example": "64392.23",
+                        "description": "The rate between this payment method's currency and the invoice currency"
+                    },
+                    "paymentMethodPaid": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The amount paid by this payment method"
+                    },
+                    "totalPaid": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The total amount paid by all payment methods to the invoice, converted to this payment method's currency"
+                    },
+                    "due": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The total amount left to be paid, converted to this payment method's currency (will be negative if overpaid)"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The invoice amount, converted to this payment method's currency"
+                    },
+                    "paymentMethodFee": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The added merchant fee to pay for additional costs incurred by this payment method."
+                    },
+                    "payments": {
+                        "type": "array",
+                        "nullable": false,
+                        "items": {
+                            "$ref": "#/components/schemas/Payment"
+                        },
+                        "description": "Payments made with this payment method."
+                    },
+                    "activated": {
+                        "type": "boolean",
+                        "description": "If the payment method is activated (when lazy payments option is enabled"
+                    },
+                    "additionalData": {
+                        "$ref": "#/components/schemas/InvoiceCheckoutPaymentMethodDetails"
+                    }
+                }
+            },
+            "InvoiceCheckoutPaymentMethodDetails": {
+                "description": "Harmless details exposed for built-in payment methods. Details from other payment methods are omitted.",
+                "anyOf": [
+                    {
+                        "type": "object",
+                        "title": "*-LNURL",
+                        "additionalProperties": false,
+                        "properties": {
+                            "paymentHash": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "The Lightning payment hash."
+                            },
+                            "nodeInfo": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Public connection information for the Lightning node."
+                            },
+                            "bech32Mode": {
+                                "type": "boolean",
+                                "description": "Whether the LNURL payment link uses Bech32 encoding."
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "title": "*-LN",
+                        "additionalProperties": false,
+                        "properties": {
+                            "paymentHash": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "The Lightning payment hash."
+                            },
+                            "nodeInfo": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Public connection information for the Lightning node."
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "title": "*-CHAIN",
+                        "additionalProperties": false,
+                        "properties": {
+                            "feeMode": {
+                                "type": "string",
+                                "description": "How the payment method fee is calculated."
+                            },
+                            "paymentMethodFeeRate": {
+                                "type": "string",
+                                "format": "decimal",
+                                "nullable": true,
+                                "description": "The fee rate charged to the customer as part of the payment method fee."
+                            },
+                            "assetId": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "The public asset identifier for an asset-based payment method."
+                            },
+                            "payjoinEnabled": {
+                                "type": "boolean",
+                                "description": "If the payjoin feature is enabled for this payment method."
+                            },
+                            "recommendedFeeRate": {
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "The recommended fee rate for this payment method.",
+                                "example": "4.107"
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "nullable": true,
+                        "additionalProperties": false,
+                        "description": "No public details"
+                    }
+                ]
             },
             "Payment": {
                 "type": "object",

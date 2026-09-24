@@ -763,6 +763,7 @@ namespace BTCPayServer.Hosting
             services.AddRateProvider<NotbankExchangeRateProvider>();
             services.AddRateProvider<BitflyerRateProvider>();
             services.AddRateProvider<YadioRateProvider>();
+            services.AddRateProvider<CoinPaprikaRateProvider>();
             services.AddRateProvider<BtcTurkRateProvider>();
             services.AddRateProvider<FreeCurrencyRatesRateProvider>();
             services.AddRateProvider<BitmyntRateProvider>();

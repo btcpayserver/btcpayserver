@@ -39,6 +39,8 @@ namespace BTCPayServer.Plugins.Altcoins
             }
             if (selectedChains.Contains("LTC"))
                 InitLitecoin(services);
+            if (selectedChains.Contains("LCC"))
+                InitLitecoinCash(services);
             if (selectedChains.Contains("DOGE"))
                 InitDogecoin(services);
             if (selectedChains.Contains("BTG"))

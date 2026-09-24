@@ -213,6 +213,12 @@ namespace BTCPayServer.Tests
                         e => e.CurrencyPair == new CurrencyPair("BTC", "XPT") &&
                              e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 LBP (I hope)
                 }
+                else if (name == "coinpaprika")
+                {
+                    Assert.Contains(exchangeRates.ByExchange[name],
+                        e => e.CurrencyPair == new CurrencyPair("LCC", "BTC") &&
+                             e.BidAsk.Bid > 0m);
+                }
                 else if (name == "bitmynt")
                 {
                     Assert.Contains(exchangeRates.ByExchange[name],

@@ -33,12 +33,12 @@ public class UIMaintenanceController(
     public IActionResult Maintenance()
     {
         var hostIntegration = hostIntegrationState.Current;
-        if (!hostIntegration.Available)
+        if (hostIntegration is null)
             return NotFound();
 
         var vm = new MaintenanceViewModel
         {
-            SupportedCommands = hostIntegration.SupportedCommands.ToHashSet(),
+            SupportedCommands = (hostIntegration.Commands ?? []).ToHashSet(),
             DNSDomain = Request.Host.Host
         };
 
@@ -52,8 +52,8 @@ public class UIMaintenanceController(
     public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
     {
         var hostIntegration = hostIntegrationState.Current;
-        vm.SupportedCommands = hostIntegration.SupportedCommands.ToHashSet();
-        if (command != "soft-restart" && !hostIntegration.Available)
+        vm.SupportedCommands = (hostIntegration?.Commands ?? []).ToHashSet();
+        if (command != "soft-restart" && hostIntegration is null)
         {
             TempData[WellKnownTempData.ErrorMessage] = stringLocalizer["Maintenance feature requires local BTCPay commands."].Value;
             return View("/Plugins/Maintenance/Views/Maintenance.cshtml", vm);

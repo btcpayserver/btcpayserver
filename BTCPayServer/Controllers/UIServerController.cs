@@ -522,7 +522,25 @@ namespace BTCPayServer.Controllers
 
         private IActionResult LndServices(ExternalService service, ExternalConnectionString connectionString, ulong? nonce, string view = nameof(LndServices))
         {
-            var model = new LndServicesViewModel();
+            var route = service.Type switch
+            {
+                ExternalServiceTypes.LNDGRPC => "lnd-grpc",
+                ExternalServiceTypes.LNDRest => "lnd-rest",
+                _ => null
+            };
+            var hostEnvironment = _hostIntegrationState.Current;
+            var routes = hostEnvironment?.Routes;
+            var model = new LndServicesViewModel
+            {
+                IsReverseProxyRouteDisabled =
+                    !service.ConnectionString.Server.IsAbsoluteUri &&
+                    route is not null &&
+                    string.Equals(hostEnvironment?.DeploymentType, "btcpayserver-docker", StringComparison.Ordinal) &&
+                    routes?.OptionalRoutes is { } optionalRoutes &&
+                    routes.EnabledRoutes is { } enabledRoutes
+                        ? optionalRoutes.Contains(route) && !enabledRoutes.Contains(route)
+                        : null
+            };
             if (service.Type == ExternalServiceTypes.LNDGRPC)
             {
                 model.Host = $"{connectionString.Server.DnsSafeHost}:{connectionString.Server.Port}";
@@ -646,7 +664,7 @@ namespace BTCPayServer.Controllers
 
             SSHServiceViewModel vm = new SSHServiceViewModel();
 
-            if (hostIntegration.SupportedCommands.Contains(HostCommands.ShowAuthorizedKeys))
+            if (hostIntegration?.Commands?.Contains(HostCommands.ShowAuthorizedKeys) is true)
             {
                 try
                 {
@@ -661,9 +679,9 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        static bool CanShowSSHService(HostIntegrationSnapshot hostIntegration)
-        => hostIntegration.SupportedCommands.Contains(HostCommands.ShowAuthorizedKeys) &&
-           hostIntegration.SupportedCommands.Contains(HostCommands.SetAuthorizedKeys);
+        static bool CanShowSSHService(BTCPayHostEnvironment? hostIntegration)
+        => hostIntegration?.Commands?.Contains(HostCommands.ShowAuthorizedKeys) is true &&
+           hostIntegration.Commands.Contains(HostCommands.SetAuthorizedKeys);
 
         [HttpPost("server/services/ssh")]
         public async Task<IActionResult> SSHService(SSHServiceViewModel viewModel, string? command = null)

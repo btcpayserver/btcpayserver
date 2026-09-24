@@ -1,5 +1,6 @@
 #nullable enable
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
@@ -18,7 +19,7 @@ public class MaintenanceSearchResultProvider(HostIntegrationState hostIntegratio
     public Task ProvideAsync(SearchResultItemProviderContext context, CancellationToken cancellationToken)
     {
         var hostIntegration = hostIntegrationState.Current;
-        if (context.UserQuery is not null || !hostIntegration.Available)
+        if (context.UserQuery is not null || hostIntegration is null)
             return Task.CompletedTask;
 
         context.ItemResults.Add(new ResultItemViewModel
@@ -29,7 +30,7 @@ public class MaintenanceSearchResultProvider(HostIntegrationState hostIntegratio
             Category = "Server",
             Aliases = Aliases
         });
-        if (hostIntegration.SupportedCommands.Contains(HostCommands.Update))
+        if (hostIntegration.Commands?.Contains(HostCommands.Update) is true)
         {
             context.ItemResults.Add(new ResultItemViewModel
             {

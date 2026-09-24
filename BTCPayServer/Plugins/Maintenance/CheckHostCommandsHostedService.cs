@@ -1,7 +1,5 @@
 #nullable enable
 using System;
-using System.Collections.Frozen;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,9 +39,7 @@ namespace BTCPayServer.Plugins.Maintenance
 
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
-            var supportedCommands = new HashSet<string>();
             BTCPayHostEnvironment? hostEnvironment = null;
-            var hostAvailable = false;
             try
             {
                 var env = await processRunner.RunHostCommand(HostCommands.Env, null, cancellationToken);
@@ -51,14 +47,8 @@ namespace BTCPayServer.Plugins.Maintenance
                 {
                     hostEnvironment = JsonConvert.DeserializeObject<BTCPayHostEnvironment>(env.Output) ??
                                       throw new JsonException("btcpay-host env returned null");
-                    foreach (var command in hostEnvironment.Commands ?? [])
-                    {
-                        if (!string.IsNullOrWhiteSpace(command))
-                            supportedCommands.Add(command.Trim());
-                    }
-                    hostAvailable = true;
                     Logs.PayServer.LogInformation("Host deployment type: {deploymentType}. Supported host commands: {commands}",
-                        hostEnvironment.DeploymentType, string.Join(", ", supportedCommands));
+                        hostEnvironment.DeploymentType, string.Join(", ", hostEnvironment.Commands ?? []));
                 }
                 else
                 {
@@ -69,10 +59,7 @@ namespace BTCPayServer.Plugins.Maintenance
             {
                 Logs.PayServer.LogInformation("btcpay-host not supported by the host");
             }
-            hostIntegrationState.Update(new HostIntegrationSnapshot(
-                hostAvailable,
-                supportedCommands.ToFrozenSet(),
-                HostEnvironmentSnapshot.From(hostEnvironment)));
+            hostIntegrationState.Update(hostEnvironment);
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)

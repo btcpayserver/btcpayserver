@@ -19,6 +19,6 @@ namespace BTCPayServer.Models.ServerViewModels
         [Display(Name = "REST Uri")]
         public string Uri { get; set; }
         public string ConnectionType { get; internal set; }
-        public bool IsReverseProxyRouteDisabled { get; internal set; }
+        public bool? IsReverseProxyRouteDisabled { get; internal set; }
     }
 }

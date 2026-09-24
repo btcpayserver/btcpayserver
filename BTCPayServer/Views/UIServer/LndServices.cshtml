@@ -13,7 +13,7 @@
     BTCPay provides the connection information for LND's @Model.ConnectionType service here.
 </p>
 
-@if (Model.IsReverseProxyRouteDisabled)
+@if (Model.IsReverseProxyRouteDisabled is true)
 {
     <div class="alert alert-warning" role="alert">
         @ViewLocalizer["This LND endpoint is available but not exposed by the BTCPay Server Docker reverse proxy. <a href=\"https://docs.btcpayserver.org/Docker/networking/#expose-bitcoin-lnd-apis\" target=\"_blank\" rel=\"noreferrer noopener\">Learn how to enable it</a>."]

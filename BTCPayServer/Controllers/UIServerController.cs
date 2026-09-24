@@ -536,9 +536,10 @@ namespace BTCPayServer.Controllers
                     !service.ConnectionString.Server.IsAbsoluteUri &&
                     route is not null &&
                     string.Equals(hostEnvironment?.DeploymentType, "btcpayserver-docker", StringComparison.Ordinal) &&
-                    routes is not null &&
-                    (routes.OptionalRoutes?.Contains(route) ?? false) &&
-                    !(routes.EnabledRoutes?.Contains(route) ?? false)
+                    routes?.OptionalRoutes is { } optionalRoutes &&
+                    routes.EnabledRoutes is { } enabledRoutes
+                        ? optionalRoutes.Contains(route) && !enabledRoutes.Contains(route)
+                        : null
             };
             if (service.Type == ExternalServiceTypes.LNDGRPC)
             {

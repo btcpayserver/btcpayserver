@@ -522,7 +522,26 @@ namespace BTCPayServer.Controllers
 
         private IActionResult LndServices(ExternalService service, ExternalConnectionString connectionString, ulong? nonce, string view = nameof(LndServices))
         {
-            var model = new LndServicesViewModel();
+            var route = service.Type switch
+            {
+                ExternalServiceTypes.LNDGRPC => "lnd-grpc",
+                ExternalServiceTypes.LNDRest => "lnd-rest",
+                _ => null
+            };
+            var hostIntegration = _hostIntegrationState.Current;
+            var hostEnvironment = hostIntegration.Environment;
+            var routes = hostEnvironment?.Routes;
+            var model = new LndServicesViewModel
+            {
+                IsReverseProxyRouteDisabled =
+                    !service.ConnectionString.Server.IsAbsoluteUri &&
+                    route is not null &&
+                    hostIntegration.Available &&
+                    string.Equals(hostEnvironment?.DeploymentType, "btcpayserver-docker", StringComparison.Ordinal) &&
+                    routes is not null &&
+                    routes.OptionalRoutes.Contains(route) &&
+                    !routes.EnabledRoutes.Contains(route)
+            };
             if (service.Type == ExternalServiceTypes.LNDGRPC)
             {
                 model.Host = $"{connectionString.Server.DnsSafeHost}:{connectionString.Server.Port}";

@@ -364,17 +364,7 @@ namespace BTCPayServer.Controllers
                 return View("_RefundModal", model);
             }
 
-            var accounting = paymentMethod.Calculate();
-            var cryptoPaid = accounting.PaidSettled;
-            var dueAmount = accounting.TotalDueSettled;
-
-            // If no payment, but settled and marked, assume it has been fully paid
-            if (cryptoPaid is 0 && accounting.Paid is 0 &&
-                invoice is { Status: InvoiceStatus.Settled, ExceptionStatus: InvoiceExceptionStatus.Marked })
-            {
-                cryptoPaid = accounting.TotalDue;
-                dueAmount = 0;
-            }
+            var (cryptoPaid, dueAmount) = paymentMethod.CalculateRefundableAmounts();
 
             var paymentMethodCurrency = paymentMethod.Currency;
             var paidCurrency = Math.Round(cryptoPaid * paymentMethod.Rate, cdCurrency.Divisibility);

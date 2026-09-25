@@ -384,17 +384,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!ModelState.IsValid || paymentPrompt is null || payoutMethodIds.Count == 0)
                 return this.CreateValidationError(ModelState);
 
-            var accounting = paymentPrompt.Calculate();
-            var cryptoPaid = accounting.PaidSettled;
-            var dueAmount = accounting.TotalDueSettled;
-
-            // If no payment, but settled and marked, assume it has been fully paid
-            if (cryptoPaid is 0 && accounting.Paid is 0 &&
-                invoice is { Status: InvoiceStatus.Settled, ExceptionStatus: InvoiceExceptionStatus.Marked })
-            {
-                cryptoPaid = accounting.TotalDue;
-                dueAmount = 0;
-            }
+            var (cryptoPaid, dueAmount) = paymentPrompt.CalculateRefundableAmounts();
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
             var paidCurrency = Math.Round(cryptoPaid * paymentPrompt.Rate, cdCurrency.Divisibility);
             var rateResult = await _rateProvider.FetchRate(
@@ -542,17 +532,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (paymentPrompt == null)
                 return this.CreateAPIError("invalid-payment-method", "Invalid payment method");
 
-            var accounting = paymentPrompt.Calculate();
-            var cryptoPaid = accounting.PaidSettled;
-            var dueAmount = accounting.TotalDueSettled;
-
-            // If no payment, but settled and marked, assume it has been fully paid
-            if (cryptoPaid is 0 && accounting.Paid is 0 &&
-                invoice is { Status: InvoiceStatus.Settled, ExceptionStatus: InvoiceExceptionStatus.Marked })
-            {
-                cryptoPaid = accounting.TotalDue;
-                dueAmount = 0;
-            }
+            var (cryptoPaid, dueAmount) = paymentPrompt.CalculateRefundableAmounts();
 
             var paymentMethodCurrency = paymentPrompt.Currency;
 

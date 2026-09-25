@@ -991,6 +991,18 @@ namespace BTCPayServer.Services.Invoices
             return accounting;
         }
 
+        public (decimal Paid, decimal TotalDue) CalculateRefundableAmounts()
+        {
+            var accounting = Calculate();
+            if (accounting.PaidSettled is 0 && accounting.Paid is 0 &&
+                ParentEntity is { Status: InvoiceStatus.Settled, ExceptionStatus: InvoiceExceptionStatus.Marked })
+            {
+                return (accounting.TotalDue, 0);
+            }
+
+            return (accounting.PaidSettled, accounting.TotalDueSettled);
+        }
+
         private decimal Smallest(int precision)
         {
             decimal a = 1.0m;

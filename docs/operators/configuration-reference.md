@@ -10,8 +10,7 @@ documented with the feature that consumes them.
 
 Configuration-file keys, environment variables, and command-line options feed
 the same configuration system. Environment variables use the `BTCPAY_`
-prefix. Options marked deprecated remain listed for compatibility and should
-not be used in new deployments.
+prefix. Legacy compatibility options are intentionally omitted.
 
 Regenerate this page from the repository root:
 
@@ -25,9 +24,6 @@ node docs/scripts/generate-configuration-reference.js
 |---|---|---|---|
 | `-? \| -h \| --help` | N/A | N/A | Show help information |
 | `-n \| --network` | `network` | `BTCPAY_NETWORK` | Set the network among (mainnet,testnet,regtest) (default: mainnet) |
-| `--testnet \| -testnet` | `testnet` | `BTCPAY_TESTNET` | Use testnet (deprecated, use --network instead) |
-| `--regtest \| -regtest` | `regtest` | `BTCPAY_REGTEST` | Use regtest (deprecated, use --network instead) |
-| `--signet \| -signet` | `signet` | `BTCPAY_SIGNET` | Use signet (deprecated, use --network instead) |
 | `--chains \| -c` | `chains` | `BTCPAY_CHAINS` | Chains to support as a comma separated. Default to empty if --nodefaultchain is set (default: btc; available: btc) |
 | `--nodefaultchain \| -nodefaultchain` | `nodefaultchain` | `BTCPAY_NODEFAULTCHAIN` | Allow BTCPay to start without any chain enabled (default: false) |
 | `-c \| --conf` | `conf` | `BTCPAY_CONF` | The configuration file |
@@ -70,15 +66,34 @@ node docs/scripts/generate-configuration-reference.js
 | `--debuglog` | `debuglog` | `BTCPAY_DEBUGLOG` | A rolling log file for debug messages. |
 | `--debugloglevel` | `debugloglevel` | `BTCPAY_DEBUGLOGLEVEL` | The severity you log (default:information) |
 
-## Compatibility and development
+## Development
 
 | Command line | Configuration file | Environment | Description |
 |---|---|---|---|
-| `--deprecated` | `deprecated` | `BTCPAY_DEPRECATED` | Allow deprecated settings (default:false) |
-| `--recommended-plugins` | `recommended-plugins` | `BTCPAY_RECOMMENDED-PLUGINS` | Deprecated. Accepted for compatibility but no longer used by the embedded plugin directory. |
 | `--cheatmode` | `cheatmode` | `BTCPAY_CHEATMODE` | Add some helper UI to facilitate dev-time testing (Default false) |
 
 ## Chain services
+
+The generated options use Bitcoin (`BTC`) as the chain prefix. Builds that
+include other chains use the same setting names with `btc` replaced by the
+lowercase crypto code in command-line and configuration-file keys, and by the
+uppercase crypto code in environment variables. For example, Litecoin's
+explorer URL is `--ltcexplorerurl`, `ltc.explorer.url`, or
+`BTCPAY_LTCEXPLORERURL`.
+
+| Chain | Crypto code |
+|---|---|
+| Bitcoin | `BTC` |
+| Bitcoin Gold | `BTG` |
+| Dash | `DASH` |
+| Dogecoin | `DOGE` |
+| Groestlcoin | `GRS` |
+| Liquid Bitcoin | `LBTC` |
+| Litecoin | `LTC` |
+| Monacoin | `MONA` |
+
+Only configure chains included in the deployed build and its NBXplorer
+instance. Not every chain supports every Lightning-specific setting.
 
 | Command line | Configuration file | Environment | Description |
 |---|---|---|---|

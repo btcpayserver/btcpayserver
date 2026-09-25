@@ -8,14 +8,16 @@ const repositoryRoot = resolve(__dirname, '..', '..')
 const outputPath = resolve(repositoryRoot, 'docs', 'operators', 'configuration-reference.md')
 
 const categories = [
-  ['Process and network', new Set(['help', 'network', 'testnet', 'regtest', 'signet', 'chains', 'nodefaultchain', 'conf', 'port', 'bind', 'datadir'])],
+  ['Process and network', new Set(['help', 'network', 'chains', 'nodefaultchain', 'conf', 'port', 'bind', 'datadir'])],
   ['Database', new Set(['postgres', 'explorerpostgres'])],
   ['HTTP and security', new Set(['nocsp', 'rootpath', 'xforwardedproto', 'disable-registration'])],
   ['Host and external services', new Set(['externalservices', 'btcpayhostenabled', 'btcpayhostexecutable', 'torrcfile', 'torservices', 'socksendpoint', 'updateurl'])],
   ['Logging and diagnostics', new Set(['debuglog', 'debugloglevel'])],
-  ['Compatibility and development', new Set(['deprecated', 'recommended-plugins', 'cheatmode'])],
+  ['Development', new Set(['cheatmode'])],
   ['Chain services', new Set(['btcexplorerurl', 'btcexplorercookiefile', 'btclightning', 'btcexternallndgrpc', 'btcexternallndrest', 'btcexternalrtl', 'btcexternalspark', 'btcexternalcharge'])]
 ]
+
+const legacyOptions = new Set(['testnet', 'regtest', 'signet', 'deprecated', 'recommended-plugins'])
 
 const configurationKeys = {
   btcexplorerurl: 'btc.explorer.url',
@@ -64,7 +66,7 @@ for (const line of help.split(/\r?\n/)) {
 }
 
 const assigned = new Set(categories.flatMap(([, names]) => [...names]))
-const unknown = options.filter(option => !assigned.has(option.name))
+const unknown = options.filter(option => !assigned.has(option.name) && !legacyOptions.has(option.name))
 const missing = [...assigned].filter(name => !options.some(option => option.name === name))
 if (unknown.length > 0 || missing.length > 0) {
   if (unknown.length > 0) console.error(`Uncategorized options: ${unknown.map(option => option.name).join(', ')}`)
@@ -83,9 +85,33 @@ const rows = option => {
   return `| \`${escapeCell(option.syntax)}\` | ${config} | ${environment} | ${escapeCell(description)} |`
 }
 
+const sectionIntroductions = {
+  'Chain services': `The generated options use Bitcoin (\`BTC\`) as the chain prefix. Builds that
+include other chains use the same setting names with \`btc\` replaced by the
+lowercase crypto code in command-line and configuration-file keys, and by the
+uppercase crypto code in environment variables. For example, Litecoin's
+explorer URL is \`--ltcexplorerurl\`, \`ltc.explorer.url\`, or
+\`BTCPAY_LTCEXPLORERURL\`.
+
+| Chain | Crypto code |
+|---|---|
+| Bitcoin | \`BTC\` |
+| Bitcoin Gold | \`BTG\` |
+| Dash | \`DASH\` |
+| Dogecoin | \`DOGE\` |
+| Groestlcoin | \`GRS\` |
+| Liquid Bitcoin | \`LBTC\` |
+| Litecoin | \`LTC\` |
+| Monacoin | \`MONA\` |
+
+Only configure chains included in the deployed build and its NBXplorer
+instance. Not every chain supports every Lightning-specific setting.`
+}
+
 const sections = categories.map(([title, names]) => {
   const categoryOptions = options.filter(option => names.has(option.name))
-  return `## ${title}\n\n| Command line | Configuration file | Environment | Description |\n|---|---|---|---|\n${categoryOptions.map(rows).join('\n')}`
+  const introduction = sectionIntroductions[title]
+  return `## ${title}\n\n${introduction ? `${introduction}\n\n` : ''}| Command line | Configuration file | Environment | Description |\n|---|---|---|---|\n${categoryOptions.map(rows).join('\n')}`
 })
 
 const markdown = `# Configuration Reference
@@ -100,8 +126,7 @@ documented with the feature that consumes them.
 
 Configuration-file keys, environment variables, and command-line options feed
 the same configuration system. Environment variables use the \`BTCPAY_\`
-prefix. Options marked deprecated remain listed for compatibility and should
-not be used in new deployments.
+prefix. Legacy compatibility options are intentionally omitted.
 
 Regenerate this page from the repository root:
 

@@ -399,6 +399,7 @@ namespace BTCPayServer.Services.Invoices
                 Currency = Currency
             };
             NetSettled = 0.0m;
+            GrossSettled = 0.0m;
             foreach (var payment in GetPayments(false))
             {
                 payment.Rate = GetInvoiceRate(payment.Currency);
@@ -409,7 +410,10 @@ namespace BTCPayServer.Services.Invoices
                     PaidAmount.Gross += payment.InvoicePaidAmount.Gross;
                     PaidAmount.Net += payment.InvoicePaidAmount.Net;
                     if (payment.Status == PaymentStatus.Settled)
+                    {
                         NetSettled += payment.InvoicePaidAmount.Net;
+                        GrossSettled += payment.InvoicePaidAmount.Gross;
+                    }
                 }
             }
             NetDue = Price - PaidAmount.Net;
@@ -765,6 +769,12 @@ namespace BTCPayServer.Services.Invoices
         /// </summary>
         [JsonIgnore]
         public decimal NetSettled { get; private set; }
+
+        /// <summary>
+        /// Same as <see cref="Amounts.Gross"/> of <see cref="PaidAmount"/>, but only counting settled payments.
+        /// </summary>
+        [JsonIgnore]
+        public decimal GrossSettled { get; private set; }
         [JsonIgnore]
         public bool DisableAccounting { get; set; }
 
@@ -867,6 +877,11 @@ namespace BTCPayServer.Services.Invoices
         public decimal Paid { get; set; }
 
         /// <summary>
+        /// Same as <see cref="Paid"/>, but only counting settled payments.
+        /// </summary>
+        public decimal PaidSettled { get; set; }
+
+        /// <summary>
         /// Total amount of the invoice paid in this currency
         /// </summary>
         public decimal PaymentMethodPaid { get; set; }
@@ -957,6 +972,7 @@ namespace BTCPayServer.Services.Invoices
             }
             accounting.TotalDue = Coins(grossDue / rate, divisibility);
             accounting.Paid = Coins(i.PaidAmount.Gross / rate, divisibility);
+            accounting.PaidSettled = Coins(i.GrossSettled / rate, divisibility);
             accounting.PaymentMethodPaid = Coins(thisPaymentMethodPayments.Sum(p => p.PaidAmount.Gross), divisibility);
 
             // This one deal with the fact where it might looks like a slight over payment due to the dust of another payment method.

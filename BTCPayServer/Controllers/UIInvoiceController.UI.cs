@@ -365,7 +365,7 @@ namespace BTCPayServer.Controllers
             }
 
             var accounting = paymentMethod.Calculate();
-            var cryptoPaid = accounting.Paid;
+            var cryptoPaid = accounting.PaidSettled;
             var dueAmount = accounting.TotalDue;
 
             // If no payment, but settled and marked, assume it has been fully paid
@@ -378,7 +378,7 @@ namespace BTCPayServer.Controllers
             var paymentMethodCurrency = paymentMethod.Currency;
 
             var isPaidOver = invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver;
-            decimal? overpaidAmount = isPaidOver ? Math.Round(cryptoPaid - dueAmount, paymentMethod.Divisibility) : null;
+            decimal? overpaidAmount = isPaidOver ? Math.Max(0, Math.Round(cryptoPaid - dueAmount, paymentMethod.Divisibility)) : null;
             int ppDivisibility = paymentMethod.Divisibility;
             switch (model.RefundStep)
             {
@@ -468,6 +468,10 @@ namespace BTCPayServer.Controllers
                             {
                                 ModelState.AddModelError(nameof(model.SelectedRefundOption), StringLocalizer["Overpaid amount cannot be calculated"]);
                             }
+                            else if (overpaidAmount <= 0)
+                            {
+                                ModelState.AddModelError(nameof(model.SelectedRefundOption), StringLocalizer["The overpaid amount has not settled yet"]);
+                            }
                             if (!ModelState.IsValid)
                             {
                                 return View("_RefundModal", model);
@@ -475,6 +479,8 @@ namespace BTCPayServer.Controllers
 
                             createPullPayment.Currency = paymentMethodCurrency;
                             createPullPayment.Amount = overpaidAmount!.Value;
+                            // Employees may auto-approve this option without CanCreatePullPayments because the
+                            // amount is limited to the settled overpayment and cannot spend the invoice principal.
                             createPullPayment.AutoApproveClaims = true;
                             break;
 

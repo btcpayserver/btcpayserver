@@ -385,7 +385,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
 
             var accounting = paymentPrompt.Calculate();
-            var cryptoPaid = accounting.Paid;
+            var cryptoPaid = accounting.PaidSettled;
             var dueAmount = accounting.TotalDue;
 
             // If no payment, but settled and marked, assume it has been fully paid
@@ -452,6 +452,10 @@ namespace BTCPayServer.Controllers.Greenfield
                     if (invoice.ExceptionStatus != InvoiceExceptionStatus.PaidOver)
                     {
                         ModelState.AddModelError(nameof(request.RefundVariant), "Invoice is not overpaid");
+                    }
+                    else if (Math.Round(paidAmount - dueAmount, appliedDivisibility) <= 0)
+                    {
+                        ModelState.AddModelError(nameof(request.RefundVariant), "The overpaid amount has not settled yet");
                     }
                     if (!ModelState.IsValid)
                     {
@@ -529,7 +533,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateAPIError("invalid-payment-method", "Invalid payment method");
 
             var accounting = paymentPrompt.Calculate();
-            var cryptoPaid = accounting.Paid;
+            var cryptoPaid = accounting.PaidSettled;
             var dueAmount = accounting.TotalDue;
 
             // If no payment, but settled and marked, assume it has been fully paid
@@ -542,7 +546,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var paymentMethodCurrency = paymentPrompt.Currency;
 
             var isPaidOver = invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver;
-            decimal? overpaidAmount = isPaidOver ? Math.Round(cryptoPaid - dueAmount, paymentPrompt.Divisibility) : null;
+            decimal? overpaidAmount = isPaidOver ? Math.Max(0, Math.Round(cryptoPaid - dueAmount, paymentPrompt.Divisibility)) : null;
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
 
             var paidAmount = Math.Round(cryptoPaid * paymentPrompt.Rate, cdCurrency.Divisibility);

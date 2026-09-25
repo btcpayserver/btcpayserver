@@ -85,7 +85,7 @@ services:
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.6.10
+    image: nicolasdorier/nbxplorer:2.6.18
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -287,7 +287,7 @@ services:
 
   tor:
     restart: unless-stopped
-    image: btcpayserver/tor:0.4.9.12
+    image: btcpayserver/tor:0.4.9.13
     container_name: tor
     environment:
         TOR_PASSWORD: btcpayserver

@@ -57,10 +57,11 @@ Use these patterns when writing or refactoring Playwright tests in BTCPayServer.
 ## Running And Debugging Tests
 
 - Before debugging BTCPay Server or running tests, start the test dependencies by running `docker-compose up -d dev` from the `BTCPayServer.Tests` directory.
+- Always set `PLAYWRIGHT_HEADLESS=true` when running Playwright tests so browser windows do not interrupt the user.
 - Run tests directly on the host rather than through Docker Compose. From the repository root, run a specific test with:
 
 ```sh
-dotnet test --project BTCPayServer.Tests/BTCPayServer.Tests.csproj --filter-method BTCPayServer.Tests.BitpayTests.CanUsePairing
+PLAYWRIGHT_HEADLESS=true dotnet test --project BTCPayServer.Tests/BTCPayServer.Tests.csproj --filter-method BTCPayServer.Tests.BitpayTests.CanUsePairing
 ```
 
 - Replace the value passed to `--filter-method` with the fully qualified test method to run another test.

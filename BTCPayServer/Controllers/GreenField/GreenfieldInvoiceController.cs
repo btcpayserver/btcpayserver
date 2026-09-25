@@ -389,7 +389,8 @@ namespace BTCPayServer.Controllers.Greenfield
             var dueAmount = accounting.TotalDue;
 
             // If no payment, but settled and marked, assume it has been fully paid
-            if (cryptoPaid is 0 && invoice is { Status: InvoiceStatus.Settled, ExceptionStatus: InvoiceExceptionStatus.Marked })
+            if (cryptoPaid is 0 && accounting.Paid is 0 &&
+                invoice is { Status: InvoiceStatus.Settled, ExceptionStatus: InvoiceExceptionStatus.Marked })
             {
                 cryptoPaid = accounting.TotalDue;
                 dueAmount = 0;
@@ -420,6 +421,10 @@ namespace BTCPayServer.Controllers.Greenfield
             if (request.SubtractPercentage is < 0 or > 100)
             {
                 ModelState.AddModelError(nameof(request.SubtractPercentage), "Percentage must be a numeric value between 0 and 100");
+            }
+            if (paidAmount <= 0 && request.RefundVariant is RefundVariant.RateThen or RefundVariant.CurrentRate or RefundVariant.Fiat)
+            {
+                ModelState.AddModelError(nameof(request.RefundVariant), "There are no settled payments to refund");
             }
             if (!ModelState.IsValid)
             {
@@ -537,7 +542,8 @@ namespace BTCPayServer.Controllers.Greenfield
             var dueAmount = accounting.TotalDue;
 
             // If no payment, but settled and marked, assume it has been fully paid
-            if (cryptoPaid is 0 && invoice is { Status: InvoiceStatus.Settled, ExceptionStatus: InvoiceExceptionStatus.Marked })
+            if (cryptoPaid is 0 && accounting.Paid is 0 &&
+                invoice is { Status: InvoiceStatus.Settled, ExceptionStatus: InvoiceExceptionStatus.Marked })
             {
                 cryptoPaid = accounting.TotalDue;
                 dueAmount = 0;

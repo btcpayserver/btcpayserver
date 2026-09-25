@@ -1844,8 +1844,25 @@ namespace BTCPayServer.Tests
                 Status = InvoiceStatus.Settled
             });
 
+            var validationError = await AssertValidationError(new[] { "RefundVariant" }, async () =>
+            {
+                await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest
+                {
+                    PayoutMethodId = method.PaymentMethodId,
+                    RefundVariant = RefundVariant.RateThen
+                });
+            });
+            Assert.Contains("no settled payments", validationError.Message, StringComparison.OrdinalIgnoreCase);
+
+            await tester.ExplorerNode.GenerateAsync(5);
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var refundData = await client.GetInvoiceRefundTriggerData(invoice.Id, method.PaymentMethodId);
+                Assert.Equal(amount, refundData.PaymentAmountThen);
+            });
+
             // test validation for the payment method
-            var validationError = await AssertValidationError(new[] { "PayoutMethodId" }, async () =>
+            validationError = await AssertValidationError(new[] { "PayoutMethodId" }, async () =>
             {
                 await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest()
                 {
@@ -2518,10 +2535,20 @@ namespace BTCPayServer.Tests
             var accounting = await client.GetInvoiceRefundTriggerData(invoice.Id, paymentMethod.PaymentMethodId);
             Assert.NotNull(accounting);
             Assert.Equal("BTC", accounting.InvoiceCurrency);
-            Assert.Equal(0.0002M, accounting.PaymentAmountThen);
-            Assert.Equal(0.0002M, accounting.PaymentAmountNow);
-            Assert.Equal(0.0001M, accounting.OverpaidPaymentAmount);
-            Assert.True(accounting.InvoiceAmount > 0);
+            Assert.Equal(0, accounting.PaymentAmountThen);
+            Assert.Equal(0, accounting.PaymentAmountNow);
+            Assert.Equal(0, accounting.OverpaidPaymentAmount);
+            Assert.Equal(0, accounting.InvoiceAmount);
+
+            await tester.ExplorerNode.GenerateAsync(5);
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                accounting = await client.GetInvoiceRefundTriggerData(invoice.Id, pm.PaymentMethodId);
+                Assert.Equal(0.0002M, accounting.PaymentAmountThen);
+                Assert.Equal(0.0002M, accounting.PaymentAmountNow);
+                Assert.Equal(0.0001M, accounting.OverpaidPaymentAmount);
+                Assert.True(accounting.InvoiceAmount > 0);
+            });
         }
 
         [Fact(Timeout = TestTimeout)]

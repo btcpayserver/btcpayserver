@@ -1080,26 +1080,15 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("/stores/{storeId}/invoices")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]
-        public async Task<IActionResult> ListInvoices(InvoicesModel? model = null)
+        public async Task<IActionResult> ListInvoices(string storeId, InvoicesModel? model = null)
         {
             model ??= new InvoicesModel();
             var fs = model.GetSearch();
             if (model.FilterCommand is not null)
                 return model.Redirect(Request);
-            string? storeId = model.StoreId;
-            var storeIds = new HashSet<string>();
-            if (storeId is not null)
-            {
-                storeIds.Add(storeId);
-            }
-            if (fs.GetFilterArray("storeid") is { } l)
-            {
-                foreach (var i in l)
-                    storeIds.Add(i);
-            }
             var apps =  await _appService.GetAllApps(User.GetIdOrNull(), false, storeId);
             InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps);
-            invoiceQuery.StoreId = storeIds.ToArray();
+            invoiceQuery.StoreId = [storeId];
             invoiceQuery.Take = model.Count;
             invoiceQuery.Skip = model.Skip;
             invoiceQuery.IncludeRefunds = true;
@@ -1162,15 +1151,15 @@ namespace BTCPayServer.Controllers
         [HttpGet("/stores/{storeId}/invoices/create")]
         [HttpGet("invoices/create")]
         [Authorize(Policy = Policies.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        public async Task<IActionResult> CreateInvoice(InvoicesModel? model = null)
+        public async Task<IActionResult> CreateInvoice(string? storeId = null)
         {
-            if (string.IsNullOrEmpty(model?.StoreId))
+            if (string.IsNullOrEmpty(storeId))
             {
                 TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["You need to select a store before creating an invoice."].Value;
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
             }
 
-            var store = await _StoreRepository.FindStore(model.StoreId);
+            var store = await _StoreRepository.FindStore(storeId);
             if (store == null)
                 return NotFound();
 
@@ -1182,7 +1171,7 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             var vm = new CreateInvoiceModel
             {
-                StoreId = model.StoreId,
+                StoreId = storeId,
                 Currency = storeBlob.DefaultCurrency,
                 AvailablePaymentMethods = GetPaymentMethodsSelectList(store)
             };

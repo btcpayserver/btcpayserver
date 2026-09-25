@@ -5,7 +5,7 @@ description: Use when writing, refactoring, running, or debugging Playwright tes
 
 # Playwright Test Patterns
 
-Follow [Testing](../../../docs/maintainers/testing.md) and [Coding conventions](../../../docs/maintainers/coding-conventions.md#frontend-selectors).
+Follow [Testing](../../../docs/maintainers/README.md#testing) and [Coding conventions](../../../docs/maintainers/README.md#frontend-selectors).
 
 ## Running and Debugging Tests
 

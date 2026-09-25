@@ -5,7 +5,7 @@ description: Use when editing or reviewing Razor `.cshtml` files containing para
 
 # Razor Localization
 
-Follow [Coding conventions](../../../docs/maintainers/coding-conventions.md#razor-localization).
+Follow [Coding conventions](../../../docs/maintainers/README.md#razor-localization).
 
 ## Review Checklist
 

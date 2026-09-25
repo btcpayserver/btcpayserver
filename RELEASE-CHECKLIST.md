@@ -1,3 +1,3 @@
 # Release Checklist
 
-The canonical release checklist is in the [maintainer handbook](docs/maintainers/release-checklist.md).
+The canonical release checklist is in the [maintainer handbook](docs/maintainers/README.md#release-checklist).

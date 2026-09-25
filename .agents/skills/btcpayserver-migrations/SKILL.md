@@ -5,6 +5,6 @@ description: Use when creating or reviewing Entity Framework migrations in BTCPa
 
 # BTCPayServer Migrations
 
-Follow [Database migrations](../../../docs/maintainers/database-migrations.md).
+Follow [Database migrations](../../../docs/maintainers/README.md#database-migrations).
 
 Before finishing, inspect the generated migration, snapshot, and repository diff. Run the focused database tests appropriate to the schema or data change.

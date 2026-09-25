@@ -20,4 +20,4 @@ For startup migrations, use the migration registration contracts exposed by BTCP
 
 Use repositories or focused data services around the context so controllers and background services do not leak context lifetimes. Do not retain a scoped context in a singleton; create a scope or use the registered factory for each unit of work.
 
-See [`BaseDbContextFactory<T>`](https://github.com/btcpayserver/btcpayserver/blob/master/BTCPayServer.Abstractions/Contracts/BaseDbContextFactory.cs) and the core [database migration conventions](https://github.com/btcpayserver/btcpayserver/blob/master/docs/maintainers/database-migrations.md).
+See [`BaseDbContextFactory<T>`](https://github.com/btcpayserver/btcpayserver/blob/master/BTCPayServer.Abstractions/Contracts/BaseDbContextFactory.cs) and the core [database migration conventions](https://github.com/btcpayserver/btcpayserver/blob/master/docs/maintainers/README.md#database-migrations).

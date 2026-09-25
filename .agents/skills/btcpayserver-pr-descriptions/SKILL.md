@@ -5,7 +5,7 @@ description: Use when writing, reviewing, or improving pull request descriptions
 
 # BTCPayServer Pull Request Descriptions
 
-Follow [Coding conventions](../../../docs/maintainers/coding-conventions.md#pull-requests) and [API changes](../../../docs/maintainers/api-changes.md). Draft the description from the actual diff and repository context; do not infer product impact from the title alone.
+Follow [Coding conventions](../../../docs/maintainers/README.md#pull-requests) and [API changes](../../../docs/maintainers/README.md#api-changes). Draft the description from the actual diff and repository context; do not infer product impact from the title alone.
 
 ## GitHub CLI Formatting
 

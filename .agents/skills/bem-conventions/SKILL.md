@@ -5,7 +5,7 @@ description: Use when editing Razor views, view components, CSS, JavaScript DOM 
 
 # BEM Conventions
 
-Follow [Coding conventions](../../../docs/maintainers/coding-conventions.md#frontend-selectors).
+Follow [Coding conventions](../../../docs/maintainers/README.md#frontend-selectors).
 
 ## Refactoring Existing Code
 

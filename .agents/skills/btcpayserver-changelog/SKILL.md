@@ -5,7 +5,7 @@ description: Use when updating or reviewing Changelog.md in BTCPayServer. Contai
 
 # BTCPayServer Changelog
 
-Follow the [changelog conventions](../../../docs/maintainers/coding-conventions.md#changelog). When asked to update or review the changelog, focus on user-visible changes and keep entries concise.
+Follow the [changelog conventions](../../../docs/maintainers/README.md#changelog). When asked to update or review the changelog, focus on user-visible changes and keep entries concise.
 
 ## Release Range
 

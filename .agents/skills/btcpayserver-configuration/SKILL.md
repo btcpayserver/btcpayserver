@@ -5,7 +5,7 @@ description: Use when adding or reviewing BTCPay Server startup configuration op
 
 # BTCPay Server Configuration Options
 
-Follow [Configuration option maintenance](../../../docs/maintainers/configuration-options.md).
+Follow [Configuration option maintenance](../../../docs/maintainers/README.md#configuration-option-maintenance).
 
 ## Verification
 

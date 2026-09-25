@@ -179,7 +179,7 @@ Do not use `migrationBuilder.IsNpgsql()`; migrations may assume PostgreSQL. Foll
 
 If Entity Framework cannot generate the required operation, add a timestamp-prefixed file in `BTCPayServer.Data/Migrations`, such as `20260525115757_passkey.cs`, and use `migrationBuilder.Sql(...)` for the raw SQL.
 
-Test both a fresh database and an upgrade from the previous schema when the change has meaningful data or compatibility risk. The operator procedure for migrating legacy SQLite or MySQL installations is separate: [database backend migration](../operators/README.md#migrate-sqlite-or-mysql-to-postgresql).
+Test both a fresh database and an upgrade from the previous schema when the change has meaningful data or compatibility risk.
 
 ## API Changes
 

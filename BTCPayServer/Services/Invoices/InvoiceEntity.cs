@@ -859,6 +859,9 @@ namespace BTCPayServer.Services.Invoices
         /// <summary>Total amount of this invoice</summary>
         public decimal TotalDue { get; set; }
 
+        /// <summary>Total amount of this invoice including fees from settled payments only</summary>
+        public decimal TotalDueSettled { get; set; }
+
         /// <summary>Amount of crypto remaining to pay this invoice</summary>
         public decimal Due { get; set; }
 
@@ -971,6 +974,7 @@ namespace BTCPayServer.Services.Invoices
                 grossDue += rate * PaymentMethodFee;
             }
             accounting.TotalDue = Coins(grossDue / rate, divisibility);
+            accounting.TotalDueSettled = Coins((i.Price + i.GrossSettled - i.NetSettled) / rate, divisibility);
             accounting.Paid = Coins(i.PaidAmount.Gross / rate, divisibility);
             accounting.PaidSettled = Coins(i.GrossSettled / rate, divisibility);
             accounting.PaymentMethodPaid = Coins(thisPaymentMethodPayments.Sum(p => p.PaidAmount.Gross), divisibility);

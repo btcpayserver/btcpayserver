@@ -86,4 +86,46 @@ public class RefundAmountTests(ITestOutputHelper helper) : UnitTestBase(helper)
         Assert.Equal(accounting.Paid, accounting.PaidSettled);
         Assert.Equal(1.0m, accounting.PaidSettled);
     }
+
+    [Fact]
+    [Trait("Fast", "Fast")]
+    public void TotalDueSettledExcludesProcessingPaymentFees()
+    {
+        var pmi = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
+        var entity = new InvoiceEntity
+        {
+            Currency = "USD",
+            Price = 5000m
+        };
+#pragma warning disable CS0618
+        entity.Payments = new List<PaymentEntity>();
+        entity.Rates["BTC"] = 5000m;
+        entity.Payments.Add(new PaymentEntity
+        {
+            Currency = "BTC",
+            Value = 1.2m,
+            PaymentMethodFee = 0.1m,
+            Status = PaymentStatus.Settled
+        });
+        entity.Payments.Add(new PaymentEntity
+        {
+            Currency = "BTC",
+            Value = 0.2m,
+            PaymentMethodFee = 0.1m,
+            Status = PaymentStatus.Processing
+        });
+#pragma warning restore CS0618
+        entity.SetPaymentPrompt(pmi, new PaymentPrompt
+        {
+            Currency = "BTC",
+            Divisibility = 8
+        });
+
+        entity.UpdateTotals();
+        var accounting = entity.GetPaymentPrompts().TryGet(pmi).Calculate();
+
+        Assert.Equal(1.2m, accounting.TotalDue);
+        Assert.Equal(1.1m, accounting.TotalDueSettled);
+        Assert.Equal(0.1m, accounting.PaidSettled - accounting.TotalDueSettled);
+    }
 }

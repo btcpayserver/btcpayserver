@@ -366,7 +366,7 @@ namespace BTCPayServer.Controllers
 
             var accounting = paymentMethod.Calculate();
             var cryptoPaid = accounting.PaidSettled;
-            var dueAmount = accounting.TotalDue;
+            var dueAmount = accounting.TotalDueSettled;
 
             // If no payment, but settled and marked, assume it has been fully paid
             if (cryptoPaid is 0 && accounting.Paid is 0 &&
@@ -550,6 +550,11 @@ namespace BTCPayServer.Controllers
             {
                 var reduceByAmount = createPullPayment.Amount * (model.SubtractPercentage / 100);
                 createPullPayment.Amount = Math.Round(createPullPayment.Amount - reduceByAmount, ppDivisibility);
+            }
+            if (createPullPayment.Amount <= 0)
+            {
+                ModelState.AddModelError(nameof(model.SelectedRefundOption), StringLocalizer["Refund amount must be greater than 0"]);
+                return View("_RefundModal", model);
             }
 
             var ppId = await _paymentHostedService.CreateRefundPullPayment(store, createPullPayment, invoice.Id);

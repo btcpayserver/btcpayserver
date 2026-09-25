@@ -1951,6 +1951,17 @@ namespace BTCPayServer.Tests
             });
             Assert.Contains("SubtractPercentage: Percentage must be a numeric value between 0 and 100", validationError.Message);
 
+            validationError = await AssertValidationError(new[] { "RefundVariant" }, async () =>
+            {
+                await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest
+                {
+                    PayoutMethodId = method.PaymentMethodId,
+                    RefundVariant = RefundVariant.RateThen,
+                    SubtractPercentage = 100
+                });
+            });
+            Assert.Contains("Refund amount must be greater than 0", validationError.Message);
+
             // should auto-approve
             pp = await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest
             {

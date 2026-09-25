@@ -222,6 +222,7 @@ namespace BTCPayServer.Controllers
                 RedirectUrl = i.RedirectURL?.AbsoluteUri ?? i.Metadata?.OrderUrl,
                 Status = i.Status,
                 Currency = i.Currency,
+                InvoiceAmount = i.Price,
                 Timestamp = i.InvoiceTime,
                 StoreName = store.StoreName,
                 StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob),
@@ -265,7 +266,8 @@ namespace BTCPayServer.Controllers
 
             var payments = ViewPaymentRequestViewModel.PaymentRequestInvoicePayment.GetViewModels(i, _displayFormatter, _transactionLinkProviders, _handlers);
             vm.TaxIncluded = i.Metadata?.TaxIncluded ?? 0.0m;
-            vm.Amount = i.PaidAmount.Net;
+            vm.PaidAmount = i.PaidAmount.Net;
+            vm.IsOverpaid = i.ExceptionStatus == InvoiceExceptionStatus.PaidOver;
             vm.Payments = receipt.ShowPayments is false ? null : payments;
 
             return View(print ? "InvoiceReceiptPrint" : "InvoiceReceipt", vm);

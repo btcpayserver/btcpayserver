@@ -14,7 +14,9 @@ namespace BTCPayServer.Models.InvoicingModels
         public string OrderId { get; set; }
         public string Currency { get; set; }
         public string StoreName { get; set; }
-        public decimal Amount { get; set; }
+        public decimal InvoiceAmount { get; set; }
+        public decimal PaidAmount { get; set; }
+        public bool IsOverpaid { get; set; }
         public DateTimeOffset Timestamp { get; set; }
         public Dictionary<string, object> AdditionalData { get; set; }
         public Dictionary<string, object> CartData { get; set; }

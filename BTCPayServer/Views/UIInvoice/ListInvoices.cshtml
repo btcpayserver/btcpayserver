@@ -5,6 +5,7 @@
 @model InvoicesModel
 @{
     ViewData.SetLayoutModel(new("Invoices", StringLocalizer["Invoices"]));
+    var storeId = Context.GetStoreData().Id;
     var statusFilterCount = Model.Search.CountArrayFilter("status") + Model.Search.CountArrayFilter("exceptionstatus") + (Model.Search.HasBooleanFilter("includearchived") ? 1 : 0) + (Model.Search.HasBooleanFilter("unusual") ? 1 : 0);
     var appFilterCount = Model.Apps.Count(app => Model.Search.HasArrayFilter("appid", app.Id));
 }
@@ -49,7 +50,7 @@
     <script src="~/modal/btcpay.js" asp-append-version="true" async></script>
 
     <script>
-        var invoicesUrl = @Safe.Json(Url.Action(nameof(UIInvoiceController.ListInvoices), new { storeId = Model.StoreId }));
+        var invoicesUrl = @Safe.Json(Url.Action(nameof(UIInvoiceController.ListInvoices), new { storeId }));
 
         delegate('click', '.showInvoice', e => {
             e.preventDefault();
@@ -74,7 +75,7 @@
             permission="@Policies.CanViewReports"
             asp-controller="UIReports"
             asp-action="StoreReports"
-            asp-route-storeId="@Model.StoreId"
+            asp-route-storeId="@storeId"
             asp-route-viewName="Invoices"
             class="btn btn-secondary">
             <vc:icon symbol="nav-reporting" />
@@ -83,7 +84,7 @@
         <a id="page-primary"
            permission="@Policies.CanCreateInvoice"
            asp-action="CreateInvoice"
-           asp-route-storeId="@Model.StoreId"
+           asp-route-storeId="@storeId"
            asp-route-searchTerm="@Model.SearchTerm"
            class="btn btn-primary"
            text-translate="true">
@@ -112,7 +113,7 @@
 
 <partial name="_StatusMessage" />
 
-<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" method="get">
+<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ListInvoices" asp-route-storeId="@storeId" method="get">
     <input asp-for="Count" type="hidden" />
 
     <vc:search-string-input search-string="Model.Search"></vc:search-string-input>
@@ -170,8 +171,8 @@
 {
     @* Standalone mass-action form: its controls reference it via the form="mass-action-form" attribute
        so the per-row comment forms below are not nested inside it (nested forms are invalid HTML). *@
-    <form id="mass-action-form" method="post" asp-action="MassAction" asp-route-storeId="@Model.StoreId">
-        <input type="hidden" name="storeId" value="@Model.StoreId" />
+    <form id="mass-action-form" method="post" asp-action="MassAction" asp-route-storeId="@storeId">
+        <input type="hidden" name="storeId" value="@storeId" />
     </form>
     <div class="table-responsive-md">
             <table id="invoices" class="table table-hover mass-action">

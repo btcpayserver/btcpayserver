@@ -528,9 +528,8 @@ namespace BTCPayServer.Tests
             });
 
             AssertSearchInvoice(acc, true, invoice.Id, null);
-            AssertSearchInvoice(acc, true, invoice.Id, null, acc.StoreId);
             AssertSearchInvoice(acc, true, invoice.Id, $"storeid:{acc.StoreId}");
-            AssertSearchInvoice(acc, false, invoice.Id, "storeid:doesnotexist");
+            AssertSearchInvoice(acc, true, invoice.Id, "storeid:doesnotexist");
             AssertSearchInvoice(acc, true, invoice.Id, $"{invoice.Id}");
             AssertSearchInvoice(acc, true, invoice.Id, "exceptionstatus:paidPartial");
             AssertSearchInvoice(acc, false, invoice.Id, "exceptionstatus:paidOver");
@@ -539,11 +538,24 @@ namespace BTCPayServer.Tests
             AssertSearchInvoice(acc, true, invoice.Id, "status:settled,exceptionstatus:paidPartial");
             AssertSearchInvoice(acc, true, invoice.Id, "status:settled,status:invalid,exceptionstatus:paidPartial,exceptionstatus:paidOver");
 
+            var otherStore = tester.NewAccount();
+            await otherStore.GrantAccessAsync();
+            otherStore.RegisterDerivationScheme("BTC");
+            var otherInvoice = await otherStore.BitPay.CreateInvoiceAsync(
+                new Invoice { Price = 10, Currency = "USD" }, Facade.Merchant);
+            var storeRepository = tester.PayTester.GetService<StoreRepository>();
+            await storeRepository.AddOrUpdateStoreUser(otherStore.StoreId, acc.UserId,
+                new StoreRoleId("Multisigner Guest"));
+            var permissionService = tester.PayTester.GetService<PermissionService>();
+            var accessibleOtherStore = await storeRepository.FindStore(otherStore.StoreId, acc.UserId);
+            Assert.False(accessibleOtherStore.HasPolicy(acc.UserId, Policies.CanViewInvoices, permissionService));
+            AssertSearchInvoice(acc, false, otherInvoice.Id, $"storeid:{otherStore.StoreId}");
+
             var invoiceController = acc.GetController<UIInvoiceController>();
             var comment = "refunded manually from cashier wallet";
             await invoiceController.Comment(invoice.Id, comment);
 
-            var listResult = await invoiceController.ListInvoices(new InvoicesModel { StoreId = acc.StoreId });
+            var listResult = await invoiceController.ListInvoices(acc.StoreId, new InvoicesModel());
             var listModel = (InvoicesModel)((ViewResult)listResult).Model;
             var listedInvoice = Assert.Single(listModel.Invoices, i => i.InvoiceId == invoice.Id);
             Assert.Equal(comment, listedInvoice.Comment);
@@ -622,11 +634,11 @@ namespace BTCPayServer.Tests
             response.EnsureSuccessStatusCode();
         }
 
-        private void AssertSearchInvoice(TestAccount acc, bool expected, string invoiceId, string filter, string storeId = null)
+        private void AssertSearchInvoice(TestAccount acc, bool expected, string invoiceId, string filter)
         {
             var result =
-                (InvoicesModel)((ViewResult)acc.GetController<UIInvoiceController>(storeId is not null)
-                    .ListInvoices(new InvoicesModel { SearchTerm = filter, StoreId = storeId }).Result).Model;
+                (InvoicesModel)((ViewResult)acc.GetController<UIInvoiceController>()
+                    .ListInvoices(acc.StoreId, new InvoicesModel { SearchTerm = filter }).Result).Model;
             Assert.Equal(expected, result.Invoices.Any(i => i.InvoiceId == invoiceId));
         }
 

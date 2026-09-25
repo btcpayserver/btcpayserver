@@ -2365,6 +2365,27 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("invoice-processing", pageContent);
             });
 
+            // Overpaid receipts show both the original invoice amount and the amount paid.
+            await s.GoToInvoices(s.StoreId);
+            var overpaidInvoice = await s.CreateInvoice(10);
+            await s.GoToInvoiceCheckout(overpaidInvoice);
+            await s.PayInvoice(mine: true, amount: 1m, clickReceipt: true);
+
+            var invoiceAmount = s.Page.Locator(".invoice-summary__invoice-amount");
+            var paidAmount = s.Page.Locator(".invoice-summary__amount-paid");
+            await Expect(invoiceAmount).ToContainTextAsync("Invoice Amount");
+            await Expect(invoiceAmount).ToContainTextAsync("$10.00");
+            await Expect(paidAmount).ToContainTextAsync("Amount Paid");
+            await Expect(paidAmount).Not.ToContainTextAsync("$10.00");
+
+            var printPage = s.Page.Context.WaitForPageAsync();
+            await s.Page.Locator(".invoice-receipt__print-link").ClickAsync();
+            await using (await s.SwitchPage(printPage))
+            {
+                await Expect(s.Page.Locator(".invoice-summary__amount-paid")).ToContainTextAsync("Amount paid");
+                await Expect(s.Page.Locator("#PaymentDetails")).ToContainTextAsync("$10.00");
+            }
+
             // ensure archived invoices are not accessible for logged out users
             await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(s.StoreId, i);
             await s.GoToHome();

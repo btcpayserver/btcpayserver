@@ -9,7 +9,7 @@
     ViewData.SetTitle($"Receipt from {Model.StoreName}");
     ViewData["StoreBranding"] = Model.StoreBranding;
     var isProcessing = Model.Status == InvoiceStatus.Processing;
-    var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.Amount == 0);
+    var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.InvoiceAmount == 0);
     var isSettled = Model.Status == InvoiceStatus.Settled;
 }
 <!DOCTYPE html>
@@ -66,9 +66,16 @@
                         }
                         <div class="d-flex gap-4 mb-0 flex-fill">
                             <dl class="d-flex flex-column gap-4 mb-0 flex-fill">
-                                <div class="d-flex flex-column">
+                                @if (Model.IsOverpaid)
+                                {
+                                    <div class="invoice-summary__invoice-amount d-flex flex-column">
+                                        <dd class="text-muted mb-0 fw-semibold">Invoice Amount</dd>
+                                        <dt class="fs-5 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.InvoiceAmount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>
+                                    </div>
+                                }
+                                <div class="invoice-summary__amount-paid d-flex flex-column">
                                     <dd class="text-muted mb-0 fw-semibold">Amount Paid</dd>
-                                    <dt class="fs-2 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>
+                                    <dt class="fs-2 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.PaidAmount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>
                                 </div>
                                 @if (Model.TaxIncluded != 0.0m)
                                 {
@@ -89,7 +96,7 @@
                                     </div>
                                 }
                             </dl>
-                            <a href="?print=true" class="flex-grow-0 align-self-start btn btn-secondary d-print-none fs-4" target="_blank" id="ReceiptLinkPrint">Print</a>
+                            <a href="?print=true" class="invoice-receipt__print-link flex-grow-0 align-self-start btn btn-secondary d-print-none fs-4" target="_blank" id="ReceiptLinkPrint">Print</a>
                         </div>
                     }
                 </div>
@@ -202,4 +209,3 @@
     <partial name="LayoutFoot"/>
 </body>
 </html>
-

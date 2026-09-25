@@ -8,7 +8,7 @@
     Layout = null;
     ViewData.SetTitle($"Receipt from {Model.StoreName}");
     var isProcessing = Model.Status == InvoiceStatus.Processing;
-    var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.Amount == 0);
+    var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.InvoiceAmount == 0);
     var isSettled = Model.Status == InvoiceStatus.Settled;
     var isRtl = LocalizerService.IsRtl;
 }
@@ -207,7 +207,14 @@
                     {
                         <tr class="sums-data">
                             <td class="key text-nowrap text-secondary">Total</td>
-                            <td class="val text-end fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
+                            <td class="val text-end fw-semibold">@DisplayFormatter.Currency(Model.InvoiceAmount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
+                        </tr>
+                    }
+                    @if (Model.IsOverpaid)
+                    {
+                        <tr class="invoice-summary__amount-paid">
+                            <td class="key text-nowrap text-secondary">Amount paid</td>
+                            <td class="val text-end fw-semibold">@DisplayFormatter.Currency(Model.PaidAmount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
                         </tr>
                     }
                     @if (Model.Payments?.Any() is true)

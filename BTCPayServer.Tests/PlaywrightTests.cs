@@ -2376,13 +2376,13 @@ namespace BTCPayServer.Tests
             await Expect(invoiceAmount).ToContainTextAsync("Invoice Amount");
             await Expect(invoiceAmount).ToContainTextAsync("$10.00");
             await Expect(paidAmount).ToContainTextAsync("Amount Paid");
-            await Expect(paidAmount).Not.ToContainTextAsync("$10.00");
+            await Expect(paidAmount).ToContainTextAsync("$5,000.00");
 
             var printPage = s.Page.Context.WaitForPageAsync();
             await s.Page.Locator(".invoice-receipt__print-link").ClickAsync();
             await using (await s.SwitchPage(printPage))
             {
-                await Expect(s.Page.Locator(".invoice-summary__amount-paid")).ToContainTextAsync("Amount paid");
+                await Expect(s.Page.Locator(".invoice-summary__amount-paid")).ToContainTextAsync("$5,000.00");
                 await Expect(s.Page.Locator("#PaymentDetails")).ToContainTextAsync("$10.00");
             }
 

@@ -384,16 +384,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!ModelState.IsValid || paymentPrompt is null || payoutMethodIds.Count == 0)
                 return this.CreateValidationError(ModelState);
 
-            var accounting = paymentPrompt.Calculate();
-            var cryptoPaid = accounting.Paid;
-            var dueAmount = accounting.TotalDue;
-
-            // If no payment, but settled and marked, assume it has been fully paid
-            if (cryptoPaid is 0 && invoice is { Status: InvoiceStatus.Settled, ExceptionStatus: InvoiceExceptionStatus.Marked })
-            {
-                cryptoPaid = accounting.TotalDue;
-                dueAmount = 0;
-            }
+            var (cryptoPaid, dueAmount) = paymentPrompt.CalculateRefundableAmounts();
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
             var paidCurrency = Math.Round(cryptoPaid * paymentPrompt.Rate, cdCurrency.Divisibility);
             var rateResult = await _rateProvider.FetchRate(
@@ -420,6 +411,10 @@ namespace BTCPayServer.Controllers.Greenfield
             if (request.SubtractPercentage is < 0 or > 100)
             {
                 ModelState.AddModelError(nameof(request.SubtractPercentage), "Percentage must be a numeric value between 0 and 100");
+            }
+            if (paidAmount <= 0 && request.RefundVariant is RefundVariant.RateThen or RefundVariant.CurrentRate or RefundVariant.Fiat)
+            {
+                ModelState.AddModelError(nameof(request.RefundVariant), "There are no settled payments to refund");
             }
             if (!ModelState.IsValid)
             {
@@ -452,6 +447,10 @@ namespace BTCPayServer.Controllers.Greenfield
                     if (invoice.ExceptionStatus != InvoiceExceptionStatus.PaidOver)
                     {
                         ModelState.AddModelError(nameof(request.RefundVariant), "Invoice is not overpaid");
+                    }
+                    else if (Math.Round(paidAmount - dueAmount, appliedDivisibility) <= 0)
+                    {
+                        ModelState.AddModelError(nameof(request.RefundVariant), "The overpaid amount has not settled yet");
                     }
                     if (!ModelState.IsValid)
                     {
@@ -503,6 +502,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 var reduceByAmount = createPullPayment.Amount * (request.SubtractPercentage / 100);
                 createPullPayment.Amount = Math.Round(createPullPayment.Amount - reduceByAmount, appliedDivisibility);
             }
+            if (createPullPayment.Amount <= 0)
+            {
+                ModelState.AddModelError(nameof(request.RefundVariant), "Refund amount must be greater than 0");
+                return this.CreateValidationError(ModelState);
+            }
 
             createPullPayment.AutoApproveClaims = createPullPayment.AutoApproveClaims && (await _authorizationService.AuthorizeAsync(User, storeId ,Policies.CanCreatePullPayments)).Succeeded;
             var ppId = await _pullPaymentService.CreateRefundPullPayment(store, createPullPayment, invoice.Id);
@@ -528,21 +532,12 @@ namespace BTCPayServer.Controllers.Greenfield
             if (paymentPrompt == null)
                 return this.CreateAPIError("invalid-payment-method", "Invalid payment method");
 
-            var accounting = paymentPrompt.Calculate();
-            var cryptoPaid = accounting.Paid;
-            var dueAmount = accounting.TotalDue;
-
-            // If no payment, but settled and marked, assume it has been fully paid
-            if (cryptoPaid is 0 && invoice is { Status: InvoiceStatus.Settled, ExceptionStatus: InvoiceExceptionStatus.Marked })
-            {
-                cryptoPaid = accounting.TotalDue;
-                dueAmount = 0;
-            }
+            var (cryptoPaid, dueAmount) = paymentPrompt.CalculateRefundableAmounts();
 
             var paymentMethodCurrency = paymentPrompt.Currency;
 
             var isPaidOver = invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver;
-            decimal? overpaidAmount = isPaidOver ? Math.Round(cryptoPaid - dueAmount, paymentPrompt.Divisibility) : null;
+            decimal? overpaidAmount = isPaidOver ? Math.Max(0, Math.Round(cryptoPaid - dueAmount, paymentPrompt.Divisibility)) : null;
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
 
             var paidAmount = Math.Round(cryptoPaid * paymentPrompt.Rate, cdCurrency.Divisibility);

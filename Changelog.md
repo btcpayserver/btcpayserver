@@ -1640,13 +1640,13 @@ Update recommended for shared instances.
 
 With this release, we are providing a migration path for legacy MySql and SQLite installations.
 
-If you are a BTCPay Server integrators such as developer of Raspiblitz, Umbrel, Embassy OS or anybody running BTCPay Server on SQLite or MySql, please refer to [the documentation](docs/db-migration.md).
+If you are a BTCPay Server integrators such as developer of Raspiblitz, Umbrel, Embassy OS or anybody running BTCPay Server on SQLite or MySql, please refer to [the documentation](https://github.com/btcpayserver/btcpayserver/blob/v1.13.7/docs/db-migration.md).
 
 While SQLite and MySQL should still be working for one year or two, we will not fix bugs related to those backend. (unless it impacts migration)
 
 ### New feature
 
-* Add ability to migrate from MySQL/SQLite to Postgres backend. (#4614) Please read [the documentation](docs/db-migration.md). @NicolasDorier
+* Add ability to migrate from MySQL/SQLite to Postgres backend. (#4614) Please read [the documentation](https://github.com/btcpayserver/btcpayserver/blob/v1.13.7/docs/db-migration.md). @NicolasDorier
 
 ### Bug fixes
 

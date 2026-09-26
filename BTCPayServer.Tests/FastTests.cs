@@ -63,6 +63,22 @@ namespace BTCPayServer.Tests
             Assert.Equal("https://example.com/root/api/v1/stores/..%2Fusers%2Fme/webhooks/delivery%2F..%2Fx?email=a%2Bb%40example.com", request.RequestUri!.AbsoluteUri);
         }
 
+        [Fact]
+        public void IsLocalNetwork()
+        {
+            Assert.True(BTCPayServer.Extensions.IsLocalNetwork("127.0.0.1"));
+            Assert.True(BTCPayServer.Extensions.IsLocalNetwork("10.0.0.1"));
+            Assert.True(BTCPayServer.Extensions.IsLocalNetwork("192.168.1.1"));
+            Assert.True(BTCPayServer.Extensions.IsLocalNetwork("172.16.0.1"));
+            Assert.True(BTCPayServer.Extensions.IsLocalNetwork("169.254.0.1"));
+            Assert.True(BTCPayServer.Extensions.IsLocalNetwork("::1"));
+            Assert.True(BTCPayServer.Extensions.IsLocalNetwork("fe80::1"));
+            Assert.True(BTCPayServer.Extensions.IsLocalNetwork("localhost"));
+            Assert.True(BTCPayServer.Extensions.IsLocalNetwork("host.internal"));
+            Assert.False(BTCPayServer.Extensions.IsLocalNetwork("example.com"));
+            Assert.False(BTCPayServer.Extensions.IsLocalNetwork("1.2.3.4"));
+        }
+
         private class RequestInspectingClient : BTCPayServerClient
         {
             public RequestInspectingClient(Uri btcpayHost) : base(btcpayHost)

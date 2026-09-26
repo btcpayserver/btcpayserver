@@ -528,5 +528,21 @@ namespace BTCPayServer.Tests
             var lang4 = languageService.FindLanguageInAcceptLanguageHeader("xx,*;q=0.5");
             Assert.Null(lang4);
         }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void LocalizerService_ToSelectListItems_SortsByNameWithNameAsValue()
+        {
+            var translations = new[]
+            {
+                new LocalizerService.Translation("Spanish", null, "Default", new JObject()),
+                new LocalizerService.Translation("English", null, "Default", new JObject()),
+                new LocalizerService.Translation("Deutsch", "English", "Custom", new JObject()),
+            };
+            var items = LocalizerService.ToSelectListItems(translations);
+            Assert.Equal(new[] { "Deutsch", "English", "Spanish" }, items.Select(i => i.Value));
+            Assert.All(items, i => Assert.Equal(i.Value, i.Text));
+            Assert.Empty(LocalizerService.ToSelectListItems(Array.Empty<LocalizerService.Translation>()));
+        }
     }
 }

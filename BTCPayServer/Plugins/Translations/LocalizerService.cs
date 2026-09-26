@@ -9,6 +9,7 @@ using System;
 using BTCPayServer.Services;
 using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Plugins.Translations
 {
@@ -140,6 +141,20 @@ namespace BTCPayServer.Plugins.Translations
         }
 
         public record Translation(string TranslationName, string? Fallback, string Source, JObject Metadata);
+        /// <summary>
+        /// The installed translations as dropdown items, sorted by name. Used by the server-wide language
+        /// setting, and shared here so a per-user language setting can list the same languages.
+        /// </summary>
+        public async Task<List<SelectListItem>> GetTranslationsSelectList()
+        {
+            return ToSelectListItems(await GetTranslations());
+        }
+
+        public static List<SelectListItem> ToSelectListItems(IEnumerable<Translation> translations)
+        {
+            return translations.Select(t => new SelectListItem(t.TranslationName, t.TranslationName)).OrderBy(t => t.Value).ToList();
+        }
+
         public async Task<Translation[]> GetTranslations()
         {
             await using var ctx = contextFactory.CreateContext();

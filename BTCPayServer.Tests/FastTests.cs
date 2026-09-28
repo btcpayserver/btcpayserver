@@ -405,6 +405,10 @@ namespace BTCPayServer.Tests
             Assert.False(attribute.IsValid(2));
             Assert.False(attribute.IsValid("http://"));
             Assert.False(attribute.IsValid("httpdsadsa.com"));
+
+            var webUriAttribute = new UriAttribute("http", "https");
+            Assert.True(webUriAttribute.IsValid("https://example.com"));
+            Assert.False(webUriAttribute.IsValid("javascript:document.body.dataset.pwned=1"));
         }
 
         [Fact]

@@ -56,7 +56,8 @@ Use these patterns when writing or refactoring Playwright tests in BTCPayServer.
 
 ## Running And Debugging Tests
 
-- Before debugging BTCPay Server or running tests, start the test dependencies by running `docker-compose up -d dev` from the `BTCPayServer.Tests` directory.
+- Run focused tests directly with `dotnet test`; do not use `.github/scripts/run-tests.sh`, which rebuilds the Docker test environment and is too slow for local iteration.
+- If the test dependencies are not already running, start them with `docker-compose up -d dev` from the `BTCPayServer.Tests` directory.
 - Always set `PLAYWRIGHT_HEADLESS=true` when running Playwright tests so browser windows do not interrupt the user.
 - Run tests directly on the host rather than through Docker Compose. From the repository root, run a specific test with:
 

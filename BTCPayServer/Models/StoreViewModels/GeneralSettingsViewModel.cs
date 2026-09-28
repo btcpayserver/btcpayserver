@@ -17,7 +17,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [MinLength(1)]
         public string StoreName { get; set; }
 
-        [Uri]
+        [Uri("http", "https")]
         [Display(Name = "Store Website")]
         [MaxLength(500)]
         public string StoreWebsite { get; set; }

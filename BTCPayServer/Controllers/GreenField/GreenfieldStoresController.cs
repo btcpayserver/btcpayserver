@@ -336,7 +336,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Name), "Name is missing");
             else if (request.Name.Length < 1 || request.Name.Length > 50)
                 ModelState.AddModelError(nameof(request.Name), "Name can only be between 1 and 50 characters");
-            if (!string.IsNullOrEmpty(request.Website) && !Uri.TryCreate(request.Website, UriKind.Absolute, out _))
+            if (!string.IsNullOrEmpty(request.Website) &&
+                (!Uri.TryCreate(request.Website, UriKind.Absolute, out var websiteUri) || websiteUri.Scheme is not ("http" or "https")))
             {
                 ModelState.AddModelError(nameof(request.Website), "Website is not a valid url");
             }

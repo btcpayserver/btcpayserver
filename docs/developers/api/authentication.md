@@ -18,7 +18,9 @@ Users can create keys under **Account > Manage account > API keys**. A user can 
 
 ## Basic authentication
 
-Basic authentication sends the user's email and password and gives the request the user's unrestricted access. It is rate limited and intended mainly to bootstrap an API key. Do not ask users to disclose their password to a third-party application and do not retain it as an integration credential.
+Basic authentication sends the user's email and password and gives the request the user's unrestricted access. By default, it is available only during the first five minutes after the account is created so the user can bootstrap an API key. The user can enable it indefinitely from their account profile with **Allow Basic authentication for Greenfield API**.
+
+Basic authentication is rate limited and intended mainly to bootstrap an API key. Do not ask users to disclose their password to a third-party application and do not retain it as an integration credential.
 
 ## Interactive authorization
 

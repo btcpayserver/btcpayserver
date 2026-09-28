@@ -23,6 +23,13 @@ hold funds as a payment intermediary.
   store configures its own payment methods.
 - An **invoice** fixes an amount and exchange rate for a limited period and
   tracks the resulting payment.
+- A **payment request** is a shareable, long-lived request that creates a new
+  invoice whenever someone pays. It can accept partial payments until the
+  requested amount is reached or the request expires.
+- A **pull payment** allocates funds that a recipient can claim by submitting a
+  payout destination. The store reviews and approves the resulting payout.
+- An **offering** groups subscription plans, prices, renewal terms, and
+  subscribers for a product or service sold through the Subscriptions app.
 
 Most pages in the navigation apply to the currently selected store. Features
 appear only when your account has permission and the server supports them.

@@ -68,6 +68,19 @@ On PowerShell, use `./run.ps1`. For debugger-driven development, use the `Docker
 dotnet dev-certs https --trust
 ```
 
+If Brave does not recognize the trusted development certificate, export its
+public certificate:
+
+```sh
+dotnet dev-certs https --export-path ./aspnetcore-localhost.crt --format PEM
+```
+
+Open `brave://certificate-manager/`, select **Authorities** (or **Custom** >
+**Trusted Certificates** in newer versions), and import
+`aspnetcore-localhost.crt`. Enable trust for identifying websites when Brave
+asks, restart the browser, and reopen the local HTTPS URL. The exported file
+contains only the public certificate and can be deleted after import.
+
 See [testing](#testing) for focused test commands and regtest tooling.
 
 ## Testing

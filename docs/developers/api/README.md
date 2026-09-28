@@ -2,6 +2,11 @@
 
 The Greenfield API is BTCPay Server's versioned REST API. Use the interactive reference at `/docs` on the instance you integrate with; it reflects that instance and includes endpoints contributed by installed plugins. Its OpenAPI document is at `/swagger/v1/swagger.json`.
 
+Most standard endpoints documented at `/docs` are also available in the
+[public Greenfield API reference](https://docs.btcpayserver.org/API/Greenfield/v1/).
+The target instance remains authoritative because its version and installed
+plugins can change the available API.
+
 ## Before you start
 
 You need:

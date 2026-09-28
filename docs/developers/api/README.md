@@ -36,7 +36,7 @@ Use `Content-Type: application/json` when sending JSON. Treat non-2xx responses 
 ## Typical payment integration
 
 1. Ask the user for their BTCPay Server URL.
-2. Send them through interactive authorization with only the permissions you need and store scope enabled.
+2. Send them through [interactive authorization flow](authentication.md#interactive-authorization) with only the permissions you need and store scope enabled.
 3. Create an invoice from your backend and store the returned invoice ID with your order.
 4. Redirect the customer to the returned `checkoutLink`.
 5. Register a webhook, retain its secret securely, and verify every delivery against the raw request body.

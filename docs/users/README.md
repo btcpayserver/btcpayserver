@@ -28,8 +28,13 @@ hold funds as a payment intermediary.
   requested amount is reached or the request expires.
 - A **pull payment** allocates funds that a recipient can claim by submitting a
   payout destination. The store reviews and approves the resulting payout.
-- An **offering** groups subscription plans, prices, renewal terms, and
-  subscribers for a product or service sold through the Subscriptions app.
+- An **offering** is a product or service sold through recurring payments in
+  the Subscriptions app. It groups plans with their prices, billing periods,
+  trial and grace periods, and merchant-defined entitlements, such as usage
+  limits or support levels. A customer joins a plan as a subscriber and funds
+  a credit balance through checkout. BTCPay Server deducts each period's cost
+  from that balance to renew the subscription; the customer must replenish it
+  because cryptocurrency cannot be charged automatically like a saved card.
 
 Most pages in the navigation apply to the currently selected store. Features
 appear only when your account has permission and the server supports them.

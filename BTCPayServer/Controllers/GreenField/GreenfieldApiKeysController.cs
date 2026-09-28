@@ -88,7 +88,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.Unrestricted, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> RevokeAPIKey(string apiKeyId)
         {
-            if (!await credentialManagementService.CanManageAccountApiKeys(User))
+            if (!credentialManagementService.CanManageAccountApiKeys(User))
                 return this.CreateAPIPermissionError(Policies.CanManageStoreCredentials);
             return await RevokeAPIKey(User.GetId(), apiKeyId);
         }

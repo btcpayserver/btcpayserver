@@ -47,18 +47,11 @@ public class CredentialManagementService(
 
     /// <summary>
     /// Determines whether the user may access account-level API key management.
+    /// Store roles do not apply here: they only constrain the store scopes a key may carry.
     /// </summary>
-    public async Task<bool> CanManageAccountApiKeys(ClaimsPrincipal user)
+    public bool CanManageAccountApiKeys(ClaimsPrincipal user)
     {
-        var userId = user.GetIdOrNull();
-        if (userId is null || !IsAllowedByServer(user))
-            return false;
-        if (user.IsInRole(Roles.ServerAdmin))
-            return true;
-
-        var stores = await storeRepository.GetStoresByUserId(userId);
-        return stores.Length is 0 || stores.Any(store =>
-            store.HasPolicy(userId, Policies.CanManageStoreCredentials, permissionService));
+        return user.GetIdOrNull() is not null && IsAllowedByServer(user);
     }
 
     /// <summary>
@@ -66,7 +59,7 @@ public class CredentialManagementService(
     /// </summary>
     public async Task<bool> CanCreateApiKey(ClaimsPrincipal user, IEnumerable<Permission> requestedPermissions)
     {
-        if (!await CanManageAccountApiKeys(user))
+        if (!CanManageAccountApiKeys(user))
             return false;
         if (user.IsInRole(Roles.ServerAdmin))
             return true;

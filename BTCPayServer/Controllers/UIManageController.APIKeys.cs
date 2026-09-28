@@ -9,6 +9,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
+using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,7 @@ namespace BTCPayServer.Controllers
         /// Lists API keys owned by the current user.
         /// </summary>
         [HttpGet]
-        [Authorize(Policy = Policies.CanManageStoreCredentials)]
+        [AccountCredentialManagement]
         public async Task<IActionResult> APIKeys()
         {
             return View(new ApiKeysViewModel()
@@ -39,7 +40,7 @@ namespace BTCPayServer.Controllers
         /// Displays permission-usage details for an API key owned by the current user.
         /// </summary>
         [HttpGet("~/api-keys/{apiKeyId}/view-analysis")]
-        [Authorize(Policy = Policies.CanManageStoreCredentials)]
+        [AccountCredentialManagement]
         public async Task<IActionResult> APIKeyPermissionAnalysis(string apiKeyId)
         {
             var id = new APIKeyRepository.Selector.ById(apiKeyId);
@@ -88,7 +89,7 @@ namespace BTCPayServer.Controllers
         /// Displays the confirmation page for deleting an API key owned by the current user.
         /// </summary>
         [HttpGet("~/api-keys/{apiKeyId}/delete")]
-        [Authorize(Policy = Policies.CanManageStoreCredentials)]
+        [AccountCredentialManagement]
         public async Task<IActionResult> DeleteAPIKey(string apiKeyId)
         {
             var key = await _apiKeyRepository.GetKey(new APIKeyRepository.Selector.ById(apiKeyId));
@@ -109,7 +110,7 @@ namespace BTCPayServer.Controllers
         /// Deletes an API key owned by the current user.
         /// </summary>
         [HttpPost("~/api-keys/{apiKeyId}/delete")]
-        [Authorize(Policy = Policies.CanManageStoreCredentials)]
+        [AccountCredentialManagement]
         public async Task<IActionResult> DeleteAPIKeyPost(string apiKeyId)
         {
             var id = new APIKeyRepository.Selector.ById(apiKeyId);
@@ -131,7 +132,7 @@ namespace BTCPayServer.Controllers
         /// Displays the API-key creation form with permissions limited to manageable stores.
         /// </summary>
         [HttpGet]
-        [Authorize(Policy = Policies.CanManageStoreCredentials)]
+        [AccountCredentialManagement]
         public async Task<IActionResult> AddApiKey()
         {
             if (!_btcPayServerEnvironment.IsSecure(HttpContext))
@@ -151,7 +152,7 @@ namespace BTCPayServer.Controllers
         /// Displays an application's API-key authorization request within the caller's credential authority.
         /// </summary>
         [HttpGet("~/api-keys/authorize")]
-        [Authorize(Policy = Policies.CanManageStoreCredentials)]
+        [AccountCredentialManagement]
         public async Task<IActionResult> AuthorizeAPIKey(string[] permissions, string applicationName = null, Uri redirect = null,
             bool strict = true, bool selectiveStores = false, string applicationIdentifier = null)
         {
@@ -204,7 +205,7 @@ namespace BTCPayServer.Controllers
         /// Processes an application's API-key authorization request after validating its permissions and scopes.
         /// </summary>
         [HttpPost("~/api-keys/authorize")]
-        [Authorize(Policy = Policies.CanManageStoreCredentials)]
+        [AccountCredentialManagement]
         public async Task<IActionResult> AuthorizeAPIKey([FromForm] AuthorizeApiKeysViewModel viewModel)
         {
             viewModel = await SetViewModelValues(viewModel);
@@ -323,7 +324,7 @@ namespace BTCPayServer.Controllers
         /// Creates an API key after validating the submitted permissions against the caller's manageable stores.
         /// </summary>
         [HttpPost]
-        [Authorize(Policy = Policies.CanManageStoreCredentials)]
+        [AccountCredentialManagement]
         public async Task<IActionResult> AddApiKey(AddApiKeyViewModel viewModel)
         {
             await SetViewModelValues(viewModel);

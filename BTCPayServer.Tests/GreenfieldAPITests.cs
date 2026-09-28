@@ -28,6 +28,7 @@ using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Stores;
 using Dapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -334,6 +335,49 @@ namespace BTCPayServer.Tests
             {
                 Permissions = new[] { Permission.Create(Policies.CanModifyServerSettings) }
             });
+        }
+
+        /// <summary>
+        /// Verifies that gaining a store role without credential management does not revoke account-level API key access.
+        /// </summary>
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task AccountApiKeysSurviveGainingANonCredentialStoreRole()
+        {
+            TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var owner = tester.NewAccount();
+            await owner.GrantAccessAsync();
+            var member = tester.NewAccount();
+            await member.RegisterAsync();
+
+            var credentialManagementService = tester.PayTester.GetService<CredentialManagementService>();
+            var controller = member.GetController<UIManageController>(false);
+            var authorizationService = controller.HttpContext.RequestServices.GetRequiredService<IAuthorizationService>();
+            var client = await member.CreateClient();
+            var profileKey = new CreateApiKeyRequest { Permissions = new[] { Permission.Create(Policies.CanViewProfile) } };
+
+            Assert.True(credentialManagementService.CanManageAccountApiKeys(controller.User));
+            Assert.True((await authorizationService.AuthorizeAsync(controller.User, Policies.CanManageStoreCredentials)).Succeeded);
+            await client.CreateAPIKey(profileKey);
+
+            await owner.AddGuest(member.UserId);
+
+            Assert.True(credentialManagementService.CanManageAccountApiKeys(controller.User));
+            Assert.True((await authorizationService.AuthorizeAsync(controller.User, Policies.CanManageStoreCredentials)).Succeeded);
+            await client.CreateAPIKey(profileKey);
+
+            // The store role still bounds keys that reach into the store.
+            Assert.False((await authorizationService.AuthorizeAsync(controller.User, owner.StoreId, Policies.CanManageStoreCredentials)).Succeeded);
+            await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.CanViewInvoices, owner.StoreId) }
+            }));
+            await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.CanViewInvoices) }
+            }));
         }
 
         [Fact(Timeout = TestTimeout)]

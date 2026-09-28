@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260831000000_AddCredentialManagementToManagerRole")]
+    [Migration("20260928000000_AddCredentialManagementToManagerRole")]
     public partial class AddCredentialManagementToManagerRole : Migration
     {
         /// <inheritdoc />
@@ -21,11 +21,6 @@ namespace BTCPayServer.Migrations
                   AND "StoreDataId" IS NULL
                   AND NOT (COALESCE("Permissions", ARRAY[]::TEXT[]) @> ARRAY['btcpay.store.canmanagestorecredentials']::TEXT[]);
                 """);
-        }
-
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
         }
     }
 }

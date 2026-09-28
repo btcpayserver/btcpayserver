@@ -8,6 +8,7 @@
 @using BTCPayServer.Plugins.Translations
 @inject ThemeSettings Theme
 @inject PluginService PluginService
+@inject CredentialManagementService CredentialManagementService
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 @model BTCPayServer.Components.GlobalNav.GlobalNavViewModel
@@ -161,9 +162,12 @@
                 <li>
                     <a id="menu-item-@nameof(ManageNavPages.Passkeys)" class="dropdown-item@(activePage == nameof(ManageNavPages.Passkeys) ? " active" : "")" asp-controller="UIManage" asp-action="Passkeys" text-translate="true">Passkeys</a>
                 </li>
-                <li permission="@Policies.CanManageStoreCredentials">
-                    <a id="menu-item-@nameof(ManageNavPages.APIKeys)" class="dropdown-item@(activePage == nameof(ManageNavPages.APIKeys) ? " active" : "")" asp-controller="UIManage" asp-action="APIKeys" text-translate="true">API Keys</a>
-                </li>
+                @if (CredentialManagementService.CanManageAccountApiKeys(User))
+                {
+                    <li>
+                        <a id="menu-item-@nameof(ManageNavPages.APIKeys)" class="dropdown-item@(activePage == nameof(ManageNavPages.APIKeys) ? " active" : "")" asp-controller="UIManage" asp-action="APIKeys" text-translate="true">API Keys</a>
+                    </li>
+                }
                 <li>
                     <a id="menu-item-@nameof(ManageNavPages.Notifications)" class="dropdown-item@(activePage == nameof(ManageNavPages.Notifications) ? " active" : "")" asp-controller="UIManage" asp-action="NotificationSettings" text-translate="true">Notifications</a>
                 </li>

@@ -75,7 +75,7 @@ public class BuiltInPermissionHandler(
                             permContext.HttpContext.AddCachedStoreData(store);
                         }
                     }
-                    success = !managesCredentials || isAdmin || stores.Length is 0 || permissionedStores.Count is not 0;
+                    success = true;
                 }
                 break;
             case { Type: PolicyType.Server }:

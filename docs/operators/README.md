@@ -3,7 +3,17 @@
 This guide covers the BTCPay Server application from an instance operator's
 perspective. Merchant workflows are in the [user guide](../users/README.md).
 
-For the official Docker deployment, use the
+## Installation
+
+Start with the public
+[deployment guide](https://docs.btcpayserver.org/Deployment/) to compare the
+available ways to run BTCPay Server, including third-party hosting, cloud and
+VPS deployments, dedicated hardware, and manual installation. If you use a
+third-party host instead of operating your own instance, the host is responsible
+for the server-level work covered by this guide.
+
+For a self-hosted production instance, the official Docker deployment is the
+recommended installation method. Use the
 [btcpayserver-docker documentation](https://github.com/btcpayserver/btcpayserver-docker/tree/master/docs).
 Its installation, configuration, backup, update, and troubleshooting commands
 are authoritative for that deployment.

@@ -20,7 +20,7 @@ request so both parties can track the amount paid and the remaining balance.
 Open **Payment Requests** for the selected store and select **Create Request**.
 The store must have a payment method configured before customers can pay.
 
-![Payment request list](https://docs.btcpayserver.org/img/payment-requests/PaymentRequestList.png)
+![Payment request list](https://raw.githubusercontent.com/btcpayserver/btcpayserver-doc/10976f0368522fad9abad4bf13bd5780093a708e/docs/img/payment-requests/PaymentRequestList.png)
 
 Configure the request:
 
@@ -36,7 +36,7 @@ Configure the request:
 - **Memo** adds formatted instructions, context, links, or attachments to the
   customer-facing page.
 
-![Create a payment request](https://docs.btcpayserver.org/img/payment-requests/CreatePaymentRequest.png)
+![Create a payment request](https://raw.githubusercontent.com/btcpayserver/btcpayserver-doc/10976f0368522fad9abad4bf13bd5780093a708e/docs/img/payment-requests/CreatePaymentRequest.png)
 
 Select **Create** to save and review the request.
 
@@ -46,7 +46,7 @@ BTCPay Server creates a public URL for the request. Share that URL with the
 customer, or print the request when a paper record is needed. The page shows
 the amount due, expiration, memo, and payment history.
 
-![Customer-facing payment request](https://docs.btcpayserver.org/img/payment-requests/NewPaymentRequest.png)
+![Customer-facing payment request](https://raw.githubusercontent.com/btcpayserver/btcpayserver-doc/10976f0368522fad9abad4bf13bd5780093a708e/docs/img/payment-requests/NewPaymentRequest.png)
 
 When the customer selects **Pay Invoice**, BTCPay Server creates a regular
 invoice for the outstanding amount or, when custom amounts are enabled, the
@@ -59,13 +59,13 @@ The payment request list shows each request's status, amount, and expiration.
 Use its action menu to inspect generated invoices, clone a request, or archive
 it.
 
-![Payment request actions](https://docs.btcpayserver.org/img/payment-requests/PaymentRequestListOptions.png)
+![Payment request actions](https://raw.githubusercontent.com/btcpayserver/btcpayserver-doc/10976f0368522fad9abad4bf13bd5780093a708e/docs/img/payment-requests/PaymentRequestListOptions.png)
 
 The request page updates its payment history and remaining balance as payments
 settle. A partially paid request remains payable for the outstanding amount. It
 becomes **Settled** when the full requested amount has been received.
 
-![Settled payment request](https://docs.btcpayserver.org/img/payment-requests/PaidPaymentRequest.png)
+![Settled payment request](https://raw.githubusercontent.com/btcpayserver/btcpayserver-doc/10976f0368522fad9abad4bf13bd5780093a708e/docs/img/payment-requests/PaidPaymentRequest.png)
 
 Invoices created through this flow are labeled as payment-request invoices in
 the store's invoice list. You can print the request or export its invoice data

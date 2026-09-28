@@ -69,6 +69,30 @@ namespace BTCPayServer.Tests
             foreach (var file in files)
             {
                 var markdown = File.ReadAllText(file);
+                var relativeFile = Path.GetRelativePath(repositoryRoot, file).Replace(Path.DirectorySeparatorChar, '/');
+                foreach (Match match in Regex.Matches(markdown, @"!\[[^\]]*\]\(([^)]+)\)"))
+                {
+                    var rawTarget = match.Groups[1].Value.Trim().TrimStart('<').TrimEnd('>');
+                    if (string.IsNullOrEmpty(rawTarget) ||
+                        Regex.IsMatch(rawTarget, @"^(https?:|data:)", RegexOptions.IgnoreCase))
+                        continue;
+
+                    var path = Uri.UnescapeDataString(rawTarget.Split('#', 2)[0]);
+                    var importedDocumentation = relativeFile.StartsWith("docs/users/", StringComparison.Ordinal) ||
+                                                relativeFile.StartsWith("docs/operators/", StringComparison.Ordinal) ||
+                                                relativeFile.StartsWith("docs/developers/", StringComparison.Ordinal);
+                    if (importedDocumentation &&
+                        !path.StartsWith("./", StringComparison.Ordinal) &&
+                        !path.StartsWith("../", StringComparison.Ordinal))
+                    {
+                        errors.Add($"{relativeFile}: local image path must start with ./ or ../: {rawTarget}");
+                    }
+
+                    var target = Path.GetFullPath(path, Path.GetDirectoryName(file)!);
+                    if (!File.Exists(target))
+                        errors.Add($"{relativeFile}: missing image {rawTarget}");
+                }
+
                 foreach (Match match in Regex.Matches(markdown, @"(?<!!)\[[^\]]*\]\(([^)]+)\)"))
                 {
                     var rawTarget = match.Groups[1].Value.Trim().TrimStart('<').TrimEnd('>');
@@ -85,7 +109,6 @@ namespace BTCPayServer.Tests
                     var target = Path.GetFullPath(path, Path.GetDirectoryName(file)!);
                     var candidates = new[] { target, $"{target}.md", Path.Combine(target, "README.md") };
                     var existing = candidates.FirstOrDefault(candidate => File.Exists(candidate) || Directory.Exists(candidate));
-                    var relativeFile = Path.GetRelativePath(repositoryRoot, file).Replace(Path.DirectorySeparatorChar, '/');
                     if (existing is null)
                     {
                         errors.Add($"{relativeFile}: missing {rawTarget}");

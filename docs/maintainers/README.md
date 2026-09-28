@@ -243,6 +243,22 @@ Use the [release checklist](#release-checklist) when preparing any release.
 
 ## Release Checklist
 
+### Pre-release Check
+
+Before publishing a release candidate, run the checks tagged `PreReleaseCheck`
+from the repository root:
+
+```sh
+dotnet test --project BTCPayServer.Tests/BTCPayServer.Tests.csproj --filter "PreReleaseCheck=PreReleaseCheck"
+```
+
+The documentation check validates internal Markdown links and compares the
+generated operator configuration reference with the application's current
+command-line options. If the reference is stale, the test updates
+`docs/operators/configuration-reference.md` and fails intentionally. Review and
+commit the generated change, fix any reported broken links, and rerun the check
+until it passes.
+
 When creating a release:
 
 1. Run `dotnet format` on the solution.

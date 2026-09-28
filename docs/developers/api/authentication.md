@@ -24,6 +24,8 @@ Basic authentication is rate limited and intended mainly to bootstrap an API key
 
 ## Interactive authorization
 
+An integration needs an API key belonging to a BTCPay Server user before it can act on that user's behalf, but it should not ask the user to copy a key or disclose account credentials. Interactive authorization solves this by letting the integration request only the permissions it needs and redirect the user to their own BTCPay Server instance to review and approve the request. After approval, BTCPay Server creates or reuses a suitable API key and sends the user back to the integration's callback with the key and its granted permissions in a form POST.
+
 Third-party applications should redirect the user to `/api-keys/authorize` on the user's own instance. The application can prefill:
 
 - `applicationName`, shown to the user.

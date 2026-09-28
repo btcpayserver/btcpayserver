@@ -1,5 +1,7 @@
 # Offerings and Recurring Payments
 
+[![Subscription complete overview](https://img.youtube.com/vi/33bPg-g9pfE/0.jpg)](https://www.youtube.com/watch?v=33bPg-g9pfE)
+
 The Subscriptions app lets merchants sell products and services through
 recurring cryptocurrency payments. Unlike a card processor, BTCPay Server
 cannot charge a customer's wallet automatically. Instead, subscribers prepay a
@@ -15,8 +17,8 @@ project, hosted BTCPay Server access, or a software-as-a-service product.
 - A **plan** defines a price, billing period, and level of service within an
   offering. Plans can represent tiers such as Free, Starter, Pro, and
   Enterprise.
-- An **entitlement** describes a right granted by a plan, such as a usage limit
-  or support level. Your service interprets and enforces entitlements; BTCPay
+- **Entitlements** are optional rights granted by a plan, such as usage limits
+  or support levels. Your service interprets and enforces entitlements; BTCPay
   Server stores them but does not enforce their meaning.
 - A **subscriber** is a customer associated with a plan. The subscriber remains
   active while the plan's payment requirements are met.
@@ -37,7 +39,7 @@ Assign the relevant entitlements to each plan:
 ## Subscription Flow
 
 1. Create an offering for the product or service.
-2. Define its entitlements and one or more plans.
+2. Define one or more plans and, optionally, their entitlements.
 3. Share or embed a plan checkout link.
 4. The customer selects a plan, provides an email address, and pays or starts a
    trial.
@@ -88,7 +90,3 @@ Configure email rules to notify the subscriber or merchant about events such as
 an ending trial, payment due, payment reminders, or an ending grace period.
 
 <img src="https://github.com/user-attachments/assets/229c10d7-111b-4f2c-97d7-1852ed9f177e" alt="Subscription email rules">
-
-## Video Overview
-
-[![Subscription complete overview](https://img.youtube.com/vi/33bPg-g9pfE/0.jpg)](https://www.youtube.com/watch?v=33bPg-g9pfE)

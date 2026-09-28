@@ -6,8 +6,9 @@ results depend on the user's query or application data.
 
 ## Static results
 
-Static results are sent with the page and filtered in the browser by title,
-category, and aliases. Register an `ActionResultItemViewModel` from the plugin's
+Static results are sent with the page. The browser uses fuzzy search across
+their title, category, and aliases to filter them without a server request.
+Register an `ActionResultItemViewModel` from the plugin's
 `Execute(IServiceCollection)` method:
 
 ```csharp
@@ -30,7 +31,8 @@ removed before the response is returned.
 
 Titles, categories, and aliases registered through `AddStaticSearch` are
 included in BTCPay Server's default translation catalog. Use stable source text
-and `Aliases`, not the obsolete `Keywords` property.
+for them. Aliases can be individual words or complete sentences that describe
+other ways a user might search for the result.
 
 Use the `ResultItemViewModel` overload only when the result already has a URL.
 `ActionResultItemViewModel` is preferable for controller actions because its
@@ -90,14 +92,3 @@ not protect a query that has already run.
 `UserQuery` is `null` while static results are assembled and contains the user's
 text for remote search. A provider may support both modes by branching on that
 value. Results with a lower `Order` appear first.
-
-## Test the integration
-
-Test with the plugin installed against its pinned BTCPay Server version. Verify
-that results:
-
-- Appear for expected title and alias searches.
-- Generate valid URLs with and without an active store, as applicable.
-- Stay hidden from users missing the required policy.
-- Never return records from another store or user.
-- Honor cancellation and result limits for remote queries.

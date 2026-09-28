@@ -15,6 +15,28 @@ public override void Execute(IServiceCollection services)
 
 Core renders locations with the `ui-extension-point` view component. Search the target BTCPay Server version for `vc:ui-extension-point` to find available locations and inspect the supplied model before writing the partial. Use an absolute view path to avoid accidental view-name collisions.
 
+Common extension points include:
+
+| Location | Model | Typical use |
+|---|---|---|
+| `global-nav` | `GlobalNavViewModel` | Content at the start of the global top navigation. |
+| `global-nav-icons` | `GlobalNavViewModel` | Compact icon actions beside notifications and other global controls. |
+| `server-nav` | `MainNavViewModel` | Server-administration navigation visible in the global settings menu. |
+| `user-nav` | `MainNavViewModel` | Account-level navigation visible in the global user menu. |
+| `store-nav` | `MainNavViewModel` | Store navigation entries outside a specific built-in category. |
+| `store-category-nav` | `MainNavViewModel` | Entries inside the store-settings category. |
+| `header-nav` | `MainNavViewModel` | General plugin entries in the main navigation's **Plugins** section. |
+| `store-integrations-nav` | `MainNavViewModel` | Store-specific entries in the **Plugins** section. |
+| `layout-banner` | None | A site-wide banner above the page body. |
+| `dashboard` | `StoreDashboardViewModel` | Store dashboard content above the built-in widgets. |
+| `checkout-end` | `CheckoutModel` | Payment-method or plugin content near the end of checkout. |
+
+This list is intentionally not exhaustive. An extension partial must emit markup
+appropriate for its location, such as an `<li>` for a navigation list. Inspect
+the rendering view and a built-in registration using the same location to
+confirm layout, permissions, and model assumptions for the BTCPay Server version
+your plugin supports.
+
 Embed static plugin resources through the plugin project and reference them with `~/Resources/...` plus `asp-append-version="true"`. Follow the [plugin template](https://github.com/btcpayserver/btcpayserver-plugin-template) project settings for the current resource layout.
 
 ## Action hooks

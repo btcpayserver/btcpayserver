@@ -22,7 +22,7 @@ hold funds as a payment intermediary.
 - A **wallet** supplies addresses to a store and tracks its transactions. Each
   store configures its own payment methods.
 - An **invoice** fixes an amount and exchange rate for a limited period and
-  tracks the resulting payment.
+  tracks the resulting payment. See [Invoices](invoices.md).
 - A **payment request** is a shareable, long-lived request that creates a new
   invoice whenever someone pays. It can accept partial payments until the
   requested amount is reached or the request expires. See

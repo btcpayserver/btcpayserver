@@ -20,6 +20,7 @@ Plugins are in-process .NET extensions. They can add services, controllers, UI, 
 - [Get started](plugins/README.md)
 - [Architecture and lifecycle](plugins/architecture-lifecycle.md)
 - [UI extension points and hooks](plugins/ui-hooks.md)
+- [Global search](plugins/global-search.md)
 - [Authentication and permissions](plugins/permissions.md)
 - [Data and migrations](plugins/data-migrations.md)
 - [API and Swagger](plugins/api-swagger.md)

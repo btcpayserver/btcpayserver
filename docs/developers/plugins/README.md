@@ -18,6 +18,7 @@ Do not reproduce that scaffolding by hand from this documentation; the template 
 
 - [Architecture and lifecycle](architecture-lifecycle.md)
 - [UI extension points and hooks](ui-hooks.md)
+- [Global search](global-search.md)
 - [Authentication and permissions](permissions.md)
 - [Data and migrations](data-migrations.md)
 - [API and Swagger](api-swagger.md)

@@ -73,6 +73,8 @@ Store**.
 Store settings can be changed later. A store cannot receive on-chain payments
 until it has a wallet.
 
+<a id="requirements-to-create-wallets"></a>
+
 ## Set Up a Wallet
 
 Select the store, then use **Set up a wallet** on its dashboard or open

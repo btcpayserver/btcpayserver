@@ -1,5 +1,7 @@
 # Offerings and Recurring Payments
 
+**Watch the complete overview video:**
+
 [![Subscription complete overview](https://img.youtube.com/vi/33bPg-g9pfE/0.jpg)](https://www.youtube.com/watch?v=33bPg-g9pfE)
 
 The Subscriptions app lets merchants sell products and services through

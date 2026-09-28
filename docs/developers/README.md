@@ -27,4 +27,4 @@ Plugins are in-process .NET extensions. They can add services, controllers, UI, 
 - [Testing and compatibility](plugins/testing-compatibility.md)
 - [Build and publish](plugins/publishing.md)
 
-BTCPay Server owns the plugin framework contracts documented here. The [plugin template](https://github.com/btcpayserver/btcpayserver-plugin-template) owns scaffolding and development setup, while [Plugin Builder](https://plugin-builder.btcpayserver.org/) owns packaging, release, and listing policy.
+BTCPay Server owns the plugin framework contracts and local packaging tool documented here. The [plugin template](https://github.com/btcpayserver/btcpayserver-plugin-template) owns scaffolding and development setup, while [Plugin Builder](https://plugin-builder.btcpayserver.org/) owns hosted builds, releases, and listing policy.

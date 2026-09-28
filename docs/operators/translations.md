@@ -12,6 +12,12 @@ is translatable, and new releases can introduce untranslated text.
 Open **Server Settings > Translations** to manage the installed and available
 languages. This page requires server-administrator permission.
 
+Earlier releases called translations **Dictionaries**. The screenshots below
+retain that older label and layout; use the current **Translations** labels and
+actions described in the text.
+
+![Translation list in an earlier release](./img/Translations/01_Translation.png)
+
 ## Language packs
 
 Community language packs provide maintained translations without requiring a
@@ -44,6 +50,10 @@ server needs local wording:
 3. Select **Create**, then edit the translation JSON.
 4. Save the translation and select it from the installed-language list.
 
+![Creating a translation in an earlier release](./img/Translations/02_Translation.png)
+
+![New translation editor](./img/Translations/03_Translation_creation.png)
+
 To customize a community pack, create a custom translation and choose that pack
 as its fallback. Installed community packs cannot be edited directly. This
 keeps local overrides separate while allowing non-overridden strings to receive
@@ -57,10 +67,18 @@ The editor stores source strings as keys and translated strings as values:
 }
 ```
 
+![Translation JSON](./img/Translations/04_Translation_dictionary.png)
+
+![Editing a translated string](./img/Translations/05_Translation_Add_Role_To_Yoruba.png)
+
 Preserve placeholders such as `{0}` and `{1}`, intentional HTML, and valid JSON
 escaping. Invalid JSON produces a syntax error. Removing an override, or making
 it equal to its fallback value, causes that string to inherit from the fallback
 translation.
+
+![Selecting a saved translation in an earlier release](./img/Translations/06_Translation_Saved_Dictionary.png)
+
+![Translated interface text](./img/Translations/07_Translation_Validation.png)
 
 ## Updating and removing translations
 

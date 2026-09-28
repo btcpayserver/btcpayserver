@@ -10,6 +10,11 @@ Open **Payments > Invoices** in the selected store to create an invoice or
 review existing ones. Wallet transactions that were not paid through an
 invoice appear in the wallet instead.
 
+![Invoice list](./img/invoice/Invoices.png)
+
+_Screenshots in this guide may show an earlier layout. Use the current labels
+and behavior described in the text._
+
 ## Invoice statuses
 
 An invoice has a base status that describes its payment and settlement state:
@@ -56,6 +61,8 @@ creation date, newest first. Use its search and filters to narrow the list:
 Selecting several status or exception filters matches invoices that satisfy
 any selected filter. Date ranges apply to invoice creation time, not payment
 time.
+
+![Filtering invoices](./img/invoice/InvoiceFiltering.gif)
 
 ## Invoice details
 

@@ -14,6 +14,10 @@ Use the [BTCPay Server plugin template](https://github.com/btcpayserver/btcpayse
 
 Do not reproduce that scaffolding by hand from this documentation; the template changes with the supported toolchain.
 
+## Learn from existing plugins
+
+Browse the [BTCPay Server Plugin Directory](https://plugin-builder.btcpayserver.org/) for real-world examples. Each plugin page links to the source code for the selected version. Check its minimum and maximum BTCPay Server versions before following an implementation, because it may target different extension contracts than your plugin.
+
 ## Learn the framework
 
 - [Architecture and lifecycle](architecture-lifecycle.md)

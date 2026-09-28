@@ -241,7 +241,8 @@ namespace BTCPayServer.Tests
         }
 
         /// <summary>
-        /// Verifies that server policy and store roles constrain credential management without restricting server administrators.
+        /// Verifies that store roles bound only store-scoped credentials, that the server policy disables all non-admin
+        /// credential management, and that server administrators are never restricted.
         /// </summary>
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
@@ -268,10 +269,20 @@ namespace BTCPayServer.Tests
                 await storeRepository.AddOrUpdateStoreUser(lockedStoreId, account.UserId, lockedRole));
 
             var credentialManagementService = tester.PayTester.GetService<CredentialManagementService>();
-            var principal = account.GetController<UIStoresController>().User;
+            var storesController = account.GetController<UIStoresController>();
+            var principal = storesController.User;
+            var authorizationService = storesController.HttpContext.RequestServices.GetRequiredService<IAuthorizationService>();
+            async Task<bool> CanManageStoreCredentials(string storeId) =>
+                (await authorizationService.AuthorizeAsync(principal, storeId, Policies.CanManageStoreCredentials)).Succeeded;
+
             var manageableStores = await credentialManagementService.GetManageableStores(principal);
             Assert.Contains(manageableStores, store => store.Id == firstStoreId);
             Assert.DoesNotContain(manageableStores, store => store.Id == lockedStoreId);
+            // Store-scoped surfaces (access tokens, pairing) follow the store role.
+            Assert.True(await CanManageStoreCredentials(firstStoreId));
+            Assert.False(await CanManageStoreCredentials(lockedStoreId));
+            // Account-level API key management does not.
+            Assert.True(credentialManagementService.CanManageAccountApiKeys(principal));
 
             var apiKeyController = account.GetController<UIManageController>();
             apiKeyController.ModelState.AddModelError("test", "Force the posted model to be rendered");
@@ -291,6 +302,10 @@ namespace BTCPayServer.Tests
             Assert.Equal(new[] { firstStoreId }, Assert.Single(postedViewModel.PermissionValues).SpecificStores);
 
             var client = await account.CreateClient();
+            await client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.CanViewProfile) }
+            });
             await client.CreateAPIKey(new CreateApiKeyRequest
             {
                 Permissions = new[] { Permission.Create(Policies.CanViewInvoices, firstStoreId) }
@@ -316,6 +331,7 @@ namespace BTCPayServer.Tests
             await storeRepository.AddOrUpdateStoreRole(lockedRole,
                 new[] { Policies.CanViewStoreSettings, Policies.CanManageStoreCredentials });
             Assert.Equal(2, (await credentialManagementService.GetManageableStores(principal)).Length);
+            Assert.True(await CanManageStoreCredentials(lockedStoreId));
             await client.CreateAPIKey(new CreateApiKeyRequest
             {
                 Permissions = new[] { Permission.Create(Policies.CanViewInvoices) }
@@ -327,12 +343,18 @@ namespace BTCPayServer.Tests
                 DisableNonAdminCredentialManagement = true
             });
             Assert.Empty(await credentialManagementService.GetManageableStores(principal));
+            Assert.False(credentialManagementService.CanManageAccountApiKeys(principal));
+            Assert.False(await CanManageStoreCredentials(firstStoreId));
+            Assert.False((await authorizationService.AuthorizeAsync(principal, Policies.CanManageStoreCredentials)).Succeeded);
             await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
             {
                 Permissions = new[] { Permission.Create(Policies.CanViewProfile) }
             }));
 
             await account.MakeAdmin();
+            var adminPrincipal = account.GetController<UIStoresController>().User;
+            Assert.True(credentialManagementService.CanManageAccountApiKeys(adminPrincipal));
+            Assert.Equal(2, (await credentialManagementService.GetManageableStores(adminPrincipal)).Length);
             await client.CreateAPIKey(new CreateApiKeyRequest
             {
                 Permissions = new[] { Permission.Create(Policies.CanViewProfile) }

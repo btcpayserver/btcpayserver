@@ -53,10 +53,37 @@ Use the [BTCPay Server Plugin Builder](https://plugin-builder.btcpayserver.org/)
 
 ### Prepare the repository
 
+The packer reads plugin metadata from the compiled assembly. Set the display name, description, and version in the plugin `.csproj`:
+
+```xml
+<PropertyGroup>
+  <Product>My Plugin</Product>
+  <Description>What the plugin does for BTCPay Server users.</Description>
+  <Version>1.0.0</Version>
+</PropertyGroup>
+```
+
+`BaseBTCPayServerPlugin` uses `Product` as the plugin name, `Description` as its description, and `Version` as its version. Its identifier defaults to the assembly name, which normally comes from the `.csproj` filename unless `<AssemblyName>` overrides it. The assembly name is also the second argument passed to `BTCPayServer.PluginPacker`; it is not the display name from `Product`.
+
+Declare the supported BTCPay Server version in the plugin class:
+
+```csharp
+public override IBTCPayServerPlugin.PluginDependency[] Dependencies { get; } =
+[
+    new()
+    {
+        Identifier = nameof(BTCPayServer),
+        Condition = ">=2.4.0"
+    }
+];
+```
+
+Set the condition to the versions actually tested by the plugin. Add other required plugins to the same array using their identifiers and version conditions. Keep the plugin identifier and assembly name stable after the first release because installations, updates, and other plugin dependencies refer to the identifier.
+
 Before creating the plugin in Plugin Builder:
 
 1. Put the plugin in a publicly cloneable Git repository.
-2. Set the plugin version and BTCPay Server dependency condition in its metadata.
+2. Verify the project metadata and dependency conditions described above.
 3. Ensure a clean Release build succeeds from the committed source.
 4. Add user-facing documentation explaining installation, configuration, and operation.
 5. Prepare a logo, screenshots, and a demonstration video for the directory listing.

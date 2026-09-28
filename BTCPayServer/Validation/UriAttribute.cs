@@ -7,11 +7,20 @@ namespace BTCPayServer.Validation
     //from https://stackoverflow.com/a/47196738/275504
     public class UriAttribute : ValidationAttribute
     {
+        private readonly string[] _allowedSchemes;
+
+        public UriAttribute(params string[] allowedSchemes)
+        {
+            _allowedSchemes = allowedSchemes;
+        }
+
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
             var str = value == null ? null : Convert.ToString(value, CultureInfo.InvariantCulture);
-            Uri uri;
-            bool valid = string.IsNullOrWhiteSpace(str) || Uri.TryCreate(str, UriKind.Absolute, out uri);
+            bool valid = string.IsNullOrWhiteSpace(str) ||
+                         Uri.TryCreate(str, UriKind.Absolute, out var uri) &&
+                         (_allowedSchemes.Length == 0 || Array.Exists(_allowedSchemes,
+                             scheme => scheme.Equals(uri.Scheme, StringComparison.OrdinalIgnoreCase)));
 
             if (!valid)
             {

@@ -1427,12 +1427,13 @@ namespace BTCPayServer.Tests
             Assert.Equal("A", newStore.Name);
 
             // validate
-            await AssertValidationError(["CssUrl", "LogoUrl", "BrandColor", "SupportUrl"], async () =>
+            await AssertValidationError(["CssUrl", "LogoUrl", "BrandColor", "SupportUrl", "Website"], async () =>
                 await client.UpdateStore(newStore.Id, new UpdateStoreRequest
                 {
                     CssUrl = "style.css",
                     LogoUrl = "logo.svg",
                     SupportUrl = "javascript:document.body.dataset.pwned=1",
+                    Website = "javascript:document.body.dataset.pwned=1",
                     BrandColor = "invalid"
                 }));
 

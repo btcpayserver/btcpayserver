@@ -463,7 +463,7 @@
                     "website": {
                         "type": "string",
                         "nullable": true,
-                        "description": "The absolute url of the store",
+                        "description": "The absolute HTTP or HTTPS URL of the store",
                         "format": "url"
                     },
                     "supportUrl": {

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Agents: Do not use this CI script for local or focused verification. It
+# rebuilds the full Docker test environment; run the relevant dotnet test
+# command directly instead.
+
 is_github_actions() {
   [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]
 }

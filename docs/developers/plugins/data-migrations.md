@@ -54,9 +54,41 @@ Inject `PluginDbContext` into scoped services. In singleton or background servic
 
 For `dotnet ef`, add an `IDesignTimeDbContextFactory<PluginDbContext>` that builds the context with a development PostgreSQL connection. EF uses this factory only while generating migrations; the runtime factory still supplies the server's configured connection. See Payroll's [`DesignTimeDbContextFactory`](https://github.com/rockstardev/BTCPayServerPlugins.RockstarDev/blob/master/Plugins/BTCPayServer.RockstarDev.Plugins.Payroll/Data/DesignTimeDbContextFactory.cs).
 
-Generate migrations in the plugin repository with the .NET and EF versions selected by the [plugin template](https://github.com/btcpayserver/btcpayserver-plugin-template). Commit migration source alongside the model. Never edit or remove a migration already shipped to users; add a forward migration.
+## Create a migration
 
-For startup migrations, use the migration registration contracts exposed by BTCPay Server, such as `AddMigration<TDbContext, TMigration>`. The generic context must have a registered `IDbContextFactory<TDbContext>`. Keep migration identifiers unique within that context and ordered; date-prefixed identifiers are recommended for raw SQL migrations.
+Use the .NET and EF versions selected by the [plugin template](https://github.com/btcpayserver/btcpayserver-plugin-template). From the plugin repository root:
+
+1. Update the plugin model.
+2. Generate the migration, specifying the plugin project, context, and output directory:
+
+   ```sh
+   dotnet ef migrations add <migration-name> \
+       --project <plugin-project> \
+       --context PluginDbContext \
+       --output-dir Data/Migrations
+   ```
+
+3. Copy the class attributes from the generated `.Designer.cs` file to the migration `.cs` file.
+4. Remove the generated `.Designer.cs` file.
+5. Remove the `Down()` method.
+6. Review the migration, model snapshot, and generated SQL implications, then commit the migration and snapshot with the model change.
+
+The Payroll plugin keeps its project under `Plugins/BTCPayServer.RockstarDev.Plugins.Payroll`, so its equivalent generation command is:
+
+```sh
+dotnet ef migrations add <migration-name> \
+    --project Plugins/BTCPayServer.RockstarDev.Plugins.Payroll \
+    --context PluginDbContext \
+    --output-dir Data/Migrations
+```
+
+Plugin migrations target PostgreSQL. Do not use `migrationBuilder.IsNpgsql()`, and follow PostgreSQL naming conventions. Never edit or remove a migration already shipped to users; add a forward migration instead. Test both installation into an empty database and an upgrade from the previous plugin schema when a change has meaningful data or compatibility risk.
+
+## Run migrations
+
+Run generated EF migrations at startup through the registered `PluginMigrationRunner`, which creates a context from `PluginDbContextFactory` and calls `context.Database.MigrateAsync(cancellationToken)`.
+
+For startup data migrations outside the EF schema history, use the migration registration contracts exposed by BTCPay Server, such as `AddMigration<TDbContext, TMigration>`. The generic context must have a registered `IDbContextFactory<TDbContext>`. Keep migration identifiers unique within that context and ordered; date-prefixed identifiers are recommended for raw SQL migrations.
 
 If you use those contracts with the plugin context, register the same factory through the interface as well:
 

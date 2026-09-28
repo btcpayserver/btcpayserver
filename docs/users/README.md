@@ -25,7 +25,8 @@ hold funds as a payment intermediary.
   tracks the resulting payment.
 - A **payment request** is a shareable, long-lived request that creates a new
   invoice whenever someone pays. It can accept partial payments until the
-  requested amount is reached or the request expires.
+  requested amount is reached or the request expires. See
+  [Payment requests](payment-requests.md).
 - A **pull payment** allocates funds that a recipient can claim by submitting a
   payout destination. The store reviews and approves the resulting payout.
 - An **offering** represents a product or service sold through recurring

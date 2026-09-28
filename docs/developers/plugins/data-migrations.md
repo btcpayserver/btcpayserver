@@ -56,7 +56,7 @@ For `dotnet ef`, add an `IDesignTimeDbContextFactory<PluginDbContext>` that buil
 
 ## Create a migration
 
-Use the .NET and EF versions selected by the [plugin template](https://github.com/btcpayserver/btcpayserver-plugin-template). From the plugin repository root:
+Use the .NET target framework and EF Core package versions declared by the [`BTCPayServer.Data.csproj`](https://github.com/btcpayserver/btcpayserver/blob/master/BTCPayServer.Data/BTCPayServer.Data.csproj) project referenced by your plugin. From the plugin repository root:
 
 1. Update the plugin model.
 2. Generate the migration, specifying the plugin project, context, and output directory:

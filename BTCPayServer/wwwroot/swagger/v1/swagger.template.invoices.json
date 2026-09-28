@@ -868,7 +868,7 @@
             "InvoiceMetadata": {
                 "type": "object",
                 "additionalProperties": true,
-                "description": "Additional information around the invoice that can be supplied. The mentioned properties are all optional and you can introduce any json format you wish. See [our documentation](https://docs.btcpayserver.org/Development/InvoiceMetadata/) for more information.",
+                "description": "Additional information around the invoice that can be supplied. The mentioned properties are all optional and you can introduce any json format you wish. See [our documentation](https://docs.btcpayserver.org/Developers/api/invoice-metadata/) for more information.",
                 "example": {
                     "orderId": "pos-app_346KRC5BjXXXo8cRFKwTBmdR6ZJ4",
                     "orderUrl": "https://localhost:14142/apps/346KRC5BjXXXo8cRFKwTBmdR6ZJ4/pos",

@@ -28,7 +28,8 @@ hold funds as a payment intermediary.
   requested amount is reached or the request expires. See
   [Payment requests](payment-requests.md).
 - A **pull payment** allocates funds that a recipient can claim by submitting a
-  payout destination. The store reviews and approves the resulting payout.
+  payout destination. The store reviews and approves the resulting payout. See
+  [Pull payments](pull-payments.md).
 - An **offering** represents a product or service sold through recurring
   payments. It groups subscription plans, entitlements, and subscribers. See
   [Offerings and recurring payments](offerings.md).

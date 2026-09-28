@@ -259,7 +259,13 @@ namespace BTCPayServer.Tests
             var storeRepository = tester.PayTester.GetService<StoreRepository>();
             var lockedRole = new StoreRoleId(lockedStoreId, "No credential management");
             await storeRepository.AddOrUpdateStoreRole(lockedRole, new[] { Policies.CanViewStoreSettings });
-            await storeRepository.AddOrUpdateStoreUser(lockedStoreId, account.UserId, lockedRole);
+            // The last owner of a store cannot be downgraded, so hand ownership to someone else first.
+            var coOwner = tester.NewAccount();
+            await coOwner.RegisterAsync();
+            Assert.IsType<StoreRepository.AddOrUpdateStoreUserResult.Success>(
+                await storeRepository.AddOrUpdateStoreUser(lockedStoreId, coOwner.UserId, new StoreRoleId("Owner")));
+            Assert.IsType<StoreRepository.AddOrUpdateStoreUserResult.Success>(
+                await storeRepository.AddOrUpdateStoreUser(lockedStoreId, account.UserId, lockedRole));
 
             var credentialManagementService = tester.PayTester.GetService<CredentialManagementService>();
             var principal = account.GetController<UIStoresController>().User;

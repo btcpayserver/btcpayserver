@@ -14,6 +14,10 @@ namespace BTCPayServer.Plugins.GlobalSearch;
 public class ActionResultItemViewModel
 {
     public string? RequiredPolicy { get; set; }
+    /// <summary>
+    /// Additional visibility check for conditions that cannot be expressed as a policy, such as server settings.
+    /// </summary>
+    public Func<SearchResultItemProviderContext, bool>? Condition { get; set; }
     public required string Title { get; set; }
     public string? SubTitle { get; set; }
     public required string Action { get; set; }
@@ -74,6 +78,8 @@ public class StaticSearchResultProvider(
         foreach (var item in routeItems)
         {
             if (item.RequiredPolicy is not null && !await context.IsAuthorized(item.RequiredPolicy))
+                continue;
+            if (item.Condition is not null && !item.Condition(context))
                 continue;
             context.ItemResults.Add(new ResultItemViewModel()
             {

@@ -1,6 +1,7 @@
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Controllers;
+using BTCPayServer.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Plugins.GlobalSearch;
@@ -229,6 +230,8 @@ public class GlobalSearchPlugin : BaseBTCPayServerPlugin
             new ActionResultItemViewModel
             {
                 RequiredPolicy = Policies.CanViewProfile,
+                Condition = ctx => ctx.Url.ActionContext.HttpContext.RequestServices
+                    .GetRequiredService<CredentialManagementService>().CanManageAccountApiKeys(ctx.User),
                 Title = "Manage API Keys",
                 Action = nameof(UIManageController.APIKeys),
                 Controller = "UIManage",

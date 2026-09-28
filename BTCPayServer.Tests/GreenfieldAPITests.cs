@@ -19,6 +19,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.Lightning;
+using BTCPayServer.Plugins.GlobalSearch;
 using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Services;
@@ -274,6 +275,12 @@ namespace BTCPayServer.Tests
             var authorizationService = storesController.HttpContext.RequestServices.GetRequiredService<IAuthorizationService>();
             async Task<bool> CanManageStoreCredentials(string storeId) =>
                 (await authorizationService.AuthorizeAsync(principal, storeId, Policies.CanManageStoreCredentials)).Succeeded;
+            var apiKeysSearchEntry = tester.PayTester.ServiceProvider.GetServices<ActionResultItemViewModel>()
+                .Single(item => item.Title == "Manage API Keys");
+            bool ShowsApiKeysInSearch(System.Security.Claims.ClaimsPrincipal user) =>
+                apiKeysSearchEntry.Condition!(new SearchResultItemProviderContext(user, account.UserId,
+                    new Microsoft.AspNetCore.Mvc.Routing.UrlHelper(new ActionContext(storesController.HttpContext,
+                        new Microsoft.AspNetCore.Routing.RouteData(), new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor())), authorizationService));
 
             var manageableStores = await credentialManagementService.GetManageableStores(principal);
             Assert.Contains(manageableStores, store => store.Id == firstStoreId);
@@ -283,6 +290,7 @@ namespace BTCPayServer.Tests
             Assert.False(await CanManageStoreCredentials(lockedStoreId));
             // Account-level API key management does not.
             Assert.True(credentialManagementService.CanManageAccountApiKeys(principal));
+            Assert.True(ShowsApiKeysInSearch(principal));
 
             var apiKeyController = account.GetController<UIManageController>();
             apiKeyController.ModelState.AddModelError("test", "Force the posted model to be rendered");
@@ -344,6 +352,7 @@ namespace BTCPayServer.Tests
             });
             Assert.Empty(await credentialManagementService.GetManageableStores(principal));
             Assert.False(credentialManagementService.CanManageAccountApiKeys(principal));
+            Assert.False(ShowsApiKeysInSearch(principal));
             Assert.False(await CanManageStoreCredentials(firstStoreId));
             Assert.False((await authorizationService.AuthorizeAsync(principal, Policies.CanManageStoreCredentials)).Succeeded);
             await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
@@ -354,6 +363,7 @@ namespace BTCPayServer.Tests
             await account.MakeAdmin();
             var adminPrincipal = account.GetController<UIStoresController>().User;
             Assert.True(credentialManagementService.CanManageAccountApiKeys(adminPrincipal));
+            Assert.True(ShowsApiKeysInSearch(adminPrincipal));
             Assert.Equal(2, (await credentialManagementService.GetManageableStores(adminPrincipal)).Length);
             await client.CreateAPIKey(new CreateApiKeyRequest
             {
@@ -405,6 +415,10 @@ namespace BTCPayServer.Tests
             await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
             {
                 Permissions = new[] { Permission.Create(Policies.CanViewInvoices) }
+            }));
+            await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = new[] { Permission.Create(Policies.Unrestricted) }
             }));
         }
 

@@ -6,6 +6,8 @@ results depend on the user's query or application data.
 
 **Video:** [Global search overview](https://github.com/user-attachments/assets/9db609a0-6805-4b77-acf3-839403a84f53)
 
+[![Global search showing suggested results](global-search-overview.jpg)](https://github.com/user-attachments/assets/9db609a0-6805-4b77-acf3-839403a84f53)
+
 ## Static results
 
 Static results are sent with the page. The browser uses fuzzy search across

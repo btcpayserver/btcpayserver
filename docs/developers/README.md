@@ -9,6 +9,7 @@ Use the Greenfield REST API to connect a commerce application, automate a BTCPay
 - [Get started and plan an integration](api/README.md)
 - [Authenticate and request permissions](api/authentication.md)
 - [Use cURL, Node.js, or PHP](api/examples.md)
+- [Use invoice metadata](api/invoice-metadata.md)
 - [Implement or change API endpoints](api/compatibility.md)
 
 The interactive API reference is available at `/docs` on every BTCPay Server instance and at [docs.btcpayserver.org](https://docs.btcpayserver.org/API/Greenfield/v1/).

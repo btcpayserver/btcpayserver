@@ -65,6 +65,9 @@ documentation.
 
 ## Advanced Topics
 
+Server administrators can install community language packs or maintain local
+interface translations. See [Backend translations](translations.md).
+
 Deployment authors can implement the optional
 [`btcpay-host` integration](./host-integration.md) to expose selected
 server-administration actions to BTCPay Server. Most operators do not need to

@@ -44,6 +44,8 @@ Use `Content-Type: application/json` when sending JSON. Treat non-2xx responses 
 7. Issue refunds through the invoice refund endpoint when required.
 
 Do not place data on an invoice merely because the model permits it. Usually an order ID is enough to correlate records; keeping customer data in one system limits exposure.
+See [invoice metadata](invoice-metadata.md) for the properties BTCPay Server
+interprets specially.
 
 ## Integration practices
 
@@ -55,4 +57,6 @@ Do not place data on an invoice merely because the model permits it. Usually an 
 - Test partial, overpaid, late, expired, invalid, and settled invoice states rather than treating “a payment was seen” as final settlement.
 - Expect network failures and rate limiting. Retry safe reads with bounded backoff; use application-level idempotency before retrying writes.
 
-See [authentication](authentication.md), [language examples](examples.md), and the [Greenfield API reference](https://docs.btcpayserver.org/API/Greenfield/v1/).
+See [authentication](authentication.md), [language examples](examples.md),
+[invoice metadata](invoice-metadata.md), and the
+[Greenfield API reference](https://docs.btcpayserver.org/API/Greenfield/v1/).

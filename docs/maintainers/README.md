@@ -4,6 +4,21 @@ These pages document the repository-specific practices shared by maintainers and
 
 For vulnerability reports, follow the canonical root [security policy](../../SECURITY.md).
 
+## Guides
+
+- [Local development and testing](local-development.md) covers prerequisites,
+  builds, launch profiles, development dependencies, and test practices.
+- [Coding conventions](coding-conventions.md) covers repository style, pull
+  requests, frontend selectors, Razor localization, and changelog entries.
+- [Greenfield API maintenance](greenfield-api.md) covers routes, authorization,
+  public models, errors, compatibility, OpenAPI, client methods, and tests.
+- [Configuration option maintenance](#configuration-option-maintenance) covers
+  the supported configuration sources, consumers, defaults, and documentation.
+- [Database migrations](#database-migrations) covers the repository-specific
+  Entity Framework and PostgreSQL migration workflow.
+- [Release cycles and checklist](#release-cycles) covers release types,
+  responsibilities, preparation, and publication.
+
 ## Architecture
 
 BTCPay Server is an ASP.NET Core application targeting the .NET version defined in `Build/Common.csproj`. The solution is split into these main projects:
@@ -20,163 +35,6 @@ BTCPay Server is an ASP.NET Core application targeting the .NET version defined 
 The application uses PostgreSQL for persistence and NBXplorer to track blockchain activity. Bitcoin and Lightning implementations run as external services. The development test environment in `BTCPayServer.Tests/docker-compose.yml` supplies PostgreSQL, NBXplorer, Bitcoin regtest, Lightning nodes, Tor, and Mailpit.
 
 Built-in features are organized under `BTCPayServer/Plugins`. Keep reusable contracts in the abstractions or client projects only when they are genuinely shared; otherwise, keep behavior close to its feature in the main application.
-
-## Local Development
-
-### Prerequisites
-
-- Install the .NET SDK required by `Build/Common.csproj` (currently .NET 10).
-- Install Docker with Compose for the local PostgreSQL, NBXplorer, Bitcoin, Lightning, Tor, and Mailpit services.
-- Use Visual Studio 2022 or JetBrains Rider for the repository launch profiles and debugging.
-
-### Build
-
-Build the solution directly:
-
-```sh
-dotnet build btcpayserver.sln
-```
-
-Create the release publish output used by the run scripts:
-
-```sh
-./build.sh
-```
-
-On PowerShell, use `./build.ps1`.
-
-### Run
-
-Start the development dependencies:
-
-```sh
-cd BTCPayServer.Tests
-docker-compose up -d dev
-cd ..
-```
-
-Run BTCPay Server with the `Bitcoin` launch profile:
-
-```sh
-dotnet run --project BTCPayServer/BTCPayServer.csproj --launch-profile Bitcoin
-```
-
-After running the build script, start the published application or inspect its options:
-
-```sh
-./run.sh
-./run.sh --help
-```
-
-On PowerShell, use `./run.ps1`. IDEs use the launch profiles from
-`BTCPayServer/Properties/launchSettings.json`. Use `Bitcoin` for HTTP or
-`Bitcoin-HTTPS` for HTTPS. The HTTPS profile requires a trusted development
-certificate:
-
-```sh
-dotnet dev-certs https --trust
-```
-
-If Brave does not recognize the trusted development certificate, export its
-public certificate:
-
-```sh
-dotnet dev-certs https --export-path ./aspnetcore-localhost.crt --format PEM
-```
-
-Open `brave://certificate-manager/`, select **Authorities** (or **Custom** >
-**Trusted Certificates** in newer versions), and import
-`aspnetcore-localhost.crt`. Enable trust for identifying websites when Brave
-asks, restart the browser, and reopen the local HTTPS URL. The exported file
-contains only the public certificate and can be deleted after import.
-
-For altcoin development, start the alternate dependency environment and use
-the `Altcoins` or `Altcoins-HTTPS` launch profile:
-
-```sh
-cd BTCPayServer.Tests
-docker-compose -f docker-compose.altcoins.yml up -d dev
-```
-
-See [testing](#testing) for focused test commands and regtest tooling.
-
-## Testing
-
-### Test Environment
-
-Start dependencies from `BTCPayServer.Tests` before running integration or Playwright tests:
-
-```sh
-docker-compose up -d dev
-```
-
-Run tests on the host. Run the full project from the repository root with:
-
-```sh
-dotnet test --project BTCPayServer.Tests/BTCPayServer.Tests.csproj
-```
-
-Run one test with its fully qualified method name:
-
-```sh
-dotnet test --project BTCPayServer.Tests/BTCPayServer.Tests.csproj --filter-method BTCPayServer.Tests.BitpayTests.CanUsePairing
-```
-
-If the dependency environment becomes stale, run `docker-compose down --volumes`, then `docker-compose pull` and `docker-compose up -d dev` from `BTCPayServer.Tests`.
-
-### Test Design
-
-- Prefer extending an existing relevant scenario over adding a separate test.
-- Exercise real browser or `BTCPayServerClient` interfaces instead of manually constructing controllers, unless controller internals are the subject of the test.
-- Use Playwright's auto-waiting `Expect` assertions; do not add `WaitForLoadStateAsync` before them.
-- Prefer `Expect` assertions such as `ToHaveCountAsync`, `ToContainTextAsync`,
-  `ToHaveValueAsync`, and `ToHaveURLAsync` over manually fetching state. Add
-  `using static Microsoft.Playwright.Assertions;` where needed.
-- Keep one-off selectors and helpers in the test. Introduce a Page Model Object only for repeated component or page behavior.
-- Page Model Objects should expose user-level actions and assertions and hide selector details.
-- Prefer stable BEM class hooks for reusable frontend components.
-
-[`BTCPayServer.Tests/README.md`](../../BTCPayServer.Tests/README.md) documents payment simulation, Bitcoin and Lightning helper scripts, Polar, and the altcoin test environment.
-
-## Coding Conventions
-
-### General
-
-- Follow the repository `.editorconfig`; it is the source of truth for formatting and C# style.
-- Prefer `Newtonsoft.Json` over `System.Text.Json` when adding or changing JSON serialization.
-
-### Pull Requests
-
-Write descriptions for users, merchants, operators, support contributors, translators, and reviewers who need to understand the outcome rather than the implementation.
-
-- Explain user-visible behavior, workflows, settings, permissions, API behavior, and operational impact in plain language.
-- State why the change matters and describe the practical before-and-after effect when useful.
-- Mention limitations, compatibility concerns, and follow-up work that affects users or operators.
-- Do not repeat the diff or include routine verification commands.
-- Keep technical implementation details only when they are necessary for review or explain public behavior.
-- Add screenshots for visual changes and a short video or GIF for multi-step UI flows when practical. Briefly explain when useful visual evidence cannot be included.
-
-### Frontend Selectors
-
-Use BEM-style classes for reusable styling, JavaScript, and Playwright hooks:
-`.block`, `.block__element`, `.block--modifier`, and
-`.block__element--modifier`. Use the component name as the block. Scope DOM
-queries to the nearest component or form when possible.
-
-Keep ids required for labels, ARIA and Bootstrap wiring, browser behavior, model binding, or compatibility. Even when an id remains, use a BEM class for new component selectors.
-
-### Razor Localization
-
-- Use `StringLocalizer` for plain text; Razor encodes the localized result.
-- Use `ViewLocalizer` only when the resource intentionally contains HTML.
-- Pass dynamic `ViewLocalizer` parameters through `Html.Encode(...)`.
-- Do not encode intentional HTML returned by helpers such as `Html.ActionLink(...)`.
-
-### Changelog
-
-Record user-visible features, fixes, regressions, deprecations, removals, security-relevant behavior, and compatibility changes in `Changelog.md`. Skip internal refactors, test-only changes, tooling changes unless users or release operators are affected, and entries already covered by an earlier patch release. Put removals and deprecations under **Miscellaneous** unless another existing section is a better fit.
-
-Use concise imperative bullets under the existing sections, preserve product terminology, wrap identifiers in backticks, and include PR numbers and contributor handles when known. When an entry begins with a titled prefix, bold only that title: `* **Title**: Description`.
 
 ## Configuration Option Maintenance
 
@@ -210,27 +68,6 @@ Do not use `migrationBuilder.IsNpgsql()`; migrations may assume PostgreSQL. Foll
 If Entity Framework cannot generate the required operation, add a timestamp-prefixed file in `BTCPayServer.Data/Migrations`, such as `20260525115757_passkey.cs`, and use `migrationBuilder.Sql(...)` for the raw SQL.
 
 Test both a fresh database and an upgrade from the previous schema when the change has meaningful data or compatibility risk.
-
-## API Changes
-
-The Greenfield API contract includes controller behavior, models, permissions, serialization, and the hand-maintained OpenAPI templates in `BTCPayServer/wwwroot/swagger/v1/`.
-
-### New Endpoints
-
-- Document every endpoint and schema in the matching `swagger.template.*.json` file.
-- Assign the correct permission; introduce a permission only when no existing one fits.
-- Use REST methods where practical: `POST` for creation or actions, `PUT` for full replacement, `PATCH` for partial updates, and `DELETE` for deletion or archival.
-- Return validation failures as HTTP 422 with `path` and `message` entries. Return business request failures as HTTP 400 with a stable `code` and human-readable `message`.
-- Register JSON converters on the model with attributes. Serialize precision-sensitive or overflow-prone values such as `decimal` and `long` as strings while accepting compatible input forms where required.
-- Serialize `DateTime` and `DateTimeOffset` model properties as Unix timestamps with `NBitcoin.JsonConverters.DateTimeToUnixTimeConverter`, and document them with the shared `UnixTimestamp` OpenAPI schema.
-
-### Compatibility
-
-Changing a property type or removing a property is breaking; version the endpoint unless compatibility can be preserved completely. Adding a required property or one without a safe default can also break clients. For additions, detect omission and retain the existing value on updates or apply a documented default on creation.
-
-Update the matching OpenAPI template in the same pull request whenever request fields, response fields, validation, models, or behavior change. Cover compatibility and permissions with Greenfield API tests.
-
-See [Greenfield API development](../greenfield-development.md) for detailed model-evolution examples and [authorization](../greenfield-authorization.md) for authentication flows.
 
 ## Release Cycles
 

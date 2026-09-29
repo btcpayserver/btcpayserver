@@ -3180,7 +3180,7 @@ Those are low risk injection vulnerabilities.
 
 ### Altcoins
 
-* BTCPay Server build is Bitcoin Only by default. If you are developer and wants to work on the altcoins build, please read [the documentation](https://github.com/btcpayserver/btcpayserver/blob/master/docs/maintainers/README.md#local-development).
+* BTCPay Server build is Bitcoin Only by default. If you are developer and wants to work on the altcoins build, please read [the documentation](https://github.com/btcpayserver/btcpayserver/blob/master/docs/maintainers/local-development.md).
 * Show sync progress for monero and show amount of monero payment #1729 @xpayserver
 
 ## 1.0.5.3:

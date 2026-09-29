@@ -47,12 +47,17 @@ new component selectors.
 
 ## Changelog
 
-Record user-visible features, fixes, regressions, deprecations, removals,
-security-relevant behavior, and compatibility changes in `Changelog.md`. Skip
-internal refactors, test-only changes, tooling changes unless users or release
-operators are affected, and entries already covered by an earlier patch
-release. Put removals and deprecations under **Miscellaneous** unless another
-existing section is a better fit.
+Do not edit `Changelog.md` in feature, fix, refactor, or documentation pull
+requests merely because a change is user-visible. Only update it when
+changelog or release-note maintenance is an explicit motivation of the pull
+request.
+
+When maintaining the changelog, record user-visible features, fixes,
+regressions, deprecations, removals, security-relevant behavior, and
+compatibility changes. Skip internal refactors, test-only changes, tooling
+changes unless users or release operators are affected, and entries already
+covered by an earlier patch release. Put removals and deprecations under
+**Miscellaneous** unless another existing section is a better fit.
 
 Use concise imperative bullets under the existing sections, preserve product
 terminology, wrap identifiers in backticks, and include PR numbers and

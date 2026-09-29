@@ -70,7 +70,8 @@ namespace BTCPayServer.Plugins.Translations
 
         private const string ManifestCacheKey = "translations.manifest";
         private const string ManifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
-        private const string TrustedOrgPrefix = "https://raw.githubusercontent.com/btcpayserver/";
+        private const string TrustedHost = "raw.githubusercontent.com";
+        private const string TrustedOrgPath = "/btcpayserver/";
 
         private static readonly TimeSpan CacheLifetime = TimeSpan.FromHours(1);
 
@@ -90,10 +91,12 @@ namespace BTCPayServer.Plugins.Translations
 
             if (!string.IsNullOrEmpty(root.Redirect))
             {
-                if (!root.Redirect.StartsWith(TrustedOrgPrefix, StringComparison.OrdinalIgnoreCase))
+                // Validate the URL as it will be requested. Uri resolves dot segments ("/btcpayserver/../other/"),
+                // so a string prefix check on the raw value could be escaped.
+                if (!IsTrustedRedirect(root.Redirect, out var redirect))
                     throw new InvalidOperationException($"Manifest redirect '{root.Redirect}' is outside the trusted repository.");
 
-                manifestUrl = root.Redirect;
+                manifestUrl = redirect.AbsoluteUri;
                 json = await httpClient.GetStringAsync(manifestUrl);
                 root = JsonConvert.DeserializeObject<ManifestRootDto>(json);
                 if (root?.Languages is null)
@@ -105,6 +108,14 @@ namespace BTCPayServer.Plugins.Translations
             var snapshot = new ManifestSnapshot(entries, DeriveBaseUrl(manifestUrl));
             memoryCache.Set(ManifestCacheKey, snapshot, CacheLifetime);
             return snapshot;
+        }
+
+        internal static bool IsTrustedRedirect(string value, out Uri redirect)
+        {
+            return Uri.TryCreate(value, UriKind.Absolute, out redirect!)
+                   && redirect.Scheme == Uri.UriSchemeHttps
+                   && string.Equals(redirect.Host, TrustedHost, StringComparison.OrdinalIgnoreCase)
+                   && redirect.AbsolutePath.StartsWith(TrustedOrgPath, StringComparison.OrdinalIgnoreCase);
         }
 
         private static string DeriveBaseUrl(string manifestUrl)
@@ -134,7 +145,7 @@ namespace BTCPayServer.Plugins.Translations
             var actualSha = Convert.ToHexString(SHA256.HashData(translationsBytes));
             if (!string.Equals(actualSha, entry.Sha, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException(
-                    $"Downloaded language pack '{language}' SHA-256 mismatch: The download may be corrupt or tampered with.");
+                    $"Downloaded language pack '{language}' SHA-256 mismatch: expected {entry.Sha}, got {actualSha}. The download may be corrupt or tampered with.");
 
             return (Encoding.UTF8.GetString(translationsBytes), entry.Sha, entry.Rtl);
         }

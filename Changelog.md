@@ -15,12 +15,14 @@
 
 ### New features
 
+* **Greenfield**: Add API endpoints for discovering and running store reports.
 * **Stores**: Add invitations for store users (#7519) @dstrukt
 * **Email Rules**: Add `StoreInvitePending` and `StoreUserJoined` triggers (#7519) @dstrukt
 * **Rates**: Support the Chilean Unidad de Fomento by recommending Bitpay for the `CLF` currency (#7522) @Shuaibu78
 
 ### Fixes
 
+* **Reports**: Make all-time and rolling date ranges use their intended bounds.
 * **Crowdfund**: Keep the main image and last-updated date when contributions change (#7487) @inauman
 * **Reports**: Display short values correctly and hide broken explorer links (#7506) @Psycarlo
 * **Invoices**: Require permission to change an invoice's state (#7514) @NicolasDorier

@@ -1,0 +1,201 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/reports": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get available reports",
+                "description": "Get the names of reports currently available for the store.",
+                "operationId": "Reports_GetStoreReports",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The available report names",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization"
+                    },
+                    "403": {
+                        "description": "Authenticated but forbidden to view reports"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewreports"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Run a report",
+                "description": "Run an available store report over an explicit date range. The search string must include a `view` filter and either `daterange` or `startdate`. Named ranges and dates without an explicit offset also require `timezone`.",
+                "operationId": "Reports_RunStoreReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreReportRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The generated report",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StoreReportResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization"
+                    },
+                    "403": {
+                        "description": "Authenticated but forbidden to view reports"
+                    },
+                    "422": {
+                        "description": "The search string or requested report is invalid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "The requested report is temporarily unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewreports"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "StoreReportRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "search"
+                ],
+                "properties": {
+                    "search": {
+                        "type": "string",
+                        "description": "A report search string containing a report view and date range.",
+                        "example": "view:Invoices,daterange:thismonth,timezone:UTC"
+                    }
+                }
+            },
+            "StoreReportResponse": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "reportName",
+                    "from",
+                    "to",
+                    "fields",
+                    "data"
+                ],
+                "properties": {
+                    "reportName": {
+                        "type": "string",
+                        "description": "The canonical report name."
+                    },
+                    "from": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "The inclusive start of the effective report range."
+                    },
+                    "to": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "The inclusive end of the effective report range."
+                    },
+                    "fields": {
+                        "type": "array",
+                        "description": "The report columns in the same order as each data row.",
+                        "items": {
+                            "$ref": "#/components/schemas/StoreReportField"
+                        }
+                    },
+                    "data": {
+                        "type": "array",
+                        "description": "The report rows. Amount and decimal values are strings to preserve precision.",
+                        "items": {
+                            "type": "array",
+                            "items": {}
+                        }
+                    }
+                }
+            },
+            "StoreReportField": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The field name."
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "The report provider's field type."
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Reports",
+            "description": "Store report operations"
+        }
+    ]
+}

@@ -188,7 +188,7 @@ namespace BTCPayServer
                 _ => (DateTimeOffset?)null
             };
             if (rollingStart is not null)
-                return rollingStart;
+                return key == "startdate" ? rollingStart : null;
             var tz = GetTimeZoneInfo(defaultTimeZoneInfo);
             if (tz is null)
                 return null;

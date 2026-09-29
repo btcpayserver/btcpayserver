@@ -25,10 +25,23 @@ public class ReportsTests
     [Fact]
     public void RollingDateRangeEndsNow()
     {
+        var before = DateTimeOffset.UtcNow;
         var range = new SearchString("daterange:-24h,timezone:UTC").GetDateRange(TimeZoneInfo.Utc);
+        var after = DateTimeOffset.UtcNow;
 
         Assert.NotNull(range.StartDate);
-        Assert.Null(range.EndDate);
+        Assert.InRange(range.EndDate!.Value, before, after);
+    }
+
+    [Fact]
+    public void AllTimeDateRangeStartsAtUnixEpoch()
+    {
+        var before = DateTimeOffset.UtcNow;
+        var range = new SearchString("daterange:alltime,timezone:UTC").GetDateRange(TimeZoneInfo.Utc);
+        var after = DateTimeOffset.UtcNow;
+
+        Assert.Equal(DateTimeOffset.UnixEpoch, range.StartDate);
+        Assert.InRange(range.EndDate!.Value, before, after);
     }
 
     [Fact]

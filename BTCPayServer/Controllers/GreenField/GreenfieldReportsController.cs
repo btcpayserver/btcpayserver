@@ -95,14 +95,15 @@ public class GreenfieldReportsController(ReportService reportService) : Controll
             return this.CreateValidationError(ModelState);
         }
 
-        var range = ReportService.ResolveRange(search, timeZone ?? TimeZoneInfo.Utc, DateTimeOffset.UtcNow);
-        if (range.From >= range.To)
+        var from = parsedRange.StartDate!.Value;
+        var to = parsedRange.EndDate ?? DateTimeOffset.UtcNow;
+        if (from >= to)
         {
             ModelState.AddModelError(nameof(StoreReportRequest.Search), "The start date must be before the end date.");
             return this.CreateValidationError(ModelState);
         }
 
-        var result = await Query(storeId, viewName, range.From, range.To, cancellationToken);
+        var result = await Query(storeId, viewName, from, to, cancellationToken);
         if (result is not ObjectResult { Value: StoreReportResponse reportResponse })
             return result;
 
@@ -115,8 +116,10 @@ public class GreenfieldReportsController(ReportService reportService) : Controll
     {
         search ??= new SearchString(null);
         var viewName = search.GetFilterString("view") ?? DefaultReport;
-        var range = ReportService.ResolveRange(search, TimeZoneInfo.Utc, DateTimeOffset.UtcNow);
-        return await Query(storeId, viewName, range.From, range.To, cancellationToken);
+        var range = search.GetDateRange(TimeZoneInfo.Utc);
+        var to = range.EndDate ?? DateTimeOffset.UtcNow;
+        var from = range.StartDate ?? to.AddMonths(-1);
+        return await Query(storeId, viewName, from, to, cancellationToken);
     }
 
     private async Task<IActionResult> Query(string storeId, string viewName, DateTimeOffset from, DateTimeOffset to,

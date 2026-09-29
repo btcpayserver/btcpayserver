@@ -37,17 +37,6 @@ namespace BTCPayServer.Services
             };
         }
 
-        public static (DateTimeOffset From, DateTimeOffset To) ResolveRange(SearchString search,
-            TimeZoneInfo defaultTimeZone, DateTimeOffset now)
-        {
-            var range = search.GetDateRange(defaultTimeZone);
-            var to = range.EndDate ?? now;
-            var from = search.GetFilterString("daterange") == "alltime"
-                ? DateTimeOffset.UnixEpoch
-                : range.StartDate ?? to.AddMonths(-1);
-            return (from, to);
-        }
-
         private static void ResizeRows(int fieldsCount, IList<IList<object>> data)
         {
             foreach (var row in data)

@@ -27,7 +27,7 @@ public static class DbContextOptionsBuilderExtensions
             .UseNpgsql(connectionString, options =>
             {
                 options.EnableRetryOnFailure(10);
-                options.SetPostgresVersion(12, 0);
+                options.SetPostgresVersion(14, 0);
                 npgsqlOptionsAction?.Invoke(options);
                 var historyTableName = string.IsNullOrEmpty(migrationHistoryTableName)
                     ? "__EFMigrationsHistory"

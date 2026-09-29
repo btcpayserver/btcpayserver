@@ -153,13 +153,9 @@ public class GreenfieldReportsController(ReportService reportService) : Controll
 
     private static JToken? NormalizeValue(JToken? value, string? fieldType)
     {
-        if (string.Equals(fieldType, "datetime", StringComparison.OrdinalIgnoreCase) && value is JValue date)
-        {
-            if (date.Value is DateTimeOffset dateTimeOffset)
-                return dateTimeOffset.ToUnixTimeSeconds();
-            if (date.Value is DateTime dateTime)
-                return new DateTimeOffset(dateTime).ToUnixTimeSeconds();
-        }
+        if (string.Equals(fieldType, "datetime", StringComparison.OrdinalIgnoreCase) &&
+            value is JValue { Value: DateTimeOffset dateTimeOffset })
+            return dateTimeOffset.ToUnixTimeSeconds();
         if (string.Equals(fieldType, "amount", StringComparison.OrdinalIgnoreCase) &&
             value is JObject amount &&
             decimal.TryParse(amount["v"]?.Value<string>(), NumberStyles.Number, CultureInfo.InvariantCulture, out var number) &&

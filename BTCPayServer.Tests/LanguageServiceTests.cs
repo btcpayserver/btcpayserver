@@ -44,7 +44,7 @@ namespace BTCPayServer.Tests
             new(new TestHttpClientFactory(handler), new MemoryCache(new MemoryCacheOptions()));
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_ParsesManifestEntries()
         {
             var handler = new TestHttpMessageHandler();
@@ -119,7 +119,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_FollowsTrustedRedirect()
         {
             const string body = "{\"Hello\":\"Bonjour\"}";
@@ -157,7 +157,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_ThrowsOnRedirectOutsideTrustedOrg()
         {
             var handler = new TestHttpMessageHandler();
@@ -198,7 +198,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_PropagatesExceptionOnMalformedManifest()
         {
             var handler = new TestHttpMessageHandler();
@@ -210,7 +210,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_ThrowsOnMissingLanguagesKey()
         {
             var handler = new TestHttpMessageHandler();
@@ -222,7 +222,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_ThrowsArgumentExceptionForUnknownLanguage()
         {
             var handler = new TestHttpMessageHandler();
@@ -235,7 +235,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_ThrowsWhenManifestFails()
         {
             var handler = new TestHttpMessageHandler();
@@ -249,7 +249,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_FetchesLanguagePackFromManifest()
         {
             const string body = "{\"Hello\":\"Bonjour\"}";
@@ -281,7 +281,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_RejectsLanguagePackOnShaMismatch()
         {
             const string body = "{\"Hello\":\"Bonjour\"}";
@@ -310,7 +310,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_UsesUpdateCacheUntilInvalidated()
         {
             var handler = new TestHttpMessageHandler();

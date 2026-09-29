@@ -2,6 +2,8 @@
 
 These pages document the repository-specific practices shared by maintainers and contributors. Public user and deployment documentation remains at [docs.btcpayserver.org](https://docs.btcpayserver.org/).
 
+Changes to the documentation structure in this repository must also be reflected in the [btcpayserver-doc repository](https://github.com/btcpayserver/btcpayserver-doc) before they appear on the public documentation site.
+
 For vulnerability reports, follow the canonical root [security policy](../../SECURITY.md).
 
 ## Guides

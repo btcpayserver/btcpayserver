@@ -490,6 +490,18 @@ namespace BTCPayServer
         /// <summary>
         /// Registers a plugin-owned database context and applies its migrations during startup.
         /// </summary>
+        public static IServiceCollection AddPluginDbContext<TDbContext>(this IServiceCollection services)
+            where TDbContext : BasePluginDbContext<TDbContext>
+        {
+            var database = typeof(TDbContext).GetCustomAttribute<PluginDatabaseAttribute>() ??
+                           throw new InvalidOperationException(
+                               $"{typeof(TDbContext).FullName} must have a {nameof(PluginDatabaseAttribute)}.");
+            return services.AddPluginDbContext<TDbContext>(database.MigrationHistoryTableName);
+        }
+
+        /// <summary>
+        /// Registers a plugin-owned database context and applies its migrations during startup.
+        /// </summary>
         public static IServiceCollection AddPluginDbContext<TDbContext>(
             this IServiceCollection services,
             string migrationHistoryTableName,

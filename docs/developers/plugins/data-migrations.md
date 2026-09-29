@@ -4,12 +4,18 @@ Own plugin data explicitly. Do not add plugin tables or migrations to BTCPay Ser
 
 ## Database context
 
-Use a plugin-specific EF Core `DbContext`. Do not construct the runtime connection string yourself. The context must accept `DbContextOptions<TContext>` so BTCPay Server can configure it:
+Use a plugin-specific EF Core `DbContext` derived from `BasePluginDbContext<TContext>`. The `PluginDatabase` attribute specifies the exact name of the plugin's migration-history table, so keep it stable and unique. The parameterless constructor allows `dotnet ef` to create the context, while the options constructor allows BTCPay Server to configure it at runtime:
 
 ```csharp
+[PluginDatabase("YourPlugin_Migrations")]
 public class PluginDbContext(DbContextOptions<PluginDbContext> options)
-    : DbContext(options)
+    : BasePluginDbContext<PluginDbContext>(options)
 {
+    public PluginDbContext()
+        : this(new DbContextOptions<PluginDbContext>())
+    {
+    }
+
     public DbSet<Widget> Widgets { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -23,10 +29,10 @@ public class PluginDbContext(DbContextOptions<PluginDbContext> options)
 Register the context from the plugin's `Execute` method:
 
 ```csharp
-serviceCollection.AddPluginDbContext<PluginDbContext>("YourPlugin_Migrations");
+serviceCollection.AddPluginDbContext<PluginDbContext>();
 ```
 
-`AddPluginDbContext` configures BTCPay Server's PostgreSQL connection and retry behavior, registers the context as scoped, registers `IDbContextFactory<PluginDbContext>`, and runs the context's EF migrations during startup. The argument is the exact name of the plugin's migration-history table. Keep it stable and unique. A context's `HasDefaultSchema` setting does not change the schema of this table; the table uses the first search path from BTCPay Server's PostgreSQL connection.
+`AddPluginDbContext` configures BTCPay Server's PostgreSQL connection and retry behavior, registers the context as scoped, registers `IDbContextFactory<PluginDbContext>`, and runs the context's EF migrations during startup. A context's `HasDefaultSchema` setting does not change the schema of the migration-history table; the table uses the first search path from BTCPay Server's PostgreSQL connection.
 
 Inject `PluginDbContext` into scoped services. In singleton or background services, inject `IDbContextFactory<PluginDbContext>` and create and dispose a context for each unit of work:
 
@@ -41,23 +47,9 @@ public class WidgetProcessor(IDbContextFactory<PluginDbContext> contextFactory)
 }
 ```
 
-For `dotnet ef`, add an `IDesignTimeDbContextFactory<PluginDbContext>`. EF uses it only while generating migrations. Use `UseBTCPayServerDatabase` so design-time conventions match runtime, but provide a development-only connection string rather than reading BTCPay Server's runtime configuration:
+When `dotnet ef` uses the parameterless constructor, `BasePluginDbContext<TContext>` configures the provider with a placeholder connection string; generating a migration does not connect to that database. This fallback is enabled only when `EF.IsDesignTime` is true. Using the parameterless constructor from application code throws an exception instead of using the placeholder connection. Generate migrations through this documented command rather than using a startup project that supplies a configured context.
 
-```csharp
-public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<PluginDbContext>
-{
-    public PluginDbContext CreateDbContext(string[] args)
-    {
-        var builder = new DbContextOptionsBuilder<PluginDbContext>();
-        builder.UseBTCPayServerDatabase(
-            "Host=127.0.0.1;Database=your_plugin_design;Username=postgres;Password=postgres",
-            "YourPlugin_Migrations");
-        return new PluginDbContext(builder.Options);
-    }
-}
-```
-
-The design-time factory requires the `Microsoft.EntityFrameworkCore.Design` package. Mark it with `PrivateAssets="all"` so it is not included as a runtime dependency.
+If the context needs additional Npgsql options, override `ConfigureNpgsql`; BTCPay Server calls it for both runtime and design-time configuration. The `dotnet ef` command requires the `Microsoft.EntityFrameworkCore.Design` package. Mark it with `PrivateAssets="all"` so it is not included as a runtime dependency.
 
 ## Create a migration
 

@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +11,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using Xunit;
 
 namespace BTCPayServer.Tests;
@@ -16,6 +19,31 @@ namespace BTCPayServer.Tests;
 [Trait("Integration", "Integration")]
 public class PluginDbContextTests(ITestOutputHelper helper) : UnitTestBase(helper)
 {
+    [Fact]
+    public void CanCreatePluginDbContextAtDesignTimeOnly()
+    {
+        using (var context = new TestPluginDbContext())
+        {
+            var exception = Assert.Throws<InvalidOperationException>(() => context.Database.GetDbConnection());
+            Assert.Contains("must be created through dependency injection", exception.Message);
+        }
+
+        var wasDesignTime = EF.IsDesignTime;
+        try
+        {
+            EF.IsDesignTime = true;
+            using var context = new TestPluginDbContext();
+            Assert.Equal("btcpay_plugin_design_time", context.Database.GetDbConnection().Database);
+            Assert.Equal(42, context.Database.GetCommandTimeout());
+            var history = context.Database.GetService<IHistoryRepository>();
+            Assert.Contains("TestPluginMigrations", history.GetCreateScript());
+        }
+        finally
+        {
+            EF.IsDesignTime = wasDesignTime;
+        }
+    }
+
     [Fact]
     public async Task CanRegisterAndMigratePluginDbContext()
     {
@@ -26,7 +54,7 @@ public class PluginDbContextTests(ITestOutputHelper helper) : UnitTestBase(helpe
         {
             ConnectionString = database.ConnectionString
         }));
-        services.AddPluginDbContext<TestPluginDbContext>("TestPluginMigrations");
+        services.AddPluginDbContext<TestPluginDbContext>();
         services.AddMigration<TestPluginDbContext, SeedWidgetsMigration>();
 
         await using var provider = services.BuildServiceProvider();
@@ -40,6 +68,7 @@ public class PluginDbContextTests(ITestOutputHelper helper) : UnitTestBase(helpe
         await executor.Execute(CancellationToken.None);
 
         await using var context = await factory.CreateDbContextAsync();
+        Assert.Equal(42, context.Database.GetCommandTimeout());
         var history = context.Database.GetService<IHistoryRepository>();
         var appliedMigrations = await history.GetAppliedMigrationsAsync();
         Assert.Contains(appliedMigrations, migration => migration.MigrationId == CreatePluginWidgetsMigration.Id);
@@ -47,7 +76,20 @@ public class PluginDbContextTests(ITestOutputHelper helper) : UnitTestBase(helpe
         Assert.Equal(1, await context.Database.ExecuteSqlRawAsync("DELETE FROM \"PluginWidgets\""));
     }
 
-    public class TestPluginDbContext(DbContextOptions<TestPluginDbContext> options) : DbContext(options);
+    [PluginDatabase("TestPluginMigrations")]
+    public class TestPluginDbContext(DbContextOptions<TestPluginDbContext> options)
+        : BasePluginDbContext<TestPluginDbContext>(options)
+    {
+        public TestPluginDbContext()
+            : this(new DbContextOptions<TestPluginDbContext>())
+        {
+        }
+
+        protected override void ConfigureNpgsql(NpgsqlDbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.CommandTimeout(42);
+        }
+    }
 
     [DbContext(typeof(TestPluginDbContext))]
     [Migration(Id)]

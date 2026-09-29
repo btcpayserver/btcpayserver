@@ -9,7 +9,7 @@
 * **Boltcards**: Remove the desktop smartcard setup and open the Boltcard app instead (#7515) @NicolasDorier
 * **Store users**: Users must accept an invitation before joining a store (#7519) @dstrukt
 * **Point of Sale**: Remove the per-request `notificationUrl`. Invoices now use the app's configured notification URL @Kukks
-* **Server administration**: Remove legacy SSH settings and add deployment-provided `btcpay-host` integration, including `btcpay-host env` ([documentation](https://docs.btcpayserver.org/Development/HostIntegration/)) (#7511 #7543) @NicolasDorier
+* **Server administration**: Remove legacy SSH settings and add deployment-provided `btcpay-host` integration, including `btcpay-host env` ([documentation](https://docs.btcpayserver.org/Operators/host-integration/#host-integration)) (#7511 #7543) @NicolasDorier
 * **API Keys**: Use API key IDs instead of secrets for Greenfield API revocation (#7561) @NicolasDorier
 * **Bitpay API**: Remove legacy BitPay Basic-auth API keys (#7561) @NicolasDorier
 
@@ -3180,7 +3180,7 @@ Those are low risk injection vulnerabilities.
 
 ### Altcoins
 
-* BTCPay Server build is Bitcoin Only by default. If you are developer and wants to work on the altcoins build, please read [the documentation](https://docs.btcpayserver.org/LocalDevelopment/).
+* BTCPay Server build is Bitcoin Only by default. If you are developer and wants to work on the altcoins build, please read [the documentation](https://github.com/btcpayserver/btcpayserver/blob/master/docs/maintainers/README.md#local-development).
 * Show sync progress for monero and show amount of monero payment #1729 @xpayserver
 
 ## 1.0.5.3:

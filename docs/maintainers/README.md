@@ -29,8 +29,6 @@ Built-in features are organized under `BTCPayServer/Plugins`. Keep reusable cont
 - Install Docker with Compose for the local PostgreSQL, NBXplorer, Bitcoin, Lightning, Tor, and Mailpit services.
 - Use Visual Studio 2022 or JetBrains Rider for the repository launch profiles and debugging.
 
-The broader platform setup guide is in the [public local development documentation](https://docs.btcpayserver.org/Development/LocalDevelopment/).
-
 ### Build
 
 Build the solution directly:
@@ -49,10 +47,18 @@ On PowerShell, use `./build.ps1`.
 
 ### Run
 
-Start the development dependencies from `BTCPayServer.Tests`:
+Start the development dependencies:
 
 ```sh
+cd BTCPayServer.Tests
 docker-compose up -d dev
+cd ..
+```
+
+Run BTCPay Server with the `Bitcoin` launch profile:
+
+```sh
+dotnet run --project BTCPayServer/BTCPayServer.csproj --launch-profile Bitcoin
 ```
 
 After running the build script, start the published application or inspect its options:
@@ -62,7 +68,10 @@ After running the build script, start the published application or inspect its o
 ./run.sh --help
 ```
 
-On PowerShell, use `./run.ps1`. For debugger-driven development, use the `Docker-Regtest` launch profile. The `Docker-Regtest-https` profile also requires a trusted development certificate:
+On PowerShell, use `./run.ps1`. IDEs use the launch profiles from
+`BTCPayServer/Properties/launchSettings.json`. Use `Bitcoin` for HTTP or
+`Bitcoin-HTTPS` for HTTPS. The HTTPS profile requires a trusted development
+certificate:
 
 ```sh
 dotnet dev-certs https --trust
@@ -80,6 +89,14 @@ Open `brave://certificate-manager/`, select **Authorities** (or **Custom** >
 `aspnetcore-localhost.crt`. Enable trust for identifying websites when Brave
 asks, restart the browser, and reopen the local HTTPS URL. The exported file
 contains only the public certificate and can be deleted after import.
+
+For altcoin development, start the alternate dependency environment and use
+the `Altcoins` or `Altcoins-HTTPS` launch profile:
+
+```sh
+cd BTCPayServer.Tests
+docker-compose -f docker-compose.altcoins.yml up -d dev
+```
 
 See [testing](#testing) for focused test commands and regtest tooling.
 

@@ -50,6 +50,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBitcoin.RPC;
@@ -57,6 +58,7 @@ using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using InvoiceCryptoInfo = BTCPayServer.Services.Invoices.InvoiceCryptoInfo;
 
 namespace BTCPayServer
@@ -477,8 +479,34 @@ namespace BTCPayServer
             where TDbContext : DbContext
             where TMigration : MigrationBase<TDbContext>
         {
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IMigrationExecutor, MigrationExecutor<TDbContext>>());
+            if (typeof(TDbContext) == typeof(ApplicationDbContext))
+                services.TryAddEnumerable(ServiceDescriptor.Singleton<IMigrationExecutor, MigrationExecutor<TDbContext>>());
+            else
+                services.TryAddEnumerable(ServiceDescriptor.Singleton<IMigrationExecutor, MigratingDbContextMigrationExecutor<TDbContext>>());
             services.AddSingleton<MigrationBase<TDbContext>, TMigration>();
+            return services;
+        }
+
+        /// <summary>
+        /// Registers a plugin-owned database context and applies its migrations during startup.
+        /// </summary>
+        public static IServiceCollection AddPluginDbContext<TDbContext>(
+            this IServiceCollection services,
+            string migrationHistoryTableName,
+            Action<NpgsqlDbContextOptionsBuilder> npgsqlOptionsAction = null)
+            where TDbContext : DbContext
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(migrationHistoryTableName);
+
+            services.AddDbContextFactory<TDbContext>((provider, builder) =>
+            {
+                var options = provider.GetRequiredService<IOptions<DatabaseOptions>>();
+                builder.UseBTCPayServerDatabase(
+                    options.Value.ConnectionString,
+                    migrationHistoryTableName,
+                    npgsqlOptionsAction);
+            });
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IMigrationExecutor, MigratingDbContextMigrationExecutor<TDbContext>>());
             return services;
         }
 

@@ -22,10 +22,12 @@ public class MigrationExecutor<TDbContext>(
     where TDbContext : DbContext
 {
     ILogger logger = loggerFactory.CreateLogger($"BTCPayServer.Migrations.{typeof(TDbContext).Name}");
+
     public async Task Execute(CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         dbContext.Database.SetCommandTimeout(TimeSpan.FromDays(1.0));
+        await PrepareDatabase(dbContext, cancellationToken);
         var history = dbContext.Database.GetService<IHistoryRepository>();
         var appliedMigrations = (await history.GetAppliedMigrationsAsync(cancellationToken)).Select(m => m.MigrationId).ToHashSet();
         var insertedRows = new List<HistoryRow>();
@@ -53,4 +55,18 @@ public class MigrationExecutor<TDbContext>(
                 await dbContext.Database.ExecuteSqlRawAsync(insertMigrations, cancellationToken);
             });
     }
+
+    protected virtual Task PrepareDatabase(TDbContext dbContext, CancellationToken cancellationToken)
+        => Task.CompletedTask;
+}
+
+public class MigratingDbContextMigrationExecutor<TDbContext>(
+    ILoggerFactory loggerFactory,
+    IDbContextFactory<TDbContext> dbContextFactory,
+    IEnumerable<MigrationBase<TDbContext>> migrations)
+    : MigrationExecutor<TDbContext>(loggerFactory, dbContextFactory, migrations)
+    where TDbContext : DbContext
+{
+    protected override Task PrepareDatabase(TDbContext dbContext, CancellationToken cancellationToken)
+        => dbContext.Database.MigrateAsync(cancellationToken);
 }

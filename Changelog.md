@@ -45,6 +45,7 @@
 * **Reports**: Sort invoice report rows from oldest to newest (#7512) @kevin-ta
 * **Rates**: Request only supported currency pairs from Kraken (#7472) @ZenulAbidin
 * **Plugins**: Allow payment methods to validate settings for the current store (#7513) @NicolasDorier
+* **Plugins**: Simplify registering plugin-owned database contexts and running their migrations @NicolasDorier
 * **Greenfield SDK**: Safely encode values in API URLs (#7530) @NicolasDorier
 * Hide breadcrumbs that only repeat the page title (#7517) @NicolasDorier
 * **Monetization**: Show a useful message instead of a 404 when Manage billing is unavailable (#7516) @NicolasDorier

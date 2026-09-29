@@ -26,7 +26,9 @@ public class StoreReportResponse
     public List<JArray> Data { get; set; }
     [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
     public string ReportName { get; set; }
+    [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
     public DateTimeOffset From { get; set; }
+    [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
     public DateTimeOffset To { get; set; }
     [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
     public List<ChartDefinition> Charts { get; set; }

@@ -1,5 +1,7 @@
 using System;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Models.StoreReportsViewModels;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace BTCPayServer.Tests;
@@ -27,5 +29,18 @@ public class ReportsTests
 
         Assert.NotNull(range.StartDate);
         Assert.Null(range.EndDate);
+    }
+
+    [Fact]
+    public void ReportBoundsAreSerializedAsUnixTimestamps()
+    {
+        var report = JObject.FromObject(new StoreReportResponse
+        {
+            From = DateTimeOffset.UnixEpoch,
+            To = DateTimeOffset.UnixEpoch.AddMinutes(1)
+        });
+
+        Assert.Equal(0L, report["From"]?.Value<long>());
+        Assert.Equal(60L, report["To"]?.Value<long>());
     }
 }

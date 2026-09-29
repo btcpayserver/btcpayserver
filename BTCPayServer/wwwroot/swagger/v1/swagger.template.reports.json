@@ -157,14 +157,20 @@
                         "description": "The canonical report name."
                     },
                     "from": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "The inclusive start of the effective report range."
+                        "description": "The inclusive start of the effective report range.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "to": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "The inclusive end of the effective report range."
+                        "description": "The inclusive end of the effective report range.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "fields": {
                         "type": "array",
@@ -175,7 +181,7 @@
                     },
                     "data": {
                         "type": "array",
-                        "description": "The report rows. Amount and decimal values are strings to preserve precision.",
+                        "description": "The report rows. Datetime values are Unix timestamps. Amount and decimal values are strings to preserve precision.",
                         "items": {
                             "type": "array",
                             "items": {}

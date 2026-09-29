@@ -103,8 +103,11 @@ namespace BTCPayServer.Tests
             Assert.Equal(DateTimeOffset.UnixEpoch, report.From);
             Assert.True(report.To <= DateTimeOffset.UtcNow);
             Assert.Null(report.Charts);
+            var invoiceCreatedDate = report.GetIndex("InvoiceCreatedDate");
             var invoicePrice = report.GetIndex("InvoicePrice");
+            Assert.NotEqual(-1, invoiceCreatedDate);
             Assert.NotEqual(-1, invoicePrice);
+            Assert.Contains(report.Data, row => row[invoiceCreatedDate]?.Type == JTokenType.Integer);
             Assert.Contains(report.Data, row => row[invoicePrice]?.Value<string>() == "1.20");
 
             var explicitlyBoundedReport = await reportClient.RunStoreReport(user.StoreId, new StoreReportRequest

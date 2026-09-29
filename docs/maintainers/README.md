@@ -29,7 +29,7 @@ Built-in features are organized under `BTCPayServer/Plugins`. Keep reusable cont
 - Install Docker with Compose for the local PostgreSQL, NBXplorer, Bitcoin, Lightning, Tor, and Mailpit services.
 - Use Visual Studio 2022 or JetBrains Rider for the repository launch profiles and debugging.
 
-The broader platform setup guide is in the [public local development documentation](https://docs.btcpayserver.org/Development/LocalDevelopment/).
+The broader platform setup guide is in the [local development documentation](#local-development).
 
 ### Build
 

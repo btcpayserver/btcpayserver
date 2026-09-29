@@ -84,7 +84,7 @@ payment before marking an unusual invoice settled.
 Apps and integrations can attach metadata such as an order ID, item details,
 or buyer information to an invoice. BTCPay Server can display, search, and
 include recognized fields in reports. See the developer guide to
-[invoice metadata](../developers/api/invoice-metadata.md) for supported fields,
+[invoice metadata](https://docs.btcpayserver.org/Developers/api/invoice-metadata/) for supported fields,
 privacy considerations, and examples.
 
 ## Refunding an invoice

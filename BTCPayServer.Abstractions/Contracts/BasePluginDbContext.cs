@@ -26,8 +26,8 @@ public sealed class PluginDatabaseAttribute : Attribute
 public abstract class BasePluginDbContext<TContext> : DbContext
     where TContext : BasePluginDbContext<TContext>
 {
-    private const string DesignTimeConnectionString =
-        "Host=localhost;Database=btcpay_plugin_design_time;Username=postgres";
+    private const string DefaultDesignTimeConnectionString =
+        "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=btcpay_plugin_design_time";
 
     protected BasePluginDbContext()
     {
@@ -62,7 +62,7 @@ public abstract class BasePluginDbContext<TContext> : DbContext
                 $"{typeof(TContext).FullName} must have a {nameof(PluginDatabaseAttribute)}.");
         }
         optionsBuilder.UseBTCPayServerDatabase(
-            DesignTimeConnectionString,
+            DefaultDesignTimeConnectionString,
             database.MigrationHistoryTableName,
             ConfigureNpgsql);
     }

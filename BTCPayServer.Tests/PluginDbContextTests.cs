@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Npgsql;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using Xunit;
 
@@ -33,7 +34,10 @@ public class PluginDbContextTests(ITestOutputHelper helper) : UnitTestBase(helpe
         {
             EF.IsDesignTime = true;
             using var context = new TestPluginDbContext();
-            Assert.Equal("btcpay_plugin_design_time", context.Database.GetDbConnection().Database);
+            var connectionString = new NpgsqlConnectionStringBuilder(context.Database.GetConnectionString());
+            Assert.Equal("127.0.0.1", connectionString.Host);
+            Assert.Equal(39372, connectionString.Port);
+            Assert.Equal("btcpay_plugin_design_time", connectionString.Database);
             Assert.Equal(42, context.Database.GetCommandTimeout());
             var history = context.Database.GetService<IHistoryRepository>();
             Assert.Contains("TestPluginMigrations", history.GetCreateScript());

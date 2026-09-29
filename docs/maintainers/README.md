@@ -222,6 +222,7 @@ The Greenfield API contract includes controller behavior, models, permissions, s
 - Use REST methods where practical: `POST` for creation or actions, `PUT` for full replacement, `PATCH` for partial updates, and `DELETE` for deletion or archival.
 - Return validation failures as HTTP 422 with `path` and `message` entries. Return business request failures as HTTP 400 with a stable `code` and human-readable `message`.
 - Register JSON converters on the model with attributes. Serialize precision-sensitive or overflow-prone values such as `decimal` and `long` as strings while accepting compatible input forms where required.
+- Serialize `DateTime` and `DateTimeOffset` model properties as Unix timestamps with `NBitcoin.JsonConverters.DateTimeToUnixTimeConverter`, and document them with the shared `UnixTimestamp` OpenAPI schema.
 
 ### Compatibility
 

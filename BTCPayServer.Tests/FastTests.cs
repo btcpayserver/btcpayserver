@@ -1601,7 +1601,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             var now = DateTime.UtcNow;
             var dateRange = search.GetDateRange(utc);
             Assert.Equal(new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero), dateRange.StartDate);
-            Assert.Null(dateRange.EndDate);
+            Assert.InRange(dateRange.EndDate!.Value, new DateTimeOffset(now, TimeSpan.Zero), DateTimeOffset.UtcNow);
 
             var nowUTC = DateTimeOffset.UtcNow;
             var nowLocal = nowUTC.ToLocalTime();

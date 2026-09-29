@@ -71,6 +71,91 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task ReportsControllerTests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            user.GrantAccess();
+            user.RegisterDerivationScheme("BTC");
+
+            var reportClient = await user.CreateClient(Policies.CanViewReports);
+            var reportNames = (await reportClient.GetStoreReports(user.StoreId)).ToArray();
+            Assert.Contains("Invoices", reportNames);
+            Assert.Equal(reportNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase), reportNames);
+
+            var invoiceClient = await user.CreateClient(Policies.CanCreateInvoice, Policies.CanModifyInvoices);
+            var invoice = await invoiceClient.CreateInvoice(user.StoreId, new CreateInvoiceRequest
+            {
+                Amount = 1.2m,
+                Currency = "USD"
+            });
+            await invoiceClient.MarkInvoiceStatus(invoice.Id, new MarkInvoiceStatusRequest
+            {
+                Status = InvoiceStatus.Invalid
+            });
+
+            var report = await reportClient.RunStoreReport(user.StoreId, new StoreReportRequest
+            {
+                Search = "view:invoices,daterange:alltime,timezone:UTC"
+            });
+            Assert.Equal("Invoices", report.ReportName);
+            Assert.Equal("UTC", report.TimeZone);
+            Assert.Equal(DateTimeOffset.UnixEpoch, report.From);
+            Assert.True(report.To <= DateTimeOffset.UtcNow);
+            Assert.Null(report.Charts);
+            var invoiceCreatedDate = report.GetIndex("InvoiceCreatedDate");
+            var invoicePrice = report.GetIndex("InvoicePrice");
+            Assert.NotEqual(-1, invoiceCreatedDate);
+            Assert.NotEqual(-1, invoicePrice);
+            Assert.Contains(report.Data, row => row[invoiceCreatedDate]?.Type == JTokenType.Integer);
+            Assert.Contains(report.Data, row => row[invoicePrice]?.Value<string>() == "1.20");
+
+            var explicitlyBoundedReport = await reportClient.RunStoreReport(user.StoreId, new StoreReportRequest
+            {
+                Search = "view:Invoices,startdate:2020-01-01T00:00:00Z"
+            });
+            Assert.Equal(new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero), explicitlyBoundedReport.From);
+            Assert.Null(explicitlyBoundedReport.TimeZone);
+
+            var wrongPermissionClient = await user.CreateClient(Policies.CanViewInvoices);
+            await AssertPermissionError(Policies.CanViewReports,
+                async () => await wrongPermissionClient.GetStoreReports(user.StoreId));
+            await AssertPermissionError(Policies.CanViewReports,
+                async () => await wrongPermissionClient.RunStoreReport(user.StoreId, new StoreReportRequest
+                {
+                    Search = "view:Invoices,daterange:today,timezone:UTC"
+                }));
+
+            await AssertEx.AssertValidationError(["Search"], async () =>
+                await reportClient.RunStoreReport(user.StoreId, new StoreReportRequest
+                {
+                    Search = "view:Invoices,daterange:today"
+                }));
+            await AssertEx.AssertValidationError(["Search"], async () =>
+                await reportClient.RunStoreReport(user.StoreId, new StoreReportRequest
+                {
+                    Search = "view:Invoices,enddate:2026-01-01T00:00:00Z"
+                }));
+            await AssertEx.AssertValidationError(["Search"], async () =>
+                await reportClient.RunStoreReport(user.StoreId, new StoreReportRequest
+                {
+                    Search = "daterange:today,timezone:UTC"
+                }));
+            await AssertEx.AssertValidationError(["Search"], async () =>
+                await reportClient.RunStoreReport(user.StoreId, new StoreReportRequest
+                {
+                    Search = "view:Invoices,daterange:today,timezone:Not/AZone"
+                }));
+            await AssertEx.AssertValidationError(["Search"], async () =>
+                await reportClient.RunStoreReport(user.StoreId, new StoreReportRequest
+                {
+                    Search = "view:Invoices,startdate:2026-02-01T00:00:00Z,enddate:2026-01-01T00:00:00Z"
+                }));
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task ApiKeysControllerTests()
         {
             using var tester = CreateServerTester();

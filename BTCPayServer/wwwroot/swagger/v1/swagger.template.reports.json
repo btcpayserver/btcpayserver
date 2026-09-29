@@ -1,0 +1,223 @@
+{
+    "paths": {
+        "/api/v1/stores/{storeId}/reports": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get available reports",
+                "description": "Get the names of reports currently available for the store.",
+                "operationId": "Reports_GetStoreReports",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The available report names",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "example": [
+                                    "Credit History",
+                                    "Invoices",
+                                    "Payments",
+                                    "Payouts",
+                                    "Refunds",
+                                    "Requests",
+                                    "Sales",
+                                    "Subscribers",
+                                    "Wallets"
+                                ]
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization"
+                    },
+                    "403": {
+                        "description": "Authenticated but forbidden to view reports"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewreports"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Run a report",
+                "description": "Run an available store report over an explicit date range. The `search` value is a comma-separated list of `field:value` filters.\n\nRequired report filter:\n- `view`: The report name returned by [Get available reports](#operation/Reports_GetStoreReports), for example `view:Invoices`.\n\nDate filters:\n- `daterange`: A predefined range. Supported values are `alltime`, `today`, `yesterday`, `thisweek`, `lastweek`, `thismonth`, `lastmonth`, `last30d`, `thisquarter`, `lastquarter`, `thisyear`, `lastyear`, `yeartodate`, `-1d`, `-24h`, `-3d`, and `-7d`. `alltime` covers the Unix epoch through the current time.\n- `startdate`: The inclusive start date or timestamp. Use this instead of `daterange` for a custom range.\n- `enddate`: The inclusive end date or timestamp. It is optional when `startdate` is present and defaults to the current time. It cannot be used without `startdate`.\n- `timezone`: An IANA timezone such as `America/New_York` or `Asia/Tokyo`. It is required with `daterange` and whenever `startdate` or `enddate` does not contain an explicit UTC offset.\n\nDates with an explicit offset use ISO 8601, for example `2026-01-01T00:00:00Z` or `2026-01-01T09:00:00+09:00`. The resolved start date must be before the resolved end date. Other search filters are accepted but ignored by the built-in report providers.",
+                "operationId": "Reports_RunStoreReport",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreReportRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The generated report",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StoreReportResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization"
+                    },
+                    "403": {
+                        "description": "Authenticated but forbidden to view reports"
+                    },
+                    "422": {
+                        "description": "The search string or requested report is invalid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "The requested report is temporarily unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewreports"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "StoreReportRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "search"
+                ],
+                "properties": {
+                    "search": {
+                        "type": "string",
+                        "description": "A report search string containing a report view and date range.",
+                        "example": "view:Invoices,daterange:thismonth,timezone:UTC"
+                    }
+                }
+            },
+            "StoreReportResponse": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "reportName",
+                    "from",
+                    "to",
+                    "fields",
+                    "data"
+                ],
+                "properties": {
+                    "reportName": {
+                        "type": "string",
+                        "description": "The canonical report name."
+                    },
+                    "timeZone": {
+                        "type": "string",
+                        "description": "The timezone from the search string, when specified.",
+                        "example": "Asia/Tokyo"
+                    },
+                    "from": {
+                        "description": "The inclusive start of the effective report range.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
+                    },
+                    "to": {
+                        "description": "The inclusive end of the effective report range.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
+                    },
+                    "fields": {
+                        "type": "array",
+                        "description": "The report columns in the same order as each data row.",
+                        "items": {
+                            "$ref": "#/components/schemas/StoreReportField"
+                        }
+                    },
+                    "data": {
+                        "type": "array",
+                        "description": "The report rows. Datetime values are Unix timestamps. Amount and decimal values are strings to preserve precision.",
+                        "items": {
+                            "type": "array",
+                            "items": {}
+                        }
+                    }
+                }
+            },
+            "StoreReportField": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The field name."
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "The report provider's field type."
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Reports",
+            "description": "Store report operations"
+        }
+    ]
+}

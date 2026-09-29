@@ -20,7 +20,11 @@ public class StoreReportsViewModel : BasePagingViewModel
         if (!search.ContainsFilter("view"))
             search.SetFilter("view", ViewName ?? GreenfieldReportsController.DefaultReport);
         // By default, search should be thismonth
-        if (FilterCommand != "alltime")
+        if (FilterCommand == "alltime")
+        {
+            search.SetDateRange("alltime");
+        }
+        else
         {
             if (!search.HasArrayFilter("startdate") && !search.HasArrayFilter("enddate") && !search.HasArrayFilter("daterange"))
                 search.SetDateRange("thismonth");

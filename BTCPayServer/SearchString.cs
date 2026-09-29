@@ -123,12 +123,15 @@ namespace BTCPayServer
             => GetDateRange(null);
         public (DateTimeOffset? StartDate, DateTimeOffset? EndDate) GetDateRange(TimeZoneInfo? defaultTimeZoneInfo)
         {
+            var utcNow = DateTimeOffset.UtcNow;
             DateTimeOffset? start;
             DateTimeOffset? end;
             if (Filters.TryGetValue("daterange", out var dateRange) && IsValidDateRange(dateRange.FirstOrDefault()))
             {
-                start = GetDateRangeDate("startdate", dateRange.First(), defaultTimeZoneInfo);
-                end = GetDateRangeDate("enddate", dateRange.First(), defaultTimeZoneInfo);
+                if (dateRange.First() == "alltime")
+                    return (DateTimeOffset.UnixEpoch, utcNow);
+                start = GetDateRangeDate("startdate", dateRange.First(), defaultTimeZoneInfo, utcNow);
+                end = GetDateRangeDate("enddate", dateRange.First(), defaultTimeZoneInfo, utcNow) ?? utcNow;
                 return (start, end);
             }
             else
@@ -158,7 +161,7 @@ namespace BTCPayServer
                 return null;
 
             var val = filter.First();
-            var dateRangeDate = GetDateRangeDate(key, val, defaultTimeZoneInfo);
+            var dateRangeDate = GetDateRangeDate(key, val, defaultTimeZoneInfo, DateTimeOffset.UtcNow);
             if (dateRangeDate is not null)
                 return dateRangeDate;
 
@@ -177,9 +180,9 @@ namespace BTCPayServer
             return null;
         }
 
-        private DateTimeOffset? GetDateRangeDate(string key, string val, TimeZoneInfo? defaultTimeZoneInfo)
+        private DateTimeOffset? GetDateRangeDate(string key, string val, TimeZoneInfo? defaultTimeZoneInfo,
+            DateTimeOffset utcNow)
         {
-            var utcNow = DateTimeOffset.UtcNow;
             var rollingStart = val switch
             {
                 "-24h" or "-1d" => utcNow.AddDays(-1),
@@ -188,7 +191,7 @@ namespace BTCPayServer
                 _ => (DateTimeOffset?)null
             };
             if (rollingStart is not null)
-                return rollingStart;
+                return key == "startdate" ? rollingStart : null;
             var tz = GetTimeZoneInfo(defaultTimeZoneInfo);
             if (tz is null)
                 return null;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models;
@@ -23,8 +24,15 @@ public class StoreReportResponse
     }
     public IList<Field> Fields { get; set; } = new List<Field>();
     public List<JArray> Data { get; set; }
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    public string ReportName { get; set; }
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    public string TimeZone { get; set; }
+    [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
     public DateTimeOffset From { get; set; }
+    [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
     public DateTimeOffset To { get; set; }
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
     public List<ChartDefinition> Charts { get; set; }
 
     public int GetIndex(string fieldName)

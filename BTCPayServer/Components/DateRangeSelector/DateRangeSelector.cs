@@ -43,6 +43,7 @@ public class DateRangeSelectorModel
     public (string Id, string Name)[] TimeZones { get; }
 
     public bool HasDateFilter => Search.HasArrayFilter("startdate") || Search.HasArrayFilter("enddate") || Search.HasArrayFilter("daterange");
+    public bool IsAllTime => !HasDateFilter || HasDateRange("alltime");
 
     public bool HasCustomDateFilter =>
         HasDateFilter &&

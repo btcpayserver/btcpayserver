@@ -17,12 +17,12 @@ Choose the route that matches how you work with BTCPay Server.
 
 - [Developer guide](developers/README.md)
 - [Contribution guide](https://docs.btcpayserver.org/Contribute/)
-- [Local development](maintainers/README.md#local-development)
-- [Testing](maintainers/README.md#testing)
+- [Local development](maintainers/local-development.md)
+- [Testing](maintainers/local-development.md#testing)
 
 ## Maintainers
 
 - [Maintainer handbook](maintainers/README.md)
 - [Architecture](maintainers/README.md#architecture)
-- [Coding conventions](maintainers/README.md#coding-conventions)
+- [Coding conventions](maintainers/coding-conventions.md)
 - [Release process](maintainers/README.md#release-cycles)

@@ -1,7 +1,7 @@
 # Tooling
 
 This README describe some useful tooling that you may need during development and testing.
-To learn how to get started with your local development environment, read [our documentation](https://github.com/btcpayserver/btcpayserver/blob/master/docs/maintainers/README.md#local-development).
+To learn how to get started with your local development environment, read [our documentation](https://github.com/btcpayserver/btcpayserver/blob/master/docs/maintainers/local-development.md).
 
 ## How to manually test payments
 

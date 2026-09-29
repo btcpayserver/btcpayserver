@@ -93,7 +93,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_ParsesCodeAndBcp47()
         {
             var handler = new TestHttpMessageHandler();
@@ -170,6 +170,29 @@ namespace BTCPayServer.Tests
                 """));
             var service = CreateLanguageService(handler);
             await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetManifestLanguages());
+        }
+
+        [Theory(Timeout = TestTimeout)]
+        [Trait("Fast", "Fast")]
+        [InlineData("https://raw.githubusercontent.com/btcpayserver/../evil-org/repo/main/manifest.json")]
+        [InlineData("https://raw.githubusercontent.com/btcpayserver/%2e%2e/evil-org/repo/main/manifest.json")]
+        [InlineData("http://raw.githubusercontent.com/btcpayserver/translations/main/manifest.json")]
+        [InlineData("https://raw.githubusercontent.com.evil.example/btcpayserver/translations/main/manifest.json")]
+        public async Task LanguagePackUpdateService_RejectsRedirectThatEscapesTrustedOrg(string redirect)
+        {
+            var handler = new TestHttpMessageHandler();
+            var fetchedElsewhere = false;
+            handler.Register(ManifestUrl, () => TestHttpMessageHandler.JsonResponse(
+                $$"""{ "Languages": [], "Redirect": "{{redirect}}" }"""));
+            // Where the dot-segment variants would resolve to if they were followed.
+            handler.Register("https://raw.githubusercontent.com/evil-org/repo/main/manifest.json", () =>
+            {
+                fetchedElsewhere = true;
+                return TestHttpMessageHandler.JsonResponse("""{ "Languages": [] }""");
+            });
+            var service = CreateLanguageService(handler);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetManifestLanguages());
+            Assert.False(fetchedElsewhere);
         }
 
         [Fact(Timeout = TestTimeout)]

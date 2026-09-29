@@ -156,6 +156,11 @@
                         "type": "string",
                         "description": "The canonical report name."
                     },
+                    "timeZone": {
+                        "type": "string",
+                        "description": "The timezone from the search string, when specified.",
+                        "example": "Asia/Tokyo"
+                    },
                     "from": {
                         "description": "The inclusive start of the effective report range.",
                         "allOf": [

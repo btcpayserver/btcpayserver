@@ -107,7 +107,7 @@ public class GreenfieldReportsController(ReportService reportService) : Controll
         if (result is not ObjectResult { Value: StoreReportResponse reportResponse })
             return result;
 
-        return Ok(ToApiResponse(reportResponse));
+        return Ok(ToApiResponse(reportResponse, timeZoneId));
     }
 
     [NonAction]
@@ -136,13 +136,14 @@ public class GreenfieldReportsController(ReportService reportService) : Controll
         return Ok(await ReportService.Query(storeId, report, from, to, cancellationToken));
     }
 
-    private static StoreReportResponse ToApiResponse(StoreReportResponse response)
+    private static StoreReportResponse ToApiResponse(StoreReportResponse response, string? timeZone)
     {
         var rows = response.Data.Select(row => new JArray(row.Select((value, index) =>
             NormalizeValue(value, index < response.Fields.Count ? response.Fields[index].Type : null)))).ToList();
         return new StoreReportResponse
         {
             ReportName = response.ReportName,
+            TimeZone = timeZone,
             From = response.From,
             To = response.To,
             Fields = response.Fields,

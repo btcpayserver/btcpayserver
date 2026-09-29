@@ -100,6 +100,7 @@ namespace BTCPayServer.Tests
                 Search = "view:invoices,daterange:alltime,timezone:UTC"
             });
             Assert.Equal("Invoices", report.ReportName);
+            Assert.Equal("UTC", report.TimeZone);
             Assert.Equal(DateTimeOffset.UnixEpoch, report.From);
             Assert.True(report.To <= DateTimeOffset.UtcNow);
             Assert.Null(report.Charts);
@@ -115,6 +116,7 @@ namespace BTCPayServer.Tests
                 Search = "view:Invoices,startdate:2020-01-01T00:00:00Z"
             });
             Assert.Equal(new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero), explicitlyBoundedReport.From);
+            Assert.Null(explicitlyBoundedReport.TimeZone);
 
             var wrongPermissionClient = await user.CreateClient(Policies.CanViewInvoices);
             await AssertPermissionError(Policies.CanViewReports,

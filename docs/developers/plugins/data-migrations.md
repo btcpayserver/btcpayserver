@@ -74,14 +74,6 @@ Plugin migrations target PostgreSQL. Do not use `migrationBuilder.IsNpgsql()`, a
 
 `AddPluginDbContext` runs generated EF migrations during BTCPay Server's migration startup phase. Do not add a separate hosted migration runner.
 
-For data migrations that are easier to express with application code, derive from `MigrationBase<PluginDbContext>` and register the migration:
-
-```csharp
-serviceCollection.AddMigration<PluginDbContext, NormalizeWidgetsMigration>();
-```
-
-BTCPay Server applies the context's pending EF migrations before these data migrations. Both types are recorded in the plugin's configured migration-history table. Keep identifiers unique across EF and data migrations and order data migration identifiers; date-prefixed identifiers are recommended.
-
 Use repositories or focused data services around the context so controllers and background services do not leak context lifetimes. Do not retain a scoped context in a singleton; create a scope or use `IDbContextFactory<PluginDbContext>` for each unit of work.
 
 Existing plugins can continue using [`BaseDbContextFactory<T>`](https://github.com/btcpayserver/btcpayserver/blob/master/BTCPayServer.Abstractions/Contracts/BaseDbContextFactory.cs) and a custom migration runner. New plugins should prefer `AddPluginDbContext`. See the core [database migration conventions](https://github.com/btcpayserver/btcpayserver/blob/master/docs/maintainers/README.md#database-migrations).

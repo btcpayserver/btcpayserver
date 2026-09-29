@@ -479,10 +479,7 @@ namespace BTCPayServer
             where TDbContext : DbContext
             where TMigration : MigrationBase<TDbContext>
         {
-            if (typeof(TDbContext) == typeof(ApplicationDbContext))
-                services.TryAddEnumerable(ServiceDescriptor.Singleton<IMigrationExecutor, MigrationExecutor<TDbContext>>());
-            else
-                services.TryAddEnumerable(ServiceDescriptor.Singleton<IMigrationExecutor, MigratingDbContextMigrationExecutor<TDbContext>>());
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IMigrationExecutor, MigrationExecutor<TDbContext>>());
             services.AddSingleton<MigrationBase<TDbContext>, TMigration>();
             return services;
         }
@@ -518,7 +515,8 @@ namespace BTCPayServer
                     migrationHistoryTableName,
                     npgsqlOptionsAction);
             });
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IMigrationExecutor, MigratingDbContextMigrationExecutor<TDbContext>>());
+            services.TryAddEnumerable(
+                ServiceDescriptor.Transient<IStartupTask, MigrateDbContextStartupTask<TDbContext>>());
             return services;
         }
 

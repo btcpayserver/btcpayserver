@@ -58,25 +58,30 @@ public class PluginDbContextTests(ITestOutputHelper helper) : UnitTestBase(helpe
         {
             ConnectionString = database.ConnectionString
         }));
+        services.AddTransient<IStartupTask, NoopStartupTask>();
         services.AddPluginDbContext<TestPluginDbContext>();
-        services.AddMigration<TestPluginDbContext, SeedWidgetsMigration>();
 
         await using var provider = services.BuildServiceProvider();
         var factory = provider.GetRequiredService<IDbContextFactory<TestPluginDbContext>>();
         await using var scope = provider.CreateAsyncScope();
         Assert.IsType<TestPluginDbContext>(scope.ServiceProvider.GetRequiredService<TestPluginDbContext>());
-        Assert.Single(provider.GetServices<IMigrationExecutor>());
+        Assert.Empty(provider.GetServices<IMigrationExecutor>());
 
-        var executor = provider.GetRequiredService<IMigrationExecutor>();
-        await executor.Execute(CancellationToken.None);
-        await executor.Execute(CancellationToken.None);
+        var startupTasks = provider.GetServices<IStartupTask>().ToArray();
+        Assert.Collection(
+            startupTasks,
+            task => Assert.IsType<NoopStartupTask>(task),
+            task => Assert.IsType<MigrateDbContextStartupTask<TestPluginDbContext>>(task));
+        await startupTasks[1].ExecuteAsync();
+        await startupTasks[1].ExecuteAsync();
 
         await using var context = await factory.CreateDbContextAsync();
         Assert.Equal(42, context.Database.GetCommandTimeout());
         var history = context.Database.GetService<IHistoryRepository>();
         var appliedMigrations = await history.GetAppliedMigrationsAsync();
         Assert.Contains(appliedMigrations, migration => migration.MigrationId == CreatePluginWidgetsMigration.Id);
-        Assert.Contains(appliedMigrations, migration => migration.MigrationId == SeedWidgetsMigration.Id);
+        await context.Database.ExecuteSqlRawAsync(
+            "INSERT INTO \"PluginWidgets\" (\"Id\") VALUES ('widget')");
         Assert.Equal(1, await context.Database.ExecuteSqlRawAsync("DELETE FROM \"PluginWidgets\""));
     }
 
@@ -113,15 +118,9 @@ public class PluginDbContextTests(ITestOutputHelper helper) : UnitTestBase(helpe
         }
     }
 
-    public class SeedWidgetsMigration() : MigrationBase<TestPluginDbContext>(Id)
+    public class NoopStartupTask : IStartupTask
     {
-        public const string Id = "20260929000001_SeedWidgets";
-
-        public override Task MigrateAsync(TestPluginDbContext dbContext, CancellationToken cancellationToken)
-        {
-            return dbContext.Database.ExecuteSqlRawAsync(
-                "INSERT INTO \"PluginWidgets\" (\"Id\") VALUES ('widget')",
-                cancellationToken);
-        }
+        public Task ExecuteAsync(CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
     }
 }

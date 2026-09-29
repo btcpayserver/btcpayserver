@@ -1,5 +1,6 @@
 using System;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Components.DateRangeSelector;
 using BTCPayServer.Models.StoreReportsViewModels;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -42,6 +43,20 @@ public class ReportsTests
 
         Assert.Equal(DateTimeOffset.UnixEpoch, range.StartDate);
         Assert.InRange(range.EndDate!.Value, before, after);
+    }
+
+    [Fact]
+    public void DateRangeSelectorRecognizesAllTimeFilter()
+    {
+        var model = new DateRangeSelectorModel
+        {
+            Search = new SearchString("daterange:alltime,timezone:UTC"),
+            CustomRangeTitle = "Custom range"
+        };
+
+        Assert.True(model.HasDateFilter);
+        Assert.True(model.IsAllTime);
+        Assert.False(model.HasCustomDateFilter);
     }
 
     [Fact]

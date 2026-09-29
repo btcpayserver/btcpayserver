@@ -19,7 +19,11 @@
 
 <div class="dropdown date-range-selector" id="DateRangeDropdown">
     <button id="DateRangeSelector" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret date-range-selector__toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-        @if (Model.HasDateFilter)
+        @if (Model.IsAllTime)
+        {
+            <span text-translate="true">All Time</span>
+        }
+        else
         {
             var filter = filters.FirstOrDefault(f => Model.HasDateRange(f.DateRange));
             if (filter.DateRange is not null)
@@ -46,10 +50,6 @@
                 }
             }
         }
-        else
-        {
-            <span text-translate="true">All Time</span>
-        }
     </button>
     <div class="dropdown-menu date-range-selector__menu" aria-labelledby="DateRangeSelector">
         <div class="px-3 py-2" style="min-width: 18rem;">
@@ -74,7 +74,7 @@
         <hr class="dropdown-divider" />
         @if (Model.ShowAllTime)
         {
-            <button type="submit" name="FilterCommand" value="alltime" class="dropdown-item date-range-selector__preset @(!Model.HasDateFilter ? "custom-active" : string.Empty)" text-translate="true">All Time</button>
+            <button type="submit" name="FilterCommand" value="alltime" class="dropdown-item date-range-selector__preset @(Model.IsAllTime ? "custom-active" : string.Empty)" text-translate="true">All Time</button>
             <hr class="dropdown-divider" />
         }
         @foreach (var filter in filters)

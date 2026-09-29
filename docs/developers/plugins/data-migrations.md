@@ -47,9 +47,7 @@ public class WidgetProcessor(IDbContextFactory<PluginDbContext> contextFactory)
 }
 ```
 
-When `dotnet ef` uses the parameterless constructor, `BasePluginDbContext<TContext>` configures the provider for the development PostgreSQL server from `BTCPayServer.Tests/docker-compose.yml` at `127.0.0.1:39372`. It uses the separate `btcpay_plugin_design_time` database rather than the normal BTCPay Server development database. Generating a migration does not connect to PostgreSQL, so the development services do not need to be running for that command. This fallback is enabled only when `EF.IsDesignTime` is true. Using the parameterless constructor from application code throws an exception instead of using the development connection. Generate migrations through this documented command rather than using a startup project that supplies a configured context.
-
-If the context needs additional Npgsql options, override `ConfigureNpgsql`; BTCPay Server calls it for both runtime and design-time configuration. The `dotnet ef` command requires the `Microsoft.EntityFrameworkCore.Design` package. Mark it with `PrivateAssets="all"` so it is not included as a runtime dependency.
+`dotnet ef` requires the Docker Compose test environment to be running. See [local development and testing](../../maintainers/local-development.md#test-environment) for startup instructions.
 
 ## Create a migration
 

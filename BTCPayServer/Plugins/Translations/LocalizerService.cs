@@ -95,9 +95,10 @@ namespace BTCPayServer.Plugins.Translations
                     return null;
                 if (!_userChoices.TryGetValue(userId, out var choice))
                 {
-                    choice = (await userManager.FindByIdAsync(userId))?.GetBlob()?.LangTranslation;
-                    _userChoices[userId] = choice;
+                    var stored = (await userManager.FindByIdAsync(userId))?.GetBlob()?.LangTranslation;
+                    choice = _userChoices.GetOrAdd(userId, stored);
                 }
+
                 return await GetUserTranslations(choice);
             }
             catch (Exception ex)

@@ -140,10 +140,7 @@ namespace BTCPayServer.Plugins.Translations
             if (string.IsNullOrEmpty(entry.Sha))
                 throw new InvalidOperationException("Manifest entry is missing the 'Sha' field.");
 
-            using var httpClient = httpClientFactory.CreateClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(30);
-            var translationsBytes = await httpClient.GetByteArrayAsync(snapshot.BaseUrl + entry.File);
-
+            var translationsBytes = await GetTrusted(new Uri(snapshot.BaseUrl + entry.File, UriKind.Absolute));
             var actualSha = Convert.ToHexString(SHA256.HashData(translationsBytes));
             if (!string.Equals(actualSha, entry.Sha, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException(

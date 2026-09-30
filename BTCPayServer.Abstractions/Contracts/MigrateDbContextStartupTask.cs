@@ -5,7 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Abstractions.Contracts;
 
-public class MigrateDbContextStartupTask<TDbContext>(IDbContextFactory<TDbContext> dbContextFactory) : IStartupTask
+public interface IDbContextMigrator
+{
+    Task ExecuteAsync(CancellationToken cancellationToken = default);
+}
+
+public class MigrateDbContextStartupTask<TDbContext>(IDbContextFactory<TDbContext> dbContextFactory) : IDbContextMigrator
     where TDbContext : DbContext
 {
     public async Task ExecuteAsync(CancellationToken cancellationToken = default)

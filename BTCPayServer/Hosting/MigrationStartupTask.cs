@@ -41,6 +41,7 @@ namespace BTCPayServer.Hosting
 
         private readonly ApplicationDbContextFactory _DBContextFactory;
         private readonly StoreRepository _StoreRepository;
+        private readonly IEnumerable<IDbContextMigrator> _dbContextMigrators;
         private readonly IEnumerable<IMigrationExecutor> _migrationExecutors;
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly SettingsRepository _Settings;
@@ -55,6 +56,7 @@ namespace BTCPayServer.Hosting
         public IOptions<LightningNetworkOptions> LightningOptions { get; }
 
         public MigrationStartupTask(
+            IEnumerable<IDbContextMigrator> dbContextMigrators,
             IEnumerable<IMigrationExecutor> migrationExecutors,
             PaymentMethodHandlerDictionary handlers,
             StoreRepository storeRepository,
@@ -69,6 +71,7 @@ namespace BTCPayServer.Hosting
             IFileService fileService,
             LightningClientFactoryService lightningClientFactoryService)
         {
+            _dbContextMigrators = dbContextMigrators;
             _migrationExecutors = migrationExecutors;
             _handlers = handlers;
             _DBContextFactory = dbContextFactory;
@@ -232,6 +235,11 @@ namespace BTCPayServer.Hosting
                     await MigrateOldDerivationSchemes();
                     settings.MigrateOldDerivationSchemes = true;
                     await _Settings.UpdateSetting(settings);
+                }
+
+                foreach (var migrator in _dbContextMigrators)
+                {
+                    await migrator.ExecuteAsync(cancellationToken);
                 }
 
                 foreach (var executor in _migrationExecutors)

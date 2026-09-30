@@ -509,7 +509,7 @@ namespace BTCPayServer
                     npgsqlOptionsAction);
             });
             services.TryAddEnumerable(
-                ServiceDescriptor.Transient<IStartupTask, MigrateDbContextStartupTask<TDbContext>>());
+                ServiceDescriptor.Transient<IDbContextMigrator, MigrateDbContextStartupTask<TDbContext>>());
             return services;
         }
 
@@ -523,6 +523,7 @@ namespace BTCPayServer
                     services.AddSingleton(definition);
             }
             var strings = definitions
+                .OfType<PolicyDefinition>()
                 .SelectMany(d => new[] {d.Display?.Title, d.Display?.Description, d.ScopeDisplay?.Title, d.ScopeDisplay?.Description})
                 .Where(d => d is not null)
                 .ToArray();

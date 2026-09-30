@@ -65,16 +65,15 @@ public class PluginDbContextTests(ITestOutputHelper helper) : UnitTestBase(helpe
         var factory = provider.GetRequiredService<IDbContextFactory<TestPluginDbContext>>();
         await using var scope = provider.CreateAsyncScope();
         Assert.IsType<TestPluginDbContext>(scope.ServiceProvider.GetRequiredService<TestPluginDbContext>());
-        Assert.Single(provider.GetServices<IDbContextMigrator>());
-        Assert.Single(provider.GetServices<IMigrationExecutor>());
-        Assert.Empty(provider.GetServices<IStartupTask>());
-
-        var migrator = provider.GetRequiredService<IDbContextMigrator>();
-        await migrator.ExecuteAsync();
-        await migrator.ExecuteAsync();
-        var executor = provider.GetRequiredService<IMigrationExecutor>();
-        await executor.Execute(CancellationToken.None);
-        await executor.Execute(CancellationToken.None);
+        var executors = provider.GetServices<IMigrationExecutor>().ToArray();
+        Assert.Collection(
+            executors,
+            executor => Assert.IsType<DbContextMigrationExecutor<TestPluginDbContext>>(executor),
+            executor => Assert.IsType<MigrationExecutor<TestPluginDbContext>>(executor));
+        foreach (var executor in executors)
+            await executor.Execute(CancellationToken.None);
+        foreach (var executor in executors)
+            await executor.Execute(CancellationToken.None);
 
         await using var context = await factory.CreateDbContextAsync();
         Assert.Equal(42, context.Database.GetCommandTimeout());

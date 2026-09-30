@@ -486,6 +486,7 @@ namespace BTCPayServer
 
         /// <summary>
         /// Registers a plugin-owned database context and applies its migrations during startup.
+        /// Call this before registering data migrations for the context.
         /// </summary>
         public static IServiceCollection AddPluginDbContext<TDbContext>(this IServiceCollection services)
             where TDbContext : BasePluginDbContext<TDbContext>
@@ -493,6 +494,7 @@ namespace BTCPayServer
 
         /// <summary>
         /// Registers a plugin-owned database context and applies its migrations during startup.
+        /// Call this before registering data migrations for the context.
         /// </summary>
         public static IServiceCollection AddPluginDbContext<TDbContext>(
             this IServiceCollection services,
@@ -509,7 +511,7 @@ namespace BTCPayServer
                     npgsqlOptionsAction);
             });
             services.TryAddEnumerable(
-                ServiceDescriptor.Transient<IDbContextMigrator, MigrateDbContextStartupTask<TDbContext>>());
+                ServiceDescriptor.Singleton<IMigrationExecutor, DbContextMigrationExecutor<TDbContext>>());
             return services;
         }
 

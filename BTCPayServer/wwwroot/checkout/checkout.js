@@ -364,7 +364,7 @@ function initApp() {
                 this.endDate = newEnd;
 
                 // updating ui
-                this.srvModel = data;
+                this.srvModel = { ...this.srvModel, ...data };
             },
             replaceNewlines (value) {
                 return value ? value.replace(/\n/ig, '<br>') : '';

@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Views.Stores;
 using NBitcoin;
@@ -423,6 +424,45 @@ namespace BTCPayServer.Tests
                 Assert.Contains("lang=en", s.Page.Url);
                 await Expect(s.Page.Locator("#DetailsToggle")).ToHaveTextAsync("View Details");
             });
+        }
+
+        [Theory(Timeout = TestTimeout)]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task CanRedirectAfterCheckoutStatusUpdate(bool isModal)
+        {
+            await using var tester = CreatePlaywrightTester();
+            await tester.StartAsync();
+            await tester.RegisterNewUser();
+            await tester.CreateNewStore();
+            await tester.AddDerivationScheme();
+
+            const string redirectUrl = "https://merchant.example/order?token=private-redirect";
+            await tester.Page.RouteAsync(redirectUrl, route => route.FulfillAsync(new()
+            {
+                ContentType = "text/plain",
+                Body = "Return to merchant"
+            }));
+            var client = await tester.AsTestAccount().CreateClient();
+            var invoice = await client.CreateInvoice(tester.StoreId, new CreateInvoiceRequest
+            {
+                Amount = 0.001m,
+                Currency = "BTC",
+                Checkout = new() { RedirectURL = redirectUrl, RedirectAutomatically = true }
+            });
+            await tester.GoToUrl(isModal ? $"/tests/index.html?invoice={invoice.Id}" : $"/i/{invoice.Id}");
+            var checkout = isModal
+                ? tester.Page.FrameLocator("iframe[name='btcpay']").Locator(".public-page-wrap")
+                : tester.Page.Locator(".public-page-wrap");
+            await checkout.WaitForAsync();
+
+            var statusResponseTask = tester.Page.WaitForResponseAsync(response =>
+                new Uri(response.Url).AbsolutePath.EndsWith("/status", StringComparison.Ordinal) && response.Status == 200);
+            await tester.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(invoice.Id, InvoiceStatus.Settled);
+            var statusResponse = await (await statusResponseTask).TextAsync();
+            Assert.DoesNotContain("merchantRefLink", statusResponse);
+            Assert.DoesNotContain("private-redirect", statusResponse);
+            await tester.Page.WaitForURLAsync(redirectUrl);
         }
 
         [Fact(Timeout = TestTimeout)]

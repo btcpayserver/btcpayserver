@@ -1035,7 +1035,7 @@ namespace BTCPayServer.Controllers
             var model = await GetCheckoutModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
             if (model == null)
                 return NotFound();
-            return Json(model);
+            return Json(model.GetStatusResponse());
         }
 
         [Route("i/{invoiceId}/status/ws")]

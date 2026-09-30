@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
 using Newtonsoft.Json;
@@ -43,15 +45,18 @@ namespace BTCPayServer.Models.InvoicingModels
         public string InvoiceId { get; set; }
         public string Address { get; set; }
         public string Due { get; set; }
+        [JsonIgnore]
         public string CustomerEmail { get; set; }
         public bool ShowRecommendedFee { get; set; }
         public decimal FeeRate { get; set; }
         public int ExpirationSeconds { get; set; }
         public int DisplayExpirationTimer { get; set; }
         public string Status { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string MerchantRefLink { get; set; }
         public int MaxTimeSeconds { get; set; }
         public string StoreName { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string ItemDesc { get; set; }
         public string TimeLeft { get; set; }
         public string Rate { get; set; }
@@ -63,9 +68,11 @@ namespace BTCPayServer.Models.InvoicingModels
         public int TxCount { get; set; }
         public int TxCountForFee { get; set; }
         public string Paid { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string StoreSupportUrl { get; set; }
         public string CheckoutText { get; set; }
 
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string OrderId { get; set; }
         public decimal NetworkFee { get; set; }
         public int MaxTimeMinutes { get; set; }
@@ -83,5 +90,31 @@ namespace BTCPayServer.Models.InvoicingModels
         public long? ReceivedConfirmations { get; set; }
         [JsonExtensionData]
         public Dictionary<string, JToken> AdditionalData { get; set; } = new();
+
+        public CheckoutModel GetStatusResponse()
+        {
+            CustomerEmail = null;
+            MerchantRefLink = null;
+            OrderId = null;
+            ItemDesc = null;
+            StoreSupportUrl = null;
+
+            foreach (var data in AvailablePaymentMethods.Select(method => method.AdditionalData).Prepend(AdditionalData))
+            {
+                if (data is null)
+                    continue;
+                foreach (var key in data.Keys.Where(IsSensitiveField).ToArray())
+                    data.Remove(key);
+            }
+
+            return this;
+        }
+
+        private static bool IsSensitiveField(string name) =>
+            name.StartsWith("buyer", StringComparison.OrdinalIgnoreCase) ||
+            name.StartsWith("customer", StringComparison.OrdinalIgnoreCase) ||
+            name.ToLowerInvariant() is "metadata" or "posdata" or "receiptdata" or
+                "merchantreflink" or "merchantcheckoutlink" or "redirecturl" or "orderurl" or
+                "orderid" or "itemdesc" or "storesupporturl";
     }
 }

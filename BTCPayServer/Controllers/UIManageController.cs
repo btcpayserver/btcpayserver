@@ -189,7 +189,10 @@ namespace BTCPayServer.Controllers
                 needUpdate = true;
             }
 
-            var langTranslation = string.IsNullOrEmpty(model.LangTranslation) || model.LangTranslation == _localizer.ServerLanguage  ? null : model.LangTranslation;
+            var langTranslation = string.IsNullOrEmpty(model.LangTranslation) ? null : model.LangTranslation;
+            if (blob.LangTranslation is null && langTranslation == _localizer.ServerLanguage)
+                langTranslation = null;
+
             if (langTranslation is not null &&
                 !LocalizerService.IsInstalledTranslation(langTranslation, await _localizer.GetTranslations()))
             {

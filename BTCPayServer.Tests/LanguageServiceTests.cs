@@ -654,6 +654,19 @@ namespace BTCPayServer.Tests
             await Expect(tester.Page.Locator("body")).ToContainTextAsync("Update your account");
             await Expect(tester.Page.Locator("body")).Not.ToContainTextAsync("Tweak your profile");
             await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English");
+
+            await tester.GoToProfile();
+            await tester.Page.Locator("#LangTranslation").SelectOptionAsync("English");
+            await tester.ClickPagePrimary();
+            await Expect(tester.Page.Locator("body")).ToContainTextAsync("Update your account");
+            await Expect(tester.Page.Locator("body")).Not.ToContainTextAsync("Tweak your profile");
+            await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English");
+
+            await tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            await tester.Page.Locator("#Select-English\\ \\(Custom\\)").ClickAsync();
+            await tester.GoToProfile();
+            await Expect(tester.Page.Locator("body")).ToContainTextAsync("Update your account");
+            await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English");
         }
     }
 }

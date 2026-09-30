@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.ManageViewModels
 {
@@ -24,5 +26,8 @@ namespace BTCPayServer.Models.ManageViewModels
 
         [Display(Name = "Allow Basic authentication for Greenfield API")]
         public bool AllowGreenfieldBasicAuth { get; set; }
+        [Display(Name = "Store Language")]
+        public string LangTranslation { get; set; }   
+        public List<SelectListItem> LangTranslations { get; set; }  
     }
 }

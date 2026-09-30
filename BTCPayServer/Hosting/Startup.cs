@@ -10,6 +10,7 @@ using BTCPayServer.Filters;
 using BTCPayServer.Logging;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Plugins;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -361,6 +362,16 @@ namespace BTCPayServer.Hosting
             app.UseProviderStorage(dataDirectories);
             app.UseAuthentication();
             app.UseAuthorization();
+            app.Use(async (context, next) =>
+            {
+                if (context.User.Identity?.IsAuthenticated is true)
+                {
+                    var localizer = context.RequestServices.GetRequiredService<LocalizerService>();
+                    var userManager = context.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+                    localizer.SetRequestTranslations(await localizer.GetTranslationsForUser(context.User, userManager));
+                }
+                await next();
+            });
             app.UseSession();
 
             app.UseWebSockets();

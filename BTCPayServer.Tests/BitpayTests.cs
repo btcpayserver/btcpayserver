@@ -6,14 +6,18 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Events;
 using BTCPayServer.Plugins.Bitpay.Controllers;
 using BTCPayServer.Plugins.Bitpay.Models;
 using BTCPayServer.Plugins.Bitpay.Security;
 using BTCPayServer.Plugins.Bitpay.Views;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Views.Stores;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
@@ -49,6 +53,51 @@ public class BitpayTests(ITestOutputHelper log) : UnitTestBase(log)
 
             await acc.BitPay.AuthorizeClient(new PairingCode(pairingCode));
             Assert.True(await acc.BitPay.TestAccessAsync(Facade.Merchant));
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task AccessTokensRequireStoreCredentialPermission()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var owner = tester.NewAccount();
+            await owner.GrantAccessAsync();
+            var storeRepository = tester.PayTester.GetService<StoreRepository>();
+            var credentialsOnly = new StoreRoleId(owner.StoreId, "Credentials only");
+            await storeRepository.AddOrUpdateStoreRole(credentialsOnly, [Policies.CanManageStoreCredentials]);
+
+            async Task<TestAccount> AddMember(StoreRoleId role)
+            {
+                var member = tester.NewAccount();
+                await member.RegisterAsync();
+                Assert.IsType<StoreRepository.AddOrUpdateStoreUserResult.Success>(
+                    await storeRepository.AddOrUpdateStoreUser(owner.StoreId, member.UserId, role));
+                return member;
+            }
+
+            async Task<bool> CanManageAccessTokens(TestAccount account)
+            {
+                var controller = account.GetController<UIStoresTokenController>();
+                var authorizationService = controller.HttpContext.RequestServices.GetRequiredService<IAuthorizationService>();
+                return (await authorizationService.AuthorizeAsync(controller.User, owner.StoreId, Policies.CanManageStoreCredentials)).Succeeded;
+            }
+
+            Assert.True(await CanManageAccessTokens(owner));
+            Assert.True(await CanManageAccessTokens(await AddMember(StoreRoleId.Manager)));
+            Assert.True(await CanManageAccessTokens(await AddMember(credentialsOnly)));
+            Assert.False(await CanManageAccessTokens(await AddMember(StoreRoleId.Employee)));
+
+            // Guests can view store settings, but not the store's access tokens.
+            var guest = await AddMember(StoreRoleId.Guest);
+            Assert.False(await CanManageAccessTokens(guest));
+            var guestController = guest.GetController<UIStoresTokenController>();
+            Assert.IsType<RedirectToActionResult>(await guestController.CreateToken());
+            Assert.IsType<ChallengeResult>(await guestController.CreateToken2(new CreateTokenViewModel
+            {
+                Label = "guest",
+                StoreId = owner.StoreId
+            }));
         }
 
         [Fact]

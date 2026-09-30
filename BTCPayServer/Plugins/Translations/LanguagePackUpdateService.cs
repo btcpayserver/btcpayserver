@@ -72,7 +72,7 @@ namespace BTCPayServer.Plugins.Translations
         private const string ManifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
         private const string TrustedHost = "raw.githubusercontent.com";
         private const string TrustedOrgPath = "/btcpayserver/";
-
+        public const string HttpClientName = "BTCPayServer.Plugins.Translations";
         private static readonly TimeSpan CacheLifetime = TimeSpan.FromHours(1);
 
         private async Task<ManifestSnapshot> GetSnapshot()
@@ -80,43 +80,45 @@ namespace BTCPayServer.Plugins.Translations
             if (memoryCache.TryGetValue(ManifestCacheKey, out ManifestSnapshot? cached) && cached is not null)
                 return cached;
 
-            using var httpClient = httpClientFactory.CreateClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(30);
-
-            var manifestUrl = ManifestUrl;
-            var json = await httpClient.GetStringAsync(manifestUrl);
-            var root = JsonConvert.DeserializeObject<ManifestRootDto>(json);
-            if (root?.Languages is null)
-                throw new InvalidOperationException("Manifest is missing the 'Languages' array.");
-
+            var manifestUri = new Uri(ManifestUrl);
+            var root = ParseManifest(await GetTrusted(manifestUri));
             if (!string.IsNullOrEmpty(root.Redirect))
             {
-                // Validate the URL as it will be requested. Uri resolves dot segments ("/btcpayserver/../other/"),
-                // so a string prefix check on the raw value could be escaped.
-                if (!IsTrustedRedirect(root.Redirect, out var redirect))
+                if (!IsTrustedRedirect(root.Redirect, out manifestUri))
                     throw new InvalidOperationException($"Manifest redirect '{root.Redirect}' is outside the trusted repository.");
 
-                manifestUrl = redirect.AbsoluteUri;
-                json = await httpClient.GetStringAsync(manifestUrl);
-                root = JsonConvert.DeserializeObject<ManifestRootDto>(json);
-                if (root?.Languages is null)
-                    throw new InvalidOperationException("Redirected manifest is missing the 'Languages' array.");
+                root = ParseManifest(await GetTrusted(manifestUri));
             }
-            var entries = root.Languages.Select(LanguageManifestEntry.FromDto)
+            var entries = root.Languages!.Select(LanguageManifestEntry.FromDto)
                 .Where(e => !string.IsNullOrEmpty(e.Name)).ToArray();
 
-            var snapshot = new ManifestSnapshot(entries, DeriveBaseUrl(manifestUrl));
+            var snapshot = new ManifestSnapshot(entries, DeriveBaseUrl(manifestUri.AbsoluteUri));
             memoryCache.Set(ManifestCacheKey, snapshot, CacheLifetime);
             return snapshot;
         }
 
-        internal static bool IsTrustedRedirect(string value, out Uri redirect)
+        private static ManifestRootDto ParseManifest(byte[] body) =>
+            JsonConvert.DeserializeObject<ManifestRootDto>(Encoding.UTF8.GetString(body)) is { Languages: not null } root
+            ? root : throw new InvalidOperationException("Manifest is missing the 'Languages' array.");
+
+        private async Task<byte[]> GetTrusted(Uri uri)
         {
-            return Uri.TryCreate(value, UriKind.Absolute, out redirect!)
-                   && redirect.Scheme == Uri.UriSchemeHttps
-                   && string.Equals(redirect.Host, TrustedHost, StringComparison.OrdinalIgnoreCase)
-                   && redirect.AbsolutePath.StartsWith(TrustedOrgPath, StringComparison.OrdinalIgnoreCase);
+            if (!IsTrustedUri(uri))
+                throw new InvalidOperationException($"'{uri}' is outside the trusted repository.");
+
+            using var client = httpClientFactory.CreateClient(HttpClientName);
+            client.Timeout = TimeSpan.FromSeconds(30);
+            using var response = await client.GetAsync(uri);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsByteArrayAsync();
         }
+
+        internal static bool IsTrustedRedirect(string value, out Uri redirect) =>
+            Uri.TryCreate(value, UriKind.Absolute, out redirect!) && IsTrustedUri(redirect);
+
+        internal static bool IsTrustedUri(Uri uri) => uri.Scheme == Uri.UriSchemeHttps
+            && string.Equals(uri.Host, TrustedHost, StringComparison.OrdinalIgnoreCase)
+            && uri.AbsolutePath.StartsWith(TrustedOrgPath, StringComparison.OrdinalIgnoreCase);
 
         private static string DeriveBaseUrl(string manifestUrl)
         {

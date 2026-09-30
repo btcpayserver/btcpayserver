@@ -1,8 +1,10 @@
+#nullable enable
 
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -50,6 +52,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBitcoin.RPC;
@@ -57,6 +60,7 @@ using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using InvoiceCryptoInfo = BTCPayServer.Services.Invoices.InvoiceCryptoInfo;
 
 namespace BTCPayServer
@@ -169,7 +173,7 @@ namespace BTCPayServer
                 // Extract fingerprint and account key path from export formats that contain them.
                 // Possible formats: [fingerprint/account_key_path]xpub, [fingerprint]xpub, xpub
                 HDFingerprint? rootFingerprint = null;
-                KeyPath accountKeyPath = null;
+                KeyPath? accountKeyPath = null;
                 var derivationRegex = new Regex(@"^(?:\[(\w+)(?:\/(.*?))?\])?(\w+)$", RegexOptions.IgnoreCase);
                 var match = derivationRegex.Match(xpub.Trim());
                 if (match.Success)
@@ -195,7 +199,7 @@ namespace BTCPayServer
                 {
                     derivationSchemeSettings.AccountKeySettings[0].RootFingerprint = rootFingerprint;
                 }
-                if (accountKeyPath != null && derivationSchemeSettings.AccountKeySettings[0].AccountKeyPath == null)
+                if (accountKeyPath is not null && derivationSchemeSettings.AccountKeySettings[0].AccountKeyPath == null)
                 {
                     derivationSchemeSettings.AccountKeySettings[0].AccountKeyPath = accountKeyPath;
                 }
@@ -231,12 +235,10 @@ namespace BTCPayServer
         /// </summary>
         /// <param name="uriString">The Uri string.</param>
         /// <returns>Unescaped back slash Uri string.</returns>
-        public static string UnescapeBackSlashUriString(string uriString)
+        public static string? UnescapeBackSlashUriString(string? uriString)
         {
             if (uriString == null)
-            {
                 return null;
-            }
             return uriString.Replace("%2f", "%2F").Replace("%2F", "/");
         }
         public static bool IsValidEmail(this string email)
@@ -249,15 +251,15 @@ namespace BTCPayServer
             return MailboxAddressValidator.TryParse(email, out var ma) && ma.ToString() == ma.Address;
         }
 
-        public static bool TryGetPayjoinEndpoint(this BitcoinUrlBuilder bip21, out Uri endpoint)
+        public static bool TryGetPayjoinEndpoint(this BitcoinUrlBuilder bip21, [MaybeNullWhen(false)] out Uri endpoint)
         {
             endpoint = bip21.UnknownParameters.TryGetValue($"{PayjoinClient.BIP21EndpointKey}", out var uri) ? new Uri(uri, UriKind.Absolute) : null;
             return endpoint != null;
         }
 
         [Obsolete("Use GetServerUri(this ILightningClient client, string connectionString) instead")]
-        public static Uri GetServerUri(this ILightningClient client) => GetServerUri(client, client.ToString());
-        public static Uri GetServerUri(this ILightningClient client, string connectionString)
+        public static Uri? GetServerUri(this ILightningClient client) => GetServerUri(client, client.ToString()!);
+        public static Uri? GetServerUri(this ILightningClient client, string connectionString)
         {
             if (client is IExtendedLightningClient { ServerUri: { } uri })
                 return uri;
@@ -266,7 +268,7 @@ namespace BTCPayServer
         }
 
         [Obsolete("Use GetDisplayName(this ILightningClient client, string connectionString) instead")]
-        public static string GetDisplayName(this ILightningClient client) => GetDisplayName(client, client.ToString());
+        public static string GetDisplayName(this ILightningClient client) => GetDisplayName(client, client.ToString()!);
 
         public static string GetDisplayName(this ILightningClient client, string connectionString)
             => client switch
@@ -280,7 +282,7 @@ namespace BTCPayServer
                 _ => client.GetType().Name
             };
 
-        private static bool TryParseLegacy(string str, out Dictionary<string, string> connectionString)
+        private static bool TryParseLegacy(string str, [MaybeNullWhen(false)] out Dictionary<string, string> connectionString)
         {
             if (str.StartsWith("/"))
             {
@@ -289,7 +291,7 @@ namespace BTCPayServer
 
             Dictionary<string, string> dictionary = new Dictionary<string, string>();
             connectionString = null;
-            if (!Uri.TryCreate(str, UriKind.Absolute, out Uri result))
+            if (!Uri.TryCreate(str, UriKind.Absolute, out var result))
             {
                 return false;
             }
@@ -366,7 +368,7 @@ namespace BTCPayServer
         }
 
         [Obsolete("Use IsSafe(this ILightningClient client, string connectionString) instead")]
-        public static bool IsSafe(this ILightningClient client) => IsSafe(client, client.ToString());
+        public static bool IsSafe(this ILightningClient client) => IsSafe(client, client.ToString()!);
         public static bool IsSafe(this ILightningClient client, string connectionString) => IsSafeLightningConnectionString(connectionString);
         public static bool IsSafeLightningConnectionString(string connectionString)
         {
@@ -482,20 +484,52 @@ namespace BTCPayServer
             return services;
         }
 
-        public static IServiceCollection AddPolicyDefinitions(this IServiceCollection services, params PolicyDefinition[] definitions)
+        /// <summary>
+        /// Registers a plugin-owned database context and applies its migrations during startup.
+        /// Call this before registering data migrations for the context.
+        /// </summary>
+        public static IServiceCollection AddPluginDbContext<TDbContext>(this IServiceCollection services)
+            where TDbContext : BasePluginDbContext<TDbContext>
+        => services.AddPluginDbContext<TDbContext>(migrationHistoryTableName: null);
+
+        /// <summary>
+        /// Registers a plugin-owned database context and applies its migrations during startup.
+        /// Call this before registering data migrations for the context.
+        /// </summary>
+        public static IServiceCollection AddPluginDbContext<TDbContext>(
+            this IServiceCollection services,
+            string? migrationHistoryTableName,
+            Action<NpgsqlDbContextOptionsBuilder>? npgsqlOptionsAction = null)
+            where TDbContext : DbContext
+        {
+            services.AddDbContextFactory<TDbContext>((provider, builder) =>
+            {
+                var options = provider.GetRequiredService<IOptions<DatabaseOptions>>();
+                builder.UseBTCPayServerDatabase(
+                    options.Value.ConnectionString,
+                    migrationHistoryTableName ?? PluginDatabaseAttribute.GetMigrationHistoryTableName(typeof(TDbContext)),
+                    npgsqlOptionsAction);
+            });
+            services.TryAddEnumerable(
+                ServiceDescriptor.Singleton<IMigrationExecutor, DbContextMigrationExecutor<TDbContext>>());
+            return services;
+        }
+
+        public static IServiceCollection AddPolicyDefinitions(this IServiceCollection services, params PolicyDefinition?[]? definitions)
         {
             if (definitions == null)
                 return services;
             foreach (var definition in definitions)
             {
-                if (definition != null)
+                if (definition is not null)
                     services.AddSingleton(definition);
             }
             var strings = definitions
+                .OfType<PolicyDefinition>()
                 .SelectMany(d => new[] {d.Display?.Title, d.Display?.Description, d.ScopeDisplay?.Title, d.ScopeDisplay?.Description})
                 .Where(d => d is not null)
                 .ToArray();
-            services.AddDefaultTranslations(strings);
+            services.AddDefaultTranslations(strings!);
             return services;
         }
 
@@ -514,7 +548,7 @@ namespace BTCPayServer
             finally { try { webSocket.Dispose(); } catch { } }
         }
 
-        public static async Task<GetMempoolInfoResponse> GetMempoolInfo(this RPCClient rpc, CancellationToken cancellationToken)
+        public static async Task<GetMempoolInfoResponse?> GetMempoolInfo(this RPCClient rpc, CancellationToken cancellationToken)
         {
             var mempoolInfo = await rpc.SendCommandAsync(new RPCRequest("getmempoolinfo", [])
             {
@@ -591,7 +625,7 @@ namespace BTCPayServer
             return transactions.Select(t => t.Result).Where(t => t != null).ToDictionary(o => o.Transaction.GetHash());
         }
 
-        public static async Task<PSBT> UpdatePSBT(this ExplorerClientProvider explorerClientProvider, DerivationSchemeSettings derivationSchemeSettings, PSBT psbt)
+        public static async Task<PSBT?> UpdatePSBT(this ExplorerClientProvider explorerClientProvider, DerivationSchemeSettings derivationSchemeSettings, PSBT psbt)
         {
             var result = await explorerClientProvider.GetExplorerClient(psbt.Network.NetworkSet.CryptoCode).UpdatePSBTAsync(new UpdatePSBTRequest()
             {
@@ -617,7 +651,7 @@ namespace BTCPayServer
             });
         }
 
-        public static void SetHeader(this HttpResponse resp, string name, string value)
+        public static void SetHeader(this HttpResponse resp, string name, string? value)
         {
             var existing = resp.Headers[name].FirstOrDefault();
             if (existing != null && value == null)

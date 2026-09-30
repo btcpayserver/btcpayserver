@@ -15,6 +15,17 @@ public interface IMigrationExecutor
     Task Execute(CancellationToken cancellationToken);
 }
 
+public class DbContextMigrationExecutor<TDbContext>(IDbContextFactory<TDbContext> dbContextFactory) : IMigrationExecutor
+    where TDbContext : DbContext
+{
+    public async Task Execute(CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        dbContext.Database.SetCommandTimeout(TimeSpan.FromDays(1.0));
+        await dbContext.Database.MigrateAsync(cancellationToken);
+    }
+}
+
 public class MigrationExecutor<TDbContext>(
     ILoggerFactory loggerFactory,
     IDbContextFactory<TDbContext> dbContextFactory,

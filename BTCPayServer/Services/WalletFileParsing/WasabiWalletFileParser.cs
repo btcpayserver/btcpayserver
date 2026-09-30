@@ -25,7 +25,7 @@ public class WasabiWalletFileParser : IWalletFileParser
         var derivationSchemeParser = network.GetDerivationSchemeParser();
         var result = new DerivationSchemeSettings();
 
-        if (jobj is null || !derivationSchemeParser.TryParseXpub(jobj.ExtPubKey, ref result))
+        if (jobj is null || jobj.ExtPubKey is null || !derivationSchemeParser.TryParseXpub(jobj.ExtPubKey, ref result))
             return false;
 
         if (jobj.MasterFingerprint is not null)

@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -17,8 +18,8 @@ public static class DbContextOptionsBuilderExtensions
     public static DbContextOptionsBuilder UseBTCPayServerDatabase(
         this DbContextOptionsBuilder builder,
         string connectionString,
-        string migrationHistoryTableName = null,
-        Action<NpgsqlDbContextOptionsBuilder> npgsqlOptionsAction = null)
+        string? migrationHistoryTableName = null,
+        Action<NpgsqlDbContextOptionsBuilder>? npgsqlOptionsAction = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(connectionString);
@@ -37,7 +38,7 @@ public static class DbContextOptionsBuilderExtensions
             .ReplaceService<IMigrationsSqlGenerator, CustomNpgsqlMigrationsSqlGenerator>();
     }
 
-    private static string GetSearchPath(string connectionString)
+    private static string? GetSearchPath(string connectionString)
     {
         var connectionStringBuilder = new NpgsqlConnectionStringBuilder(connectionString);
         var searchPaths = connectionStringBuilder.SearchPath?.Split(',');
@@ -57,7 +58,7 @@ public static class DbContextOptionsBuilderExtensions
 
         protected override void Generate(
             NpgsqlCreateDatabaseOperation operation,
-            IModel model,
+            IModel? model,
             MigrationCommandListBuilder builder)
         {
             builder

@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using BTCPayServer.Abstractions.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -9,15 +10,13 @@ namespace BTCPayServer.Abstractions.Contracts;
 /// Identifies a plugin database context and its migration-history table.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public sealed class PluginDatabaseAttribute : Attribute
+public sealed class PluginDatabaseAttribute(string? migrationHistoryTableName) : Attribute
 {
-    public PluginDatabaseAttribute(string migrationHistoryTableName)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(migrationHistoryTableName);
-        MigrationHistoryTableName = migrationHistoryTableName;
-    }
-
-    public string MigrationHistoryTableName { get; }
+    public string? MigrationHistoryTableName { get; } = migrationHistoryTableName;
+    public static string? GetMigrationHistoryTableName(Type type)
+        => ((PluginDatabaseAttribute?)Attribute.GetCustomAttribute(
+            type,
+            typeof(PluginDatabaseAttribute)))?.MigrationHistoryTableName;
 }
 
 /// <summary>
@@ -52,18 +51,9 @@ public abstract class BasePluginDbContext<TContext> : DbContext
             throw new InvalidOperationException(
                 $"{typeof(TContext).FullName} must be created through dependency injection or IDbContextFactory<{typeof(TContext).Name}>.");
         }
-
-        var database = (PluginDatabaseAttribute)Attribute.GetCustomAttribute(
-            typeof(TContext),
-            typeof(PluginDatabaseAttribute));
-        if (database is null)
-        {
-            throw new InvalidOperationException(
-                $"{typeof(TContext).FullName} must have a {nameof(PluginDatabaseAttribute)}.");
-        }
         optionsBuilder.UseBTCPayServerDatabase(
             DefaultDesignTimeConnectionString,
-            database.MigrationHistoryTableName,
+            PluginDatabaseAttribute.GetMigrationHistoryTableName(typeof(TContext)),
             ConfigureNpgsql);
     }
 

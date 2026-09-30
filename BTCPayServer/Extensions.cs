@@ -505,7 +505,7 @@ namespace BTCPayServer
                 var options = provider.GetRequiredService<IOptions<DatabaseOptions>>();
                 builder.UseBTCPayServerDatabase(
                     options.Value.ConnectionString,
-                    migrationHistoryTableName,
+                    migrationHistoryTableName ?? PluginDatabaseAttribute.GetMigrationHistoryTableName(typeof(TDbContext)),
                     npgsqlOptionsAction);
             });
             services.TryAddEnumerable(
@@ -513,13 +513,14 @@ namespace BTCPayServer
             return services;
         }
 
-        public static IServiceCollection AddPolicyDefinitions(this IServiceCollection services, params PolicyDefinition[]? definitions)
+        public static IServiceCollection AddPolicyDefinitions(this IServiceCollection services, params PolicyDefinition?[]? definitions)
         {
             if (definitions == null)
                 return services;
             foreach (var definition in definitions)
             {
-                services.AddSingleton(definition);
+                if (definition is not null)
+                    services.AddSingleton(definition);
             }
             var strings = definitions
                 .SelectMany(d => new[] {d.Display?.Title, d.Display?.Description, d.ScopeDisplay?.Title, d.ScopeDisplay?.Description})
@@ -647,7 +648,7 @@ namespace BTCPayServer
             });
         }
 
-        public static void SetHeader(this HttpResponse resp, string name, string value)
+        public static void SetHeader(this HttpResponse resp, string name, string? value)
         {
             var existing = resp.Headers[name].FirstOrDefault();
             if (existing != null && value == null)

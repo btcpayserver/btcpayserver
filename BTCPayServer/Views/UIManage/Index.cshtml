@@ -50,6 +50,12 @@
             <input asp-for="Name" class="form-control" />
             <span asp-validation-for="Name" class="text-danger"></span>
         </div>
+        <div class="form-group">
+            <label asp-for="LangTranslation" class="form-label"></label>
+            <select asp-for="LangTranslation" asp-items="Model.LangTranslations" class="form-select w-auto"></select>
+            <div class="form-text" text-translate="true">The language you see your BTCPay Server store in.</div>
+            <span asp-validation-for="LangTranslation" class="text-danger"></span>
+        </div>
         @if (canUpload)
         {
             <div class="form-group">

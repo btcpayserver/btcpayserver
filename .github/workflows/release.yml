@@ -53,7 +53,7 @@ jobs:
     name: Plugin Compatibility
     runs-on: ubuntu-24.04
     container:
-      image: mcr.microsoft.com/dotnet/sdk:10.0.301-noble
+      image: mcr.microsoft.com/dotnet/sdk:10.0.401-noble
     timeout-minutes: 120
     steps:
       - name: Install checkout dependencies

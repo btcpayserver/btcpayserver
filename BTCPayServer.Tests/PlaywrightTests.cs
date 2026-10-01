@@ -2283,8 +2283,9 @@ namespace BTCPayServer.Tests
             await s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
             await s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
             await s.AssertPageAccess(false, GetStorePath("apps/create"));
+            await s.AssertPageAccess(false, GetStorePath("tokens"));
 
-            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks",
+            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "users", "roles", "webhooks",
                 "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC",
                 "emails/rules", "email-settings", "forms"};
             foreach (var path in storeSettingsPaths)

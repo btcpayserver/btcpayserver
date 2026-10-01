@@ -91,6 +91,14 @@ namespace BTCPayServer.Models.InvoicingModels
         [JsonExtensionData]
         public Dictionary<string, JToken> AdditionalData { get; set; } = new();
 
+        /// <summary>
+        /// Removes customer and merchant reference fields before serializing a public invoice status response.
+        /// </summary>
+        /// <remarks>
+        /// Mutates this instance and its checkout and payment-method extension-data dictionaries in place,
+        /// preserving the remaining checkout settings and plugin fields.
+        /// </remarks>
+        /// <returns>This instance after filtering.</returns>
         public CheckoutModel GetStatusResponse()
         {
             CustomerEmail = null;
@@ -110,6 +118,11 @@ namespace BTCPayServer.Models.InvoicingModels
             return this;
         }
 
+        /// <summary>
+        /// Identifies extension-data fields excluded from public status responses by their case-insensitive names or prefixes.
+        /// </summary>
+        /// <param name="name">The extension-data field name to check.</param>
+        /// <returns>Whether the name matches a buyer or customer prefix or a known metadata or merchant reference field.</returns>
         private static bool IsSensitiveField(string name) =>
             name.StartsWith("buyer", StringComparison.OrdinalIgnoreCase) ||
             name.StartsWith("customer", StringComparison.OrdinalIgnoreCase) ||

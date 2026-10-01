@@ -96,6 +96,10 @@ const PaymentDetails = {
     }
 }
 
+/**
+ * Creates the checkout application from the initial server model and initializes its localized interface.
+ * @returns {Vue} The checkout application instance.
+ */
 function initApp() {
     updateLanguageDir(i18next.language);
     return new Vue({
@@ -353,6 +357,11 @@ function initApp() {
                     this.updateData(data);
                 }
             },
+            /**
+             * Updates the expiration timer, notifies the parent of status changes, and merges the latest checkout data.
+             * Fields omitted from public status responses, including the merchant redirect URL, retain their initial values.
+             * @param {Object} data The initial checkout model or a public invoice status response.
+             */
             updateData (data) {
                 if (this.srvModel.status !== data.status) {
                     const { invoiceId } = this.srvModel;

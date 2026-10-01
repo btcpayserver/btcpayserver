@@ -426,6 +426,11 @@ namespace BTCPayServer.Tests
             });
         }
 
+        /// <summary>
+        /// Verifies that checkout retains its initial merchant redirect URL after receiving a filtered status update
+        /// and redirects when the invoice settles.
+        /// </summary>
+        /// <param name="isModal">Whether to exercise embedded modal checkout instead of the standalone page.</param>
         [Theory(Timeout = TestTimeout)]
         [InlineData(false)]
         [InlineData(true)]

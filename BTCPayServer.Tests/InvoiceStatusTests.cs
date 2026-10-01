@@ -10,8 +10,16 @@ using Xunit;
 
 namespace BTCPayServer.Tests
 {
+    /// <summary>
+    /// Tests privacy filtering and checkout compatibility for public invoice status responses.
+    /// </summary>
+    /// <param name="helper">The test output sink.</param>
     public class InvoiceStatusTests(ITestOutputHelper helper) : UnitTestBase(helper)
     {
+        /// <summary>
+        /// Verifies that status filtering removes sensitive model and extension-data fields while preserving
+        /// payment methods, plugin settings, sounds, and tax information.
+        /// </summary>
         [Fact]
         public void StatusResponsePreservesCheckoutSettingsAndRemovesSensitiveData()
         {
@@ -76,6 +84,10 @@ namespace BTCPayServer.Tests
             Assert.Null(JObject.FromObject(model, serializer)["customerEmail"]);
         }
 
+        /// <summary>
+        /// Verifies that public status routes omit private invoice metadata, preserve checkout data and stored metadata,
+        /// and return not found for archived or missing invoices when accessed anonymously.
+        /// </summary>
         [Fact(Timeout = TestUtils.TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task PublicStatusRoutesExcludeInvoiceMetadata()

@@ -34,7 +34,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NBitcoin" Version="10.0.11" />
+    <PackageReference Include="NBitcoin" Version="10.0.14" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
     <PackageReference Include="BIP78.Sender" Version="0.2.5" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.6" />
@@ -58,7 +58,7 @@
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.26.1" />
     <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.26.1" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.26.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="10.0.11" />
   </ItemGroup>
 

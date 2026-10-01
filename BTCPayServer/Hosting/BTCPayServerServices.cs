@@ -555,6 +555,11 @@ namespace BTCPayServer.Hosting
                     new PermissionDisplay("Send store emails", "Allows sending emails on behalf of all your stores."),
                     new PermissionDisplay("Send selected stores' emails", "Allows sending emails on behalf of the selected stores.")),
                 new PolicyDefinition(
+                    Policies.CanManageStoreCredentials,
+                    new PermissionDisplay("Manage access tokens", "Allows managing the access tokens of all your stores."),
+                    new PermissionDisplay("Manage selected stores' access tokens", "Allows managing the access tokens of the selected stores."),
+                    includedByPermissions: new[] { Policies.CanModifyStoreSettings }),
+                new PolicyDefinition(
                     Policies.CanModifyServerSettings,
                     new PermissionDisplay("Manage your server", "Grants total control on the server settings of your server."),
                     includedPermissions: new[] { Policies.CanUseInternalLightningNode, Policies.CanManageUsers }),

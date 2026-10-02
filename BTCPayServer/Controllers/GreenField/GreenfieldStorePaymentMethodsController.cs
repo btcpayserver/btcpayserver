@@ -44,6 +44,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 var m = methods.FirstOrDefault(m => m.PaymentMethodId == paymentMethodId.ToString());
                 return m is { } ? Ok(m) : PaymentMethodNotFound();
             }
+
             return result;
         }
 
@@ -76,12 +77,14 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request), "Missing body");
                 return this.CreateValidationError(ModelState);
             }
+
             var handler = AssertHasHandler(paymentMethodId);
             if (request?.Config is { } config)
             {
                 try
                 {
-                    var ctx = new PaymentMethodConfigValidationContext(authorizationService, ModelState, config, User, Store.GetPaymentMethodConfig(paymentMethodId), Store);
+                    var ctx = new PaymentMethodConfigValidationContext(authorizationService, ModelState, config, User,
+                        Store.GetPaymentMethodConfig(paymentMethodId), Store);
                     await handler.ValidatePaymentMethodConfig(ctx);
                     config = ctx.Config;
                     if (ctx.MissingPermission is not null)
@@ -96,14 +99,17 @@ namespace BTCPayServer.Controllers.Greenfield
                     ModelState.AddModelError(nameof(config), $"Invalid configuration ({ex.Message})");
                     return this.CreateValidationError(ModelState);
                 }
+
                 Store.SetPaymentMethodConfig(paymentMethodId, config);
             }
+
             if (request?.Enabled is { } enabled)
             {
                 var storeBlob = Store.GetStoreBlob();
                 storeBlob.SetExcluded(paymentMethodId, !enabled);
                 Store.SetStoreBlob(storeBlob);
             }
+
             await storeRepository.UpdateStore(Store);
             return await GetStorePaymentMethod(storeId, paymentMethodId, request?.Config is not null);
         }
@@ -136,13 +142,12 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             return Ok(Store.GetPaymentMethodConfigs(handlers, onlyEnabled is true)
-                .Select(
-                    method => new GenericPaymentMethodData()
-                    {
-                        PaymentMethodId = method.Key.ToString(),
-                        Enabled = !excludedPaymentMethods.Match(method.Key),
-                        Config = includeConfig is true ? JToken.FromObject(method.Value, handlers[method.Key].Serializer.ForAPI()) : null
-                    }).ToArray());
+                .Select(method => new GenericPaymentMethodData()
+                {
+                    PaymentMethodId = method.Key.ToString(),
+                    Enabled = !excludedPaymentMethods.Match(method.Key),
+                    Config = includeConfig is true ? JToken.FromObject(method.Value, handlers[method.Key].Serializer.ForAPI()) : null
+                }).ToArray());
         }
     }
 }

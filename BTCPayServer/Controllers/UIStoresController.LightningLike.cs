@@ -137,6 +137,7 @@ public partial class UIStoresController
         var store = HttpContext.GetStoreDataOrNull();
         if (store == null)
             return NotFound();
+        vm.StoreId = store.Id;
 
         var network = _explorerProvider.GetNetwork(vm.CryptoCode);
         var oldConf = _handlers.GetLightningConfig(store, network);
@@ -271,6 +272,7 @@ public partial class UIStoresController
         var store = HttpContext.GetStoreDataOrNull();
         if (store == null)
             return NotFound();
+        vm.StoreId = store.Id;
 
         if (vm.CryptoCode == null)
         {

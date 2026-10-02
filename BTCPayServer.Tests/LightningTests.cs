@@ -778,6 +778,34 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
 
     [Fact(Timeout = 60 * 2 * 1000)]
     [Trait("Integration", "Integration")]
+    public async Task LightningFormsRerenderWithAuthorisedStoreId()
+    {
+        using var tester = CreateServerTester();
+        await tester.StartAsync();
+        var user = tester.NewAccount();
+        await user.GrantAccessAsync();
+        var other = tester.NewAccount();
+        await other.GrantAccessAsync();
+        var storeController = user.GetController<UIStoresController>();
+
+        var setupResponse = await storeController.SetupLightningNode(user.StoreId, new LightningNodeViewModel
+        {
+            LightningNodeType = LightningNodeType.Custom,
+            StoreId = other.StoreId
+        }, "save", "BTC");
+        var setupVm = Assert.IsType<LightningNodeViewModel>(Assert.IsType<ViewResult>(setupResponse).Model);
+        Assert.Equal(user.StoreId, setupVm.StoreId);
+
+        var settingsResponse = await storeController.LightningSettings(new LightningSettingsViewModel
+        {
+            StoreId = other.StoreId
+        });
+        var settingsVm = Assert.IsType<LightningSettingsViewModel>(Assert.IsType<ViewResult>(settingsResponse).Model);
+        Assert.Equal(user.StoreId, settingsVm.StoreId);
+    }
+
+    [Fact(Timeout = 60 * 2 * 1000)]
+    [Trait("Integration", "Integration")]
     [Trait("Lightning", "Lightning")]
     public async Task CanSetPaymentMethodLimitsLightning()
     {

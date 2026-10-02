@@ -69,6 +69,17 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             await AssertPermission("btcpay.server.canmodifyserversettings");
 
+            // A checked checkbox posts "true,false". Verify that another binding error can redisplay the form.
+            var storePermission = s.Page.Locator("#btcpay\\.store\\.canmodifystoresettings");
+            await storePermission.SetCheckedAsync(true);
+            var storePermissionValueName = await storePermission.GetAttributeAsync("name");
+            var storeModeName = storePermissionValueName!.Replace(".Value", ".StoreMode");
+            var storeMode = s.Page.Locator($"input[name='{storeModeName}']");
+            await storeMode.EvaluateAsync("element => element.value = 'invalid'");
+            await s.ClickPagePrimary();
+            Assert.True(await storePermission.IsCheckedAsync());
+            await storeMode.EvaluateAsync("element => element.value = 'AllStores'");
+
             //server management should show now
             await s.Page.SetCheckedAsync("#btcpay\\.server\\.canmodifyserversettings", true);
             await s.Page.SetCheckedAsync("#btcpay\\.store\\.canmodifystoresettings", true);

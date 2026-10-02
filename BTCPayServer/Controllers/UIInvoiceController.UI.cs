@@ -1022,6 +1022,14 @@ namespace BTCPayServer.Controllers
             return _displayFormatter.Currency(paymentMethod.Rate, currency, format);
         }
 
+        /// <summary>
+        /// Returns public checkout status with customer data and merchant reference fields removed.
+        /// </summary>
+        /// <param name="invoiceId">The invoice to query.</param>
+        /// <param name="paymentMethodId">The requested payment method, taking precedence over the route value.</param>
+        /// <param name="implicitPaymentMethodId">The payment method supplied by the route when none is explicitly requested.</param>
+        /// <param name="lang">The optional language used to format checkout data.</param>
+        /// <returns>The filtered checkout model as JSON, or a not-found result when checkout is unavailable.</returns>
         [HttpGet("i/{invoiceId}/status")]
         [HttpGet("i/{invoiceId}/{implicitPaymentMethodId}/status")]
         [HttpGet("invoice/{invoiceId}/status")]
@@ -1035,7 +1043,7 @@ namespace BTCPayServer.Controllers
             var model = await GetCheckoutModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
             if (model == null)
                 return NotFound();
-            return Json(model);
+            return Json(model.GetStatusResponse());
         }
 
         [Route("i/{invoiceId}/status/ws")]

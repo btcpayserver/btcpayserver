@@ -43,12 +43,14 @@ namespace BTCPayServer.Models.InvoicingModels
         public string InvoiceId { get; set; }
         public string Address { get; set; }
         public string Due { get; set; }
+        [JsonIgnore]
         public string CustomerEmail { get; set; }
         public bool ShowRecommendedFee { get; set; }
         public decimal FeeRate { get; set; }
         public int ExpirationSeconds { get; set; }
         public int DisplayExpirationTimer { get; set; }
         public string Status { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string MerchantRefLink { get; set; }
         public int MaxTimeSeconds { get; set; }
         public string StoreName { get; set; }
@@ -66,6 +68,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string StoreSupportUrl { get; set; }
         public string CheckoutText { get; set; }
 
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string OrderId { get; set; }
         public decimal NetworkFee { get; set; }
         public int MaxTimeMinutes { get; set; }
@@ -83,5 +86,21 @@ namespace BTCPayServer.Models.InvoicingModels
         public long? ReceivedConfirmations { get; set; }
         [JsonExtensionData]
         public Dictionary<string, JToken> AdditionalData { get; set; } = new();
+
+        /// <summary>
+        /// Removes customer and merchant reference fields before serializing a public invoice status response.
+        /// </summary>
+        /// <remarks>
+        /// Mutates this instance in place, preserving checkout settings and plugin extension data.
+        /// </remarks>
+        /// <returns>This instance after filtering.</returns>
+        public CheckoutModel GetStatusResponse()
+        {
+            CustomerEmail = null;
+            MerchantRefLink = null;
+            OrderId = null;
+
+            return this;
+        }
     }
 }

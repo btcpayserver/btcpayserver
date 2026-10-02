@@ -1,5 +1,53 @@
 # Changelog
 
+## 2.4.5
+
+### Breaking changes
+
+* **Outbound HTTP requests**: Block private-network destinations for Lightning connections, LNURL requests, invoice notification URLs, and webhooks by default to prevent SSRF. Operators using private services must [allow them with `ssrfexceptions`](https://docs.btcpayserver.org/Operators/#allow-private-outbound-destinations) (#7581 #7626 #7627 #7635 #7636 #7637 #7638 #7644 #7646) @NicolasDorier
+* **Refunds**: Employees without permission to create approved pull payments can no longer auto-approve invoice overpayment refunds; another user must approve the payout (#7649) @NicolasDorier
+
+### New features
+
+* **Greenfield**: Add APIs for discovering and running store reports (#7608) @NicolasDorier
+* **Plugins**: Simplify registering and migrating plugin-owned EF Core database contexts (#7611) @NicolasDorier
+* **Invoices**: Add the `btcpay.store.canmanageinvoicestatus` permission for marking invoices as settled or invalid (#7643) @NicolasDorier
+* **Access Tokens**: Add the `btcpay.store.canmanagelegacyaccesstokens` permission for managing legacy BitPay-compatible tokens and pairing requests (#7502 #7612 #7631) @okjodom @NicolasDorier
+
+### Fixes
+
+* **Invoices**: Avoid invoice creation crashes when a payment method reuses another invoice's destination ([btcpayserver-monero-plugin#57](https://github.com/btcpay-monero/btcpayserver-monero-plugin/issues/57), #7483) @CaMoPeZzz
+* **Invoices**: Keep invoice searches scoped to the current store (#7599) @NicolasDorier
+* **Invoices**: Require antiforgery validation when changing invoice status in the browser (#7643) @NicolasDorier
+* **Payouts**: Complete payouts and send update webhooks when an RBF replacement confirms (#7625 #7641) @NicolasDorier
+* **Payouts**: Scope payout payment actions to the current store (#7642) @NicolasDorier
+* **Refunds**: Calculate refundable and overpaid amounts only from settled payments (#7600) @NicolasDorier
+* **Refunds**: Require permission to create approved pull payments before auto-approving invoice overpayment refunds (#7649) @NicolasDorier
+* **Reports**: Correct All Time and rolling date ranges (#7608) @NicolasDorier
+* **Lightning**: Persist replacement invoices before canceling previous invoices to keep payments available when replacement fails (#7630) @NicolasDorier
+* **Lightning**: Use LND's WebSocket invoice subscription instead of long polling (#7621) @NicolasDorier
+* **Lightning**: Use only the authorized store when redisplaying setup and settings forms (#7618) @Team1-dev
+* **Generated links**: Use the configured server Base URL for account, password-reset, and store-invitation links, and reject non-HTTP(S) Base URLs (#7590 #7628) @NicolasDorier
+* **Store settings**: Accept only absolute HTTP or HTTPS Store Website URLs in the UI and Greenfield API (#7604) @NicolasDorier, reported by @gn00295120
+* **API Keys**: Show an error instead of a server error when confirming a removed API key (#7568 #7570) @monasco
+* **Access Tokens**: Keep failed token revocations scoped to the authorized store (#7629) @NicolasDorier
+* **Server users**: Return Not Found instead of a server error when sending a verification email to a deleted user (#7571 #7572) @monasco
+* **Plugins**: Run registered plugin database migrations reliably during startup (#7588) @NicolasDorier
+
+### Improvements
+
+* **Invoices**: Create invoices noticeably faster by avoiding unnecessary Lightning node and on-chain fee lookups (#7632 #7633 #7634) @NicolasDorier, reported by @bigg-bb
+* **Access Tokens**: Warn against using legacy BitPay-compatible tokens for new integrations (#7624) @NicolasDorier
+* **Server settings**: Organize administration pages into clearer labeled sections (#7501) @dstrukt
+* **Server administration**: Refresh `btcpay-host` deployment capabilities on `SIGHUP` without restarting BTCPay Server (#7576) @NicolasDorier
+* **LND**: Warn administrators when Docker's LND REST or gRPC endpoint is available but its reverse-proxy route is disabled (#7593) @NicolasDorier
+* **Receipts**: Show the original invoice amount alongside the amount paid on overpaid receipts (#7595 #7597) @NicolasDorier
+* **Documentation**: Rewrite the plugin development guides to make plugins easier to build with coding agents (#7598) @NicolasDorier
+
+### Miscellaneous
+
+* **Invoices**: Deprecate invoice notification URLs in favor of webhooks and remove the notification URL from manual invoice creation (#7647) @NicolasDorier
+
 ## 2.4.4
 
 ### Breaking changes

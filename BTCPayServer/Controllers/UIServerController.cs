@@ -173,7 +173,7 @@ namespace BTCPayServer.Controllers
         private async Task UpdateViewBag()
         {
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
-            ViewBag.LangTranslations = await GetLangTranslationsSelectList();
+            ViewBag.LangTranslations = await _localizer.GetTranslationsSelectList();
         }
 
         [HttpPost("server/policies")]
@@ -327,12 +327,6 @@ namespace BTCPayServer.Controllers
             }
 
             return View(result);
-        }
-
-        private async Task<List<SelectListItem>> GetLangTranslationsSelectList()
-        {
-            var translations = await this._localizer.GetTranslations();
-            return translations.Select(t => new SelectListItem(t.TranslationName, t.TranslationName)).OrderBy(t => t.Value).ToList();
         }
 
         private static bool TryParseAsExternalService(TorService torService, [MaybeNullWhen(false)] out ExternalService externalService)

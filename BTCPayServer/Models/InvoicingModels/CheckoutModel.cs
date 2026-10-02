@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
 using Newtonsoft.Json;
@@ -56,7 +54,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string MerchantRefLink { get; set; }
         public int MaxTimeSeconds { get; set; }
         public string StoreName { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string ItemDesc { get; set; }
         public string TimeLeft { get; set; }
         public string Rate { get; set; }
@@ -68,7 +65,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public int TxCount { get; set; }
         public int TxCountForFee { get; set; }
         public string Paid { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string StoreSupportUrl { get; set; }
         public string CheckoutText { get; set; }
 
@@ -95,8 +91,7 @@ namespace BTCPayServer.Models.InvoicingModels
         /// Removes customer and merchant reference fields before serializing a public invoice status response.
         /// </summary>
         /// <remarks>
-        /// Mutates this instance and its checkout and payment-method extension-data dictionaries in place,
-        /// preserving the remaining checkout settings and plugin fields.
+        /// Mutates this instance in place, preserving checkout settings and plugin extension data.
         /// </remarks>
         /// <returns>This instance after filtering.</returns>
         public CheckoutModel GetStatusResponse()
@@ -104,30 +99,8 @@ namespace BTCPayServer.Models.InvoicingModels
             CustomerEmail = null;
             MerchantRefLink = null;
             OrderId = null;
-            ItemDesc = null;
-            StoreSupportUrl = null;
-
-            foreach (var data in AvailablePaymentMethods.Select(method => method.AdditionalData).Prepend(AdditionalData))
-            {
-                if (data is null)
-                    continue;
-                foreach (var key in data.Keys.Where(IsSensitiveField).ToArray())
-                    data.Remove(key);
-            }
 
             return this;
         }
-
-        /// <summary>
-        /// Identifies extension-data fields excluded from public status responses by their case-insensitive names or prefixes.
-        /// </summary>
-        /// <param name="name">The extension-data field name to check.</param>
-        /// <returns>Whether the name matches a buyer or customer prefix or a known metadata or merchant reference field.</returns>
-        private static bool IsSensitiveField(string name) =>
-            name.StartsWith("buyer", StringComparison.OrdinalIgnoreCase) ||
-            name.StartsWith("customer", StringComparison.OrdinalIgnoreCase) ||
-            name.ToLowerInvariant() is "metadata" or "posdata" or "receiptdata" or
-                "merchantreflink" or "merchantcheckoutlink" or "redirecturl" or "orderurl" or
-                "orderid" or "itemdesc" or "storesupporturl";
     }
 }

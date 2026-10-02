@@ -1,5 +1,39 @@
 # Changelog
 
+## 2.4.5
+
+### Breaking changes
+
+* **Lightning**: Require server administration permission for connection strings that reference local files or directories (#7581) @NicolasDorier
+* **Access Tokens**: Add the `btcpay.store.canmanagestorecredentials` permission for managing legacy BitPay-compatible tokens and approving pairing requests. Custom roles must be updated to receive it (#7612) @okjodom
+
+### New features
+
+* **Greenfield**: Add APIs for discovering and running store reports (#7608) @NicolasDorier
+* **Plugins**: Simplify registering and migrating plugin-owned EF Core database contexts (#7611) @NicolasDorier
+
+### Fixes
+
+* **Invoices**: Keep invoice creation working when a payment method reuses another invoice's destination (#7483) @CaMoPeZzz
+* **Invoices**: Prevent invoice searches from including invoices from another store without permission (#7599) @NicolasDorier
+* **Refunds**: Calculate refundable and overpaid amounts only from settled payments (#7600) @NicolasDorier
+* **Reports**: Correct All Time and rolling date ranges (#7608) @NicolasDorier
+* **Lightning**: Reliably detect LND invoice payments behind nginx (#7621) @NicolasDorier
+* **Lightning**: Use only the authorized store when redisplaying setup and settings forms (#7618) @Team1-dev
+* **Payment methods**: Resolve identifiers case-insensitively in hash-based lookups (#7591) @NicolasDorier
+* **Generated links**: Use the configured server Base URL for account, password-reset, and store-invitation links (#7590) @NicolasDorier
+* **Store settings**: Accept only absolute HTTP or HTTPS Store Website URLs in the UI and Greenfield API (#7604) @NicolasDorier, reported by @gn00295120
+* **API Keys**: Show an error instead of a server error when confirming a removed API key (#7570) @monasco
+* **Server users**: Return Not Found instead of a server error when sending a verification email to a deleted user (#7572) @monasco
+* **Plugins**: Run registered plugin database migrations reliably during startup (#7588) @NicolasDorier
+
+### Improvements
+
+* **Server settings**: Organize administration pages into clearer labeled sections (#7501) @dstrukt
+* **Server administration**: Refresh `btcpay-host` deployment capabilities on `SIGHUP` without restarting BTCPay Server (#7576) @NicolasDorier
+* **LND**: Warn administrators when Docker's LND REST or gRPC endpoint is available but its reverse-proxy route is disabled (#7593) @NicolasDorier
+* **Receipts**: Show the original invoice amount alongside the amount paid on overpaid receipts (#7597) @NicolasDorier
+
 ## 2.4.4
 
 ### Breaking changes

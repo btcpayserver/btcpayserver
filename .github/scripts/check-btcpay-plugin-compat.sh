@@ -159,7 +159,7 @@ build_all() {
   for project in blink/Plugins/*/*.csproj; do
     plugin_name="$(basename "$(dirname "$project")")"
     plugin_name="${plugin_name#BTCPayServer.Plugins.}"
-    if [ "$plugin_name" = "Wabisabi" ]; then
+    if [ "$plugin_name" = "Wabisabi" ] || [ "$plugin_name" = "MCP" ]; then
       continue
     fi
     run_build "kukks-$plugin_name" "$project"

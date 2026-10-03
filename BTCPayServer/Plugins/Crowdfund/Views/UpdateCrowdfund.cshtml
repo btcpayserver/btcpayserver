@@ -234,6 +234,17 @@
                 <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
                 <span asp-validation-for="FormId" class="text-danger"></span>
             </div>
+			<div class="form-group">
+				<label asp-for="TaxRateId" class="form-label"></label>
+				<select asp-for="TaxRateId" class="form-select w-auto">
+					<option value="" text-translate="true">No tax</option>
+					@foreach (var rate in Model.TaxRates)
+					{
+						<option value="@rate.Id">@rate.Name (@rate.Rate.ToString("0.##")%)</option>
+					}
+				</select>
+				<span asp-validation-for="TaxRateId" class="text-danger"></span>
+			</div>
 
             <h3 class="mt-5 mb-2" text-translate="true">Additional Options</h3>
             <div class="form-group">

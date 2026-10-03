@@ -1,3 +1,4 @@
+using System.Net.Http;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
@@ -26,6 +27,8 @@ public class TranslationsPlugin : BaseBTCPayServerPlugin
         services.TryAddSingleton<LocalizerService>();
         services.TryAddSingleton<LanguagePackUpdateService>();
         services.AddStartupTask<LoadTranslationsStartupTask>();
+        services.AddHttpClient(LanguagePackUpdateService.HttpClientName)
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.TryAddSingleton<IStringLocalizer>(o => o.GetRequiredService<IStringLocalizerFactory>().Create("", ""));
 
         services.AddStaticSearch(new ActionResultItemViewModel()

@@ -742,6 +742,12 @@
                                 "example": false,
                                 "nullable": true
                             },
+                            "defaultDiscount": {
+                                "type": "integer",
+                                "description": "The discount percentage (0-100) the discount field is pre-filled with. Only applies when showDiscount is enabled.",
+                                "example": 10,
+                                "nullable": true
+                            },
                             "showSearch": {
                                 "type": "boolean",
                                 "description": "Display the search bar",

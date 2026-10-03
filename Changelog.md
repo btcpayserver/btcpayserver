@@ -1,5 +1,35 @@
 # Changelog
 
+## 2.4.5
+
+### New features
+
+* **Greenfield**: Add APIs for discovering and running store reports (#7608) @NicolasDorier
+* **Plugins**: Simplify registering and migrating plugin-owned EF Core database contexts (#7611) @NicolasDorier
+
+### Fixes
+
+* **Invoices**: Keep invoice creation working when a payment method reuses another invoice's destination (#7483) @CaMoPeZzz
+* **Invoices**: Keep invoice searches scoped to the current store (#7599) @NicolasDorier
+* **Refunds**: Calculate refundable and overpaid amounts only from settled payments (#7600) @NicolasDorier
+* **Reports**: Correct All Time and rolling date ranges (#7608) @NicolasDorier
+* **Lightning**: Use LND's WebSocket invoice subscription instead of long polling (#7621) @NicolasDorier
+* **Lightning**: Use only the authorized store when redisplaying setup and settings forms (#7618) @Team1-dev
+* **Generated links**: Use the configured server Base URL for account, password-reset, and store-invitation links (#7590) @NicolasDorier
+* **Store settings**: Accept only absolute HTTP or HTTPS Store Website URLs in the UI and Greenfield API (#7604) @NicolasDorier, reported by @gn00295120
+* **API Keys**: Show an error instead of a server error when confirming a removed API key (#7570) @monasco
+* **Server users**: Return Not Found instead of a server error when sending a verification email to a deleted user (#7572) @monasco
+* **Plugins**: Run registered plugin database migrations reliably during startup (#7588) @NicolasDorier
+
+### Improvements
+
+* **Access Tokens**: Add a dedicated store permission for managing legacy BitPay-compatible tokens and approving pairing requests (#7612) @okjodom
+* **Server settings**: Organize administration pages into clearer labeled sections (#7501) @dstrukt
+* **Server administration**: Refresh `btcpay-host` deployment capabilities on `SIGHUP` without restarting BTCPay Server (#7576) @NicolasDorier
+* **LND**: Warn administrators when Docker's LND REST or gRPC endpoint is available but its reverse-proxy route is disabled (#7593) @NicolasDorier
+* **Receipts**: Show the original invoice amount alongside the amount paid on overpaid receipts (#7597) @NicolasDorier
+* **Documentation**: Rewrite the plugin development guides to make plugins easier to build with coding agents (#7598) @NicolasDorier
+
 ## 2.4.4
 
 ### Breaking changes

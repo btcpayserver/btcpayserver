@@ -195,7 +195,7 @@ public class UIMultisigWalletsController(
             return View("MultisigConfirm", vm);
         }
 
-        var strategy = pending.GetDiredivationSchemeSettings(network);
+        var strategy = pending.GetDerivationSchemeSettings(network);
         var wallet = walletProvider.GetWallet(network);
         if (wallet is null)
         {
@@ -237,7 +237,7 @@ public class UIMultisigWalletsController(
             return RedirectToMultisigSetup(pending.RequestId);
         }
 
-        var strategy = pending.GetDiredivationSchemeSettings(network);
+        var strategy = pending.GetDerivationSchemeSettings(network);
         var vm = new MultisigSetupViewModel
         {
             MultisigRequestId = pending.RequestId,

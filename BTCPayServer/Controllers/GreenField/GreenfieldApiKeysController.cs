@@ -6,6 +6,8 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Security.Greenfield;
+using BTCPayServer.Services;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -18,7 +20,11 @@ namespace BTCPayServer.Controllers.Greenfield
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
     [EnableCors(CorsPolicies.All)]
-    public class GreenfieldApiKeysController(APIKeyRepository apiKeyRepository, UserManager<ApplicationUser> userManager) : ControllerBase
+    public class GreenfieldApiKeysController(
+        APIKeyRepository apiKeyRepository,
+        UserManager<ApplicationUser> userManager,
+        StoreRepository storeRepository,
+        PermissionService permissionService) : ControllerBase
     {
         [HttpGet("~/api/v1/api-keys/current")]
         public async Task<IActionResult> GetKey()
@@ -48,6 +54,10 @@ namespace BTCPayServer.Controllers.Greenfield
             var userId = (await userManager.FindByIdOrEmail(idOrEmail))?.Id;
             if (userId is null)
                 return this.UserNotFound();
+
+            if (!User.IsInRole(Roles.ServerAdmin) &&
+                !(await storeRepository.GetStoresByUserId(userId)).CanGrantApiKeyPermissions(userId, request.Permissions, permissionService))
+                return this.CreateAPIPermissionError(Policies.CanManageStoreCredentials);
 
             var key = APIKeyRepository.New();
             key.UserId = userId;

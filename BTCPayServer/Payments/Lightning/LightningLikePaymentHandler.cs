@@ -78,13 +78,10 @@ namespace BTCPayServer.Payments.Lightning
         {
             var paymentPrompt = context.Prompt;
 
-            var preferOnion = Uri.TryCreate(context.InvoiceEntity.ServerUrl, UriKind.Absolute, out var u) && u.IsOnion();
-
             var storeBlob = context.StoreBlob;
             var store = context.Store;
 
             var config = ParsePaymentMethodConfig(context.PaymentMethodConfig);
-            var nodeInfo = GetNodeInfo(config, context.Logs, preferOnion);
 
             var invoice = context.InvoiceEntity;
             decimal due = paymentPrompt.Calculate().Due;
@@ -137,8 +134,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 PaymentHash = lightningInvoice.GetPaymentHash(_Network.NBitcoinNetwork),
                 Preimage = string.IsNullOrEmpty(lightningInvoice.Preimage) ? null : uint256.Parse(lightningInvoice.Preimage),
-                InvoiceId = lightningInvoice.Id,
-                NodeInfo = (await nodeInfo).FirstOrDefault()?.ToString()
+                InvoiceId = lightningInvoice.Id
             };
             if (details.PaymentHash is {} h)
                 context.TrackedDestinations.Add(h.ToString());

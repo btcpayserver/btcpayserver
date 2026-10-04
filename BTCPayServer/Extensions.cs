@@ -292,6 +292,26 @@ namespace BTCPayServer
 
             Dictionary<string, string> dictionary = new Dictionary<string, string>();
             connectionString = null;
+            if (str.StartsWith("lndhub://", StringComparison.OrdinalIgnoreCase))
+            {
+                var parts = str.Replace("lndhub://", "").Split('@');
+                if (parts.Length != 2 ||
+                    !Uri.TryCreate(parts[1].Replace("://", $"://{parts[0]}@"), UriKind.Absolute, out var uri))
+                {
+                    return false;
+                }
+
+                dictionary.Add("type", "lndhub");
+                dictionary.Add("server", uri.AbsoluteUri);
+                if (uri.Scheme == "http")
+                {
+                    dictionary.Add("allowinsecure", "true");
+                }
+
+                connectionString = dictionary;
+                return true;
+            }
+
             if (!Uri.TryCreate(str, UriKind.Absolute, out var result))
             {
                 return false;

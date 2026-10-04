@@ -814,20 +814,13 @@ namespace BTCPayServer
                         updatePaymentMethod = true;
                     }
                 }
+                ILightningClient replacementClient = null;
+                string replacedInvoiceId = null;
                 if (string.IsNullOrEmpty(lightningPaymentMethod.Destination) || promptDetails.GeneratedBoltAmount != amt)
                 {
-                    var client = _handlers.GetLightningHandler(network).CreateLightningClient(lnConfig);
+                    replacementClient = _handlers.GetLightningHandler(network).CreateLightningClient(lnConfig);
                     if (!string.IsNullOrEmpty(lightningPaymentMethod.Destination))
-                    {
-                        try
-                        {
-                            await client.CancelInvoice(promptDetails.InvoiceId);
-                        }
-                        catch (Exception)
-                        {
-                            //not a fully supported option
-                        }
-                    }
+                        replacedInvoiceId = promptDetails.InvoiceId;
 
                     LightningInvoice invoice;
                     try
@@ -843,7 +836,7 @@ namespace BTCPayServer
                             PrivateRouteHints = blob.LightningPrivateRouteHints,
                             DescriptionHashOnly = true
                         };
-                        invoice = await client.CreateInvoice(param);
+                        invoice = await replacementClient.CreateInvoice(param);
                     }
                     catch (Exception ex)
                     {
@@ -872,6 +865,12 @@ namespace BTCPayServer
                         ? new[] { promptDetails.PaymentHash.ToString().ToLowerInvariant() }
                         : null;
                     await _invoiceRepository.UpdatePrompt(invoiceId, lightningPaymentMethod, trackedDestinations);
+                    if (replacementClient is not null &&
+                        !string.IsNullOrEmpty(replacedInvoiceId) &&
+                        replacedInvoiceId != promptDetails.InvoiceId)
+                    {
+                        await replacementClient.TryCancelInvoice(replacedInvoiceId);
+                    }
                     _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoiceId, promptDetails, pmi));
                 }
 

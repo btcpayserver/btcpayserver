@@ -319,16 +319,6 @@ namespace BTCPayServer.Payments.Lightning
                             // So if no BOLT11 already created, which is likely the case, do nothing
                             if (string.IsNullOrEmpty(o.PaymentPrompt.Destination))
                                 continue;
-                            try
-                            {
-                                var client = lightningHandler.CreateLightningClient(lnConfig);
-                                await client.CancelInvoice(oldDetails.InvoiceId);
-                            }
-                            catch
-                            {
-                                //not a fully supported option
-                            }
-
                             lnurlPayPaymentMethodDetails = new LNURLPayPaymentMethodDetails()
                             {
                                 Bech32Mode = lnurlPayPaymentMethodDetails.Bech32Mode, NodeInfo = lnurlPayPaymentMethodDetails.NodeInfo,
@@ -338,22 +328,15 @@ namespace BTCPayServer.Payments.Lightning
                             o.PaymentPrompt.Details = JToken.FromObject(lnurlPayPaymentMethodDetails, o.Handler.Serializer);
                             await _InvoiceRepository.UpdatePrompt(invoice.Id, o.PaymentPrompt);
 
+                            await lightningHandler.CreateLightningClient(lnConfig).TryCancelInvoice(oldDetails.InvoiceId);
+
                             _Aggregator.Publish(new Events.InvoiceNewPaymentDetailsEvent(invoice.Id,
                                 lnurlPayPaymentMethodDetails, o.Handler.PaymentMethodId));
 
                             continue;
                         }
 
-                        try
-                        {
-                            var client = lightningHandler.CreateLightningClient(lnConfig);
-                            await client.CancelInvoice(oldDetails.InvoiceId);
-                        }
-                        catch
-                        {
-                            //not a fully supported option
-                        }
-
+                        var replacementClient = lightningHandler.CreateLightningClient(lnConfig);
                         var paymentContext = new PaymentMethodContext(store, store.GetStoreBlob(),
                             JToken.FromObject(lnConfig, _handlers.GetLightningHandler(network).Serializer), lightningHandler, invoice, logs, _InvoiceRepository);
                         var paymentPrompt = paymentContext.Prompt;
@@ -370,9 +353,11 @@ namespace BTCPayServer.Payments.Lightning
 
                         if (instanceListener is not null)
                         {
+                            var details = lightningHandler.ParsePaymentPromptDetails(paymentPrompt.Details);
+                            if (details.InvoiceId == oldDetails.InvoiceId)
+                                continue;
                             await _InvoiceRepository.NewPaymentPrompt(invoice.Id, paymentContext);
                             await paymentContext.ActivatingPaymentPrompt();
-                            var details = lightningHandler.ParsePaymentPromptDetails(paymentPrompt.Details);
                             instanceListener.AddListenedInvoice(new ListenedInvoice(
                                 invoice.MonitoringExpiration.AddSeconds(-1),
                                 details,
@@ -381,6 +366,7 @@ namespace BTCPayServer.Payments.Lightning
                                 invoice.Id));
                             _Aggregator.Publish(new Events.InvoiceNewPaymentDetailsEvent(invoice.Id,
                                 details, paymentPrompt.PaymentMethodId));
+                            await replacementClient.TryCancelInvoice(oldDetails.InvoiceId);
                         }
                     }
                     catch (Exception e)

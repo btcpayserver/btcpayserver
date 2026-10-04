@@ -321,7 +321,7 @@ namespace BTCPayServer.Payments.Lightning
                                 continue;
                             lnurlPayPaymentMethodDetails = new LNURLPayPaymentMethodDetails()
                             {
-                                Bech32Mode = lnurlPayPaymentMethodDetails.Bech32Mode, NodeInfo = lnurlPayPaymentMethodDetails.NodeInfo,
+                                Bech32Mode = lnurlPayPaymentMethodDetails.Bech32Mode
                             };
 
                             o.PaymentPrompt.Destination = null;

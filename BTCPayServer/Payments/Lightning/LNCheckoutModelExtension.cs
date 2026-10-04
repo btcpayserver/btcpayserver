@@ -19,27 +19,24 @@ namespace BTCPayServer.Payments.Lightning
             BTCPayNetwork network,
             DisplayFormatter displayFormatter,
             IEnumerable<IPaymentLinkExtension> paymentLinkExtensions,
-            IStringLocalizer stringLocalizer,
-            PaymentMethodHandlerDictionary handlers)
+            IStringLocalizer stringLocalizer)
         {
             Network = network;
             _displayFormatter = displayFormatter;
             StringLocalizer = stringLocalizer;
-            Handlers = handlers;
             PaymentMethodId = paymentMethodId;
             _PaymentLinkExtension = paymentLinkExtensions.Single(p => p.PaymentMethodId == PaymentMethodId);
         }
 
         public BTCPayNetwork Network { get; }
         public IStringLocalizer StringLocalizer { get; }
-        public PaymentMethodHandlerDictionary Handlers { get; }
         public PaymentMethodId PaymentMethodId { get; }
 
         public string Image => Network.LightningImagePath;
         public string Badge => "⚡";
         public void ModifyCheckoutModel(CheckoutModelContext context)
         {
-            if (context is not { Handler: LightningLikePaymentHandler handler })
+            if (context is not { Handler: LightningLikePaymentHandler })
                 return;
             var paymentPrompt = context.InvoiceEntity.GetPaymentPrompt(PaymentMethodId);
             if (paymentPrompt is null)
@@ -48,7 +45,6 @@ namespace BTCPayServer.Payments.Lightning
             context.Model.InvoiceBitcoinUrl = _PaymentLinkExtension.GetPaymentLink(context.Prompt, context.UrlHelper);
             if (context.Model.InvoiceBitcoinUrl is not null)
                 context.Model.InvoiceBitcoinUrlQR = $"lightning:{context.Model.InvoiceBitcoinUrl.ToUpperInvariant()?.Substring("LIGHTNING:".Length)}";
-            context.Model.PeerInfo = handler.ParsePaymentPromptDetails(paymentPrompt.Details).NodeInfo;
             if (context.StoreBlob.LightningAmountInSatoshi && Network.IsBTC)
             {
                 BitcoinCheckoutModelExtension.PreparePaymentModelForAmountInSats(context.Model, paymentPrompt.Rate, _displayFormatter);

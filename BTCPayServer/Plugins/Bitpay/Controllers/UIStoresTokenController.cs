@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Client;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
@@ -24,7 +23,7 @@ namespace BTCPayServer.Plugins.Bitpay.Controllers;
 
 [Route("stores")]
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-[Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+[Authorize(Policy = BitpayPolicies.CanManageLegacyAccessTokens, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Area(BitpayPlugin.Area)]
 public class UIStoresTokenController(
     TokenRepository tokenRepository,
@@ -44,7 +43,7 @@ public class UIStoresTokenController(
     public bool StoreNotConfigured { get; set; }
     public string? GeneratedPairingCode { get; set; }
     [HttpGet("{storeId}/tokens")]
-    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = BitpayPolicies.CanManageLegacyAccessTokens, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ListTokens()
     {
         var model = new TokensViewModel();
@@ -60,7 +59,7 @@ public class UIStoresTokenController(
     }
 
     [HttpGet("{storeId}/tokens/{tokenId}/revoke")]
-    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = BitpayPolicies.CanManageLegacyAccessTokens, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> RevokeToken(string tokenId)
     {
         var token = await tokenRepository.GetToken(tokenId);
@@ -70,7 +69,7 @@ public class UIStoresTokenController(
     }
 
     [HttpPost("{storeId}/tokens/{tokenId}/revoke")]
-    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = BitpayPolicies.CanManageLegacyAccessTokens, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> RevokeTokenConfirm(string tokenId)
     {
         var token = await tokenRepository.GetToken(tokenId);
@@ -84,7 +83,7 @@ public class UIStoresTokenController(
     }
 
     [HttpGet("{storeId}/tokens/{tokenId}")]
-    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = BitpayPolicies.CanManageLegacyAccessTokens, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ShowToken(string tokenId)
     {
         var token = await tokenRepository.GetToken(tokenId);
@@ -94,7 +93,7 @@ public class UIStoresTokenController(
     }
 
     [HttpGet("{storeId}/tokens/create")]
-    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = BitpayPolicies.CanManageLegacyAccessTokens, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult CreateToken(string storeId)
     {
         var model = new CreateTokenViewModel();
@@ -105,7 +104,7 @@ public class UIStoresTokenController(
     }
 
     [HttpPost("{storeId}/tokens/create")]
-    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = BitpayPolicies.CanManageLegacyAccessTokens, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> CreateToken(string storeId, CreateTokenViewModel model)
     {
         if (!ModelState.IsValid)
@@ -124,7 +123,7 @@ public class UIStoresTokenController(
         if (store == null)
             return Challenge(AuthenticationSchemes.Cookie);
 
-        if (!(await authorizationService.AuthorizeAsync(User, store.Id, Policies.CanManageStoreCredentials)).Succeeded)
+        if (!(await authorizationService.AuthorizeAsync(User, store.Id, BitpayPolicies.CanManageLegacyAccessTokens)).Succeeded)
             return Challenge(AuthenticationSchemes.Cookie);
 
         var tokenRequest = new TokenRequest()
@@ -168,7 +167,7 @@ public class UIStoresTokenController(
         var model = new CreateTokenViewModel();
         ViewBag.HidePublicKey = true;
         ViewBag.ShowStores = true;
-        var stores = (await storeRepository.GetStoresByUserId(userId)).Where(data => data.HasPolicy(userId, Policies.CanManageStoreCredentials, permissionService)).ToArray();
+        var stores = (await storeRepository.GetStoresByUserId(userId)).Where(data => data.HasPolicy(userId, BitpayPolicies.CanManageLegacyAccessTokens, permissionService)).ToArray();
 
         model.Stores = new SelectList(stores, nameof(CurrentStore.Id), nameof(CurrentStore.StoreName));
         if (!model.Stores.Any())
@@ -209,7 +208,7 @@ public class UIStoresTokenController(
             return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
         }
 
-        var stores = (await storeRepository.GetStoresByUserId(userId)).Where(data => data.HasPolicy(userId, Policies.CanManageStoreCredentials, permissionService)).ToArray();
+        var stores = (await storeRepository.GetStoresByUserId(userId)).Where(data => data.HasPolicy(userId, BitpayPolicies.CanManageLegacyAccessTokens, permissionService)).ToArray();
         return View(new PairingModel
         {
             Id = pairing.Id,
@@ -225,7 +224,7 @@ public class UIStoresTokenController(
     }
 
     [HttpPost("/api-access-request")]
-    [Authorize(Policy = Policies.CanManageStoreCredentials, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = BitpayPolicies.CanManageLegacyAccessTokens, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Pair(string pairingCode, string storeId)
     {
         var store = CurrentStore;

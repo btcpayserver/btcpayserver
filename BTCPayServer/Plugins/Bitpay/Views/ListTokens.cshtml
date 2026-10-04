@@ -35,7 +35,7 @@
     <div class="col-xxl-constrain col-xl-8">
         <div class="settings-section__heading d-flex align-items-center justify-content-between">
             <h3 class="mb-0">@ViewData["Title"]</h3>
-            <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanManageStoreCredentials" text-translate="true">
+            <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@BitpayPolicies.CanManageLegacyAccessTokens" text-translate="true">
                 Create Token
             </a>
         </div>
@@ -61,7 +61,7 @@
                     <thead>
                     <tr>
                         <th text-translate="true">Label</th>
-                        <th class="text-end" permission="@Policies.CanManageStoreCredentials" text-translate="true">Actions</th>
+                        <th class="text-end" permission="@BitpayPolicies.CanManageLegacyAccessTokens" text-translate="true">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -69,7 +69,7 @@
                     {
                     <tr>
                         <td>@token.Label</td>
-                        <td class="text-end" permission="@Policies.CanManageStoreCredentials">
+                        <td class="text-end" permission="@BitpayPolicies.CanManageLegacyAccessTokens">
                             <a asp-action="ShowToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id" text-translate="true">See information</a> -
                             <a asp-action="RevokeToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The access token with the label <strong>@Html.Encode(token.Label)</strong> will be revoked." data-confirm-input="REVOKE" text-translate="true">Revoke</a>
                         </td>
@@ -89,4 +89,4 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Revoke access token"], StringLocalizer["The access token will be revoked. Do you wish to continue?"], StringLocalizer["Revoke"]))" permission="@Policies.CanManageStoreCredentials" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Revoke access token"], StringLocalizer["The access token will be revoked. Do you wish to continue?"], StringLocalizer["Revoke"]))" permission="@BitpayPolicies.CanManageLegacyAccessTokens" />

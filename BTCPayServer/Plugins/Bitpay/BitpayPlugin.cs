@@ -23,6 +23,12 @@ public class BitpayPlugin : BaseBTCPayServerPlugin
 
     public override void Execute(IServiceCollection services)
     {
+        services.AddPolicyDefinitions(
+            new PolicyDefinition(
+                BitpayPolicies.CanManageLegacyAccessTokens,
+                new PermissionDisplay("Manage legacy access tokens", "Allows managing the legacy access tokens of all your stores."),
+                new PermissionDisplay("Manage selected stores' legacy access tokens", "Allows managing the legacy access tokens of the selected stores."),
+                includedByPermissions: [Policies.CanModifyStoreSettings]));
         services.AddSingleton<IHostedService, BitpayIPNSender>();
         var userAgent = BTCPayServerEnvironment.GetUserAgentHeaderValue();
         services.AddHttpClient(BitpayIPNSender.NamedClient)
@@ -41,7 +47,7 @@ public class BitpayPlugin : BaseBTCPayServerPlugin
 
         services.AddStaticSearch(new ActionResultItemViewModel()
         {
-            RequiredPolicy = Policies.CanManageStoreCredentials,
+            RequiredPolicy = BitpayPolicies.CanManageLegacyAccessTokens,
             Title = "View the access tokens (for legacy API access)",
             Action = nameof(UIStoresTokenController.ListTokens),
             Controller = "UIStoresToken",

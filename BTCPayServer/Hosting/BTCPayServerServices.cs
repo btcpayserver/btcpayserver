@@ -556,8 +556,8 @@ namespace BTCPayServer.Hosting
                     new PermissionDisplay("Send selected stores' emails", "Allows sending emails on behalf of the selected stores.")),
                 new PolicyDefinition(
                     Policies.CanManageStoreCredentials,
-                    new PermissionDisplay("Manage access tokens", "Allows managing the access tokens of all your stores."),
-                    new PermissionDisplay("Manage selected stores' access tokens", "Allows managing the access tokens of the selected stores."),
+                    new PermissionDisplay("Manage API keys and access tokens", "Allows managing API keys and access tokens for all your stores."),
+                    new PermissionDisplay("Manage selected stores' API keys and access tokens", "Allows managing API keys and access tokens for the selected stores."),
                     includedByPermissions: new[] { Policies.CanModifyStoreSettings }),
                 new PolicyDefinition(
                     Policies.CanModifyServerSettings,

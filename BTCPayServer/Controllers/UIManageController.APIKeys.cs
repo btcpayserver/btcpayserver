@@ -218,9 +218,17 @@ namespace BTCPayServer.Controllers
 
                 case "authorize":
                 case "confirm":
+                    if (command == "authorize" && !await CanGrantApiKeyPermissions(GetPermissionsFromViewModel(viewModel)))
+                    {
+                        ModelState.AddModelError(string.Empty, CannotGrantStoresError);
+                        return View(viewModel);
+                    }
                     var key = command == "authorize"
                         ? await CreateKey(viewModel, (viewModel.ApplicationIdentifier, viewModel.RedirectUrl?.AbsoluteUri))
                         : await _apiKeyRepository.GetKey(new APIKeyRepository.Selector.ByApiKey(viewModel.ApiKey));
+                    if (key is not null && command == "confirm" &&
+                        (key.UserId != User.GetId() || !await CanGrantApiKeyPermissions(Permission.ToPermissions(key.GetBlob().Permissions))))
+                        key = null;
                     if (key is null)
                     {
                         TempData.SetStatusMessageModel(new StatusMessageModel
@@ -290,6 +298,11 @@ namespace BTCPayServer.Controllers
                 return ar;
             }
 
+            if (!await CanGrantApiKeyPermissions(GetPermissionsFromViewModel(viewModel)))
+            {
+                ModelState.AddModelError(string.Empty, CannotGrantStoresError);
+            }
+
             if (!ModelState.IsValid)
             {
                 return View(viewModel);
@@ -352,7 +365,7 @@ namespace BTCPayServer.Controllers
                     }
                 }
 
-                if (fail)
+                if (fail || !await CanGrantApiKeyPermissions(Permission.ToPermissions(blob.Permissions)))
                 {
                     continue;
                 }
@@ -449,6 +462,14 @@ namespace BTCPayServer.Controllers
             var command = parts[1];
             var storeIndex = parts.Length == 3 ? parts[2] : null;
 
+            if (command == "change-store-mode" &&
+                permissionValueItem.StoreMode == AddApiKeyViewModel.ApiKeyStoreMode.Specific &&
+                !viewModel.CanUseAllStores)
+            {
+                ModelState.AddModelError(string.Empty, CannotGrantStoresError);
+                return View(viewModel);
+            }
+
             ModelState.Clear();
             switch (command)
             {
@@ -501,6 +522,16 @@ namespace BTCPayServer.Controllers
             return key;
         }
 
+        private const string CannotGrantStoresError = "You cannot grant API key permissions to stores where your role cannot manage API keys and access tokens.";
+
+        private async Task<bool> CanGrantApiKeyPermissions(IEnumerable<Permission> permissions)
+        {
+            if (User.IsInRole(Roles.ServerAdmin))
+                return true;
+            var stores = await _StoreRepository.GetStoresByUserId(User.GetId());
+            return stores.CanGrantApiKeyPermissions(User.GetId(), permissions, _permissionService);
+        }
+
         private IEnumerable<Permission> GetPermissionsFromViewModel(AddApiKeyViewModel viewModel)
         {
             var permissions = new List<Permission>();
@@ -527,11 +558,18 @@ namespace BTCPayServer.Controllers
 
         private async Task<T> SetViewModelValues<T>(T viewModel) where T : AddApiKeyViewModel
         {
-            var stores = await _StoreRepository.GetStoresByUserId(User.GetId());
+            var userId = User.GetId();
+            var allStores = await _StoreRepository.GetStoresByUserId(userId);
+            // Only offer stores where the user may manage credentials
+            var stores = User.IsInRole(Roles.ServerAdmin)
+                ? allStores
+                : allStores.Where(store => store.HasPolicy(userId, Policies.CanManageStoreCredentials, _permissionService)).ToArray();
             viewModel.Stores = stores.OrderBy(store => store.StoreName, StringComparer.InvariantCultureIgnoreCase).ToArray();
+            viewModel.CanUseAllStores = stores.Length == allStores.Length;
 
             var isAdmin = (await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings))
                 .Succeeded;
+            var initializePermissions = viewModel.PermissionValues is null;
             viewModel.PermissionValues ??= _permissionService.Definitions.Values.OrderBy(d => d.Policy)
                 .Select(definition => new AddApiKeyViewModel.PermissionValueItem()
                 {
@@ -539,6 +577,15 @@ namespace BTCPayServer.Controllers
                     Value = false,
                     Forbidden = definition.Type is PolicyType.Server && !isAdmin
                 }).ToList();
+
+            foreach (var permissionValue in viewModel.PermissionValues.Where(value => value.IsStorePolicy))
+            {
+                permissionValue.SpecificStores = (permissionValue.SpecificStores ?? new List<string>())
+                    .Where(storeId => storeId is null || stores.Any(store => store.Id == storeId))
+                    .ToList();
+                if (initializePermissions && !viewModel.CanUseAllStores)
+                    permissionValue.StoreMode = AddApiKeyViewModel.ApiKeyStoreMode.Specific;
+            }
 
             foreach (var permissionValue in viewModel.PermissionValues)
             {
@@ -569,6 +616,8 @@ namespace BTCPayServer.Controllers
             public StoreData[] Stores { get; set; }
             public string Command { get; set; }
             public List<PermissionValueItem> PermissionValues { get; set; }
+            [BindNever]
+            public bool CanUseAllStores { get; set; }
 
             public enum ApiKeyStoreMode
             {

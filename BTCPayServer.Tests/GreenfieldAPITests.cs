@@ -206,6 +206,103 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task ApiKeysOnlyReachStoresWhereUserManagesCredentials()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var account = tester.NewAccount();
+            await account.GrantAccessAsync();
+            var manageableStoreId = account.StoreId;
+            await account.CreateStoreAsync();
+            var lockedStoreId = account.StoreId;
+
+            var storeRepository = tester.PayTester.GetService<StoreRepository>();
+            var lockedRole = new StoreRoleId(lockedStoreId, "No credential management");
+            await storeRepository.AddOrUpdateStoreRole(lockedRole, [Policies.CanViewStoreSettings]);
+            // The last owner of a store cannot be downgraded, so add another owner first.
+            var coOwner = tester.NewAccount();
+            await coOwner.RegisterAsync();
+            Assert.IsType<StoreRepository.AddOrUpdateStoreUserResult.Success>(
+                await storeRepository.AddOrUpdateStoreUser(lockedStoreId, coOwner.UserId, StoreRoleId.Owner));
+            Assert.IsType<StoreRepository.AddOrUpdateStoreUserResult.Success>(
+                await storeRepository.AddOrUpdateStoreUser(lockedStoreId, account.UserId, lockedRole));
+
+            var client = await account.CreateClient();
+            await client.CreateAPIKey(new CreateApiKeyRequest { Permissions = [Permission.Create(Policies.CanViewProfile)] });
+            await client.CreateAPIKey(new CreateApiKeyRequest { Permissions = [Permission.Create(Policies.CanViewInvoices, manageableStoreId)] });
+
+            var error = await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = [Permission.Create(Policies.CanViewInvoices, lockedStoreId)]
+            }));
+            Assert.Equal(Policies.CanManageStoreCredentials, Assert.IsType<GreenfieldPermissionAPIError>(error.APIError).MissingPermission);
+            await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = [Permission.Create(Policies.CanViewInvoices)]
+            }));
+            await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = [Permission.Create(Policies.Unrestricted)]
+            }));
+
+            // The UI only offers stores where the user manages credentials, and drops any other posted store
+            var controller = account.GetController<UIManageController>();
+            controller.ModelState.AddModelError("test", "Render the posted model");
+            var view = Assert.IsType<ViewResult>(await controller.AddApiKey(new UIManageController.AddApiKeyViewModel
+            {
+                PermissionValues =
+                [
+                    new()
+                    {
+                        Permission = Policies.CanViewInvoices,
+                        StoreMode = UIManageController.AddApiKeyViewModel.ApiKeyStoreMode.Specific,
+                        SpecificStores = [manageableStoreId, lockedStoreId]
+                    }
+                ]
+            }));
+            var vm = Assert.IsType<UIManageController.AddApiKeyViewModel>(view.Model);
+            Assert.False(vm.CanUseAllStores);
+            Assert.Equal([manageableStoreId], vm.Stores.Select(s => s.Id));
+            Assert.Equal([manageableStoreId], Assert.Single(vm.PermissionValues).SpecificStores);
+
+            await storeRepository.AddOrUpdateStoreRole(lockedRole, [Policies.CanViewStoreSettings, Policies.CanManageStoreCredentials]);
+            await client.CreateAPIKey(new CreateApiKeyRequest { Permissions = [Permission.Create(Policies.CanViewInvoices)] });
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task StoreRolesDoNotLimitAccountLevelApiKeys()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var owner = tester.NewAccount();
+            await owner.GrantAccessAsync();
+            var member = tester.NewAccount();
+            await member.RegisterAsync();
+            var client = await member.CreateClient();
+            var profileKey = new CreateApiKeyRequest { Permissions = [Permission.Create(Policies.CanViewProfile)] };
+
+            await client.CreateAPIKey(profileKey);
+            await owner.AddGuest(member.UserId);
+            await client.CreateAPIKey(profileKey);
+
+            // The guest role still limits keys that reach into the store
+            await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = [Permission.Create(Policies.CanViewInvoices, owner.StoreId)]
+            }));
+            await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = [Permission.Create(Policies.CanViewInvoices)]
+            }));
+            await AssertAPIError("missing-permission", () => client.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Permissions = [Permission.Create(Policies.Unrestricted)]
+            }));
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanUseMiscAPIs()
         {
             using (var tester = CreateServerTester())

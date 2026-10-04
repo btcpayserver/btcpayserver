@@ -80,7 +80,7 @@ public class UIStoresTokenController(
             TempData[WellKnownTempData.ErrorMessage] = "Failure to revoke this token.";
         else
             TempData[WellKnownTempData.SuccessMessage] = "Token revoked";
-        return RedirectToAction(nameof(ListTokens), new { storeId = token?.StoreId });
+        return RedirectToAction(nameof(ListTokens), new { storeId = CurrentStore.Id });
     }
 
     [HttpGet("{storeId}/tokens/{tokenId}")]

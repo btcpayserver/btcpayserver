@@ -9,6 +9,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Events;
+using BTCPayServer.Plugins.Bitpay;
 using BTCPayServer.Plugins.Bitpay.Controllers;
 using BTCPayServer.Plugins.Bitpay.Models;
 using BTCPayServer.Plugins.Bitpay.Security;
@@ -57,15 +58,15 @@ public class BitpayTests(ITestOutputHelper log) : UnitTestBase(log)
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public async Task AccessTokensRequireStoreCredentialPermission()
+        public async Task LegacyAccessTokensRequirePermission()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var owner = tester.NewAccount();
             await owner.GrantAccessAsync();
             var storeRepository = tester.PayTester.GetService<StoreRepository>();
-            var credentialsOnly = new StoreRoleId(owner.StoreId, "Credentials only");
-            await storeRepository.AddOrUpdateStoreRole(credentialsOnly, [Policies.CanManageStoreCredentials]);
+            var legacyAccessTokensOnly = new StoreRoleId(owner.StoreId, "Legacy access tokens only");
+            await storeRepository.AddOrUpdateStoreRole(legacyAccessTokensOnly, [BitpayPolicies.CanManageLegacyAccessTokens]);
 
             async Task<TestAccount> AddMember(StoreRoleId role)
             {
@@ -76,21 +77,21 @@ public class BitpayTests(ITestOutputHelper log) : UnitTestBase(log)
                 return member;
             }
 
-            async Task<bool> CanManageAccessTokens(TestAccount account)
+            async Task<bool> CanManageLegacyAccessTokens(TestAccount account)
             {
                 var controller = account.GetController<UIStoresTokenController>();
                 var authorizationService = controller.HttpContext.RequestServices.GetRequiredService<IAuthorizationService>();
-                return (await authorizationService.AuthorizeAsync(controller.User, owner.StoreId, Policies.CanManageStoreCredentials)).Succeeded;
+                return (await authorizationService.AuthorizeAsync(controller.User, owner.StoreId, BitpayPolicies.CanManageLegacyAccessTokens)).Succeeded;
             }
 
-            Assert.True(await CanManageAccessTokens(owner));
-            Assert.True(await CanManageAccessTokens(await AddMember(StoreRoleId.Manager)));
-            Assert.True(await CanManageAccessTokens(await AddMember(credentialsOnly)));
-            Assert.False(await CanManageAccessTokens(await AddMember(StoreRoleId.Employee)));
+            Assert.True(await CanManageLegacyAccessTokens(owner));
+            Assert.True(await CanManageLegacyAccessTokens(await AddMember(StoreRoleId.Manager)));
+            Assert.True(await CanManageLegacyAccessTokens(await AddMember(legacyAccessTokensOnly)));
+            Assert.False(await CanManageLegacyAccessTokens(await AddMember(StoreRoleId.Employee)));
 
             // Guests can view store settings, but not the store's access tokens.
             var guest = await AddMember(StoreRoleId.Guest);
-            Assert.False(await CanManageAccessTokens(guest));
+            Assert.False(await CanManageLegacyAccessTokens(guest));
             var guestController = guest.GetController<UIStoresTokenController>();
             Assert.IsType<RedirectToActionResult>(await guestController.CreateToken());
             Assert.IsType<ChallengeResult>(await guestController.CreateToken2(new CreateTokenViewModel

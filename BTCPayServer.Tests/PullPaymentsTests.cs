@@ -13,9 +13,11 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Views.Stores;
 using Dapper;
 using LNURL;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -528,6 +530,46 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             var c = RandomNumberGenerator.GetBytes(count);
             return Encoders.Hex.EncodeData(c);
         }
+    }
+
+    [Fact]
+    [Trait("Integration", "Integration")]
+    public async Task PayingPayoutsIsScopedToStore()
+    {
+        using var tester = CreateServerTester();
+        await tester.StartAsync();
+
+        var victim = tester.NewAccount();
+        await victim.GrantAccessAsync();
+        var victimStoreId = (await victim.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
+        var victimClient = await victim.CreateClient();
+        var victimPayout = await victimClient.CreatePayout(victimStoreId, new CreatePayoutThroughStoreRequest
+        {
+            Approved = true,
+            PayoutMethodId = "BTC",
+            Amount = 0.0001m,
+            Destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString()
+        });
+        Assert.Equal(PayoutState.AwaitingPayment, victimPayout.State);
+
+        var attacker = tester.NewAccount();
+        await attacker.GrantAccessAsync();
+        await attacker.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true);
+        var controller = attacker.GetController<UIStorePullPaymentsController>();
+
+        var result = await controller.PayoutsPost(new PayoutsModel
+        {
+            Command = $"{PayoutState.AwaitingPayment}-pay",
+            PayoutMethodId = "BTC-CHAIN",
+            Payouts =
+            [
+                new() { PayoutId = victimPayout.Id, Selected = true }
+            ]
+        }, CancellationToken.None);
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(UIStorePullPaymentsController.Payouts), redirect.ActionName);
+        Assert.Equal(attacker.StoreId, redirect.RouteValues["storeId"]);
     }
 
     [Fact]

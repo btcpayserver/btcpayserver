@@ -174,7 +174,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
         if (o is NewOnChainTransactionEvent newTransaction && newTransaction.NewTransactionEvent.TrackedSource is AddressTrackedSource addressTrackedSource
             && newTransaction.PaymentMethodId == PaymentMethodId)
         {
-            await UpdatePayoutsAwaitingForPayment(newTransaction, addressTrackedSource);
+            await UpdatePayoutsFromTransaction(newTransaction, addressTrackedSource);
         }
 
         if ((o is NewBlockEvent nbe && nbe.PaymentMethodId == PaymentMethodId) ||
@@ -374,7 +374,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
         }
     }
 
-    private async Task UpdatePayoutsAwaitingForPayment(NewOnChainTransactionEvent newTransaction,
+    private async Task UpdatePayoutsFromTransaction(NewOnChainTransactionEvent newTransaction,
         AddressTrackedSource addressTrackedSource)
     {
         try
@@ -388,7 +388,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
             var payout = await ctx.Payouts
                 .Include(o => o.StoreData)
                 .Include(o => o.PullPaymentData)
-                .Where(p => p.State == PayoutState.AwaitingPayment)
+                .Where(p => p.State == PayoutState.AwaitingPayment || p.State == PayoutState.InProgress)
                 .Where(p => p.PayoutMethodId == PaymentMethodId.ToString())
 #pragma warning disable CA1307 // Specify StringComparison
                 .Where(p => destination.Equals(p.DedupId))
@@ -418,6 +418,10 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
             var proof = ParseProof(payout) as PayoutTransactionOnChainBlob ??
                         new PayoutTransactionOnChainBlob() { Accounted = isInternal };
             var txId = newTransaction.NewTransactionEvent.TransactionData.TransactionHash;
+            if (payout.State == PayoutState.InProgress &&
+                (newTransaction.NewTransactionEvent.Replacing is not { } replaced ||
+                 !replaced.Any(proof.Candidates.Contains)))
+                return;
             if (!proof.Candidates.Add(txId))
                 return;
             if (isInternal)

@@ -48,6 +48,8 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.RegisterNewUser(true);
         await s.CreateNewStore();
         await s.GenerateWallet("BTC", "", true);
+        var webhookAccount = s.AsTestAccount();
+        await webhookAccount.SetupWebhook();
 
         await s.Server.ExplorerNode.GenerateAsync(1);
         await s.FundStoreWallet(denomination: 50.0m);
@@ -73,6 +75,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.ClickPagePrimary();
 
         string viewPullPaymentUrl;
+        PayoutData payoutForWebhook;
         // This should select the first View, ie, the last one PP2
         await using (await s.SwitchPage(async () =>
                      {
@@ -82,7 +85,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             var address = await s.Server.ExplorerNode.GetNewAddressAsync();
             await s.Page.FillAsync("#Destination", address.ToString());
             await s.Page.FillAsync("#ClaimedAmount", "15");
-            await ClickClaimAmount();
+            payoutForWebhook = await ClickClaimAmount();
             await s.FindAlertMessage();
 
             // We should not be able to use an address already used
@@ -125,6 +128,15 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await pmo.AssertHasLabels("payout");
         await pmo.AssertHasLabels("pull-payment");
 
+        var client = await webhookAccount.CreateClient();
+        var payoutTransaction = Assert.Single(await client.ShowOnChainWalletTransactions(s.StoreId, "BTC"),
+            transaction => transaction.Confirmations == 0);
+        await pmo.BumpFee(payoutTransaction.TransactionHash);
+        await Expect(s.Page.Locator("#BumpMethod option:checked")).ToHaveTextAsync("RBF");
+        await s.ClickPagePrimary();
+        await s.Page.ClickAsync("#BroadcastTransaction");
+        await s.FindAlertMessage(partialText: "Transaction broadcasted successfully");
+
         await s.GoToStore(s.StoreId, StoreNavPages.Payouts);
         await s.Page.ClickAsync($"#{PayoutState.InProgress}-view");
 
@@ -135,6 +147,11 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await Expect(s.Page.Locator("body")).ToContainTextAsync(PayoutState.InProgress.GetStateString());
 
         await s.Server.ExplorerNode.GenerateAsync(1);
+        await webhookAccount.AssertHasWebhookEvent(WebhookEventType.PayoutUpdated, (WebhookPayoutEvent payoutEvent) =>
+        {
+            Assert.Equal(payoutForWebhook.Id, payoutEvent.PayoutId);
+            Assert.Equal(PayoutState.Completed, payoutEvent.PayoutState);
+        });
 
         await TestUtils.EventuallyAsync(async () =>
         {

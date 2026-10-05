@@ -1,4 +1,3 @@
-@using BTCPayServer.Client
 @using BTCPayServer.Payments
 @model BTCPayServer.Components.InvoiceStatus.InvoiceStatusViewModel
 @inject Dictionary<PaymentMethodId, ICheckoutModelExtension> Extensions
@@ -16,27 +15,24 @@
     <div class="badge badge-@badgeClass" data-invoice-state-badge="@Model.InvoiceId">
         @if (canMark)
         {
-            <div class="d-inline" permission="@Policies.CanModifyInvoices">
-                @Html.AntiForgeryToken()
-                <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    @state
-                </span>
-                <div class="dropdown-menu">
-                    @if (Model.State.CanMarkInvalid())
-                    {
-                        <button type="button" class="dropdown-item lh-base" data-invoice-id="@Model.InvoiceId" data-new-state="invalid" text-translate="true">
-                            Mark as invalid
-                        </button>
-                    }
-                    @if (Model.State.CanMarkComplete())
-                    {
-                        <button type="button" class="dropdown-item lh-base" data-invoice-id="@Model.InvoiceId" data-new-state="settled" text-translate="true">
-                            Mark as settled
-                        </button>
-                    }
-                </div>
+            @Html.AntiForgeryToken()
+            <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                @state
+            </span>
+            <div class="dropdown-menu">
+                @if (Model.State.CanMarkInvalid())
+                {
+                    <button type="button" class="dropdown-item lh-base" data-invoice-id="@Model.InvoiceId" data-new-state="invalid" text-translate="true">
+                        Mark as invalid
+                    </button>
+                }
+                @if (Model.State.CanMarkComplete())
+                {
+                    <button type="button" class="dropdown-item lh-base" data-invoice-id="@Model.InvoiceId" data-new-state="settled" text-translate="true">
+                        Mark as settled
+                    </button>
+                }
             </div>
-            <span not-permission="@Policies.CanModifyInvoices">@state</span>
         }
         else
         {

@@ -313,6 +313,14 @@ namespace BTCPayServer.Controllers
                 .TryGet(payoutMethodId);
             var commandState = Enum.Parse<PayoutState>(vm.Command.Split("-").First());
             var payoutIds = vm.GetSelectedPayouts(commandState);
+            if (payoutIds.Length != 0)
+            {
+                await using var ctx = this._dbContextFactory.CreateContext();
+                ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+                payoutIds = (await GetPayoutsForPaymentMethod(payoutMethodId, ctx, payoutIds, storeId, cancellationToken))
+                    .Select(payout => payout.Id)
+                    .ToArray();
+            }
             if (payoutIds.Length == 0)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
@@ -406,26 +414,13 @@ namespace BTCPayServer.Controllers
 
                 case "pay":
                     {
-                        if (handler is null)
-                        {
-                            TempData.SetStatusMessageModel(new StatusMessageModel
-                            {
-                                Message = StringLocalizer["Paying via this payment method is not supported"].Value,
-                                Severity = StatusMessageModel.StatusSeverity.Error
-                            });
-                            break;
-                        }
-
-                        await using var ctx = this._dbContextFactory.CreateContext();
-                        ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-                        var payouts =
-                            await GetPayoutsForPaymentMethod(payoutMethodId, ctx, payoutIds, storeId, cancellationToken);
-                        payoutIds = payouts
-                            .Where(payout => payout.State == PayoutState.AwaitingPayment)
-                            .Select(payout => payout.Id)
-                            .ToArray();
-                        if (payoutIds.Length != 0)
+                        if (handler is { })
                             return await handler.InitiatePayment(payoutIds);
+                        TempData.SetStatusMessageModel(new StatusMessageModel
+                        {
+                            Message = StringLocalizer["Paying via this payment method is not supported"].Value,
+                            Severity = StatusMessageModel.StatusSeverity.Error
+                        });
                         break;
                     }
 

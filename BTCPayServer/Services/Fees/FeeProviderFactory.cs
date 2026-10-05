@@ -45,9 +45,9 @@ public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
         }
     }
 
-    internal class ClampFeeProvider(IFeeProvider inner, NBXplorerDashboard dashboard, string cryptoCode) : IFeeProvider
+    class ClampFeeProvider(IFeeProvider inner, NBXplorerDashboard dashboard, string cryptoCode) : IFeeProvider
     {
-        internal IFeeProvider Inner { get; } = inner;
+        public IFeeProvider Inner { get; } = inner;
 
         public async Task<FeeRate> GetFeeRateAsync(int blockTarget = 20)
         {
@@ -83,7 +83,7 @@ public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
         }
     }
     private Task RefreshCache(IEnumerable<IFeeProvider> feeProviders) => Task.WhenAll(feeProviders.Select(RefreshCache));
-    internal static Task RefreshCache(IFeeProvider fp) =>
+    private static Task RefreshCache(IFeeProvider fp) =>
         fp switch
         {
             ClampFeeProvider cfp => RefreshCache(cfp.Inner),

@@ -32,8 +32,7 @@ public class WebhookSender(
 {
     public const string OnionNamedClient = "greenfield-webhook.onion";
     public const string ClearnetNamedClient = "greenfield-webhook.clearnet";
-    public const string LoopbackNamedClient = "greenfield-webhook.loopback";
-    public static string[] AllClients = new[] { OnionNamedClient, ClearnetNamedClient, LoopbackNamedClient };
+    public static string[] AllClients = new[] { OnionNamedClient, ClearnetNamedClient };
     public static readonly JsonSerializerSettings DefaultSerializerSettings;
 
 
@@ -64,8 +63,7 @@ public class WebhookSender(
 
     private HttpClient GetClient(Uri uri)
     {
-        return HttpClientFactory.CreateClient(uri.IsOnion() ? OnionNamedClient :
-            uri.IsLoopback ? LoopbackNamedClient : ClearnetNamedClient);
+        return HttpClientFactory.CreateClient(uri.IsOnion() ? OnionNamedClient : ClearnetNamedClient);
     }
 
     public async Task<string?> Redeliver(string deliveryId)

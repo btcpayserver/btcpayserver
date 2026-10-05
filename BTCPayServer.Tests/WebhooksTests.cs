@@ -1,13 +1,18 @@
 using System;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Configuration;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Webhooks;
 using BTCPayServer.Plugins.Webhooks.HostedServices;
+using BTCPayServer.Services;
 using BTCPayServer.Views.Stores;
+using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
@@ -22,10 +27,27 @@ namespace BTCPayServer.Tests;
 public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
 {
     [Fact]
+    public async Task WebhookClientRejectsLocalEndpoints()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(new BTCPayServerOptions());
+        services.AddSingleton<SSRFProtection>();
+        new WebhooksPlugin().Execute(services);
+        await using var serviceProvider = services.BuildServiceProvider();
+        var client = serviceProvider.GetRequiredService<IHttpClientFactory>()
+            .CreateClient(WebhookSender.ClearnetNamedClient);
+
+        var exception = await Assert.ThrowsAsync<HttpRequestException>(() => client.GetAsync("http://localhost"));
+
+        Assert.Contains("does not resolve exclusively to public addresses", exception.Message);
+    }
+
+    [Fact]
     [Trait("Playwright", "Playwright-2")]
     public async Task CanUseWebhooks()
     {
         await using var s = CreatePlaywrightTester();
+        s.Server.PayTester.DisableSSRFProtection = true;
         await s.StartAsync();
         await s.RegisterNewUser(true);
         await s.CreateNewStore();
@@ -158,6 +180,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
         public async Task EnsureWebhooksInvoiceExpiredPaidLatePartial()
         {
             using var tester = CreateServerTester();
+            tester.PayTester.DisableSSRFProtection = true;
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -215,6 +238,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
         public async Task EnsureWebhooksTrigger()
         {
             using var tester = CreateServerTester();
+            tester.PayTester.DisableSSRFProtection = true;
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -389,6 +413,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             using var tester = CreateServerTester(newDb: true);
             using var fakeServer = new FakeServer();
             await fakeServer.Start();
+            tester.PayTester.DisableSSRFProtection = true;
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();

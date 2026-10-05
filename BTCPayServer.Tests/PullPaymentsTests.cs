@@ -44,6 +44,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             }, e => e.Type == PayoutEvent.PayoutEventType.Created)).Payout;
         }
         s.Server.DeleteStore = false;
+        s.Server.PayTester.DisableSSRFProtection = true;
         s.Server.ActivateLightning(LightningTestImplementation.LND);
         await s.StartAsync();
         await s.Server.EnsureChannelsSetup();

@@ -1874,6 +1874,7 @@ namespace BTCPayServer.Tests
             // still exercised throughout this test to guarantee backward compatibility.
 #pragma warning disable CS0618 // Type or member is obsolete
             using var tester = CreateServerTester();
+            tester.PayTester.DisableSSRFProtection = true;
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.RegisterDerivationSchemeAsync("BTC");
@@ -2222,6 +2223,7 @@ namespace BTCPayServer.Tests
         public async Task InvoiceTests()
         {
             using var tester = CreateServerTester();
+            tester.PayTester.DisableSSRFProtection = true;
             await tester.StartAsync();
             var user = tester.NewAccount();
 

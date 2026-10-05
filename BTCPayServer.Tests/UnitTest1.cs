@@ -1783,6 +1783,7 @@ namespace BTCPayServer.Tests
         public async Task InvoiceFlowThroughDifferentStatesCorrectly()
         {
             using var tester = CreateServerTester();
+            tester.PayTester.DisableSSRFProtection = true;
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();

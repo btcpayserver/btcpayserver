@@ -86,7 +86,7 @@ namespace BTCPayServer.Services
             var httpClient = (isOnion, allowUnsafe) switch
             {
                 (true, _) => OnionNamedClient,
-                (false, false) when BTCPayServer.Extensions.IsSafeLightningConnectionString(lightningConnectionString) => SafeNamedClient,
+                (false, false) => SafeNamedClient,
                 _ => NamedClient
             };
 

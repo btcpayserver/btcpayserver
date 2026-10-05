@@ -771,6 +771,12 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         var localUri = new UriBuilder(tester.PayTester.ServerUriWithIP) { Host = "localhost" }.Uri;
         var exception = await Assert.ThrowsAsync<HttpRequestException>(() => safeLightningHttpClient.GetAsync(localUri));
         Assert.Contains("does not resolve exclusively to public addresses", exception.Message);
+        var guardedLightningClient = tester.PayTester.GetService<LightningClientFactoryService>().Create(
+            $"type=phoenixd;server={localUri};password=secret",
+            tester.PayTester.Networks.GetNetwork<BTCPayNetwork>("BTC"),
+            allowUnsafe: false);
+        exception = await Assert.ThrowsAsync<HttpRequestException>(() => guardedLightningClient.GetInfo());
+        Assert.Contains("does not resolve exclusively to public addresses", exception.Message);
         var onionHandler = tester.PayTester.GetService<IHttpMessageHandlerFactory>()
             .CreateHandler(LightningClientFactoryService.OnionNamedClient);
         while (onionHandler is DelegatingHandler delegatingHandler)

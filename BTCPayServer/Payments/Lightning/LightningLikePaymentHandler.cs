@@ -279,7 +279,7 @@ namespace BTCPayServer.Payments.Lightning
                         if (!canManage)
                         {
                             validationContext.ModelState.AddModelError(nameof(config.ConnectionString),
-                                $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contain parameters ending in 'filepath' or 'directorypath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
+                                $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contain parameters ending in 'filepath' or 'directorypath', use custom LND TLS handling, point to a local endpoint, or use a DNS name for a non-HTTP endpoint.");
                             return;
                         }
                     }

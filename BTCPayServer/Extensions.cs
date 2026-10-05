@@ -396,15 +396,26 @@ namespace BTCPayServer
             var kv = ExtractValues(connectionString);
             if (kv.Keys.Any(k => k.EndsWith("filepath", StringComparison.OrdinalIgnoreCase) || k.EndsWith("directorypath", StringComparison.OrdinalIgnoreCase)))
                 return false;
+            var isLnd = kv.TryGetValue("type", out var type) &&
+                        type is "lnd-rest" or "lnd-grpc";
+            // LND replaces BTCPay's redirect-disabled HttpClient when certificate pinning is used,
+            // or when certificate validation is disabled for HTTPS. Keep those paths admin-only.
+            if (isLnd && kv.ContainsKey("certthumbprint"))
+                return false;
 
             if (!kv.TryGetValue("server", out var server))
-            {
-                return true;
-            }
+                return false;
             var uri = new Uri(server, UriKind.Absolute);
+            if (isLnd && uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase) &&
+                kv.TryGetValue("allowinsecure", out var allowInsecure) &&
+                bool.TryParse(allowInsecure, out var enabled) && enabled)
+                return false;
             if (uri.Scheme.Equals("unix", StringComparison.OrdinalIgnoreCase))
                 return false;
             if (!Utils.TryParseEndpoint(uri.DnsSafeHost, 80, out _))
+                return false;
+            if (!IPAddress.TryParse(uri.DnsSafeHost, out _) &&
+                uri.Scheme is not ("http" or "https"))
                 return false;
             return !IsLocalNetwork(uri.DnsSafeHost);
         }

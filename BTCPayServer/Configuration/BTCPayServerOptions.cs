@@ -109,12 +109,14 @@ namespace BTCPayServer.Configuration
             }
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
+            DisableSSRFProtection = conf.GetOrDefault<bool>("disablessrfprotection", false);
             CheatMode = conf.GetOrDefault("cheatmode", false);
             if (CheatMode && this.NetworkType == ChainName.Mainnet)
                 throw new ConfigException($"cheatmode can't be used on mainnet");
         }
 
         public bool CheatMode { get; set; }
+        public bool DisableSSRFProtection { get; set; }
 
         public string RootPath { get; set; }
         public bool DockerDeployment { get; set; }

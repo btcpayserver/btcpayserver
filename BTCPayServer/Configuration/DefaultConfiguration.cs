@@ -36,6 +36,7 @@ namespace BTCPayServer.Configuration
             app.Option("--nodefaultchain | -nodefaultchain", "Allow BTCPay to start without any chain enabled (default: false)", CommandOptionType.BoolValue);
             app.Option("--postgres", $"Connection string to a PostgreSQL database", CommandOptionType.SingleValue);
             app.Option("--nocsp", $"Disable CSP (default false)", CommandOptionType.BoolValue);
+            app.Option("--disablessrfprotection", "Disable outbound HTTP protection against DNS rebinding and private-network access (default: false)", CommandOptionType.BoolValue);
             app.Option("--deprecated", $"Allow deprecated settings (default:false)", CommandOptionType.BoolValue);
             app.Option("--externalservices", $"Links added to external services inside Server Settings / Services under the format service1:path2;service2:path2.(default: empty)", CommandOptionType.SingleValue);
             app.Option("--btcpayhostenabled", "Enable the btcpay-host integration (default: false)", CommandOptionType.BoolValue);
@@ -129,6 +130,7 @@ namespace BTCPayServer.Configuration
             builder.AppendLine("#bind=127.0.0.1");
             builder.AppendLine("#httpscertificatefilepath=devtest.pfx");
             builder.AppendLine("#httpscertificatefilepassword=toto");
+            builder.AppendLine("#disablessrfprotection=false");
             builder.AppendLine();
             builder.AppendLine("### Host integration ###");
             builder.AppendLine("#btcpayhostenabled=false");

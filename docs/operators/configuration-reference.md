@@ -40,6 +40,7 @@ this page.
 | Command line | Configuration file | Environment | Description |
 |---|---|---|---|
 | `--nocsp` | `nocsp` | `BTCPAY_NOCSP` | Disable CSP (default false) |
+| `--disablessrfprotection` | `disablessrfprotection` | `BTCPAY_DISABLESSRFPROTECTION` | Disable outbound HTTP protection against DNS rebinding and private-network access (default: false) |
 | `--rootpath` | `rootpath` | `BTCPAY_ROOTPATH` | The root path in the URL to access BTCPay (default: /) |
 | `--disable-registration` | `disable-registration` | `BTCPAY_DISABLE-REGISTRATION` | Disables new user registrations (default:true) |
 | `--xforwardedproto` | `xforwardedproto` | `BTCPAY_XFORWARDEDPROTO` | If specified, set X-Forwarded-Proto to the specified value, this may be useful if your reverse proxy handle https but is not configured to add X-Forwarded-Proto (example: --xforwardedproto https) |

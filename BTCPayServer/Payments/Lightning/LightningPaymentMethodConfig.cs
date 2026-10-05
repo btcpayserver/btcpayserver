@@ -11,6 +11,10 @@ namespace BTCPayServer.Payments.Lightning
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string? ConnectionString { get; set; }
 
+        // Null preserves the behavior of configurations saved before endpoint safety was recorded.
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? AllowUnsafeConnection { get; set; }
+
         public string? GetExternalLightningUrl()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -45,6 +49,7 @@ namespace BTCPayServer.Payments.Lightning
 #pragma warning disable CS0618 // Type or member is obsolete
             ConnectionString = null;
             InternalNodeRef = InternalNode;
+            AllowUnsafeConnection = null;
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 

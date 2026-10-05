@@ -177,6 +177,7 @@ public partial class UIStoresController
             ModelState.AddModelError(nameof(vm.ConnectionString), StringLocalizer["You do not have the permissions to change this settings"]);
         if (!ModelState.IsValid)
             return View(vm);
+        paymentMethod = handler.ParsePaymentMethodConfig(ctx.Config);
 
         switch (command)
         {

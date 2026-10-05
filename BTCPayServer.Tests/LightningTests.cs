@@ -338,6 +338,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         Assert.Null(method.Config);
         method = await adminClient.GetStorePaymentMethod(store.Id, "BTC-LN", includeConfig: true);
         Assert.NotNull(method.Config);
+        Assert.Null(method.Config["allowUnsafeConnection"]);
         await AssertEx.AssertHttpError(403, async () =>
         {
             await viewOnlyClient.RemoveStorePaymentMethod(store.Id, "BTC-LN");
@@ -385,16 +386,31 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
                 Enabled = true
             });
         }
+        var unsafeMethod = await admin2Client.GetStorePaymentMethod(admin2.StoreId, "BTC-LN", includeConfig: true);
+        Assert.True(unsafeMethod.Config?["allowUnsafeConnection"]?.Value<bool>());
+        await admin2Client.UpdateStorePaymentMethod(admin2.StoreId, "BTC-LN", new UpdatePaymentMethodRequest
+        {
+            Config = new JObject
+            {
+                ["connectionString"] = "type=clightning;server=unix://[0:0:0:0:0:0:0:1]"
+            },
+            Enabled = false
+        });
+        unsafeMethod = await admin2Client.GetStorePaymentMethod(admin2.StoreId, "BTC-LN", includeConfig: true);
+        Assert.True(unsafeMethod.Config?["allowUnsafeConnection"]?.Value<bool>());
 
         // Allowed ip should be ok
         await adminClient.UpdateStorePaymentMethod(store.Id, "BTC-LN", new UpdatePaymentMethodRequest()
         {
             Config = new JObject()
             {
-                ["connectionString"] = "type=clightning;server=tcp://8.8.8.8"
+                ["connectionString"] = "type=clightning;server=tcp://8.8.8.8",
+                ["allowUnsafeConnection"] = true
             },
             Enabled = true
         });
+        method = await adminClient.GetStorePaymentMethod(store.Id, "BTC-LN", includeConfig: true);
+        Assert.False(method.Config?["allowUnsafeConnection"]?.Value<bool>());
         // If we strip the admin's right, he should not be able to set unsafe anymore, even if the API key is still valid
         await admin2.MakeAdmin(false);
         await AssertEx.AssertValidationError(new[] { "ConnectionString" }, async () =>
@@ -475,11 +491,13 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
             Enabled = method.Enabled,
             Config = new JObject()
             {
-                ["connectionString"] = "Internal Node"
+                ["internalNodeRef"] = "Internal Node",
+                ["allowUnsafeConnection"] = true
             }
         });
         Assert.NotNull(data);
         Assert.NotNull(data.Config["internalNodeRef"]?.Value<string>());
+        Assert.Null(data.Config["allowUnsafeConnection"]);
         // Make sure that the nonAdmin can toggle enabled, ConnectionString unchanged.
         await nonAdminUserClient.UpdateStorePaymentMethod(nonAdminUser.StoreId, "BTC-LN", new UpdatePaymentMethodRequest()
         {
@@ -763,6 +781,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         var address = ((CLightningClient)tester.CustomerLightningD).Address.AbsoluteUri;
         await storeController.SetupLightningNode(user.StoreId, new LightningNodeViewModel
         {
+            LightningNodeType = LightningNodeType.Custom,
             ConnectionString = $"type=clightning;server={address}",
             SkipPortTest = true // We can't test this as the IP can't be resolved by the test host :(
         }, "test", "BTC");
@@ -773,12 +792,19 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         Assert.IsType<RedirectToActionResult>(await storeController.SetupLightningNode(user.StoreId,
             new LightningNodeViewModel
             {
-                ConnectionString = $"type=clightning;server={address}"
+                LightningNodeType = LightningNodeType.Custom,
+                ConnectionString = "type=clightning;server=tcp://127.0.0.1:1234"
             }, "save", "BTC"));
+        var store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
+        var handlers = tester.PayTester.GetService<PaymentMethodHandlerDictionary>();
+        var lightningConfig = store?.GetPaymentMethodConfig<LightningPaymentMethodConfig>(
+            PaymentTypes.LN.GetPaymentMethodId("BTC"), handlers);
+        Assert.Equal("type=clightning;server=tcp://127.0.0.1:1234", lightningConfig?.ConnectionString);
+        Assert.True(lightningConfig?.AllowUnsafeConnection);
 
         // Make sure old connection string format does not work
         Assert.IsType<RedirectToActionResult>(await storeController.SetupLightningNode(user.StoreId,
-            new LightningNodeViewModel { ConnectionString = address },
+            new LightningNodeViewModel { LightningNodeType = LightningNodeType.Custom, ConnectionString = address },
             "save", "BTC"));
 
         storeResponse = storeController.LightningSettings(user.StoreId, "BTC");

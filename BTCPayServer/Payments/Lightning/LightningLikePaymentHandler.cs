@@ -261,7 +261,7 @@ namespace BTCPayServer.Payments.Lightning
                 validationContext.Config = new JObject() { ["connectionString"] = validationContext.Config.Value<string>()! };
 #pragma warning disable CS0618 // Type or member is obsolete
             var config = ParsePaymentMethodConfig(validationContext.Config);
-            if (config.ConnectionString == LightningPaymentMethodConfig.InternalNode)
+            if (config.ConnectionString == LightningPaymentMethodConfig.InternalNode || config.IsInternalNode)
                 config.SetInternalNode();
             LightningPaymentMethodConfig? oldConfig = null;
             if (validationContext.PreviousConfig is not null)
@@ -272,7 +272,8 @@ namespace BTCPayServer.Payments.Lightning
                 // Let's check the connection string can be parsed and is safe to use for non-admin.
                 try
                 {
-                    if (!BTCPayServer.Extensions.IsSafeLightningConnectionString(config.ConnectionString))
+                    var safe = BTCPayServer.Extensions.IsSafeLightningConnectionString(config.ConnectionString);
+                    if (!safe)
                     {
                         var canManage = (await validationContext.AuthorizationService.AuthorizeAsync(validationContext.User, null,
                             new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
@@ -283,6 +284,7 @@ namespace BTCPayServer.Payments.Lightning
                             return;
                         }
                     }
+                    config.AllowUnsafeConnection = !safe;
 
                     var client = _lightningClientFactory.Create(config.ConnectionString, _Network);
                     if (client is IExtendedLightningClient vlc)
@@ -306,6 +308,10 @@ namespace BTCPayServer.Payments.Lightning
                     validationContext.ModelState.AddModelError(nameof(config.ConnectionString), "Invalid connection string");
                     return;
                 }
+            }
+            else if (!connectionStringChanged && !config.IsInternalNode)
+            {
+                config.AllowUnsafeConnection = oldConfig?.AllowUnsafeConnection;
             }
 
             if (oldConfig?.IsInternalNode != config.IsInternalNode && config.IsInternalNode)

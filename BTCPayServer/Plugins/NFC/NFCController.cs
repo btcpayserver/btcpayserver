@@ -1,7 +1,6 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Payouts.LightningLike;
@@ -27,18 +26,21 @@ namespace BTCPayServer.Plugins.NFC
         private readonly InvoiceActivator _invoiceActivator;
         private readonly StoreRepository _storeRepository;
         private readonly ILogger<NFCController> _logger;
+        private readonly UILNURLController _lnurlController;
 
         public NFCController(IHttpClientFactory httpClientFactory,
             InvoiceRepository invoiceRepository,
             InvoiceActivator invoiceActivator,
             StoreRepository storeRepository,
-            ILogger<NFCController> logger)
+            ILogger<NFCController> logger,
+            UILNURLController lnurlController)
         {
             _httpClientFactory = httpClientFactory;
             _invoiceRepository = invoiceRepository;
             _invoiceActivator = invoiceActivator;
             _storeRepository = storeRepository;
             _logger = logger;
+            _lnurlController = lnurlController;
         }
 
         public class SubmitRequest
@@ -164,24 +166,19 @@ namespace BTCPayServer.Plugins.NFC
 
                 try
                 {
-                    httpClient = CreateHttpClient(info.Callback);
                     var amount = LightMoney.Coins(due);
-                    var actionPath = Url.Action(nameof(UILNURLController.GetLNURLForInvoice), "UILNURL",
-                        new { invoiceId = request.InvoiceId, cryptoCode = "BTC", amount = amount.MilliSatoshi });
-                    var url = Request.GetAbsoluteUri(actionPath);
-                    var resp = await httpClient.GetAsync(url);
-                    var response = await resp.Content.ReadAsStringAsync();
-
-                    if (resp.IsSuccessStatusCode)
+                    _lnurlController.ControllerContext = ControllerContext;
+                    var response = await _lnurlController.GetLNURLForInvoice(request.InvoiceId, "BTC", amount.MilliSatoshi);
+                    if (response is OkObjectResult { Value: JObject callbackResponse })
                     {
-                        var res = JObject.Parse(response).ToObject<LNURLPayRequest.LNURLPayRequestCallbackResponse>();
-                        bolt11 = res.Pr;
+                        bolt11 = callbackResponse.Value<string>("pr");
                     }
                     else
                     {
-                        var res = JObject.Parse(response).ToObject<LNUrlStatusResponse>();
-                        return BadRequest($"Could not fetch BOLT11 invoice to pay to: {res.Reason}");
-
+                        var reason = (response as ObjectResult)?.Value is LNUrlStatusResponse status
+                            ? status.Reason
+                            : "Unknown error";
+                        return BadRequest($"Could not fetch BOLT11 invoice to pay to: {reason}");
                     }
                 }
                 catch (Exception ex)
@@ -197,6 +194,7 @@ namespace BTCPayServer.Plugins.NFC
 
             try
             {
+                httpClient = CreateHttpClient(info.Callback);
                 var result = await info.SendRequest(bolt11, httpClient, null, null);
                 if (!string.IsNullOrEmpty(result.Status) && result.Status.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
                 {

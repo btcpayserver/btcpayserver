@@ -403,6 +403,12 @@ namespace BTCPayServer.Hosting
 
             services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
+            services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient)
+                .ConfigurePrimaryHttpMessageHandler(sp => new SocketsHttpHandler
+                {
+                    UseProxy = false,
+                    ConnectCallback = sp.GetRequiredService<SSRFProtection>().Connect
+                });
             services.AddSingleton<HostedServices.PullPaymentHostedService>();
             services.AddSingleton<IHostedService, HostedServices.PullPaymentHostedService>(o => o.GetRequiredService<PullPaymentHostedService>());
 

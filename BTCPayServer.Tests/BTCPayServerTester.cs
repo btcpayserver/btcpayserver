@@ -119,6 +119,7 @@ namespace BTCPayServer.Tests
         public bool UseLightning { get; set; }
         public bool CheatMode { get; set; } = true;
         public bool DisableRegistration { get; set; } = false;
+        public bool DisableSSRFProtection { get; set; }
         public async Task StartAsync()
         {
             _lifetimeToken.ThrowIfCancellationRequested();
@@ -177,6 +178,7 @@ namespace BTCPayServer.Tests
             config.AppendLine($"socksendpoint={SocksEndpoint}");
             config.AppendLine($"debuglog=debug.log");
             config.AppendLine($"nocsp={NoCSP.ToString().ToLowerInvariant()}");
+            config.AppendLine($"disablessrfprotection={DisableSSRFProtection.ToString().ToLowerInvariant()}");
             if (btcpayHostExecutable is not null)
             {
                 config.AppendLine($"btcpayhostexecutable={btcpayHostExecutable}");

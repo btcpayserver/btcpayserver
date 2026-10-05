@@ -24,6 +24,7 @@ using Xunit;
 using static Microsoft.Playwright.Assertions;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using BTCPayServer.Data;
+using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Lightning.CLightning;
 using LightningAddressData = BTCPayServer.Client.Models.LightningAddressData;
 
@@ -771,6 +772,10 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
             .CreateClient(LightningClientFactoryService.SafeNamedClient);
         var localUri = new UriBuilder(tester.PayTester.ServerUriWithIP) { Host = "localhost" }.Uri;
         var exception = await Assert.ThrowsAsync<HttpRequestException>(() => safeLightningHttpClient.GetAsync(localUri));
+        Assert.Contains("does not resolve exclusively to public addresses", exception.Message);
+        var lnurlHttpClient = tester.PayTester.GetService<IHttpClientFactory>()
+            .CreateClient(LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient);
+        exception = await Assert.ThrowsAsync<HttpRequestException>(() => lnurlHttpClient.GetAsync(localUri));
         Assert.Contains("does not resolve exclusively to public addresses", exception.Message);
         using var unprotectedHandler = new SocketsHttpHandler
         {

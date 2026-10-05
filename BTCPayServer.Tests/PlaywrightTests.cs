@@ -313,6 +313,7 @@ namespace BTCPayServer.Tests
             await using var s = CreatePlaywrightTester();
             s.Server.DeleteStore = false;
             s.Server.ActivateLightning();
+            s.Server.PayTester.DisableSSRFProtection = true;
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
             var cryptoCode = "BTC";

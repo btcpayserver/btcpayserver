@@ -1,9 +1,30 @@
+using System.Collections.Generic;
+using BTCPayServer.Configuration;
+using BTCPayServer.Logging;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace BTCPayServer.Tests;
 
 public class LightningConnectionStringSafetyTests
 {
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("true", true)]
+    [InlineData("false", false)]
+    public void LoadsSSRFProtectionConfiguration(string configuredValue, bool expected)
+    {
+        var values = new Dictionary<string, string> { ["network"] = "regtest" };
+        if (configuredValue is not null)
+            values["disablessrfprotection"] = configuredValue;
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
+        var options = new BTCPayServerOptions();
+
+        options.LoadArgs(configuration, new Logs());
+
+        Assert.Equal(expected, options.DisableSSRFProtection);
+    }
+
     [Theory]
     [InlineData("type=phoenixd;server=https://example.com;passwordfilepath=/run/secrets/phoenixd.pwd", false)]
     [InlineData("type=phoenixd;server=https://example.com;PassWordFilePath=/run/secrets/phoenixd.pwd", false)]

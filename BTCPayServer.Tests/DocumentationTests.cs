@@ -14,7 +14,7 @@ namespace BTCPayServer.Tests
         {
             ("Process and network", new HashSet<string> { "help", "network", "chains", "nodefaultchain", "conf", "port", "bind", "datadir" }),
             ("Database", new HashSet<string> { "postgres", "explorerpostgres" }),
-            ("HTTP and security", new HashSet<string> { "nocsp", "rootpath", "xforwardedproto", "disable-registration" }),
+            ("HTTP and security", new HashSet<string> { "nocsp", "rootpath", "xforwardedproto", "disable-registration", "disablessrfprotection" }),
             ("Host and external services", new HashSet<string> { "externalservices", "btcpayhostenabled", "btcpayhostexecutable", "torrcfile", "torservices", "socksendpoint", "updateurl" }),
             ("Logging and diagnostics", new HashSet<string> { "debuglog", "debugloglevel" }),
             ("Development", new HashSet<string> { "cheatmode" }),

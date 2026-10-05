@@ -22,7 +22,7 @@ namespace BTCPayServer.Payments.Lightning
             var external = supportedPaymentMethod.GetExternalLightningUrl();
             if (external != null)
             {
-                return lightningClientFactory.Create(external, network);
+                return lightningClientFactory.Create(external, network, supportedPaymentMethod.IsUnsafeConnectionAllowed());
             }
             else
             {

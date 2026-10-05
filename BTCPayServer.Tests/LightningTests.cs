@@ -7,6 +7,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.Lightning;
@@ -766,6 +767,26 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
             .CreateClient(LightningClientFactoryService.NamedClient);
         using var redirectResponse = await lightningHttpClient.GetAsync(tester.PayTester.ServerUriWithIP);
         Assert.Equal(HttpStatusCode.Redirect, redirectResponse.StatusCode);
+        var safeLightningHttpClient = tester.PayTester.GetService<IHttpClientFactory>()
+            .CreateClient(LightningClientFactoryService.SafeNamedClient);
+        var localUri = new UriBuilder(tester.PayTester.ServerUriWithIP) { Host = "localhost" }.Uri;
+        var exception = await Assert.ThrowsAsync<HttpRequestException>(() => safeLightningHttpClient.GetAsync(localUri));
+        Assert.Contains("does not resolve exclusively to public addresses", exception.Message);
+        using var unprotectedHandler = new SocketsHttpHandler
+        {
+            AllowAutoRedirect = false,
+            UseProxy = false,
+            ConnectCallback = new SSRFProtection(new BTCPayServerOptions { DisableSSRFProtection = true }).Connect
+        };
+        using var unprotectedClient = new HttpClient(unprotectedHandler);
+        using var unprotectedResponse = await unprotectedClient.GetAsync(localUri);
+        Assert.Equal(HttpStatusCode.Redirect, unprotectedResponse.StatusCode);
+        var guardedLightningClient = tester.PayTester.GetService<LightningClientFactoryService>().Create(
+            $"type=phoenixd;server={localUri};password=secret",
+            tester.PayTester.Networks.GetNetwork<BTCPayNetwork>("BTC"),
+            allowUnsafe: false);
+        exception = await Assert.ThrowsAsync<HttpRequestException>(() => guardedLightningClient.GetInfo());
+        Assert.Contains("does not resolve exclusively to public addresses", exception.Message);
         var onionHandler = tester.PayTester.GetService<IHttpMessageHandlerFactory>()
             .CreateHandler(LightningClientFactoryService.OnionNamedClient);
         while (onionHandler is DelegatingHandler delegatingHandler)

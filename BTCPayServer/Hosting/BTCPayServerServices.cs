@@ -132,8 +132,16 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
                 new LndHubConnectionStringHandler(client));
             services.TryAddSingleton<LightningClientFactoryService>();
+            services.TryAddSingleton<SSRFProtection>();
             services.AddHttpClient(LightningClientFactoryService.NamedClient)
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+            services.AddHttpClient(LightningClientFactoryService.SafeNamedClient)
+                .ConfigurePrimaryHttpMessageHandler(sp => new SocketsHttpHandler
+                {
+                    AllowAutoRedirect = false,
+                    UseProxy = false,
+                    ConnectCallback = sp.GetRequiredService<SSRFProtection>().Connect
+                });
             services.AddHttpClient(LightningClientFactoryService.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler(sp =>
                 {

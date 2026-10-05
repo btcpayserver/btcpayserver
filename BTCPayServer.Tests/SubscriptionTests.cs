@@ -1108,11 +1108,11 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             return await eventAggregator.WaitNext<T>(cts.Token);
         }
 
-        public async Task<PortalPMO> GoToPortal(string subscriberEmail)
+        public async Task<PortalPMO> GoToPortal(string subscriberEmail, bool closeAfter = true)
         {
             var o = s.Page.Context.WaitForPageAsync();
             await s.Page.Locator($"{SubscriberRowSelector(subscriberEmail)} .portal-link").ClickAsync();
-            var switching = await s.SwitchPage(o);
+            var switching = await s.SwitchPage(o, closeAfter);
             return new(s, switching);
         }
 

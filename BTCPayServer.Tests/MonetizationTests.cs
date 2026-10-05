@@ -273,7 +273,7 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await offeringPMO.GoToSubscribers();
         await offeringPMO.ToggleTestSubscriber("enrolled-invited@gmail.com");
         await s.FindAlertMessage(partialText: "is now test");
-        await using (var portal = await offeringPMO.GoToPortal("enrolled-invited@gmail.com"))
+        await using (var portal = await offeringPMO.GoToPortal("enrolled-invited@gmail.com", closeAfter: false))
         {
             await s.Server.WaitForEvent<MonetizationHostedService.MonetizationLockoutUpdated>(portal.GoToNextPhase);
         }

@@ -193,7 +193,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             return storeData.GetPaymentMethodConfig<LightningPaymentMethodConfig>(PaymentMethodId, _paymentHandlers, true)?.IsConfigured(Network, _options.Value) is true;
         }
 
-        public Task<IActionResult> InitiatePayment(string[] payoutIds)
+        public Task<IActionResult> InitiatePayment(string[] payoutIds, string storeId)
         {
             var cryptoCode = Network.CryptoCode;
             return Task.FromResult<IActionResult>(new RedirectToActionResult("ConfirmLightningPayout",

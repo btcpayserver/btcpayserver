@@ -277,18 +277,18 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
         return storeData.GetDerivationSchemeSettings(_paymentHandlers, Network.CryptoCode, true)?.AccountDerivation is not null;
     }
 
-    public async Task<IActionResult> InitiatePayment(string[] payoutIds)
+    public async Task<IActionResult> InitiatePayment(string[] payoutIds, string storeId)
     {
         await using var ctx = this._dbContextFactory.CreateContext();
         ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         var payouts = await ctx.Payouts.Include(data => data.PullPaymentData)
             .Where(data => payoutIds.Contains(data.Id)
+                           && data.StoreDataId == storeId
                            && PayoutMethodId.ToString() == data.PayoutMethodId
                            && data.State == PayoutState.AwaitingPayment)
             .ToListAsync();
 
         var pullPaymentIds = payouts.Select(data => data.PullPaymentDataId).Distinct().Where(s => s != null).ToArray();
-        var storeId = payouts.First().StoreDataId;
         List<string> bip21 = new List<string>();
         foreach (var payout in payouts)
         {

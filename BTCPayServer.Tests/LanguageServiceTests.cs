@@ -590,6 +590,7 @@ namespace BTCPayServer.Tests
             Assert.NotNull(french);
             Assert.Equal("French", french.LangName);
             Assert.Equal("Salut", Hello(french.Translations));
+            Assert.Same(french, await localizer.GetUserTranslations("French"));
 
             TestLogs.LogInformation("An unknown choice falls back to the server language");
             Assert.Null(await localizer.GetUserTranslations("Klingon"));
@@ -604,7 +605,18 @@ namespace BTCPayServer.Tests
 
             TestLogs.LogInformation("Editing the language drops the cached set");
             await SetHello("Bonjour");
-            Assert.Equal("Bonjour", Hello((await localizer.GetUserTranslations("French"))!.Translations));
+            var reloaded = await localizer.GetUserTranslations("French");
+            Assert.NotSame(french, reloaded);
+            Assert.Equal("Bonjour", Hello(reloaded!.Translations));
+            TestLogs.LogInformation("Editing a parent language drops cached children");
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('Quebecois', 'French', 'Custom')");
+            var quebec = await localizer.GetUserTranslations("Quebecois");
+            Assert.Equal("Bonjour", quebec!.Translations["Hello"]); 
+            await SetHello("Allo");
+            var quebecAgain = await localizer.GetUserTranslations("Quebecois");
+            Assert.NotSame(quebec, quebecAgain);
+            Assert.Equal("Allo", quebecAgain!.Translations["Hello"]);
+            await localizer.DeleteTranslation("Quebecois");
 
             TestLogs.LogInformation("Removing the language falls back to the server language");
             await localizer.DeleteTranslation("French");

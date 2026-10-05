@@ -30,10 +30,10 @@ public class AuthorizationPolicyTests(ITestOutputHelper helper) : UnitTestBase(h
 
     [Fact]
     [Trait("Fast", "Fast")]
-    public void InvoiceStatusMutationsRequireModifyPermission()
+    public void InvoiceStatusMutationsRequireManageStatusPermission()
     {
-        AssertPolicy(typeof(UIInvoiceController), nameof(UIInvoiceController.ChangeInvoiceState), Policies.CanModifyInvoices);
-        AssertPolicy(typeof(GreenfieldInvoiceController), nameof(GreenfieldInvoiceController.MarkInvoiceStatus), Policies.CanModifyInvoices);
+        AssertPolicy(typeof(UIInvoiceController), nameof(UIInvoiceController.ChangeInvoiceState), Policies.CanManageInvoiceStatus);
+        AssertPolicy(typeof(GreenfieldInvoiceController), nameof(GreenfieldInvoiceController.MarkInvoiceStatus), Policies.CanManageInvoiceStatus);
     }
 
     [Fact]

@@ -563,10 +563,15 @@ namespace BTCPayServer.Hosting
                     new PermissionDisplay("Create an invoice", "Allows creating new invoices."),
                     new PermissionDisplay("Create an invoice", "Allows creating new invoices on the selected stores.")),
                 new PolicyDefinition(
+                    Policies.CanManageInvoiceStatus,
+                    new PermissionDisplay("Manage invoice status", "Allows viewing invoices and marking them as settled or invalid."),
+                    new PermissionDisplay("Manage invoice status", "Allows viewing invoices and marking them as settled or invalid on the selected stores."),
+                    new[] { Policies.CanViewInvoices }),
+                new PolicyDefinition(
                     Policies.CanModifyInvoices,
                     new PermissionDisplay("Modify invoices", "Allows viewing and modifying invoices."),
                     new PermissionDisplay("Modify invoices", "Allows viewing and modifying invoices on the selected stores."),
-                    new[] { Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanCreateLightningInvoiceInStore }),
+                    new[] { Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanManageInvoiceStatus, Policies.CanCreateLightningInvoiceInStore }),
                 new PolicyDefinition(
                     Policies.CanModifyWebhooks,
                     new PermissionDisplay("Modify stores webhooks", "Allows modifying the webhooks of all your stores."),

@@ -39,11 +39,11 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
 
         services.AddHttpClient(WebhookSender.OnionNamedClient)
             .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
-        services.AddHttpClient(WebhookSender.LoopbackNamedClient)
-            .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
+        services.AddHttpClient(WebhookSender.ClearnetNamedClient)
+            .ConfigurePrimaryHttpMessageHandler(sp => new SocketsHttpHandler
             {
-                ServerCertificateCustomValidationCallback =
-                    HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                UseProxy = false,
+                ConnectCallback = sp.GetRequiredService<SSRFProtection>().Connect
             });
         var userAgent = BTCPayServerEnvironment.GetUserAgentHeaderValue();
         foreach (var clientName in WebhookSender.AllClients)

@@ -8,12 +8,14 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Configuration;
 using BTCPayServer.Events;
 using BTCPayServer.Plugins.Bitpay;
 using BTCPayServer.Plugins.Bitpay.Controllers;
 using BTCPayServer.Plugins.Bitpay.Models;
 using BTCPayServer.Plugins.Bitpay.Security;
 using BTCPayServer.Plugins.Bitpay.Views;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Views.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -31,6 +33,22 @@ namespace BTCPayServer.Tests;
 [Collection(nameof(NonParallelizableCollectionDefinition))]
 public class BitpayTests(ITestOutputHelper log) : UnitTestBase(log)
 {
+        [Fact]
+        public async Task BitpayIPNClientRejectsLocalEndpoints()
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton(new BTCPayServerOptions());
+            services.AddSingleton<SSRFProtection>();
+            new BitpayPlugin().Execute(services);
+            await using var serviceProvider = services.BuildServiceProvider();
+            var client = serviceProvider.GetRequiredService<IHttpClientFactory>()
+                .CreateClient(BitpayIPNSender.NamedClient);
+
+            var exception = await Assert.ThrowsAsync<HttpRequestException>(() => client.GetAsync("http://localhost"));
+
+            Assert.Contains("does not resolve exclusively to public addresses", exception.Message);
+        }
+
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanUseServerInitiatedPairingCode()
@@ -107,6 +125,7 @@ public class BitpayTests(ITestOutputHelper log) : UnitTestBase(log)
         {
             using var callbackServer = new CustomServer();
             using var tester = CreateServerTester();
+            tester.PayTester.DisableSSRFProtection = true;
             await tester.StartAsync();
             var acc = tester.NewAccount();
             await acc.GrantAccessAsync();

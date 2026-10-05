@@ -766,6 +766,11 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
             .CreateClient(LightningClientFactoryService.NamedClient);
         using var redirectResponse = await lightningHttpClient.GetAsync(tester.PayTester.ServerUriWithIP);
         Assert.Equal(HttpStatusCode.Redirect, redirectResponse.StatusCode);
+        var safeLightningHttpClient = tester.PayTester.GetService<IHttpClientFactory>()
+            .CreateClient(LightningClientFactoryService.SafeNamedClient);
+        var localUri = new UriBuilder(tester.PayTester.ServerUriWithIP) { Host = "localhost" }.Uri;
+        var exception = await Assert.ThrowsAsync<HttpRequestException>(() => safeLightningHttpClient.GetAsync(localUri));
+        Assert.Contains("does not resolve exclusively to public addresses", exception.Message);
         var onionHandler = tester.PayTester.GetService<IHttpMessageHandlerFactory>()
             .CreateHandler(LightningClientFactoryService.OnionNamedClient);
         while (onionHandler is DelegatingHandler delegatingHandler)

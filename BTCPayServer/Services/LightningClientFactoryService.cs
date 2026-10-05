@@ -33,6 +33,7 @@ namespace BTCPayServer.Services
         }
 
         public static string OnionNamedClient { get; set; } = "lightning.onion";
+        public static string NamedClient { get; set; } = "lightning";
 
         public ILightningClient Create(string lightningConnectionString, BTCPayNetwork network)
         {
@@ -41,7 +42,7 @@ namespace BTCPayServer.Services
 
             var httpClient = lightningConnectionString.Contains(".onion")
                 ? OnionNamedClient
-                : $"{network.CryptoCode}: Lightning client";
+                : NamedClient;
 
             return GetFactory(httpClient, network).Create(lightningConnectionString);
         }

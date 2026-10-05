@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Models;
@@ -351,6 +353,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         foreach (var forbidden in new[]
                  {
                      "type=clightning;server=tcp://127.0.0.1",
+                     "type=clightning;server=tcp://example.com:9735",
                      "type=clightning;server=tcp://test",
                      "type=clightning;server=tcp://test.lan",
                      "type=clightning;server=tcp://test.local",
@@ -741,6 +744,15 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         tester.ActivateLightning();
         await tester.StartAsync();
         await tester.EnsureChannelsSetup();
+        var lightningHttpClient = tester.PayTester.GetService<IHttpClientFactory>()
+            .CreateClient(LightningClientFactoryService.NamedClient);
+        using var redirectResponse = await lightningHttpClient.GetAsync(tester.PayTester.ServerUriWithIP);
+        Assert.Equal(HttpStatusCode.Redirect, redirectResponse.StatusCode);
+        var onionHandler = tester.PayTester.GetService<IHttpMessageHandlerFactory>()
+            .CreateHandler(LightningClientFactoryService.OnionNamedClient);
+        while (onionHandler is DelegatingHandler delegatingHandler)
+            onionHandler = delegatingHandler.InnerHandler;
+        Assert.False(Assert.IsType<Socks5HttpClientHandler>(onionHandler).AllowAutoRedirect);
         var user = tester.NewAccount();
         await user.GrantAccessAsync(true);
         var storeController = user.GetController<UIStoresController>();

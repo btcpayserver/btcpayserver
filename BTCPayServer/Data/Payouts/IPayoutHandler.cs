@@ -41,5 +41,5 @@ public interface IPayoutHandler : IHandler<PayoutMethodId>
     Task<decimal> GetMinimumPayoutAmount(IClaimDestination claimDestination);
     Dictionary<PayoutState, List<(string Action, string Text)>> GetPayoutSpecificActions();
     Task<StatusMessageModel> DoSpecificAction(string action, string[] payoutIds, string storeId);
-    Task<IActionResult> InitiatePayment(string[] payoutIds, string storeId);
+    Task<IActionResult> InitiatePayment(string[] payoutIds);
 }

@@ -12,7 +12,9 @@ using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.Translations
@@ -28,13 +30,19 @@ namespace BTCPayServer.Plugins.Translations
         ILogger<LocalizerService> logger,
         ApplicationDbContextFactory contextFactory,
         ISettingsAccessor<PoliciesSettings> settingsAccessor,
-        IEnumerable<IDefaultTranslationProvider> defaultTranslationProviders)
+        IEnumerable<IDefaultTranslationProvider> defaultTranslationProviders,
+        IMemoryCache memoryCache)
     {
         public record LoadedTranslations(Translations Translations, Translations Fallback, string LangName, bool Rtl);
         LoadedTranslations _LoadedTranslations = new(Translations.Default, Translations.Default, Translations.DefaultLanguage, false);
 
         readonly AsyncLocal<LoadedTranslations?> _requestTranslations = new();
-        readonly ConcurrentDictionary<string, Task<LoadedTranslations?>> _userTranslations = new(StringComparer.Ordinal);
+        static readonly TimeSpan CacheIdle = TimeSpan.FromMinutes(30);
+        static readonly MemoryCacheEntryOptions UserChoiceOptions = new() { SlidingExpiration = CacheIdle };
+        static string GetTranslationsCacheKey(string name) => $"{nameof(LocalizerService)}-translations-{name}";
+        static string GetUserChoiceCacheKey(string userId) => $"{nameof(LocalizerService)}-user-{userId}";
+
+        CancellationTokenSource _translationsChanged = new();
         LoadedTranslations Current => _requestTranslations.Value ?? _LoadedTranslations;
         public Translations Translations => Current.Translations;
 
@@ -43,9 +51,8 @@ namespace BTCPayServer.Plugins.Translations
 
 
         public string ServerLanguage => _LoadedTranslations.LangName;
-        readonly ConcurrentDictionary<string, string?> _userChoices = new();
 
-        public void SetUserLanguage(string userId, string? translationName) => _userChoices[userId] = translationName;
+        public void SetUserLanguage(string userId, string? translationName) => memoryCache.Set(GetUserChoiceCacheKey(userId), translationName, UserChoiceOptions);
 
         /// <summary>
         /// Load the translation of the server into memory
@@ -74,14 +81,21 @@ namespace BTCPayServer.Plugins.Translations
             if (string.IsNullOrEmpty(translationName) || translationName == _LoadedTranslations.LangName)
                 return null;
 
-            var loading = _userTranslations.GetOrAdd(translationName, LoadIfInstalled);
+            var key = GetTranslationsCacheKey(translationName);
+            var loading = memoryCache.GetOrCreate(key, entry =>
+            {
+                entry.SlidingExpiration = CacheIdle;
+                entry.AddExpirationToken(new CancellationChangeToken(_translationsChanged.Token));
+                return LoadIfInstalled(translationName);
+            })!;
             try
             {
                 return await loading;
             }
             catch
             {
-                _userTranslations.TryRemove(KeyValuePair.Create(translationName, loading));
+                if (memoryCache.TryGetValue(key, out Task<LoadedTranslations?>? current) && ReferenceEquals(current, loading))
+                    memoryCache.Remove(key);
                 throw;
             }
         }
@@ -93,12 +107,12 @@ namespace BTCPayServer.Plugins.Translations
                 var userId = userManager.GetUserId(principal);
                 if (userId is null)
                     return null;
-                if (!_userChoices.TryGetValue(userId, out var choice))
+                var key = GetUserChoiceCacheKey(userId);
+                if (!memoryCache.TryGetValue(key, out string? choice))
                 {
                     var stored = (await userManager.FindByIdAsync(userId))?.GetBlob()?.LangTranslation;
-                    choice = _userChoices.GetOrAdd(userId, stored);
+                    choice = memoryCache.GetOrCreate(key, e => { e.SlidingExpiration = CacheIdle; return stored; });
                 }
-
                 return await GetUserTranslations(choice);
             }
             catch (Exception ex)
@@ -112,7 +126,7 @@ namespace BTCPayServer.Plugins.Translations
             _requestTranslations.Value = translations;
         }
 
-        void InvalidateUserTranslations() => _userTranslations.Clear();
+        void InvalidateUserTranslations() => Interlocked.Exchange(ref _translationsChanged, new CancellationTokenSource()).Cancel();
 
         async Task<LoadedTranslations?> LoadIfInstalled(string translationName)
         {

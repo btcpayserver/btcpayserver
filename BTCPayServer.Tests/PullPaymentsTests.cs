@@ -9,11 +9,14 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
+using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Plugins.Wallets.Views.ViewModels;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Views.Stores;
 using Dapper;
 using LNURL;
@@ -570,6 +573,69 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal(nameof(UIStorePullPaymentsController.Payouts), redirect.ActionName);
         Assert.Equal(attacker.StoreId, redirect.RouteValues["storeId"]);
+    }
+
+    [Fact]
+    [Trait("Integration", "Integration")]
+    public async Task EmployeeOverpaidRefundIsAutoApprovedOnce()
+    {
+        using var tester = CreateServerTester();
+        await tester.StartAsync();
+        var owner = tester.NewAccount();
+        await owner.GrantAccessAsync();
+        await owner.RegisterDerivationSchemeAsync("BTC");
+        var employee = tester.NewAccount();
+        await employee.GrantAccessAsync();
+        await owner.AddEmployee(employee.UserId);
+        var client = await owner.CreateClient();
+
+        async Task<string> CreateOverpaidInvoice()
+        {
+            var invoice = await client.CreateInvoice(owner.StoreId, new CreateInvoiceRequest { Amount = 0.0001m, Currency = "BTC" });
+            var method = (await client.GetInvoicePaymentMethods(invoice.Id)).First();
+            await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
+            {
+                await tester.ExplorerNode.SendToAddressAsync(
+                    BitcoinAddress.Create(method.Destination, tester.NetworkProvider.BTC.NBitcoinNetwork),
+                    Money.Coins(method.Due * 2));
+            });
+            await tester.ExplorerNode.GenerateAsync(5);
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                invoice = await client.GetInvoice(invoice.Id);
+                Assert.Equal(InvoiceStatus.Settled, invoice.Status);
+                Assert.Equal(InvoiceExceptionStatus.PaidOver, invoice.AdditionalStatus);
+            });
+            return invoice.Id;
+        }
+
+        async Task<bool> RefundOverpaidAmount(string invoiceId, TestAccount user)
+        {
+            var controller = tester.PayTester.GetController<UIInvoiceController>(user.UserId, owner.StoreId);
+            controller.HttpContext.SetInvoiceData(await tester.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId));
+            var result = await controller.Refund(invoiceId, new RefundModel
+            {
+                RefundStep = RefundSteps.SelectRate,
+                SelectedPayoutMethod = "BTC-CHAIN",
+                SelectedRefundOption = "OverpaidAmount"
+            }, CancellationToken.None);
+            var ppId = Assert.IsType<string>(Assert.IsType<RedirectToActionResult>(result).RouteValues!["pullPaymentId"]);
+            await using var ctx = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
+            return (await ctx.PullPayments.FindAsync(ppId))!.GetBlob().AutoApproveClaims;
+        }
+
+        // An employee can refund the overpayment without approval, but only once:
+        // a second refund would pay the same overpayment again.
+        var invoiceId = await CreateOverpaidInvoice();
+        Assert.True(await RefundOverpaidAmount(invoiceId, employee));
+        Assert.False(await RefundOverpaidAmount(invoiceId, employee));
+        // Users allowed to approve payouts are not limited.
+        Assert.True(await RefundOverpaidAmount(invoiceId, owner));
+
+        // Concurrent requests cannot each be the first refund.
+        invoiceId = await CreateOverpaidInvoice();
+        var autoApproved = await Task.WhenAll(Enumerable.Range(0, 5).Select(_ => RefundOverpaidAmount(invoiceId, employee)));
+        Assert.True(autoApproved.Count(a => a) <= 1);
     }
 
     [Fact]

@@ -347,6 +347,7 @@ namespace BTCPayServer.Controllers
             RateRulesCollection rules;
             RateResult rateResult;
             CreatePullPaymentRequest createPullPayment;
+            var autoApproveIfOnlyRefund = false;
 
             var pmis = _payoutHandlers.GetSupportedPayoutMethods(store);
             if (!pmis.Contains(pmi))
@@ -486,7 +487,11 @@ namespace BTCPayServer.Controllers
                             createPullPayment.Amount = overpaidAmount!.Value;
                             // Employees may auto-approve this option without CanCreatePullPayments because the
                             // amount is limited to the settled overpayment and cannot spend the invoice principal.
-                            createPullPayment.AutoApproveClaims = true;
+                            // That limit holds for one refund only: a second one would pay the same overpayment
+                            // again. So it starts pending and is switched to auto-approve once saved, if it is
+                            // the only refund of the invoice.
+                            createPullPayment.AutoApproveClaims = authorizedForAutoApprove;
+                            autoApproveIfOnlyRefund = !authorizedForAutoApprove;
                             break;
 
                         case "Custom":
@@ -548,6 +553,16 @@ namespace BTCPayServer.Controllers
             }
 
             var ppId = await _paymentHostedService.CreateRefundPullPayment(store, createPullPayment, invoice.Id);
+            // Checked after this refund is saved, so of two concurrent refunds at most one sees itself alone.
+            if (autoApproveIfOnlyRefund &&
+                !await ctx.Refunds.AnyAsync(r => r.InvoiceDataId == invoice.Id && r.PullPaymentDataId != ppId, cancellationToken))
+            {
+                var pp = await ctx.PullPayments.FindAsync([ppId], cancellationToken);
+                var ppBlob = pp!.GetBlob();
+                ppBlob.AutoApproveClaims = true;
+                pp.SetBlob(ppBlob);
+                await ctx.SaveChangesAsync(cancellationToken);
+            }
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Store > Payouts.",

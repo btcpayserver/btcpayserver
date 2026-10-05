@@ -97,7 +97,7 @@ public class StoreLightningBalance(
         if (existing.GetExternalLightningUrl() is { } connectionString)
         {
             return lightningClientFactory.Create(connectionString, network,
-                existing.AllowUnsafeConnection is not false);
+                existing.IsUnsafeConnectionAllowed());
         }
         if (existing.IsInternalNode && lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var internalLightningNode))
         {

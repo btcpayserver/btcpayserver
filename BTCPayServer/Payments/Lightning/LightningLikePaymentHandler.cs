@@ -287,7 +287,7 @@ namespace BTCPayServer.Payments.Lightning
                     config.AllowUnsafeConnection = !safe;
 
                     var client = _lightningClientFactory.Create(config.ConnectionString, _Network,
-                        config.AllowUnsafeConnection is not false);
+                        config.IsUnsafeConnectionAllowed());
                     if (client is IExtendedLightningClient vlc)
                     {
                         var result = await vlc.Validate();

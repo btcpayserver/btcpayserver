@@ -15,6 +15,8 @@ namespace BTCPayServer.Payments.Lightning
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public bool? AllowUnsafeConnection { get; set; }
 
+        public bool IsUnsafeConnectionAllowed() => AllowUnsafeConnection is not false;
+
         public string? GetExternalLightningUrl()
         {
 #pragma warning disable CS0618 // Type or member is obsolete

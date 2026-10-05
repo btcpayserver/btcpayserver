@@ -105,7 +105,7 @@ namespace BTCPayServer.Payments.Lightning
                             var connStr = GetLightningUrl(listenedInvoice.Network.CryptoCode, lnConfig);
                             if (connStr is null)
                                 continue;
-                            var allowUnsafe = lnConfig.AllowUnsafeConnection is not false;
+                            var allowUnsafe = lnConfig.IsUnsafeConnectionAllowed();
                             var instanceListenerKey = (listenedInvoice.Network.CryptoCode, connStr, allowUnsafe);
                             lock (_InstanceListeners)
                             {
@@ -346,7 +346,7 @@ namespace BTCPayServer.Payments.Lightning
                         if (paymentContext.Status != PaymentMethodContext.ContextStatus.Created)
                             continue;
                         var instanceListenerKey = (paymentPrompt.Currency, connStr,
-                            lnConfig.AllowUnsafeConnection is not false);
+                            lnConfig.IsUnsafeConnectionAllowed());
                         LightningInstanceListener? instanceListener;
                         lock (_InstanceListeners)
                         {

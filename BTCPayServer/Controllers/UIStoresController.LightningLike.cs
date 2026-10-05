@@ -370,7 +370,7 @@ public partial class UIStoresController
         if (existing.GetExternalLightningUrl() is { } connectionString)
         {
             return _lightningClientFactory.Create(connectionString, network,
-                existing.AllowUnsafeConnection is not false);
+                existing.IsUnsafeConnectionAllowed());
         }
         if (existing.IsInternalNode && _lightningNetworkOptions.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var internalLightningNode))
         {

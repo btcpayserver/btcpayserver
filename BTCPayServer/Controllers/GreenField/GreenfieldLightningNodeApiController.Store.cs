@@ -160,7 +160,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (existing.GetExternalLightningUrl() is {} connectionString)
             {
                 return Task.FromResult(_lightningClientFactory.Create(connectionString, network,
-                    existing.AllowUnsafeConnection is not false));
+                    existing.IsUnsafeConnectionAllowed()));
             }
             else if (existing.IsInternalNode &&
             _lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,

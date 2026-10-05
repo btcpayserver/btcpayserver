@@ -31,6 +31,7 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Services.Wallets.Import;
 using BTCPayServer.Validation;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -208,6 +209,38 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain(generated, g => g > 110m);
             Assert.Contains(generated, g => g < 91m);
             Assert.Contains(generated, g => g > 109m);
+        }
+
+        [Fact]
+        public async Task CanRefreshMempoolFeeProviderThroughClamp()
+        {
+            var services = new ServiceCollection();
+            services.AddMemoryCache();
+            services.AddHttpClient(nameof(MempoolSpaceFeeProvider))
+                .ConfigurePrimaryHttpMessageHandler(() => new TestHttpMessageHandler(_ =>
+                    TestHttpMessageHandler.JsonResponse("""
+                        {
+                          "fastestFee": 10,
+                          "halfHourFee": 5,
+                          "hourFee": 3,
+                          "economyFee": 2,
+                          "minimumFee": 1
+                        }
+                        """)));
+            await using var serviceProvider = services.BuildServiceProvider();
+            var mempool = new MempoolSpaceFeeProvider(
+                serviceProvider.GetRequiredService<IMemoryCache>(),
+                nameof(CanRefreshMempoolFeeProviderThroughClamp),
+                serviceProvider.GetRequiredService<IHttpClientFactory>(),
+                false)
+            {
+                CachedOnly = true
+            };
+            var provider = new FeeProviderFactory.ClampFeeProvider(mempool, null, "BTC");
+
+            await FeeProviderFactory.RefreshCache(provider);
+
+            Assert.Equal(1m, (await mempool.GetFeeRateAsync(144)).SatoshiPerByte);
         }
 
         private void CanParseDecimalsCore(string str, decimal expected)

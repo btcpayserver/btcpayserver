@@ -22,6 +22,7 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Tests.Mocks;
+using Fido2NetLib;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
@@ -249,6 +250,8 @@ namespace BTCPayServer.Tests
                         .UseStartup<Startup>()
                         .ConfigureServices(services =>
                         {
+                            // Keep test hosts independent of FIDO Metadata Service availability and rate limits.
+                            services.RemoveAll<IMetadataService>();
                             if (RuntimeCompilation)
                                 services.AddMvcCore().AddRazorRuntimeCompilation();
 

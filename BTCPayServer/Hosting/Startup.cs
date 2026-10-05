@@ -134,12 +134,10 @@ namespace BTCPayServer.Hosting
             });
             services.AddFido2(options =>
                 {
-                    options.ServerName = "BTCPay Server";
+                    options.RPName = "BTCPay Server";
                 })
-                .AddCachedMetadataService(config =>
-                {
-                    config.AddFidoMetadataRepository();
-                });
+                .AddCachedMetadataService()
+                .AddFidoMetadataRepository();
             var descriptor = services.Single(descriptor => descriptor.ServiceType == typeof(Fido2Configuration));
             services.Remove(descriptor);
             services.AddScoped(provider =>
@@ -147,9 +145,9 @@ namespace BTCPayServer.Hosting
                 var httpContext = provider.GetService<IHttpContextAccessor>();
                 return new Fido2Configuration()
                 {
-                    ServerName = "BTCPay Server",
+                    RPName = "BTCPay Server",
                     Origins = new[] { $"{httpContext.HttpContext.Request.Scheme}://{httpContext.HttpContext.Request.Host}" }.ToHashSet(),
-                    ServerDomain = httpContext.HttpContext.Request.Host.Host
+                    RPID = httpContext.HttpContext.Request.Host.Host
                 };
             });
             services.AddScoped<Fido2Service>();

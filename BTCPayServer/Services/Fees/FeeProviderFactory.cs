@@ -47,9 +47,11 @@ public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
 
     class ClampFeeProvider(IFeeProvider inner, NBXplorerDashboard dashboard, string cryptoCode) : IFeeProvider
     {
+        public IFeeProvider Inner { get; } = inner;
+
         public async Task<FeeRate> GetFeeRateAsync(int blockTarget = 20)
         {
-            var rate = await inner.GetFeeRateAsync(blockTarget);
+            var rate = await Inner.GetFeeRateAsync(blockTarget);
             var d = dashboard.Get(cryptoCode);
             var min = d?.MempoolInfo?.MempoolMinfeeRate;
             min ??= d?.Status?.BitcoinStatus?.MinRelayTxFee;
@@ -80,10 +82,11 @@ public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
         {
         }
     }
-    private Task RefreshCache(IEnumerable<IFeeProvider> feeProviders) => Task.WhenAll(feeProviders.Select(fp => RefreshCache(fp)));
-    private Task RefreshCache(IFeeProvider fp) =>
+    private Task RefreshCache(IEnumerable<IFeeProvider> feeProviders) => Task.WhenAll(feeProviders.Select(RefreshCache));
+    private static Task RefreshCache(IFeeProvider fp) =>
         fp switch
         {
+            ClampFeeProvider cfp => RefreshCache(cfp.Inner),
             FallbackFeeProvider ffp => Task.WhenAll(ffp.Providers.Select(p => RefreshCache(p))),
             MempoolSpaceFeeProvider mempool => mempool.RefreshCache(),
             _ => Task.CompletedTask

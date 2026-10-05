@@ -2234,6 +2234,7 @@ namespace BTCPayServer.Tests
             await user.SetupWebhook();
             var client = await user.CreateClient(Policies.Unrestricted);
             var viewOnly = await user.CreateClient(Policies.CanViewInvoices);
+            var statusOnly = await user.CreateClient(Policies.CanManageInvoiceStatus);
 
             //create
 
@@ -2368,17 +2369,21 @@ namespace BTCPayServer.Tests
                 new CreateInvoiceRequest { Currency = "USD", Amount = 1 });
             Assert.Contains(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
             Assert.Contains(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
-            await client.MarkInvoiceStatus(newInvoice.Id, new MarkInvoiceStatusRequest()
+            await AssertHttpError(403, () => viewOnly.MarkInvoiceStatus(newInvoice.Id, new MarkInvoiceStatusRequest
+            {
+                Status = InvoiceStatus.Settled
+            }));
+            await statusOnly.MarkInvoiceStatus(newInvoice.Id, new MarkInvoiceStatusRequest()
             {
                 Status = InvoiceStatus.Settled
             });
-            newInvoice = await client.GetInvoice(newInvoice.Id);
+            newInvoice = await statusOnly.GetInvoice(newInvoice.Id);
 
             Assert.DoesNotContain(InvoiceStatus.Settled, newInvoice.AvailableStatusesForManualMarking);
             Assert.Contains(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
             newInvoice = await client.CreateInvoice(user.StoreId,
                 new CreateInvoiceRequest { Currency = "USD", Amount = 1 });
-            await client.MarkInvoiceStatus(newInvoice.Id, new MarkInvoiceStatusRequest()
+            await statusOnly.MarkInvoiceStatus(newInvoice.Id, new MarkInvoiceStatusRequest()
             {
                 Status = InvoiceStatus.Invalid
             });
@@ -2391,7 +2396,7 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain(InvoiceStatus.Invalid, newInvoice.AvailableStatusesForManualMarking);
             await AssertHttpError(403, async () =>
             {
-                await viewOnly.UpdateInvoice(invoice.Id,
+                await statusOnly.UpdateInvoice(invoice.Id,
                     new UpdateInvoiceRequest
                     {
                         Metadata = metadataForUpdate

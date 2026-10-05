@@ -239,7 +239,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
         }
 
-        [Authorize(Policy = Policies.CanModifyInvoices,
+        [Authorize(Policy = Policies.CanManageInvoiceStatus,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/status")]
         [HttpPost("~/api/v1/invoices/{invoiceId}/status")]

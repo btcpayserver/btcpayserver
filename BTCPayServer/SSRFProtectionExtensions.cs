@@ -31,15 +31,12 @@ public static class SSRFProtectionExtensions
     {
         var addresses = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host,
             AddressFamily.Unspecified, cancellationToken);
-        if (addresses.Length is 0 ||
-            addresses.Any(a => BTCPayServer.Extensions.IsLocalNetwork(a.ToString())))
-        {
-            throw new HttpRequestException("The endpoint does not resolve exclusively to public addresses");
-        }
 
         Exception lastException = null;
         foreach (var address in addresses)
         {
+            if (Extensions.IsLocalNetwork(address.ToString()))
+                continue;
             var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             try
             {
@@ -58,6 +55,9 @@ public static class SSRFProtectionExtensions
             }
         }
 
-        throw new HttpRequestException("Could not connect to the endpoint", lastException);
+        if (lastException is null)
+            throw new HttpRequestException("The endpoint does not resolve a public network address");
+        else
+            throw new HttpRequestException("Could not connect to the endpoint", lastException);
     }
 }

@@ -203,7 +203,7 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.GetStoreByInvoiceId(i.Id);
             if (store is null)
                 return NotFound();
-            if (!await ValidateAccessForArchivedInvoice(i))
+            if (!await ValidateAccessToInvoice(i))
                 return NotFound();
 
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, i.ReceiptOptions);
@@ -753,9 +753,11 @@ namespace BTCPayServer.Controllers
                 // see if the invoice actually exists and is in a state for which we do not display the checkout
                 // TODO: Can happen if the invoice has lazy activation which failed for all payment methods. We should display error instead...
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-                var store = invoice != null ? await _StoreRepository.GetStoreByInvoiceId(invoice.Id) : null;
-                var receipt = invoice != null && store != null ? InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, invoice.ReceiptOptions) : null;
-                var redirectUrl = invoice?.RedirectURL?.ToString();
+                if (invoice is null || !await ValidateAccessToInvoice(invoice))
+                    return NotFound();
+                var store = await _StoreRepository.GetStoreByInvoiceId(invoice.Id);
+                var receipt = store != null ? InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, invoice.ReceiptOptions) : null;
+                var redirectUrl = invoice.RedirectURL?.ToString();
                 return receipt?.Enabled is true
                     ? RedirectToAction(nameof(InvoiceReceipt), new { invoiceId })
                     : !string.IsNullOrEmpty(redirectUrl) ? Redirect(redirectUrl) : NotFound();
@@ -774,7 +776,7 @@ namespace BTCPayServer.Controllers
             if (invoice == null)
                 return null;
 
-            if (!await ValidateAccessForArchivedInvoice(invoice))
+            if (!await ValidateAccessToInvoice(invoice))
                 return null;
 
             var store = await _StoreRepository.FindStore(invoice.StoreId);
@@ -1045,7 +1047,7 @@ namespace BTCPayServer.Controllers
             if (invoice == null || invoice.Status == InvoiceStatus.Settled || invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired)
                 return NotFound();
 
-            if (!await ValidateAccessForArchivedInvoice(invoice))
+            if (!await ValidateAccessToInvoice(invoice))
                 return NotFound();
 
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
@@ -1337,9 +1339,10 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListInvoices), new { storeId });
         }
 
-        private async Task<bool> ValidateAccessForArchivedInvoice(InvoiceEntity invoice)
+        private async Task<bool> ValidateAccessToInvoice(InvoiceEntity invoice)
         {
-            if (!invoice.Archived) return true;
+            if (!invoice.Archived && DateTimeOffset.UtcNow < invoice.MonitoringExpiration.AddMonths(1))
+                return true;
             var authorizationResult = await _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanViewInvoices);
             return authorizationResult.Succeeded;
         }

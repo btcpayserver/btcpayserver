@@ -2416,6 +2416,76 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public async Task HidesStaleInvoicesFromPublicEndpoints()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            var ownerEmail = await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.AddDerivationScheme();
+            await s.GoToInvoices();
+            var invoiceId = await s.CreateInvoice();
+            await s.GoToInvoiceCheckout(invoiceId);
+            await s.GoToHome();
+            await s.Logout();
+
+            async Task AssertStatus(string path, HttpStatusCode expectedStatus)
+            {
+                var response = await s.Page.GotoAsync(s.Link(path));
+                Assert.NotNull(response);
+                Assert.Equal((int)expectedStatus, response.Status);
+            }
+
+            async Task<bool> CanOpenStatusWebSocket()
+            {
+                return await s.Page.EvaluateAsync<bool>(
+                    """
+                    path => new Promise(resolve => {
+                        const url = new URL(path, window.location.href);
+                        url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+                        const socket = new WebSocket(url);
+                        socket.onopen = () => {
+                            socket.close();
+                            resolve(true);
+                        };
+                        socket.onerror = () => resolve(false);
+                    })
+                    """,
+                    $"/i/{invoiceId}/status/ws");
+            }
+
+            var publicPaths = new[]
+            {
+                $"/i/{invoiceId}",
+                $"/i/{invoiceId}/status",
+                $"/i/{invoiceId}/receipt"
+            };
+            foreach (var path in publicPaths)
+                await AssertStatus(path, HttpStatusCode.OK);
+            Assert.True(await CanOpenStatusWebSocket());
+
+            await using (var ctx = s.Server.PayTester.GetService<ApplicationDbContextFactory>().CreateContext())
+            {
+                var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
+                Assert.NotNull(invoiceData);
+                var invoice = invoiceData.GetBlob();
+                invoice.MonitoringExpiration = DateTimeOffset.UtcNow.AddMonths(-1).AddSeconds(-1);
+                invoiceData.SetBlob(invoice);
+                await ctx.SaveChangesAsync();
+            }
+
+            foreach (var path in publicPaths)
+                await AssertStatus(path, HttpStatusCode.NotFound);
+            Assert.False(await CanOpenStatusWebSocket());
+
+            await s.GoToLogin();
+            await s.LogIn(ownerEmail, s.Password);
+            foreach (var path in publicPaths)
+                await AssertStatus(path, HttpStatusCode.OK);
+            Assert.True(await CanOpenStatusWebSocket());
+        }
+
+        [Fact]
         public async Task CanCreateCrowdfundingApp()
         {
             await using var s = CreatePlaywrightTester();

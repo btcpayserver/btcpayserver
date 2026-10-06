@@ -6,6 +6,7 @@
 
 * **Outbound HTTP requests**: Block private-network destinations for Lightning connections, LNURL requests, invoice notification URLs, and webhooks by default to prevent SSRF. Operators using private services must [allow them with `ssrfexceptions`](https://docs.btcpayserver.org/Operators/#allow-private-outbound-destinations) (#7581 #7626 #7627 #7635 #7636 #7637 #7638 #7644 #7646) @NicolasDorier
 * **Refunds**: Employees without permission to create approved pull payments can no longer auto-approve invoice overpayment refunds; another user must approve the payout (#7649) @NicolasDorier
+* **Invoices**: Hide checkout, status, and receipt information from public endpoints one month after monitoring ends; users with invoice-view permission retain access (#7651) @NicolasDorier
 
 ### New features
 

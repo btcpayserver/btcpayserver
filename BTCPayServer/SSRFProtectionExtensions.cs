@@ -7,18 +7,32 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace BTCPayServer.Services;
+namespace BTCPayServer;
 
-public class SSRFProtection(BTCPayServerOptions options)
+public static class SSRFProtectionExtensions
 {
-    public async ValueTask<Stream> Connect(SocketsHttpConnectionContext context,
+    public static IHttpClientBuilder UseSSRFProtection(this IHttpClientBuilder builder)
+    => builder.ConfigurePrimaryHttpMessageHandler((h, sp) =>
+    {
+        var handler = (SocketsHttpHandler)h;
+        var opt = sp.GetRequiredService<BTCPayServerOptions>();
+        if (!opt.DisableSSRFProtection)
+        {
+            handler.UseProxy = false;
+            handler.ConnectCallback = Connect;
+        }
+    });
+
+
+    static async ValueTask<Stream> Connect(SocketsHttpConnectionContext context,
         CancellationToken cancellationToken)
     {
         var addresses = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host,
             AddressFamily.Unspecified, cancellationToken);
         if (addresses.Length is 0 ||
-            !options.DisableSSRFProtection && addresses.Any(a => BTCPayServer.Extensions.IsLocalNetwork(a.ToString())))
+            addresses.Any(a => BTCPayServer.Extensions.IsLocalNetwork(a.ToString())))
         {
             throw new HttpRequestException("The endpoint does not resolve exclusively to public addresses");
         }

@@ -1,5 +1,4 @@
 #nullable enable
-using System.Net.Http;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
@@ -37,11 +36,7 @@ public class BitpayPlugin : BaseBTCPayServerPlugin
             {
                 client.DefaultRequestHeaders.UserAgent.Add(userAgent);
             })
-            .ConfigurePrimaryHttpMessageHandler(sp => new SocketsHttpHandler
-            {
-                UseProxy = false,
-                ConnectCallback = sp.GetRequiredService<SSRFProtection>().Connect
-            });
+            .UseSSRFProtection();
 
         services.AddSingleton<MatcherPolicy, BitpayEndpointSelectorPolicy>();
         services.TryAddSingleton<TokenRepository>();

@@ -132,16 +132,12 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
                 new LndHubConnectionStringHandler(client));
             services.TryAddSingleton<LightningClientFactoryService>();
-            services.TryAddSingleton<SSRFProtection>();
             services.AddHttpClient(LightningClientFactoryService.NamedClient)
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
             services.AddHttpClient(LightningClientFactoryService.SafeNamedClient)
-                .ConfigurePrimaryHttpMessageHandler(sp => new SocketsHttpHandler
-                {
-                    AllowAutoRedirect = false,
-                    UseProxy = false,
-                    ConnectCallback = sp.GetRequiredService<SSRFProtection>().Connect
-                });
+                .UseSSRFProtection()
+                .ConfigurePrimaryHttpMessageHandler((handler, _) =>
+                    ((SocketsHttpHandler)handler).AllowAutoRedirect = false);
             services.AddHttpClient(LightningClientFactoryService.OnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler(sp =>
                 {
@@ -404,11 +400,7 @@ namespace BTCPayServer.Hosting
             services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
             services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient)
-                .ConfigurePrimaryHttpMessageHandler(sp => new SocketsHttpHandler
-                {
-                    UseProxy = false,
-                    ConnectCallback = sp.GetRequiredService<SSRFProtection>().Connect
-                });
+                .UseSSRFProtection();
             services.AddSingleton<HostedServices.PullPaymentHostedService>();
             services.AddSingleton<IHostedService, HostedServices.PullPaymentHostedService>(o => o.GetRequiredService<PullPaymentHostedService>());
 

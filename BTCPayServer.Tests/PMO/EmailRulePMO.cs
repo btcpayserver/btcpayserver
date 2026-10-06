@@ -32,6 +32,7 @@ public  class EmailRulePMO(PlaywrightTester s)
 
     public async Task Fill(Form form)
     {
+        await s.Page.Locator(".note-editable").WaitForAsync();
         if (form.Trigger is not null)
             await s.Page.SelectOptionAsync("#Trigger", form.Trigger);
         if (form.Condition is not null)

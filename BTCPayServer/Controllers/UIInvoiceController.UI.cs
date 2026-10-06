@@ -484,9 +484,7 @@ namespace BTCPayServer.Controllers
 
                             createPullPayment.Currency = paymentMethodCurrency;
                             createPullPayment.Amount = overpaidAmount!.Value;
-                            // Employees may auto-approve this option without CanCreatePullPayments because the
-                            // amount is limited to the settled overpayment and cannot spend the invoice principal.
-                            createPullPayment.AutoApproveClaims = true;
+                            createPullPayment.AutoApproveClaims = authorizedForAutoApprove;
                             break;
 
                         case "Custom":

@@ -37,6 +37,7 @@ namespace BTCPayServer.Configuration
             app.Option("--postgres", $"Connection string to a PostgreSQL database", CommandOptionType.SingleValue);
             app.Option("--nocsp", $"Disable CSP (default false)", CommandOptionType.BoolValue);
             app.Option("--disablessrfprotection", "Disable outbound HTTP protection against DNS rebinding and private-network access (default: false)", CommandOptionType.BoolValue);
+            app.Option("--ssrfexceptions", "Comma- or semicolon-separated exact hostnames, IP addresses, and CIDR ranges allowed through SSRF protection, optionally restricted to a port (for example: nas.home.arpa:8080;10.8.0.0/24;[fd00::/8]:443). Exact hostnames trust all resolved addresses (default: empty)", CommandOptionType.SingleValue);
             app.Option("--deprecated", $"Allow deprecated settings (default:false)", CommandOptionType.BoolValue);
             app.Option("--externalservices", $"Links added to external services inside Server Settings / Services under the format service1:path2;service2:path2.(default: empty)", CommandOptionType.SingleValue);
             app.Option("--btcpayhostenabled", "Enable the btcpay-host integration (default: false)", CommandOptionType.BoolValue);
@@ -131,6 +132,7 @@ namespace BTCPayServer.Configuration
             builder.AppendLine("#httpscertificatefilepath=devtest.pfx");
             builder.AppendLine("#httpscertificatefilepassword=toto");
             builder.AppendLine("#disablessrfprotection=false");
+            builder.AppendLine("#ssrfexceptions=nas.home.arpa:8080;10.8.0.0/24;[fd00::/8]:443");
             builder.AppendLine();
             builder.AppendLine("### Host integration ###");
             builder.AppendLine("#btcpayhostenabled=false");

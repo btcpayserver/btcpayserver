@@ -41,6 +41,7 @@ this page.
 |---|---|---|---|
 | `--nocsp` | `nocsp` | `BTCPAY_NOCSP` | Disable CSP (default false) |
 | `--disablessrfprotection` | `disablessrfprotection` | `BTCPAY_DISABLESSRFPROTECTION` | Disable outbound HTTP protection against DNS rebinding and private-network access (default: false) |
+| `--ssrfexceptions` | `ssrfexceptions` | `BTCPAY_SSRFEXCEPTIONS` | Comma- or semicolon-separated exact hostnames, IP addresses, and CIDR ranges allowed through SSRF protection, optionally restricted to a port (for example: nas.home.arpa:8080;10.8.0.0/24;[fd00::/8]:443). Exact hostnames trust all resolved addresses (default: empty) |
 | `--rootpath` | `rootpath` | `BTCPAY_ROOTPATH` | The root path in the URL to access BTCPay (default: /) |
 | `--disable-registration` | `disable-registration` | `BTCPAY_DISABLE-REGISTRATION` | Disables new user registrations (default:true) |
 | `--xforwardedproto` | `xforwardedproto` | `BTCPAY_XFORWARDEDPROTO` | If specified, set X-Forwarded-Proto to the specified value, this may be useful if your reverse proxy handle https but is not configured to add X-Forwarded-Proto (example: --xforwardedproto https) |

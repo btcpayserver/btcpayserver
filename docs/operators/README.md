@@ -63,6 +63,61 @@ Keep environment-specific service wiring in deployment tooling. Avoid placing
 Docker Compose procedures or generated-container details in application
 documentation.
 
+### Allow Private Outbound Destinations
+
+BTCPay Server protects outbound HTTP requests against server-side request
+forgery (SSRF). Without this protection, a user who can configure an outbound
+destination, such as a webhook, could make BTCPay Server connect to services
+that are reachable from the server but not from the public internet. This can
+expose applications, node APIs, cloud metadata endpoints, or other systems on
+the server's LAN or VPN.
+
+By default, SSRF-protected requests connect only to public network addresses.
+This can also block an operator's intentional integration with a private
+service, such as a webhook receiver on a LAN or a Lightning-related service on
+a VPN. Use `ssrfexceptions` to allow only the destinations BTCPay Server needs:
+
+```ini
+ssrfexceptions=nas.home.arpa:8080;10.8.0.0/24;[fd00::/8]:443
+```
+
+The equivalent environment variable is:
+
+```sh
+BTCPAY_SSRFEXCEPTIONS="nas.home.arpa:8080;10.8.0.0/24;[fd00::/8]:443"
+```
+
+For a direct command-line deployment, pass:
+
+```text
+--ssrfexceptions "nas.home.arpa:8080;10.8.0.0/24;[fd00::/8]:443"
+```
+
+Separate entries with commas or semicolons. Each entry can be one of:
+
+- An exact hostname, such as `nas.home.arpa` or `nas.home.arpa:8080`.
+- An IPv4 or IPv6 address, optionally restricted to one port.
+- A canonical IPv4 or IPv6 CIDR range, optionally restricted to one port.
+  Use brackets when adding a port to IPv6, such as `[fd00::/8]:443`.
+
+An entry without a port permits every port on that destination. Hostnames are
+matched exactly, not as wildcard domains. An excepted hostname trusts every IP
+address returned by DNS for that name, so only except hostnames whose DNS is
+under trusted control. CIDR ranges must use their network address: for example,
+`10.8.0.0/24` is valid while `10.8.0.5/24` is not. Exceptions apply globally to
+all features using SSRF-protected HTTP clients. Redirect targets are checked
+separately and require their own exception when they resolve to a private
+address.
+
+Exceptions do not disable HTTPS certificate validation or change Tor routing.
+Invalid entries prevent BTCPay Server from starting. After changing the
+setting, restart BTCPay Server and exercise the affected integration. Debug
+logs record private connections permitted by an exception.
+
+The existing `disablessrfprotection` setting disables all outbound SSRF
+protection. Set it to `true` only as a temporary troubleshooting measure;
+`ssrfexceptions` is the safer option for normal LAN and VPN integrations.
+
 ## Advanced Topics
 
 Server administrators can install community language packs or maintain local

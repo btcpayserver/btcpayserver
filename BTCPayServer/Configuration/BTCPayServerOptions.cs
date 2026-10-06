@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using BTCPayServer.Logging;
@@ -110,6 +111,14 @@ namespace BTCPayServer.Configuration
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
             DisableSSRFProtection = conf.GetOrDefault<bool>("disablessrfprotection", false);
+            try
+            {
+                SSRFExceptions = SSRFAllowedDestination.ParseList(conf.GetOrDefault<string>("ssrfexceptions", null));
+            }
+            catch (FormatException ex)
+            {
+                throw new ConfigException(ex.Message);
+            }
             CheatMode = conf.GetOrDefault("cheatmode", false);
             if (CheatMode && this.NetworkType == ChainName.Mainnet)
                 throw new ConfigException($"cheatmode can't be used on mainnet");
@@ -117,6 +126,7 @@ namespace BTCPayServer.Configuration
 
         public bool CheatMode { get; set; }
         public bool DisableSSRFProtection { get; set; }
+        internal IReadOnlyList<SSRFAllowedDestination> SSRFExceptions { get; private set; } = [];
 
         public string RootPath { get; set; }
         public bool DockerDeployment { get; set; }

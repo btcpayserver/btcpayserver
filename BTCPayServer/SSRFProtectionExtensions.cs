@@ -1,4 +1,6 @@
+#nullable enable
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -8,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer;
 
@@ -21,22 +24,36 @@ public static class SSRFProtectionExtensions
         if (!opt.DisableSSRFProtection)
         {
             handler.UseProxy = false;
-            handler.ConnectCallback = Connect;
+            var logger = sp.GetService<ILoggerFactory>()?.CreateLogger(typeof(SSRFProtectionExtensions));
+            handler.ConnectCallback = (context, cancellationToken) =>
+                Connect(context, opt.SSRFExceptions, logger, cancellationToken);
         }
     });
 
 
     static async ValueTask<Stream> Connect(SocketsHttpConnectionContext context,
+        IReadOnlyList<SSRFAllowedDestination> exceptions,
+        ILogger? logger,
         CancellationToken cancellationToken)
     {
         var addresses = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host,
             AddressFamily.Unspecified, cancellationToken);
+        var hostnameException = exceptions.FirstOrDefault(exception =>
+            exception.MatchesHostname(context.DnsEndPoint.Host, context.DnsEndPoint.Port));
 
-        Exception lastException = null;
+        Exception? lastException = null;
         foreach (var address in addresses)
         {
-            if (Extensions.IsLocalNetwork(address.ToString()))
+            var isLocal = Extensions.IsLocalNetwork(address.ToString());
+            var addressException = exceptions.FirstOrDefault(exception =>
+                exception.MatchesAddress(address, context.DnsEndPoint.Port));
+            if (isLocal && hostnameException is null && addressException is null)
                 continue;
+            if (isLocal)
+            {
+                logger?.LogDebug("SSRF exception permitted connection to {Host}:{Port} at {Address}",
+                    context.DnsEndPoint.Host, context.DnsEndPoint.Port, address);
+            }
             var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             try
             {
@@ -56,7 +73,7 @@ public static class SSRFProtectionExtensions
         }
 
         if (lastException is null)
-            throw new HttpRequestException("The endpoint does not resolve a public network address");
+            throw new HttpRequestException("The endpoint does not resolve to an allowed network address");
         else
             throw new HttpRequestException("Could not connect to the endpoint", lastException);
     }

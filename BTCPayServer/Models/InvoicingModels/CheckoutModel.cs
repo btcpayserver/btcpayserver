@@ -43,7 +43,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string InvoiceId { get; set; }
         public string Address { get; set; }
         public string Due { get; set; }
-        public string CustomerEmail { get; set; }
         public bool ShowRecommendedFee { get; set; }
         public decimal FeeRate { get; set; }
         public int ExpirationSeconds { get; set; }

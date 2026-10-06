@@ -916,7 +916,6 @@ namespace BTCPayServer.Controllers
                 // The Tweak is part of the PaymentMethodFee, but let's not show it in the UI as it's negligible.
                 OrderAmount = ShowMoney(accounting.TotalDue - (prompt.PaymentMethodFee - prompt.TweakFee)),
                 IsUnsetTopUp = invoice.IsUnsetTopUp(),
-                CustomerEmail = invoice.Metadata.BuyerEmail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
                 DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalSeconds,
                 MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,

@@ -918,7 +918,6 @@ namespace BTCPayServer.Controllers
                 IsUnsetTopUp = invoice.IsUnsetTopUp(),
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
                 DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalSeconds,
-                MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
                 MaxTimeMinutes = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalMinutes,
                 ItemDesc = invoice.Metadata.ItemDesc,
                 Rate = ExchangeRate(prompt.Currency, prompt, DisplayFormatter.CurrencyFormat.Symbol),
@@ -979,9 +978,6 @@ namespace BTCPayServer.Controllers
                 model.ErrorSoundUrl = string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/error.mp3");
                 model.NfcReadSoundUrl = string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/nfcread.mp3");
             }
-
-            var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
-            model.TimeLeft = expiration.PrettyPrint();
 
             if (_handlers.TryGetValue(paymentMethodId, out var h))
             {

@@ -54,13 +54,6 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-        [Uri]
-        [DisplayName("Notification URL")]
-        public string NotificationUrl
-        {
-            get; set;
-        }
-
         [DisplayName("Supported Transaction Currencies")]
         public List<string> SupportedTransactionCurrencies
         {

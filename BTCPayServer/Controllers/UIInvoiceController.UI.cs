@@ -1257,7 +1257,6 @@ namespace BTCPayServer.Controllers
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     entityManipulator: (entity) =>
                     {
-                        entity.NotificationURLTemplate = model.NotificationUrl;
                         entity.FullNotifications = true;
                         entity.NotificationEmail = model.NotificationEmail;
                         entity.ExtendedNotifications = model.NotificationEmail != null;

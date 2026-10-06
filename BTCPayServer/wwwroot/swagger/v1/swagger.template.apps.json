@@ -802,7 +802,8 @@
                             },
                             "notificationUrl": {
                                 "type": "string",
-                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
+                                "description": "Deprecated. Use webhooks instead. Callback notification URL to POST to once when an invoice is paid and once when there are enough blockchain confirmations.",
+                                "deprecated": true,
                                 "nullable": true
                             },
                             "redirectUrl": {
@@ -971,7 +972,8 @@
                             },
                             "notificationUrl": {
                                 "type": "string",
-                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
+                                "description": "Deprecated. Use webhooks instead. Callback notification URL to POST to once when an invoice is paid and once when there are enough blockchain confirmations.",
+                                "deprecated": true,
                                 "nullable": true
                             },
                             "tagline": {

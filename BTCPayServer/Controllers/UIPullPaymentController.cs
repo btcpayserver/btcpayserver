@@ -11,9 +11,10 @@ using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
-using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
+using BTCPayServer.Plugins.Translations;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -34,6 +35,7 @@ namespace BTCPayServer.Controllers
         BTCPayNetworkJsonSerializerSettings serializerSettings,
         PayoutMethodHandlerDictionary payoutHandlers,
         StoreRepository storeRepository,
+        LocalizerService localizer,
         IStringLocalizer stringLocalizer)
         : Controller
     {
@@ -53,6 +55,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var storeBlob = store.GetStoreBlob();
+            await localizer.UseStoreLanguage(storeBlob.StoreLanguage);
             var payouts = (await ctx.Payouts.Where(p => p.PullPaymentDataId == pp.Id)
                     .OrderByDescending(o => o.Date)
                     .ToListAsync())
@@ -177,6 +180,9 @@ namespace BTCPayServer.Controllers
             var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
             if (pp is null)
                 return NotFound();
+
+            if (await storeRepository.FindStore(pp.StoreId) is { } store)
+                await localizer.UseStoreLanguage(store.GetStoreBlob().StoreLanguage);
 
             if (string.IsNullOrEmpty(vm.Destination))
             {

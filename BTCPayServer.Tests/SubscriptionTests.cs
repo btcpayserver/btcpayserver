@@ -16,6 +16,7 @@ using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Subscriptions;
 using BTCPayServer.Tests.PMO;
 using BTCPayServer.Views.Stores;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
 using NBitcoin;
 using NBXplorer;
@@ -456,6 +457,68 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
     {
         var trialEnd = DateTimeOffset.UtcNow.AddDays(trialDays);
         return DateTime.DaysInMonth(trialEnd.Year, trialEnd.Month);
+    }
+
+    [Fact]
+    [Trait("Integration", "Integration")]
+    public async Task CanConcurrentlyDebitSubscriberCredit()
+    {
+        using var s = CreateServerTester();
+        await s.StartAsync();
+        var user = s.NewAccount();
+        await user.RegisterAsync(true);
+        await user.CreateStoreAsync();
+
+        var client = await user.CreateClient();
+        var offering = await client.CreateOffering(user.StoreId, new OfferingModel { AppName = "Test" });
+        var plan = await client.CreateOfferingPlan(user.StoreId, offering.Id, new()
+        {
+            Name = "Test",
+            Price = 10m
+        });
+
+        var dbFactory = s.PayTester.GetService<ApplicationDbContextFactory>();
+        long subscriberId;
+        await using (var db = dbFactory.CreateContext())
+        {
+            var customer = await db.Customers.GetOrUpdate(user.StoreId, CustomerSelector.ByEmail("test@gmail.com"));
+            var subscriber = new SubscriberData
+            {
+                OfferingId = offering.Id,
+                CustomerId = customer.Id,
+                PlanId = plan.Id
+            };
+            db.Subscribers.Add(subscriber);
+            await db.SaveChangesAsync();
+            subscriberId = subscriber.Id;
+        }
+
+        var subscriptionService = s.PayTester.GetService<SubscriptionHostedService>();
+        Assert.Equal(27m, await subscriptionService.UpdateCredit(new()
+        {
+            SubscriberId = subscriberId,
+            Description = "Initial credit",
+            Credit = 27m
+        }));
+
+        var startDebits = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var concurrentDebits = Enumerable.Range(0, 32).Select(async _ =>
+        {
+            await startDebits.Task;
+            return await subscriptionService.UpdateCredit(new()
+            {
+                SubscriberId = subscriberId,
+                Description = "Concurrent debit",
+                Charge = 2m
+            });
+        }).ToArray();
+        startDebits.SetResult();
+
+        var debitResults = await Task.WhenAll(concurrentDebits);
+        Assert.Equal(13, debitResults.Count(debit => debit is not null));
+        await using var verificationDb = dbFactory.CreateContext();
+        Assert.Equal(1m, (await verificationDb.Credits.SingleAsync(c => c.SubscriberId == subscriberId)).Amount);
+        Assert.Equal(14, await verificationDb.SubscriberCreditHistory.CountAsync(h => h.SubscriberId == subscriberId));
     }
 
     [Fact]

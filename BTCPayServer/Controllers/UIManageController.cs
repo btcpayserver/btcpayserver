@@ -146,6 +146,12 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
 
+            var langTranslation = string.IsNullOrEmpty(model.LangTranslation) ? null : model.LangTranslation;
+            if (langTranslation is not null && !LocalizerService.IsInstalledTranslation(langTranslation, await _localizer.GetTranslations()))
+            {
+                ModelState.AddModelError(nameof(model.LangTranslation), StringLocalizer["The selected language is not installed on this server."].Value);
+                return View(await GetIndexViewModel(user, model));
+            }
             bool needUpdate = false;
             var email = user.Email;
             var setNewEmail = model.Email != email && ModelState.IsValid;
@@ -188,17 +194,10 @@ namespace BTCPayServer.Controllers
                 blob.Name = model.Name;
                 needUpdate = true;
             }
-
-            var langTranslation = string.IsNullOrEmpty(model.LangTranslation) ? null : model.LangTranslation;
             if (blob.LangTranslation is null && langTranslation == _localizer.ServerLanguage)
                 langTranslation = null;
 
-            if (langTranslation is not null &&
-                !LocalizerService.IsInstalledTranslation(langTranslation, await _localizer.GetTranslations()))
-            {
-                ModelState.AddModelError(nameof(model.LangTranslation), StringLocalizer["The selected language is not installed on this server."].Value);
-            }
-            else if (blob.LangTranslation != langTranslation)
+            if (blob.LangTranslation != langTranslation)
             {
                 blob.LangTranslation = langTranslation;
                 needUpdate = true;

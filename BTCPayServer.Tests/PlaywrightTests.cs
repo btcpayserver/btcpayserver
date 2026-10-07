@@ -175,6 +175,43 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public async Task CanUsePayButtonFromExternalWebsite()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.InitializeBTCPayServer();
+
+            await s.GoToStore(s.StoreId, StoreNavPages.PayButton);
+            await s.Page.Locator("#enable-pay-button").ClickAsync();
+            await s.Page.Locator("#price").FillAsync("10");
+            await s.Page.Locator("#useModal").CheckAsync();
+            await Expect(s.Page.Locator("#mainCode")).ToContainTextAsync("btcpay-form");
+            var payButtonCode = await s.Page.Locator("#mainCode").InnerTextAsync();
+
+            using var merchantServer = new FakeServer();
+            await merchantServer.Start();
+            var merchantUrl = new UriBuilder(merchantServer.ServerUri) { Host = "localhost" }.Uri;
+            var navigation = s.Page.GotoAsync(merchantUrl.AbsoluteUri);
+            var request = await merchantServer.GetNextRequest();
+            var body = System.Text.Encoding.UTF8.GetBytes($"<!doctype html><html><body>{payButtonCode}</body></html>");
+            request.Response.StatusCode = 200;
+            request.Response.ContentType = "text/html";
+            request.Response.ContentLength = body.Length;
+            await request.Response.Body.WriteAsync(body);
+            merchantServer.Done();
+            await navigation;
+
+            await Expect(s.Page).ToHaveURLAsync(merchantUrl.AbsoluteUri);
+            await Expect(s.Page.Locator(".btcpay-form")).ToBeVisibleAsync();
+            await s.Page.WaitForFunctionAsync("() => !!window.btcpay");
+            await s.Page.Locator(".btcpay-form .submit").ClickAsync();
+
+            var checkoutFrame = s.Page.Locator("iframe[name='btcpay']");
+            await Expect(checkoutFrame).ToBeVisibleAsync();
+            await Expect(s.Page.FrameLocator("iframe[name='btcpay']").Locator("#Checkout")).ToBeVisibleAsync();
+        }
+
+        [Fact]
         public async Task CanCreatePayRequest()
         {
             await using var s = CreatePlaywrightTester();

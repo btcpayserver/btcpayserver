@@ -36,14 +36,19 @@ namespace BTCPayServer.Plugins.Translations
         public record LoadedTranslations(Translations Translations, Translations Fallback, string LangName, bool Rtl);
         LoadedTranslations _LoadedTranslations = new(Translations.Default, Translations.Default, Translations.DefaultLanguage, false);
 
-        readonly AsyncLocal<LoadedTranslations?> _requestTranslations = new();
+        sealed class RequestLanguage
+        {
+            public string? TranslationName { get; set; }
+            public LoadedTranslations? Translations { get; set; }
+        }
+        readonly AsyncLocal<RequestLanguage?> _requestTranslations = new();
         static readonly TimeSpan CacheIdle = TimeSpan.FromMinutes(30);
         static readonly MemoryCacheEntryOptions UserChoiceOptions = new() { SlidingExpiration = CacheIdle };
         static string GetTranslationsCacheKey(string name) => $"{nameof(LocalizerService)}-translations-{name}";
         static string GetUserChoiceCacheKey(string userId) => $"{nameof(LocalizerService)}-user-{userId}";
 
         CancellationTokenSource _translationsChanged = new();
-        LoadedTranslations Current => _requestTranslations.Value ?? _LoadedTranslations;
+        LoadedTranslations Current => _requestTranslations.Value?.Translations ?? _LoadedTranslations;
         public Translations Translations => Current.Translations;
 
         // Whether the language used for the current request is written right-to-left.
@@ -121,9 +126,32 @@ namespace BTCPayServer.Plugins.Translations
                 return null;
             }
         }
+        public void BeginRequest() => _requestTranslations.Value = new RequestLanguage();
+
         public void SetRequestTranslations(LoadedTranslations? translations)
         {
-            _requestTranslations.Value = translations;
+            if (_requestTranslations.Value is { } current)
+                current.Translations = translations;
+            else
+                _requestTranslations.Value = new RequestLanguage { Translations = translations };
+        }
+
+        public async Task UseStoreLanguage(string? translationName)
+        {
+            if (string.IsNullOrEmpty(translationName))
+                return;
+
+            if (translationName == ServerLanguage)
+            {
+                SetRequestTranslations(null);
+                return;
+            }
+            try
+            {
+                if (await GetUserTranslations(translationName) is { } translations)
+                    SetRequestTranslations(translations);
+            }
+            catch (Exception) { }
         }
 
         void InvalidateUserTranslations() => Interlocked.Exchange(ref _translationsChanged, new CancellationTokenSource()).Cancel();

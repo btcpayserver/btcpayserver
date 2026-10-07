@@ -7,31 +7,32 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Services;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
+using BTCPayServer.Payouts;
+using BTCPayServer.Plugins.Translations;
+using BTCPayServer.Plugins.Webhooks;
 using BTCPayServer.Rating;
 using BTCPayServer.Security.Greenfield;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
-using Newtonsoft.Json.Linq;
-using StoreData = BTCPayServer.Data.StoreData;
-using BTCPayServer.Payouts;
-using BTCPayServer.Plugins.Webhooks;
-using Dapper;
 using Microsoft.AspNetCore.Mvc.Localization;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
+using Newtonsoft.Json.Linq;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers
 {
@@ -60,6 +61,7 @@ namespace BTCPayServer.Controllers
         private readonly AppService _appService;
         private readonly UriResolver _uriResolver;
         private readonly PermissionService _permissionService;
+        private readonly LocalizerService _localizer;
 
         public WebhookSender WebhookNotificationManager { get; }
         public IEnumerable<IGlobalCheckoutModelExtension> GlobalCheckoutModelExtensions { get; }
@@ -93,7 +95,8 @@ namespace BTCPayServer.Controllers
             IStringLocalizer stringLocalizer,
             ViewLocalizer viewLocalizer,
             PrettyNameProvider prettyName,
-            PermissionService permissionService)
+            PermissionService permissionService,
+            LocalizerService localizer)
         {
             _displayFormatter = displayFormatter;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -122,6 +125,7 @@ namespace BTCPayServer.Controllers
             StringLocalizer = stringLocalizer;
             ViewLocalizer = viewLocalizer;
             _permissionService = permissionService;
+            _localizer = localizer;
         }
 
         internal async Task<InvoiceEntity> CreatePaymentRequestInvoice(Data.PaymentRequestData prData, decimal? amount, decimal amountDue, StoreData storeData, HttpRequest request, CancellationToken cancellationToken)

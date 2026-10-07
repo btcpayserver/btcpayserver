@@ -215,6 +215,7 @@ namespace BTCPayServer.Controllers
             }
 
             var storeBlob = store.GetStoreBlob();
+            await _localizer.UseStoreLanguage(storeBlob.StoreLanguage);
             var vm = new InvoiceReceiptViewModel
             {
                 InvoiceId = i.Id,

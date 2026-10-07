@@ -364,10 +364,11 @@ namespace BTCPayServer.Hosting
             app.UseAuthorization();
             app.Use(async (context, next) =>
             {
+                var localizer = context.RequestServices.GetRequiredService<LocalizerService>();
+                localizer.BeginRequest();
                 if (context.User.Identity is { IsAuthenticated: true } identity &&
                     identity.AuthenticationType == IdentityConstants.ApplicationScheme)
                 {
-                    var localizer = context.RequestServices.GetRequiredService<LocalizerService>();
                     var userManager = context.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
                     localizer.SetRequestTranslations(await localizer.GetTranslationsForUser(context.User, userManager));
                 }

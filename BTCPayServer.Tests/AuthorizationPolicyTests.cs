@@ -48,4 +48,13 @@ public class AuthorizationPolicyTests(ITestOutputHelper helper) : UnitTestBase(h
         foreach (var method in methods)
             Assert.Empty(method.GetCustomAttributes<IgnoreAntiforgeryTokenAttribute>(true));
     }
+
+    [Fact]
+    [Trait("Fast", "Fast")]
+    public void FileUploadRequiresAntiforgeryValidation()
+    {
+        var method = typeof(UIAppsController).GetMethod(nameof(UIAppsController.FileUpload));
+        Assert.NotNull(method);
+        Assert.Empty(method.GetCustomAttributes<IgnoreAntiforgeryTokenAttribute>(true));
+    }
 }

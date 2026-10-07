@@ -58,8 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.$refs.input.classList.remove('is-invalid');
                 const formData = new FormData();
                 formData.append('file', file);
+                const tokenInput = this.$el.closest('form').querySelector('input[name="__RequestVerificationToken"]');
+                const headers = { RequestVerificationToken: tokenInput.value };
                 try {
-                    const response = await fetch(this.uploadUrl, { method: 'POST', body: formData });
+                    const response = await fetch(this.uploadUrl, { method: 'POST', headers, body: formData });
                     if (response.ok) {
                         const { error, fileUrl } = await response.json();
                         if (error) {

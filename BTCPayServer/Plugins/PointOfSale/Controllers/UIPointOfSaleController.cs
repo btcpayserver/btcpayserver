@@ -443,7 +443,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 if (wantsJson) return Json(new { error = e.Message });
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Html = e.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
+                    Message = e.Message,
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     AllowDismiss = true
                 });

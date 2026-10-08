@@ -18,6 +18,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.JsonConverters;
@@ -102,6 +103,29 @@ namespace BTCPayServer.Tests
 
             Assert.Contains(txId, model.Tooltip);
             Assert.DoesNotContain("invalid", model.Tooltip);
+        }
+
+        [Theory]
+        [InlineData("https://example.com/details", "https://example.com/details")]
+        [InlineData("/wallet/transactions", null)]
+        [InlineData("#", "#")]
+        [InlineData("javascript:alert(1)", null)]
+        [InlineData("data:text/html,<script>alert(1)</script>", null)]
+        [InlineData("//example.com/details", null)]
+        public void CreateTransactionTagModelsOnlyAllowsSafeCustomAttachmentLinks(string link, string expected)
+        {
+            const string type = "custom";
+            var transactionInfo = new WalletTransactionInfo(new WalletId("store", "BTC"));
+            transactionInfo.LabelColors.Add(type, "#000000");
+            transactionInfo.Attachments.Add(new Attachment(type, data: new JObject
+            {
+                ["link"] = link
+            }));
+
+            var model = Assert.Single(new LabelService(null!).CreateTransactionTagModels(
+                transactionInfo, new DefaultHttpContext().Request));
+
+            Assert.Equal(expected, model.Link);
         }
 
         private class RequestInspectingClient : BTCPayServerClient
@@ -446,10 +470,29 @@ namespace BTCPayServer.Tests
             Assert.False(attribute.IsValid(2));
             Assert.False(attribute.IsValid("http://"));
             Assert.False(attribute.IsValid("httpdsadsa.com"));
+            Assert.False(attribute.IsValid(" "));
+            Assert.False(attribute.IsValid("javascript:document.body.dataset.pwned=1"));
+            Assert.False(attribute.IsValid("data:text/html,<script>alert(1)</script>"));
 
             var webUriAttribute = new UriAttribute("http", "https");
             Assert.True(webUriAttribute.IsValid("https://example.com"));
             Assert.False(webUriAttribute.IsValid("javascript:document.body.dataset.pwned=1"));
+            Assert.True(new UriAttribute("ftp").IsValid("ftp://example.com/file"));
+        }
+
+        [Fact]
+        public void PlanCheckoutRedirectOnlyAllowsHttpUrls()
+        {
+            var checkout = new PlanCheckoutData { Id = "checkout-id" };
+
+            checkout.SuccessRedirectUrl = "javascript:alert(1)";
+            Assert.Null(checkout.GetRedirectUrl());
+            checkout.SuccessRedirectUrl = "data:text/html,<script>alert(1)</script>";
+            Assert.Null(checkout.GetRedirectUrl());
+            checkout.SuccessRedirectUrl = "/subscriptions/success";
+            Assert.Null(checkout.GetRedirectUrl());
+            checkout.SuccessRedirectUrl = "https://example.com/success?source=test";
+            Assert.Equal("https://example.com/success?source=test&checkoutPlanId=checkout-id", checkout.GetRedirectUrl());
         }
 
         [Fact]

@@ -146,6 +146,7 @@ namespace BTCPayServer.Controllers
                     : _displayFormatter.Currency(invoice.Metadata.TaxIncluded ?? 0.0m, invoice.Currency),
                 NotificationUrl = invoice.NotificationURL?.AbsoluteUri,
                 RedirectUrl = invoice.RedirectURL?.AbsoluteUri,
+                OrderUrl = GetSafeHttpUrl(invoice.Metadata.OrderUrl),
                 TypedMetadata = invoice.Metadata,
                 StatusException = invoice.ExceptionStatus,
                 Events = await _InvoiceRepository.GetInvoiceLogs(invoice.Id),
@@ -219,7 +220,7 @@ namespace BTCPayServer.Controllers
             {
                 InvoiceId = i.Id,
                 OrderId = i.Metadata?.OrderId,
-                RedirectUrl = i.RedirectURL?.AbsoluteUri ?? i.Metadata?.OrderUrl,
+                RedirectUrl = i.RedirectURL?.AbsoluteUri ?? GetSafeHttpUrl(i.Metadata?.OrderUrl),
                 Status = i.Status,
                 Currency = i.Currency,
                 InvoiceAmount = i.Price,
@@ -1188,6 +1189,13 @@ namespace BTCPayServer.Controllers
             };
 
             return View(vm);
+        }
+
+        private static string? GetSafeHttpUrl(string? value)
+        {
+            return Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https"
+                ? uri.AbsoluteUri
+                : null;
         }
 
         [HttpPost("/stores/{storeId}/invoices/create")]

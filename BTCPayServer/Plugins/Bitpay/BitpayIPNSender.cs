@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Events;
@@ -132,13 +133,15 @@ namespace BTCPayServer.Plugins.Bitpay
                 invoice.NotificationEmail is String e &&
                 MailboxAddressValidator.TryParse(e, out MailboxAddress notificationEmail))
             {
-                var json = NBitcoin.JsonConverters.Serializer.ToString(notification);
+                string Encode(object value) => HtmlEncoder.Default.Encode(value?.ToString() ?? string.Empty);
+
+                var json = Encode(NBitcoin.JsonConverters.Serializer.ToString(notification));
                 var store = await _StoreRepository.FindStore(invoice.StoreId);
-                var storeName = store.StoreName ?? "BTCPay Server";
+                var storeName = Encode(store.StoreName ?? "BTCPay Server");
                 var emailBody = $"Store: {storeName}<br>" +
-                                $"Invoice ID: {notification.Data.Id}<br>" +
-                                $"Status: {notification.Data.Status}<br>" +
-                                $"Amount: {notification.Data.Price} {notification.Data.Currency}<br>" +
+                                $"Invoice ID: {Encode(notification.Data.Id)}<br>" +
+                                $"Status: {Encode(notification.Data.Status)}<br>" +
+                                $"Amount: {Encode(notification.Data.Price)} {Encode(notification.Data.Currency)}<br>" +
                                 $"<br><details><summary>Details</summary><pre>{json}</pre></details>";
 
                 (await _EmailSenderFactory.GetEmailSender(invoice.StoreId)).SendEmail(

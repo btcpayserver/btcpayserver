@@ -2383,6 +2383,39 @@ namespace BTCPayServer.Tests
             Assert.Contains("100.00 USD", content);
             Assert.Contains(i, content);
 
+            var api = await s.AsTestAccount().CreateClient();
+            var unsafeOrderUrlInvoice = await api.CreateInvoice(s.StoreId, new CreateInvoiceRequest
+            {
+                Amount = 1,
+                Currency = "USD",
+                Metadata = new JObject
+                {
+                    ["orderId"] = "unsafe-order",
+                    ["orderUrl"] = "javascript:alert(1)"
+                },
+                Receipt = new InvoiceDataBase.ReceiptOptions { Enabled = true }
+            });
+            await s.GoToUrl($"/i/{unsafeOrderUrlInvoice.Id}/receipt");
+            Assert.Equal(0, await s.Page.Locator("#StoreLink").CountAsync());
+            await s.GoToInvoice(unsafeOrderUrlInvoice.Id);
+            Assert.Equal(0, await s.Page.Locator(".invoice-order-link").CountAsync());
+
+            var safeOrderUrlInvoice = await api.CreateInvoice(s.StoreId, new CreateInvoiceRequest
+            {
+                Amount = 1,
+                Currency = "USD",
+                Metadata = new JObject
+                {
+                    ["orderId"] = "safe-order",
+                    ["orderUrl"] = "https://example.com/order"
+                },
+                Receipt = new InvoiceDataBase.ReceiptOptions { Enabled = true }
+            });
+            await s.GoToUrl($"/i/{safeOrderUrlInvoice.Id}/receipt");
+            await Expect(s.Page.Locator("#StoreLink")).ToHaveAttributeAsync("href", "https://example.com/order");
+            await s.GoToInvoice(safeOrderUrlInvoice.Id);
+            await Expect(s.Page.Locator(".invoice-order-link")).ToHaveAttributeAsync("href", "https://example.com/order");
+
             await s.GoToInvoices(s.StoreId);
             i = await s.CreateInvoice();
             await s.GoToInvoiceCheckout(i);

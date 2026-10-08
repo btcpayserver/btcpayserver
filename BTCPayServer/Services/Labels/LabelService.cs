@@ -150,7 +150,13 @@ public class LabelService
                 model.Tooltip = tag.Data?.TryGetValue("tooltip", StringComparison.InvariantCultureIgnoreCase, out var tooltip) is true ? tooltip.ToString() : tag.Id;
                 if (tag.Data?.TryGetValue("link", StringComparison.InvariantCultureIgnoreCase, out var link) is true)
                 {
-                    model.Link = link.ToString();
+                    var value = link.ToString();
+                    if (value == "#" ||
+                        (Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
+                         uri.Scheme is "http" or "https"))
+                    {
+                        model.Link = value;
+                    }
                 }
             }
         }

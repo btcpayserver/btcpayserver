@@ -90,7 +90,6 @@ namespace BTCPayServer.Tests
             //this api key has access to everything
             await TestApiAgainstAccessToken(superApiKey, tester, user, Policies.CanModifyServerSettings, Policies.CanModifyStoreSettings,
                 Policies.CanViewProfile);
-
             await s.ClickPagePrimary();
             await s.Page.SetCheckedAsync("#btcpay\\.server\\.canmodifyserversettings", true);
             await s.ClickPagePrimary();

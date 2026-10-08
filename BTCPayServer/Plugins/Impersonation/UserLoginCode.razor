@@ -1,12 +1,11 @@
 @using System.Timers
-@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions
 @using BTCPayServer.Blazor
 @using BTCPayServer.Client
 @using BTCPayServer.Data
 @using BTCPayServer.Security
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Http
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Mvc
 @using Microsoft.AspNetCore.Routing
@@ -16,7 +15,6 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject UserLoginCodeService UserLoginCodeService
 @inject LinkGenerator LinkGenerator
-@inject IHttpContextAccessor HttpContextAccessor
 @inject IStringLocalizer StringLocalizer
 @implements IDisposable
 
@@ -36,6 +34,8 @@
 @code {
     [Parameter]
     public string RedirectUrl { get; set; }
+    [Parameter]
+    public string BaseUrl { get; set; }
 
     [Parameter]
     public int Size { get; set; } = 256;
@@ -93,9 +93,7 @@
 
     private string GetData(string loginCode)
     {
-        var req = HttpContextAccessor.HttpContext?.Request;
-        if (req == null) return "";
-        return LinkGenerator.LoginCodeLink(loginCode, RedirectUrl, req.GetRequestBaseUrl());
+        return LinkGenerator.LoginCodeLink(loginCode, RedirectUrl, RequestBaseUrl.FromUrl(BaseUrl));
     }
 
     private double Percent => Math.Round(_seconds / Seconds * 100);

@@ -17,6 +17,47 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
 {
     [Fact]
     [Trait("Playwright", "Playwright-2")]
+    public async Task DoesNotAttachNewSubscriberToExistingUser()
+    {
+        await using var s = CreatePlaywrightTester(newDb: true);
+        await s.StartAsync();
+        await s.RegisterNewUser(true);
+        await CreateUser(s, "existing-user@gmail.com");
+
+        await s.CreateNewStore();
+        await GoToMonetization(s);
+        await s.ClickPagePrimary();
+        await s.ConfirmModal();
+        await s.FindAlertMessage(partialText: "Monetization activated");
+
+        SubscriptionEvent.NewSubscriber newSubscriber;
+        await using (await s.SwitchPage())
+        {
+            newSubscriber = await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+            {
+                await s.GoToUrl("/monetization/new-user");
+                await s.Page.FillAsync(".plan-checkout__email", "existing-user@gmail.com");
+                await s.ClickPagePrimary();
+            });
+            await s.Server.WaitForEvent<UserEvent.Registered>(async () =>
+            {
+                await s.GoToUrl("/monetization/new-user");
+                await s.Page.FillAsync(".plan-checkout__email", "new-user@gmail.com");
+                await s.ClickPagePrimary();
+            }, evt => evt.User.Email == "new-user@gmail.com");
+        }
+
+        var dbContextFactory = s.Server.PayTester.GetService<ApplicationDbContextFactory>();
+        await using var ctx = dbContextFactory.CreateContext();
+        var subscriber = await ctx.Subscribers.GetBySelector(
+            newSubscriber.Subscriber.OfferingId,
+            CustomerSelector.ByEmail("existing-user@gmail.com"));
+        Assert.NotNull(subscriber);
+        Assert.Null(subscriber.GetApplicationUserId());
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanMonetizeServer()
     {
         await using var s = CreatePlaywrightTester(newDb: true);

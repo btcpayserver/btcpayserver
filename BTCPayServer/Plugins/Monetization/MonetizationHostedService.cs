@@ -74,12 +74,6 @@ public class MonetizationHostedService(
                 callbackGenerator.BaseUrl = newSub.RequestBaseUrl;
                 EventAggregator.Publish(await UserEvent.Registered.Create(user, null, callbackGenerator));
             }
-            else
-            {
-                var existing = await userManager.FindByEmailAsync(email ?? "");
-                if (existing is not null)
-                    await AttachUserIdToSubscriber(existing.Id, newSub);
-            }
         }
 
         if (evt is SubscriptionEvent.SubscriberActivated or SubscriptionEvent.SubscriberDisabled)

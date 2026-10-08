@@ -4,11 +4,13 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Logging;
 using BTCPayServer.Plugins.Maintenance.Models;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Localization;
@@ -24,6 +26,7 @@ public class UIMaintenanceController(
     HostIntegrationState hostIntegrationState,
     ProcessRunner processRunner,
     IHostApplicationLifetime applicationLifetime,
+    SettingsRepository settingsRepository,
     Logs logs,
     IStringLocalizer stringLocalizer) : Controller
 {
@@ -112,6 +115,12 @@ public class UIMaintenanceController(
                 ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid domain ({string.Join(", ", messages.ToArray())})");
                 return View("/Plugins/Maintenance/Views/Maintenance.cshtml", vm);
             }
+
+            var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+            serverSettings.BaseUrl = (Request.GetRequestBaseUrl() with { Host = new HostString(vm.DNSDomain) })
+                .ToString()
+                .WithoutEndingSlash();
+            await settingsRepository.UpdateSetting(serverSettings);
 
             _ = processRunner.RunHostCommand(HostCommands.ChangeDomain, new[] { vm.DNSDomain }, TimeSpan.FromMinutes(20));
             builder.Path = null;

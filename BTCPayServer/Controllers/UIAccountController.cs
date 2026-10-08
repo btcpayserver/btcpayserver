@@ -500,6 +500,15 @@ namespace BTCPayServer.Controllers
             else
             {
                 await signInManager.SignInAsync(user, session.ToAuthenticationProperties(false), session.AuthenticationMethod);
+                if (await userManager.IsInRoleAsync(user, Roles.ServerAdmin))
+                {
+                    var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+                    if (string.IsNullOrWhiteSpace(serverSettings.BaseUrl))
+                    {
+                        serverSettings.BaseUrl = Request.GetRequestBaseUrl().ToString().WithoutEndingSlash();
+                        await settingsRepository.UpdateSetting(serverSettings);
+                    }
+                }
             }
             await userManager.ResetAccessFailedCountAsync(user);
             return RedirectToLocal(session.ReturnUrl);

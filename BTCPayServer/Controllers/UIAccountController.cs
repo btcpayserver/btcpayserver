@@ -503,11 +503,8 @@ namespace BTCPayServer.Controllers
                 if (await userManager.IsInRoleAsync(user, Roles.ServerAdmin))
                 {
                     var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
-                    if (string.IsNullOrWhiteSpace(serverSettings.BaseUrl))
-                    {
-                        serverSettings.BaseUrl = Request.GetRequestBaseUrl().ToString().WithoutEndingSlash();
+                    if (serverSettings.UpdateBaseUrlIfUnset(Request.GetRequestBaseUrl()))
                         await settingsRepository.UpdateSetting(serverSettings);
-                    }
                 }
             }
             await userManager.ResetAccessFailedCountAsync(user);

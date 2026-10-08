@@ -58,6 +58,44 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
     [Fact]
     [Trait("Playwright", "Playwright-2")]
+    public async Task DoesNotLockOutAdminSubscriber()
+    {
+        await using var s = CreatePlaywrightTester(newDb: true);
+        await s.StartAsync();
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await GoToMonetization(s);
+        await s.ClickPagePrimary();
+        await s.ConfirmModal();
+        await s.FindAlertMessage(partialText: "Monetization activated");
+
+        var newSubscriber = await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await CreateUser(s, "subscriber-admin@gmail.com");
+        });
+        var userId = newSubscriber.Subscriber.GetApplicationUserId();
+        Assert.NotNull(userId);
+        var userService = s.Server.PayTester.GetService<UserService>();
+        Assert.True(await userService.SetAdminUser(userId, true));
+
+        var eventAggregator = s.Server.PayTester.GetService<EventAggregator>();
+        eventAggregator.Publish(new SubscriptionEvent.SubscriberDisabled(
+            newSubscriber.Subscriber,
+            SubscriptionEvent.DisabledReason.Expired));
+        await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await CreateUser(s, "queue-marker@gmail.com");
+        }, evt => evt.Subscriber.Customer.Email.Get() == "queue-marker@gmail.com");
+
+        var dbContextFactory = s.Server.PayTester.GetService<ApplicationDbContextFactory>();
+        await using var ctx = dbContextFactory.CreateContext();
+        var admin = await ctx.Users.FindAsync(userId);
+        Assert.NotNull(admin);
+        Assert.Null(admin.LockoutEnd);
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
     public async Task CanMonetizeServer()
     {
         await using var s = CreatePlaywrightTester(newDb: true);

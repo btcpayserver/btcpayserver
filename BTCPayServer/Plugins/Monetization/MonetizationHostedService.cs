@@ -204,6 +204,7 @@ public class MonetizationHostedService(
         var userId = evt.Subscriber.GetApplicationUserId();
         var user = await userManager.FindByIdAsync(userId ?? "");
         if (user is not null &&
+            !await userService.IsAdminUser(user) &&
             await userService.SetDisabled(user.Id, !activated, nameof(MonetizationHostedService)) is not UserService.SetDisabledResult.Error)
         {
             EventAggregator.Publish(new MonetizationLockoutUpdated([(user.Id, !activated)]));

@@ -47,12 +47,14 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
                 await s.Page.FillAsync(".plan-checkout__email", "existing-user@gmail.com");
                 await s.ClickPagePrimary();
             });
-            await s.Server.WaitForEvent<UserEvent.Registered>(async () =>
+            var registered = await s.Server.WaitForEvent<UserEvent.Registered>(async () =>
             {
                 await s.GoToUrl("/monetization/new-user");
                 await s.Page.FillAsync(".plan-checkout__email", "new-user@gmail.com");
                 await s.ClickPagePrimary();
             }, evt => evt.User.Email == "new-user@gmail.com");
+            Assert.Equal("https://canonical.example/btcpay", registered.RequestBaseUrl.ToString());
+            Assert.StartsWith("https://canonical.example/btcpay/register/confirm-email?", registered.ConfirmationEmailLink);
         }
 
         var dbContextFactory = s.Server.PayTester.GetService<ApplicationDbContextFactory>();

@@ -1,4 +1,7 @@
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions;
+using BTCPayServer.Data;
+using BTCPayServer.Services;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
@@ -12,14 +15,19 @@ public class ImpersonationTests(ITestOutputHelper helper) : UnitTestBase(helper)
     [Trait("Playwright", "Playwright")]
     public async Task CanSigninWithLoginCode()
     {
-        await using var s = CreatePlaywrightTester();
+        await using var s = CreatePlaywrightTester(newDb: true);
         await s.StartAsync();
+        var settingsRepository = s.Server.PayTester.GetService<SettingsRepository>();
+        var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+        serverSettings.UpdateBaseUrl(RequestBaseUrl.FromUrl("https://canonical.example/btcpay"));
+        await settingsRepository.UpdateSetting(serverSettings);
         var user = await s.RegisterNewUser();
         await s.GoToHome();
         await s.GoToProfile(ManageNavPages.LoginCodes);
 
         await s.Page.WaitForSelectorAsync("#LoginCode .qr-code");
         var code = await s.Page.Locator("#LoginCode .qr-code").GetAttributeAsync("alt");
+        Assert.StartsWith("https://canonical.example/btcpay/login?", code);
         string prevCode = code;
         await s.Page.ReloadAsync();
         await s.Page.WaitForSelectorAsync("#LoginCode .qr-code");

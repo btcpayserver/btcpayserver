@@ -428,8 +428,12 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
     public async Task CanEnableAndUseMultisigWallet()
     {
         var cryptoCode = "BTC";
-        await using var s = CreatePlaywrightTester();
+        await using var s = CreatePlaywrightTester(newDb: true);
         await s.StartAsync();
+        var settingsRepository = s.Server.PayTester.GetService<SettingsRepository>();
+        var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+        serverSettings.UpdateBaseUrl(RequestBaseUrl.FromUrl("https://canonical.example/btcpay"));
+        await settingsRepository.UpdateSetting(serverSettings);
         var owner = await s.RegisterNewUser(true);
 
         var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -488,6 +492,9 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var amount = "0.1";
         await s.Page.FillAsync("#Outputs_0__Amount", amount);
         await s.Page.ClickAsync("#CreatePendingTransaction");
+        var pendingTransactionService = s.Server.PayTester.GetService<PendingTransactionService>();
+        var createdPending = Assert.Single(await pendingTransactionService.GetPendingTransactions(cryptoCode, storeId));
+        Assert.Equal("https://canonical.example/btcpay", createdPending.GetBlob().RequestBaseUrl);
 
         // validating the state of UI
         Assert.Equal("0", await s.Page.TextContentAsync("#Sigs_0__Collected"));
@@ -528,7 +535,6 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.FillAsync("#Outputs_0__Amount", "0.3");
         await s.Page.ClickAsync("#CreatePendingTransaction");
 
-        var pendingTransactionService = s.Server.PayTester.GetService<PendingTransactionService>();
         var pendingWithoutSigner = Assert.Single(await pendingTransactionService.GetPendingTransactions(cryptoCode, storeId));
         var pendingWithoutSignerBlob = pendingWithoutSigner.GetBlob();
         Assert.NotNull(pendingWithoutSignerBlob?.PSBT);

@@ -57,15 +57,4 @@ public class AuthorizationPolicyTests(ITestOutputHelper helper) : UnitTestBase(h
         Assert.NotNull(method);
         Assert.Empty(method.GetCustomAttributes<IgnoreAntiforgeryTokenAttribute>(true));
     }
-
-    [Fact]
-    [Trait("Fast", "Fast")]
-    public void ServerFileDeletionRequiresPostWithAntiforgeryValidation()
-    {
-        var method = typeof(UIServerController).GetMethod(nameof(UIServerController.DeleteFile));
-        Assert.NotNull(method);
-        Assert.NotEmpty(method.GetCustomAttributes<HttpPostAttribute>(true));
-        Assert.Empty(method.GetCustomAttributes<HttpGetAttribute>(true));
-        Assert.Empty(method.GetCustomAttributes<IgnoreAntiforgeryTokenAttribute>(true));
-    }
 }

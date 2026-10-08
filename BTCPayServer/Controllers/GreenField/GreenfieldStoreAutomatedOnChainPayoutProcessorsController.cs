@@ -80,6 +80,8 @@ namespace BTCPayServer.Controllers.Greenfield
             string storeId, string paymentMethod, OnChainAutomatedPayoutSettings request)
         {
             AutomatedPayoutConstants.ValidateInterval(ModelState, request.IntervalSeconds, nameof(request.IntervalSeconds));
+            if (request.Threshold < 0)
+                ModelState.AddModelError(nameof(request.Threshold), "The threshold should be greater than or equal to 0");
             if (request.FeeBlockTarget is int t && (t < 1 || t > 1000))
                 ModelState.AddModelError(nameof(request.FeeBlockTarget), "The feeBlockTarget should be between 1 and 1000");
             if (!ModelState.IsValid)

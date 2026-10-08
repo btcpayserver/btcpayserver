@@ -148,6 +148,7 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
 
         [Range(1, 1000)]
         public int FeeTargetBlock { get; set; }
+        [Range(0, double.MaxValue)]
         public decimal Threshold { get; set; }
 
         [Range(AutomatedPayoutConstants.MinIntervalMinutes, AutomatedPayoutConstants.MaxIntervalMinutes)]

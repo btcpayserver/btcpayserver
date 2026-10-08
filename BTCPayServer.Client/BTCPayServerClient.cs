@@ -51,22 +51,31 @@ public partial class BTCPayServerClient
     {
         if (!message.IsSuccessStatusCode && message.Content?.Headers?.ContentType?.MediaType?.StartsWith("application/json", StringComparison.OrdinalIgnoreCase) is true)
         {
-            if (message.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
+            try
             {
-                var aa = await message.Content.ReadAsStringAsync();
-                var err = JsonConvert.DeserializeObject<Models.GreenfieldValidationError[]>(aa);
-                throw new GreenfieldValidationException(err);
+                if (message.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
+                {
+                    var aa = await message.Content.ReadAsStringAsync();
+                    var err = JsonConvert.DeserializeObject<Models.GreenfieldValidationError[]>(aa);
+                    if (err is not null && err.All(e => e is not null))
+                        throw new GreenfieldValidationException(err);
+                }
+                else if (message.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    var err = JsonConvert.DeserializeObject<Models.GreenfieldPermissionAPIError>(await message.Content.ReadAsStringAsync());
+                    if (err is not null)
+                        throw new GreenfieldAPIException((int)message.StatusCode, err);
+                }
+                else
+                {
+                    var err = JsonConvert.DeserializeObject<Models.GreenfieldAPIError>(await message.Content.ReadAsStringAsync());
+                    if (err?.Code is not null)
+                        throw new GreenfieldAPIException((int)message.StatusCode, err);
+                }
             }
-            if (message.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            catch (JsonException)
             {
-                var err = JsonConvert.DeserializeObject<Models.GreenfieldPermissionAPIError>(await message.Content.ReadAsStringAsync());
-                throw new GreenfieldAPIException((int)message.StatusCode, err);
-            }
-            else
-            {
-                var err = JsonConvert.DeserializeObject<Models.GreenfieldAPIError>(await message.Content.ReadAsStringAsync());
-                if (err.Code != null)
-                    throw new GreenfieldAPIException((int)message.StatusCode, err);
+                // Fall back to the HTTP status when an error response is not valid JSON.
             }
         }
         message.EnsureSuccessStatusCode();

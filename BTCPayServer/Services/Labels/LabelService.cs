@@ -102,7 +102,12 @@ public class LabelService
             }
             else if (tag.Type == WalletObjectData.Types.CPFP)
             {
-                var txs = ((tag.LinkData?["outpoints"] as JArray)?.Select(e => OutPoint.Parse(e.ToString()).Hash) ?? []).ToHashSet();
+                var txs = new HashSet<uint256>();
+                foreach (var value in (tag.LinkData?["outpoints"] as JArray) ?? [])
+                {
+                    if (OutPoint.TryParse(value.ToString(), out var outpoint) && outpoint is not null)
+                        txs.Add(outpoint.Hash);
+                }
                 var txsStr = string.Join(", ", txs);
                 model.Tooltip = $"This is transaction is paying for fee for the following transactions: {txsStr}";
                 model.Link = "#";

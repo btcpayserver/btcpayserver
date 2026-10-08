@@ -82,6 +82,7 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         eventAggregator.Publish(new SubscriptionEvent.SubscriberDisabled(
             newSubscriber.Subscriber,
             SubscriptionEvent.DisabledReason.Expired));
+        // This registration is processed later on the same FIFO queue, so its subscriber event is a completion marker.
         await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
         {
             await CreateUser(s, "queue-marker@gmail.com");

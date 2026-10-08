@@ -1521,6 +1521,20 @@ namespace BTCPayServer.Tests
                     Website = "javascript:document.body.dataset.pwned=1",
                     BrandColor = "invalid"
                 }));
+            await AssertValidationError(["InvoiceExpiration", "DisplayExpirationTimer", "MonitoringExpiration"], async () =>
+                await client.UpdateStore(newStore.Id, new UpdateStoreRequest
+                {
+                    InvoiceExpiration = TimeSpan.Zero,
+                    DisplayExpirationTimer = TimeSpan.Zero,
+                    MonitoringExpiration = TimeSpan.Zero
+                }));
+            await AssertValidationError(["InvoiceExpiration", "DisplayExpirationTimer", "MonitoringExpiration"], async () =>
+                await client.UpdateStore(newStore.Id, new UpdateStoreRequest
+                {
+                    InvoiceExpiration = TimeSpan.FromDays(25),
+                    DisplayExpirationTimer = TimeSpan.FromDays(25),
+                    MonitoringExpiration = TimeSpan.FromDays(25)
+                }));
 
             //update store
             Assert.Empty(newStore.PaymentMethodCriteria);
@@ -2915,6 +2929,10 @@ namespace BTCPayServer.Tests
             });
             Assert.Empty(await walletViewerClient.GetOnChainWalletUTXOs(walletId.StoreId, walletId.CryptoCode));
             Assert.Empty(await client.GetOnChainWalletUTXOs(walletId.StoreId, walletId.CryptoCode));
+            var emptyHistogram = await client.GetOnChainWalletHistogram(walletId.StoreId, walletId.CryptoCode);
+            Assert.Equal(0m, emptyHistogram.Balance);
+            Assert.Equal(emptyHistogram.Balance, emptyHistogram.Series.Last());
+            Assert.Equal(emptyHistogram.Series.Count, emptyHistogram.Labels.Count);
             uint256 txhash = null;
             await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
             {

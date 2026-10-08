@@ -30,6 +30,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Services.Wallets.Import;
+using BTCPayServer.Services.WalletFileParsing;
 using BTCPayServer.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
@@ -1239,6 +1240,27 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 
             Assert.Equal("BSMS", nunchuk.Source);
             Assert.Null(error);
+
+            var bsmsParser = new BSMSWalletFileParser();
+            Assert.False(bsmsParser.TryParse(mainnet, """
+                BSMS 1.0
+                invalid descriptor
+                /0/*
+                invalid address
+                """, out var invalidBsms));
+            Assert.Null(invalidBsms);
+            Assert.False(bsmsParser.TryParse(mainnet, """
+                BSMS 1.0
+                invalid descriptor
+                /0/*
+                bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
+                """, out invalidBsms));
+            Assert.Null(invalidBsms);
+            var mismatchedAddress = new Key().PubKey.WitHash.GetAddress(Network.Main).ToString();
+            Assert.False(bsmsParser.TryParse(mainnet,
+                bsms.Replace("bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku", mismatchedAddress),
+                out invalidBsms));
+            Assert.Null(invalidBsms);
 
 
             // Failure case

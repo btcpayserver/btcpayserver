@@ -573,9 +573,11 @@ namespace BTCPayServer
             if (store is null)
                 return NotFound();
 
-			var blob = store.GetStoreBlob();
+            var blob = store.GetStoreBlob();
             if (!blob.AnyoneCanInvoice)
                 return NotFound(StringLocalizer["'Anyone can invoice' is turned off"]);
+            if (amount is <= 0)
+                return BadRequest(StringLocalizer["Please provide an amount greater than 0"]);
             var metadata = new InvoiceMetadata();
             if (!string.IsNullOrEmpty(orderId))
             {

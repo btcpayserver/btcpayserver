@@ -162,6 +162,14 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         Assert.NotEmpty(merchantPendingInvoices);
         Assert.Contains(merchantPendingInvoices, i => i.Id == merchantInvoice.Id);
 
+        var validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(async () =>
+            await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest
+            {
+                BOLT11 = merchantInvoice.BOLT11,
+                Amount = LightMoney.Satoshis(-1)
+            }));
+        Assert.Contains(validationErr.ValidationErrors, error => error.Path == "Amount");
+
         var payResponse = await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest
         {
             BOLT11 = merchantInvoice.BOLT11
@@ -187,7 +195,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
                 BOLT11 = "lol"
             }));
 
-        var validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.CreateLightningInvoice(user.StoreId, "BTC",
+        validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.CreateLightningInvoice(user.StoreId, "BTC",
             new CreateLightningInvoiceRequest()
             {
                 Amount = -1,

@@ -239,7 +239,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(lightningInvoice.BOLT11), "The BOLT11 invoice was invalid.");
             }
-            if (lightningInvoice.Amount < LightMoney.Zero)
+            if (lightningInvoice.Amount is not null && lightningInvoice.Amount < LightMoney.Zero)
             {
                 ModelState.AddModelError(nameof(lightningInvoice.Amount), "Amount must be greater than or equal to 0");
             }

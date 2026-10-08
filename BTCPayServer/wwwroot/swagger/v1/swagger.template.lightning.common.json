@@ -355,7 +355,7 @@
                     },
                     "amount": {
                         "type": "string",
-                        "description": "Optional non-negative explicit payment amount in millisatoshi (if specified, it overrides the BOLT11 amount)",
+                        "description": "Optional explicit payment amount in millisatoshi (if specified, it overrides the BOLT11 amount)",
                         "nullable": true
                     },
                     "maxFeePercent": {

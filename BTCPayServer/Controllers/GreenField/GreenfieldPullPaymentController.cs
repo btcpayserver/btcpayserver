@@ -534,10 +534,13 @@ retry:
             else if (amt is ClaimRequest.ClaimedAmountResult.Success succ)
             {
                 request.Amount = succ.Amount;
-                if (request.Amount is { } v && (v < ppBlob?.MinimumClaim || v == 0.0m))
+                if (request.Amount is { } v &&
+                    (v <= 0.0m || ppBlob?.MinimumClaim is { } minimum && v < minimum))
                 {
                     var minimumClaim = ppBlob?.MinimumClaim is decimal val ? val : 0.0m;
-                    ModelState.AddModelError(nameof(request.Amount), $"Amount too small (should be at least {minimumClaim})");
+                    ModelState.AddModelError(nameof(request.Amount), minimumClaim > 0
+                        ? $"Amount too small (should be at least {minimumClaim})"
+                        : "Amount must be greater than 0");
                     return this.CreateValidationError(ModelState);
                 }
                 var result = await _pullPaymentService.Claim(new ClaimRequest()

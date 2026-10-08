@@ -3166,6 +3166,21 @@ namespace BTCPayServer.Tests
             Assert.Equal(new Dictionary<string, LabelData>(), transaction.Labels);
 
             // transaction patch tests
+            var unknownTransactionHash = RandomUtils.GetUInt256();
+            await AssertEx.AssertApiError("transaction-not-found", () =>
+                client.PatchOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode,
+                    unknownTransactionHash.ToString(), new PatchOnChainTransactionRequest()));
+            var forcedTransaction = await client.PatchOnChainWalletTransaction(
+                walletId.StoreId, walletId.CryptoCode, unknownTransactionHash.ToString(),
+                new PatchOnChainTransactionRequest
+                {
+                    Comment = "pending transaction",
+                    Labels = ["pending"]
+                }, true);
+            Assert.Equal(unknownTransactionHash, forcedTransaction.TransactionHash);
+            Assert.Equal("pending transaction", forcedTransaction.Comment);
+            Assert.Contains("pending", forcedTransaction.Labels);
+
             var patchedTransaction = await client.PatchOnChainWalletTransaction(
                 walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString(),
                 new PatchOnChainTransactionRequest()
@@ -4053,6 +4068,13 @@ namespace BTCPayServer.Tests
             Assert.Empty(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC"));
             Assert.Empty(await adminClient.GetPayoutProcessors(admin.StoreId));
 
+            await AssertValidationError([nameof(OnChainAutomatedPayoutSettings.Threshold)], () =>
+                adminClient.UpdateStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC",
+                    new OnChainAutomatedPayoutSettings
+                    {
+                        IntervalSeconds = TimeSpan.FromSeconds(3600),
+                        Threshold = -1m
+                    }));
             await adminClient.UpdateStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC",
                 new OnChainAutomatedPayoutSettings() { IntervalSeconds = TimeSpan.FromSeconds(3600) });
             Assert.Equal(3600, Assert.Single(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC")).IntervalSeconds.TotalSeconds);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Security;
@@ -27,11 +28,13 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Services.Wallets.Import;
 using BTCPayServer.Services.WalletFileParsing;
 using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,6 +65,43 @@ namespace BTCPayServer.Tests
             var request = client.CreateRequest($"api/v1/stores/{"../users/me"}/webhooks/{"delivery/../x"}?email={"a+b@example.com"}");
 
             Assert.Equal("https://example.com/root/api/v1/stores/..%2Fusers%2Fme/webhooks/delivery%2F..%2Fx?email=a%2Bb%40example.com", request.RequestUri!.AbsoluteUri);
+        }
+
+        [Theory]
+        [InlineData(HttpStatusCode.BadRequest, "{")]
+        [InlineData(HttpStatusCode.Forbidden, "{")]
+        [InlineData(HttpStatusCode.UnprocessableEntity, "{")]
+        [InlineData(HttpStatusCode.UnprocessableEntity, "[null]")]
+        public async Task BTCPayServerClientFallsBackToHttpExceptionForMalformedJsonErrors(HttpStatusCode statusCode, string content)
+        {
+            using var httpClient = new HttpClient(new TestHttpMessageHandler(_ => new HttpResponseMessage(statusCode)
+            {
+                Content = new StringContent(content, Encoding.UTF8, "application/json")
+            }));
+            var client = new BTCPayServerClient(new Uri("https://example.com/"), httpClient);
+
+            var exception = await Assert.ThrowsAsync<HttpRequestException>(() =>
+                client.SendHttpRequest($"api/v1/test", queryPayload: null, method: HttpMethod.Get));
+
+            Assert.Equal(statusCode, exception.StatusCode);
+        }
+
+        [Fact]
+        public void CreateTransactionTagModelsIgnoresInvalidCpfpOutpoints()
+        {
+            const string txId = "aecb52b892f5e12454b3ee1ad554ffe28c1cca35ffdfaa441c74a30cf7a279f0";
+            var transactionInfo = new WalletTransactionInfo(new WalletId("store", "BTC"));
+            transactionInfo.LabelColors.Add(WalletObjectData.Types.CPFP, "#000000");
+            transactionInfo.Attachments.Add(new Attachment(WalletObjectData.Types.CPFP, linkData: new JObject
+            {
+                ["outpoints"] = new JArray($"{txId}-1", "invalid")
+            }));
+
+            var model = Assert.Single(new LabelService(null!).CreateTransactionTagModels(
+                transactionInfo, new DefaultHttpContext().Request));
+
+            Assert.Contains(txId, model.Tooltip);
+            Assert.DoesNotContain("invalid", model.Tooltip);
         }
 
         private class RequestInspectingClient : BTCPayServerClient

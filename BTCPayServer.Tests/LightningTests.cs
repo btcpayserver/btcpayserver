@@ -169,6 +169,15 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
                 Amount = LightMoney.Satoshis(-1)
             }));
         Assert.Contains(validationErr.ValidationErrors, error => error.Path == "Amount");
+        validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(() =>
+            client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest
+            {
+                BOLT11 = merchantInvoice.BOLT11,
+                MaxFeePercent = -1,
+                MaxFeeFlat = Money.Satoshis(-1)
+            }));
+        Assert.Contains(validationErr.ValidationErrors, error => error.Path == "MaxFeePercent");
+        Assert.Contains(validationErr.ValidationErrors, error => error.Path == "MaxFeeFlat");
 
         var payResponse = await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest
         {
@@ -539,6 +548,16 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
 
         Assert.Empty(await adminClient.GetStoreLightningAddresses(store.Id));
         Assert.Empty(await adminClient.GetStoreLightningAddresses(store2));
+        await AssertEx.AssertValidationError(["Min"], () =>
+            adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1,
+                new LightningAddressData { Min = 0 }));
+        await AssertEx.AssertValidationError(["Max"], () =>
+            adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1,
+                new LightningAddressData { Max = 0 }));
+        await AssertEx.AssertValidationError(["Max"], () =>
+            adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1,
+                new LightningAddressData { Min = 2, Max = 1 }));
+        Assert.Empty(await adminClient.GetStoreLightningAddresses(store.Id));
         await adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1, new LightningAddressData());
 
         await adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1, new LightningAddressData()

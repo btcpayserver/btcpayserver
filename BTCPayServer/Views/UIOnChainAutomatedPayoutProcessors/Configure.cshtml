@@ -48,7 +48,7 @@
                 <div class="input-group">
                     <input asp-for="Threshold" class="form-control" min="0" inputmode="numeric" style="max-width:12ch;">
                     <span class="input-group-text">@cryptoCode</span>
-                    <span asp-validation-for="FeeTargetBlock" class="text-danger"></span>
+                    <span asp-validation-for="Threshold" class="text-danger"></span>
                 </div>
                 <div class="form-text" text-translate="true">Only process payouts when this payout sum is reached.</div>
             </div>

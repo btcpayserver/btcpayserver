@@ -956,6 +956,12 @@ namespace BTCPayServer
                     vm.AddModelError(addressVm => addressVm.Add.CurrencyCode, StringLocalizer["Currency is invalid"], this);
                 }
 
+                if (vm.Add.Min is { } min && vm.Add.Max is { } max && min > max)
+                {
+                    vm.AddModelError(addressVm => addressVm.Add.Max,
+                        StringLocalizer["Maximum must be greater than or equal to minimum"], this);
+                }
+
                 JObject metadata = null;
                 if (!string.IsNullOrEmpty(vm.Add.InvoiceMetadata))
                 {

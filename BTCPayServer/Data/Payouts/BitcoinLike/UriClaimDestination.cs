@@ -14,6 +14,8 @@ namespace BTCPayServer.Data
             ArgumentNullException.ThrowIfNull(bitcoinUrl);
             if (bitcoinUrl.Address is null)
                 throw new ArgumentException(nameof(bitcoinUrl));
+            if (bitcoinUrl.Amount is { } amount && amount < Money.Zero)
+                throw new ArgumentOutOfRangeException(nameof(bitcoinUrl), "The BIP21 amount cannot be negative");
             _bitcoinUrl = bitcoinUrl;
             Address = bitcoinUrl.Address ?? throw new FormatException("the bip21 doesn't contain an address");
         }

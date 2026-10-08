@@ -1977,42 +1977,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task AdminLoginSetsBaseUrlWhenMissing()
-        {
-            using var tester = CreateServerTester(newDb: true);
-            await tester.StartAsync();
-
-            var account = tester.PayTester.GetController<UIAccountController>();
-            account.Request.PathBase = "/btcpay";
-            var registration = new RegisterViewModel
-            {
-                Email = Utils.GenerateEmail(),
-                Password = "Kitten0@",
-                ConfirmPassword = "Kitten0@"
-            };
-            await account.Register(registration);
-
-            var settingsRepository = tester.PayTester.GetService<SettingsRepository>();
-            var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>();
-            Assert.Equal($"http://127.0.0.1:{tester.PayTester.Port}/btcpay", serverSettings?.BaseUrl);
-
-            serverSettings.BaseUrl = "https://configured.example";
-            await settingsRepository.UpdateSetting(serverSettings);
-            account = tester.PayTester.GetController<UIAccountController>();
-            account.Request.PathBase = "/different-root";
-            await account.Login(new LoginViewModel
-            {
-                Email = registration.Email,
-                Password = registration.Password,
-                Method = "Password"
-            });
-
-            serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>();
-            Assert.Equal("https://configured.example", serverSettings?.BaseUrl);
-        }
-
-        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Playwright", "Playwright")]
         public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
         {

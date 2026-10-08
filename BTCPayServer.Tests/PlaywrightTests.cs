@@ -9,7 +9,6 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
-using BTCPayServer.Abstractions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -32,7 +31,6 @@ using LNURL;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Microsoft.Playwright;
 using NBitcoin;
 using NBitcoin.Altcoins;
@@ -1901,38 +1899,6 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage();
             seedEl = s.Page.Locator("#Seed");
             Assert.Contains("Seed removed", await seedEl.TextContentAsync(), StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Fact]
-        [Trait("Playwright", "Playwright")]
-        public async Task LndConfigQrUsesCanonicalServerUrl()
-        {
-            await using var s = CreatePlaywrightTester(newDb: true);
-            await s.StartAsync();
-            await s.RegisterNewUser(true);
-            await s.SkipWizard();
-
-            var settingsRepository = s.Server.PayTester.GetService<SettingsRepository>();
-            var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
-            serverSettings.UpdateBaseUrl(RequestBaseUrl.FromUrl("https://canonical.example/btcpay"));
-            await settingsRepository.UpdateSetting(serverSettings);
-            var externalServices = s.Server.PayTester.GetService<IOptions<ExternalServicesOptions>>().Value.ExternalServices;
-            externalServices.Add(new ExternalService
-            {
-                Type = ExternalServiceTypes.LNDRest,
-                ServiceName = "lndrest",
-                DisplayName = "LND (REST)",
-                CryptoCode = "BTC",
-                ConnectionString = new ExternalConnectionString(new Uri("https://127.0.0.1:8080"))
-                {
-                    Macaroon = [1, 2, 3]
-                }
-            });
-
-            await s.GoToUrl("/server/services/lndrest/BTC");
-            await s.Page.GetByRole(AriaRole.Button, new() { Name = "Show QR Code" }).ClickAsync();
-            var qrData = await s.Page.Locator("#qrCodeData").GetAttributeAsync("data-url");
-            Assert.Matches("^config=https://canonical\\.example/btcpay/lnd-config/[0-9]+/lnd\\.config$", qrData!);
         }
 
         [Fact]

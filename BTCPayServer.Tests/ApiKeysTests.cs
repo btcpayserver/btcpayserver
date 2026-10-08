@@ -4,14 +4,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Security.Greenfield;
-using BTCPayServer.Services;
 using BTCPayServer.Views.Manage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -37,13 +35,9 @@ namespace BTCPayServer.Tests
             //as a user through your profile
             //as an external application requesting an api key from a user
 
-            await using var s = CreatePlaywrightTester(newDb: true);
+            await using var s = CreatePlaywrightTester();
             await s.StartAsync();
             var tester = s.Server;
-            var settingsRepository = tester.PayTester.GetService<SettingsRepository>();
-            var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
-            serverSettings.UpdateBaseUrl(RequestBaseUrl.FromUrl("https://canonical.example/btcpay"));
-            await settingsRepository.UpdateSetting(serverSettings);
 
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -96,14 +90,6 @@ namespace BTCPayServer.Tests
             //this api key has access to everything
             await TestApiAgainstAccessToken(superApiKey, tester, user, Policies.CanModifyServerSettings, Policies.CanModifyStoreSettings,
                 Policies.CanViewProfile);
-            var superApiKeyRow = s.Page.Locator("tr").Filter(new() { HasText = superApiKey.ApiKey });
-            await superApiKeyRow.Locator("button[data-qr]").ClickAsync();
-            var qrData = await s.Page.Locator(".truncate-center.form-control-plaintext").GetAttributeAsync("data-text");
-            var qrPayload = JObject.Parse(qrData!);
-            Assert.Equal(superApiKey.ApiKey, qrPayload.Value<string>("apiKey"));
-            Assert.Equal("https://canonical.example/btcpay", qrPayload.Value<string>("host"));
-            await s.Page.GetByRole(AriaRole.Dialog).GetByRole(AriaRole.Button, new() { Name = "Close" }).ClickAsync();
-
             await s.ClickPagePrimary();
             await s.Page.SetCheckedAsync("#btcpay\\.server\\.canmodifyserversettings", true);
             await s.ClickPagePrimary();

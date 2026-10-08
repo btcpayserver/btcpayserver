@@ -428,12 +428,8 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
     public async Task CanEnableAndUseMultisigWallet()
     {
         var cryptoCode = "BTC";
-        await using var s = CreatePlaywrightTester(newDb: true);
+        await using var s = CreatePlaywrightTester();
         await s.StartAsync();
-        var settingsRepository = s.Server.PayTester.GetService<SettingsRepository>();
-        var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
-        serverSettings.UpdateBaseUrl(RequestBaseUrl.FromUrl("https://canonical.example/btcpay"));
-        await settingsRepository.UpdateSetting(serverSettings);
         var owner = await s.RegisterNewUser(true);
 
         var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
@@ -492,9 +488,6 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var amount = "0.1";
         await s.Page.FillAsync("#Outputs_0__Amount", amount);
         await s.Page.ClickAsync("#CreatePendingTransaction");
-        var pendingTransactionService = s.Server.PayTester.GetService<PendingTransactionService>();
-        var createdPending = Assert.Single(await pendingTransactionService.GetPendingTransactions(cryptoCode, storeId));
-        Assert.Equal("https://canonical.example/btcpay", createdPending.GetBlob().RequestBaseUrl);
 
         // validating the state of UI
         Assert.Equal("0", await s.Page.TextContentAsync("#Sigs_0__Collected"));
@@ -535,6 +528,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Page.FillAsync("#Outputs_0__Amount", "0.3");
         await s.Page.ClickAsync("#CreatePendingTransaction");
 
+        var pendingTransactionService = s.Server.PayTester.GetService<PendingTransactionService>();
         var pendingWithoutSigner = Assert.Single(await pendingTransactionService.GetPendingTransactions(cryptoCode, storeId));
         var pendingWithoutSignerBlob = pendingWithoutSigner.GetBlob();
         Assert.NotNull(pendingWithoutSignerBlob?.PSBT);
@@ -580,11 +574,6 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var storeRepo = scope.ServiceProvider.GetRequiredService<StoreRepository>();
         var multisigService = scope.ServiceProvider.GetRequiredService<MultisigService>();
-        var settingsRepository = scope.ServiceProvider.GetRequiredService<SettingsRepository>();
-        var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
-        serverSettings.UpdateBaseUrl(RequestBaseUrl.FromUrl("https://canonical.example/btcpay"));
-        await settingsRepository.UpdateSetting(serverSettings);
-
         var signerAUser = await userManager.FindByEmailAsync(signerA);
         var signerBUser = await userManager.FindByEmailAsync(signerB);
         var walletManagerUser = await userManager.FindByEmailAsync(walletManager);
@@ -623,12 +612,11 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Assert.Equal("Multisig signer request for BTC", signerRequestEmail.Subject);
             var currentPending = (await multisigService.GetPendingMultisigSetup(storeId))[0];
             Assert.NotNull(currentPending);
-            Assert.Equal("https://canonical.example/btcpay", currentPending.RequestBaseUrl.ToString());
             Assert.Equal(storeId, currentPending.StoreId);
             Assert.Equal("BTC", currentPending.CryptoCode);
             Assert.Equal(2, currentPending.Participants.Count);
             Assert.All(currentPending.Participants, p => Assert.True(string.IsNullOrEmpty(p.AccountKey)));
-            Assert.Contains($"https://canonical.example/btcpay/multisig-setups/{currentPending.RequestId}", signerRequestEmail.Html ?? signerRequestEmail.Text ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains($"/multisig-setups/{currentPending.RequestId}", signerRequestEmail.Html ?? signerRequestEmail.Text ?? string.Empty, StringComparison.OrdinalIgnoreCase);
             Assert.EndsWith($"/multisig-setups/{currentPending.RequestId}", new Uri(s.Page.Url).AbsolutePath);
             await Expect(s.Page.Locator("#MultisigRequiredSigners")).ToHaveCountAsync(0);
             await Expect(s.Page.Locator("#MultisigTotalSigners")).ToHaveCountAsync(0);

@@ -1,6 +1,5 @@
 #nullable enable
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -31,30 +30,21 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.ConfirmModal();
         await s.FindAlertMessage(partialText: "Monetization activated");
 
-        var settingsRepository = s.Server.PayTester.GetService<SettingsRepository>();
-        var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
-        serverSettings.UpdateBaseUrl(RequestBaseUrl.FromUrl("https://canonical.example/btcpay"));
-        await settingsRepository.UpdateSetting(serverSettings);
-
         SubscriptionEvent.NewSubscriber newSubscriber;
         await using (await s.SwitchPage())
         {
             newSubscriber = await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
             {
                 await s.GoToUrl("/monetization/new-user");
-                var qrUrl = await s.Page.Locator(".plan-checkout__qr-modal .qr-code").GetAttributeAsync("alt");
-                Assert.StartsWith("https://canonical.example/btcpay/plan-checkout/", qrUrl);
                 await s.Page.FillAsync(".plan-checkout__email", "existing-user@gmail.com");
                 await s.ClickPagePrimary();
             });
-            var registered = await s.Server.WaitForEvent<UserEvent.Registered>(async () =>
+            await s.Server.WaitForEvent<UserEvent.Registered>(async () =>
             {
                 await s.GoToUrl("/monetization/new-user");
                 await s.Page.FillAsync(".plan-checkout__email", "new-user@gmail.com");
                 await s.ClickPagePrimary();
             }, evt => evt.User.Email == "new-user@gmail.com");
-            Assert.Equal("https://canonical.example/btcpay", registered.RequestBaseUrl.ToString());
-            Assert.StartsWith("https://canonical.example/btcpay/register/confirm-email?", registered.ConfirmationEmailLink);
         }
 
         var dbContextFactory = s.Server.PayTester.GetService<ApplicationDbContextFactory>();

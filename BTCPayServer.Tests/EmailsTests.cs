@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Plugins.Emails.Controllers;
+using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Services;
@@ -13,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Playwright;
 using MimeKit;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace BTCPayServer.Tests;
@@ -29,6 +32,28 @@ public class EmailsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         string[] expected = ["\"Nicolas, The, Great\" <emperor@btc.pay>", "{SomeTemplate}", "\"Madd,Test\" <madd@example.com>"];
         Assert.Equal(expected, actual);
     }
+
+    [Fact]
+    [Trait("FastTest", "FastTest")]
+    public void EmailDestinationTemplatesCannotAddRecipients()
+    {
+        var vm = new StoreEmailRuleViewModel();
+        var configured = vm.AsArray("configured@example.com,\"Smith, John\" <john@example.com>,{Email},{Injected}");
+        var model = JObject.FromObject(new
+        {
+            Email = "rendered@example.com",
+            Injected = "victim@example.com, attacker@example.com"
+        });
+        List<MailboxAddress> recipients = [];
+
+        StoreEmailRuleProcessorSender.AddToMatchedContext(model, recipients, configured);
+
+        Assert.Collection(recipients,
+            address => Assert.Equal("configured@example.com", address.Address),
+            address => Assert.Equal("john@example.com", address.Address),
+            address => Assert.Equal("rendered@example.com", address.Address));
+    }
+
     [Fact(Timeout = TestUtils.LongRunningTestTimeout)]
     [Trait("Integration", "Integration")]
     public async Task EmailSenderTests()

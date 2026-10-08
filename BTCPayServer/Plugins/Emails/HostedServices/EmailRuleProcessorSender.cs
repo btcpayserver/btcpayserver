@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mail;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
@@ -101,31 +100,16 @@ public class StoreEmailRuleProcessorSender(
             transformer.Transform(context);
     }
 
-    private void AddToMatchedContext(JObject model, List<MailboxAddress> mailboxAddresses, string[] rulesAddresses)
+    internal static void AddToMatchedContext(JObject model, List<MailboxAddress> mailboxAddresses, string[] rulesAddresses)
     {
         mailboxAddresses.AddRange(
             rulesAddresses
-                .SelectMany(o =>
+                .Select(o =>
                 {
                     var emails = new TextTemplate(o).Render(model);
-                    MailAddressCollection mailCollection = new();
-                    try
-                    {
-                        mailCollection.Add(emails);
-                    }
-                    catch (FormatException)
-                    {
-                        return Array.Empty<MailboxAddress>();
-                    }
-
-                    return mailCollection.Select(a =>
-                        {
-                            MailboxAddressValidator.TryParse(a.ToString(), out var oo);
-                            return oo;
-                        })
-                        .Where(a => a != null)
-                        .ToArray();
+                    MailboxAddressValidator.TryParse(emails, out var address);
+                    return address;
                 })
-                .Where(o => o != null)!);
+                .OfType<MailboxAddress>());
     }
 }

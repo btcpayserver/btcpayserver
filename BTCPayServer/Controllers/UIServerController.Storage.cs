@@ -66,7 +66,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        [HttpGet("server/files/{fileId}/delete")]
+        [HttpPost("server/files/{fileId}/delete")]
         public async Task<IActionResult> DeleteFile(string fileId)
         {
             try

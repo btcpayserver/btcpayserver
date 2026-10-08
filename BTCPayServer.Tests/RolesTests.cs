@@ -122,7 +122,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         var guestBadgeTexts = await Task.WhenAll(guestBadges.Select(async element => await element.TextContentAsync()));
         Assert.DoesNotContain(guestBadgeTexts, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
         Assert.Contains(guestBadgeTexts, text => text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
-        await guestRow.Locator("#SetDefault").ClickAsync();
+        await guestRow.Locator(".role-list__set-default").ClickAsync();
         await s.FindAlertMessage(partialText: "Role set default");
 
         existingServerRoles = await s.Page.Locator("table tr").AllAsync();
@@ -148,7 +148,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         ownerBadges = await ownerRow.Locator(".badge").AllAsync();
         var ownerBadgeTexts2 = await Task.WhenAll(ownerBadges.Select(async element => await element.TextContentAsync()));
         Assert.DoesNotContain(ownerBadgeTexts2, text => text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
-        await ownerRow.Locator("#SetDefault").ClickAsync();
+        await ownerRow.Locator(".role-list__set-default").ClickAsync();
 
         await s.FindAlertMessage(partialText: "Role set default");
 

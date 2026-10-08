@@ -532,6 +532,18 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await user.CreateStoreAsync();
 
         var client = await user.CreateClient();
+        await AssertEx.AssertValidationError(["SuccessRedirectUrl"], () =>
+            client.CreateOffering(user.StoreId, new OfferingModel
+            {
+                AppName = "Unsafe",
+                SuccessRedirectUrl = "javascript:alert(1)"
+            }));
+        await AssertEx.AssertValidationError(["SuccessRedirectUrl"], () =>
+            client.CreateOffering(user.StoreId, new OfferingModel
+            {
+                AppName = "Unsafe",
+                SuccessRedirectUrl = " "
+            }));
         var offering = await client.CreateOffering(user.StoreId, new OfferingModel()
         {
             AppName = "Test",
@@ -607,6 +619,12 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         Assert.Equal("updated", offering.Metadata["subscription"]?.ToString());
         Assert.Equal(2, offering.Features.Count);
         Assert.Contains(offering.Features, f => f.Id == "can-access3");
+        await AssertEx.AssertValidationError(["SuccessRedirectUrl"], () =>
+            client.UpdateOffering(user.StoreId, offering.Id, new OfferingModel
+            {
+                AppName = "Test Updated",
+                SuccessRedirectUrl = "data:text/html,<script>alert(1)</script>"
+            }));
 
         Assert.Equal(("NewPlanV2", 10m, "USD"), (plan.Name, plan.Price, plan.Currency));
         plan = await client.GetOfferingPlan(user.StoreId, offering.Id, plan.Id);

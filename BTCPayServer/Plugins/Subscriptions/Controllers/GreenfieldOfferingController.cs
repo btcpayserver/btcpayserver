@@ -58,7 +58,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         {
             if (request?.AppName is null)
                 ModelState.AddModelError(nameof(request.AppName), "AppName is required");
-            ValidateOfferingFeatures(request);
+            ValidateOffering(request);
             if (!ModelState.IsValid || request?.AppName is null)
                 return this.CreateValidationError(ModelState);
             var o = await appService.CreateOffering(storeId, request.AppName);
@@ -87,7 +87,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         {
             if (request?.AppName is null)
                 ModelState.AddModelError(nameof(request.AppName), "AppName is required");
-            ValidateOfferingFeatures(request);
+            ValidateOffering(request);
             if (!ModelState.IsValid || request?.AppName is null)
                 return this.CreateValidationError(ModelState);
 
@@ -116,8 +116,14 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             return await GetOffering(storeId, offeringId);
         }
 
-        private void ValidateOfferingFeatures(OfferingModel? request)
+        private void ValidateOffering(OfferingModel? request)
         {
+            if (!string.IsNullOrEmpty(request?.SuccessRedirectUrl) &&
+                !PlanCheckoutData.IsSafeRedirectUrl(request.SuccessRedirectUrl))
+            {
+                ModelState.AddModelError(nameof(request.SuccessRedirectUrl), "SuccessRedirectUrl must be an HTTP or HTTPS URL");
+            }
+
             if (request?.Features is null)
                 return;
             for (var i = 0; i < request.Features.Count; i++)

@@ -47,7 +47,7 @@
                                         <span id="delivery-status-icon"
                                               data-bs-toggle="tooltip"
                                               data-bs-html="true"
-                                              title="Error: @wh.LastDeliveryErrorMessage. <br/> Delivery last attempted <span id='last-delivery-time'>@wh.LastDeliveryTimeStamp?.ToTimeAgo()</span>">
+                                              title="Error: @Html.Encode(wh.LastDeliveryErrorMessage). <br/> Delivery last attempted <span id='last-delivery-time'>@wh.LastDeliveryTimeStamp?.ToTimeAgo()</span>">
                                             <vc:icon symbol="cross" css-class="text-danger" />
                                         </span>
                                     }

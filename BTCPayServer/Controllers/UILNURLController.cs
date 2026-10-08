@@ -505,8 +505,7 @@ namespace BTCPayServer
             if (!string.Equals(details.PaymentHash?.ToString(), paymentHash, StringComparison.Ordinal))
                 return NotFound(new LNUrlStatusResponse { Status = "ERROR", Reason = "Not found" });
 
-            var settled = invoice.Status == InvoiceStatus.Settled ||
-                          invoice.Status == InvoiceStatus.Processing;
+            var settled = invoice.Status == InvoiceStatus.Settled;
             var preimage = settled ? details.Preimage?.ToString() : null;
 
             return Ok(new

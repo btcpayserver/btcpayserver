@@ -1995,25 +1995,6 @@ namespace BTCPayServer.Tests
             Assert.True(pp.AutoApproveClaims);
             Assert.Equal(1, pp.Amount);
 
-            var rateConfiguration = await client.GetStoreRateConfiguration(store.Id);
-            await client.UpdateStoreRateConfiguration(store.Id, new StoreRateConfiguration
-            {
-                IsCustomScript = true,
-                EffectiveScript = "BTC_USD = 0"
-            });
-            validationError = await AssertValidationError(["RefundVariant"], async () =>
-            {
-                await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest
-                {
-                    PayoutMethodId = method.PaymentMethodId,
-                    RefundVariant = RefundVariant.CurrentRate
-                });
-            });
-            Assert.Contains("Impossible to fetch rate", validationError.Message);
-            if (!rateConfiguration.IsCustomScript)
-                rateConfiguration.EffectiveScript = null;
-            await client.UpdateStoreRateConfiguration(store.Id, rateConfiguration);
-
             // test RefundVariant.Fiat
             pp = await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest()
             {

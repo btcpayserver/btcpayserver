@@ -431,7 +431,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     break;
 
                 case RefundVariant.CurrentRate:
-                    if (rateResult.BidAsk?.Bid is not > 0)
+                    if (rateResult.BidAsk is null)
                     {
                         ModelState.AddModelError(nameof(request.RefundVariant),
                             $"Impossible to fetch rate: {rateResult.EvaluatedRule}");

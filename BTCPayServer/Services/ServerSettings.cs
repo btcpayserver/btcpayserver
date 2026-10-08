@@ -14,12 +14,8 @@ public class ServerSettings
     [Display(Name = "Base URL")]
     public string BaseUrl { get; set; }
 
-    public bool UpdateBaseUrlIfUnset(RequestBaseUrl baseUrl)
+    public void UpdateBaseUrl(RequestBaseUrl baseUrl)
     {
-        if (!string.IsNullOrWhiteSpace(BaseUrl))
-            return false;
-
         BaseUrl = baseUrl.ToString().WithoutEndingSlash();
-        return true;
     }
 }

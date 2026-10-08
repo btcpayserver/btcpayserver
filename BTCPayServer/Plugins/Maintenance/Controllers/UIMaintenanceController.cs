@@ -117,9 +117,7 @@ public class UIMaintenanceController(
             }
 
             var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
-            serverSettings.BaseUrl = (Request.GetRequestBaseUrl() with { Host = new HostString(vm.DNSDomain) })
-                .ToString()
-                .WithoutEndingSlash();
+            serverSettings.UpdateBaseUrl(Request.GetRequestBaseUrl() with { Host = new HostString(vm.DNSDomain) });
             await settingsRepository.UpdateSetting(serverSettings);
 
             _ = processRunner.RunHostCommand(HostCommands.ChangeDomain, new[] { vm.DNSDomain }, TimeSpan.FromMinutes(20));

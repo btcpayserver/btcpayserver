@@ -431,6 +431,12 @@ namespace BTCPayServer.Controllers.Greenfield
                     break;
 
                 case RefundVariant.CurrentRate:
+                    if (rateResult.BidAsk?.Bid is not > 0)
+                    {
+                        ModelState.AddModelError(nameof(request.RefundVariant),
+                            $"Impossible to fetch rate: {rateResult.EvaluatedRule}");
+                        return this.CreateValidationError(ModelState);
+                    }
                     createPullPayment.Currency = paymentPrompt.Currency;
                     createPullPayment.Amount = Math.Round(paidCurrency / rateResult.BidAsk.Bid, appliedDivisibility);
                     createPullPayment.AutoApproveClaims = true;

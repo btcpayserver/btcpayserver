@@ -1521,6 +1521,20 @@ namespace BTCPayServer.Tests
                     Website = "javascript:document.body.dataset.pwned=1",
                     BrandColor = "invalid"
                 }));
+            await AssertValidationError(["InvoiceExpiration", "DisplayExpirationTimer", "MonitoringExpiration"], async () =>
+                await client.UpdateStore(newStore.Id, new UpdateStoreRequest
+                {
+                    InvoiceExpiration = TimeSpan.Zero,
+                    DisplayExpirationTimer = TimeSpan.Zero,
+                    MonitoringExpiration = TimeSpan.Zero
+                }));
+            await AssertValidationError(["InvoiceExpiration", "DisplayExpirationTimer", "MonitoringExpiration"], async () =>
+                await client.UpdateStore(newStore.Id, new UpdateStoreRequest
+                {
+                    InvoiceExpiration = TimeSpan.FromDays(25),
+                    DisplayExpirationTimer = TimeSpan.FromDays(25),
+                    MonitoringExpiration = TimeSpan.FromDays(25)
+                }));
 
             //update store
             Assert.Empty(newStore.PaymentMethodCriteria);
@@ -1980,6 +1994,25 @@ namespace BTCPayServer.Tests
             Assert.Equal("BTC", pp.Currency);
             Assert.True(pp.AutoApproveClaims);
             Assert.Equal(1, pp.Amount);
+
+            var rateConfiguration = await client.GetStoreRateConfiguration(store.Id);
+            await client.UpdateStoreRateConfiguration(store.Id, new StoreRateConfiguration
+            {
+                IsCustomScript = true,
+                EffectiveScript = "BTC_USD = 0"
+            });
+            validationError = await AssertValidationError(["RefundVariant"], async () =>
+            {
+                await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest
+                {
+                    PayoutMethodId = method.PaymentMethodId,
+                    RefundVariant = RefundVariant.CurrentRate
+                });
+            });
+            Assert.Contains("Impossible to fetch rate", validationError.Message);
+            if (!rateConfiguration.IsCustomScript)
+                rateConfiguration.EffectiveScript = null;
+            await client.UpdateStoreRateConfiguration(store.Id, rateConfiguration);
 
             // test RefundVariant.Fiat
             pp = await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest()
@@ -2915,6 +2948,10 @@ namespace BTCPayServer.Tests
             });
             Assert.Empty(await walletViewerClient.GetOnChainWalletUTXOs(walletId.StoreId, walletId.CryptoCode));
             Assert.Empty(await client.GetOnChainWalletUTXOs(walletId.StoreId, walletId.CryptoCode));
+            var emptyHistogram = await client.GetOnChainWalletHistogram(walletId.StoreId, walletId.CryptoCode);
+            Assert.Equal(0m, emptyHistogram.Balance);
+            Assert.Equal(emptyHistogram.Balance, emptyHistogram.Series.Last());
+            Assert.Equal(emptyHistogram.Series.Count, emptyHistogram.Labels.Count);
             uint256 txhash = null;
             await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
             {

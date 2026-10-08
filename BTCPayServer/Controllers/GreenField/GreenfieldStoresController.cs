@@ -358,11 +358,11 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.SupportUrl), "Support URL is not a valid url");
             }
-            if (request.InvoiceExpiration < TimeSpan.FromMinutes(1) && request.InvoiceExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
+            if (request.InvoiceExpiration < TimeSpan.FromMinutes(1) || request.InvoiceExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.InvoiceExpiration), "InvoiceExpiration can only be between 1 and 34560 mins");
-            if (request.DisplayExpirationTimer < TimeSpan.FromMinutes(1) && request.DisplayExpirationTimer > TimeSpan.FromMinutes(60 * 24 * 24))
+            if (request.DisplayExpirationTimer < TimeSpan.FromMinutes(1) || request.DisplayExpirationTimer > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.DisplayExpirationTimer), "DisplayExpirationTimer can only be between 1 and 34560 mins");
-            if (request.MonitoringExpiration < TimeSpan.FromMinutes(10) && request.MonitoringExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
+            if (request.MonitoringExpiration < TimeSpan.FromMinutes(10) || request.MonitoringExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.MonitoringExpiration), "MonitoringExpiration can only be between 10 and 34560 mins");
             if (request.PaymentTolerance < 0 || request.PaymentTolerance > 100)
                 ModelState.AddModelError(nameof(request.PaymentTolerance), "PaymentTolerance can only be between 0 and 100 percent");

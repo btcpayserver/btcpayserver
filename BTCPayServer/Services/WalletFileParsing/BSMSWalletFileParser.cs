@@ -29,12 +29,23 @@ public class BSMSWalletFileParser : IWalletFileParser
             return false;
 
 
-        descriptor = descriptor.Replace("/**", derivationPath);
-        var testAddress = BitcoinAddress.Create(lines[3], network.NBitcoinNetwork);
+        try
+        {
+            descriptor = descriptor.Replace("/**", derivationPath);
+            var testAddress = BitcoinAddress.Create(lines[3], network.NBitcoinNetwork);
 
-        derivationSchemeSettings = network.GetDerivationSchemeParser().ParseOD(descriptor);
-        derivationSchemeSettings.Source = "BSMS";
-        var line = derivationSchemeSettings.AccountDerivation.GetLineFor(DerivationFeature.Deposit).Derive(0);
-        return testAddress.ScriptPubKey == line.ScriptPubKey;
+            derivationSchemeSettings = network.GetDerivationSchemeParser().ParseOD(descriptor);
+            derivationSchemeSettings.Source = "BSMS";
+            var line = derivationSchemeSettings.AccountDerivation.GetLineFor(DerivationFeature.Deposit).Derive(0);
+            if (testAddress.ScriptPubKey == line.ScriptPubKey)
+                return true;
+            derivationSchemeSettings = null;
+            return false;
+        }
+        catch
+        {
+            derivationSchemeSettings = null;
+            return false;
+        }
     }
 }

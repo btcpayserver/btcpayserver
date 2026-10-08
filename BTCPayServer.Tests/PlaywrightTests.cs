@@ -376,6 +376,20 @@ namespace BTCPayServer.Tests
             await s.Page.CheckAsync("#LUD12Enabled");
             await s.ClickPagePrimary();
 
+            var store = await s.Server.PayTester.StoreRepository.FindStore(storeId);
+            var storeBlob = store.GetStoreBlob();
+            storeBlob.AnyoneCanInvoice = true;
+            store.SetStoreBlob(storeBlob);
+            await s.Server.PayTester.StoreRepository.UpdateStore(store);
+            using (var zeroAmountResponse = await s.Server.PayTester.HttpClient.GetAsync($"BTC/lnurl/{storeId}/pay?amount=0"))
+            {
+                Assert.Equal(HttpStatusCode.BadRequest, zeroAmountResponse.StatusCode);
+            }
+            using (var negativeAmountResponse = await s.Server.PayTester.HttpClient.GetAsync($"BTC/lnurl/{storeId}/pay?amount=-1"))
+            {
+                Assert.Equal(HttpStatusCode.BadRequest, negativeAmountResponse.StatusCode);
+            }
+
             // Topup Invoice test
             var i = await s.CreateInvoice(storeId, null, cryptoCode);
             await s.GoToInvoiceCheckout(i);

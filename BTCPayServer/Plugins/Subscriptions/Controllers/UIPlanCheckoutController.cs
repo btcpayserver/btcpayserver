@@ -23,7 +23,8 @@ public class UIPlanCheckoutController(
     LinkGenerator linkGenerator,
     UriResolver uriResolver,
     IStringLocalizer stringLocalizer,
-    SubscriptionHostedService subsService)
+    SubscriptionHostedService subsService,
+    CallbackGenerator callbackGenerator)
     : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
     [HttpGet]
@@ -42,6 +43,7 @@ public class UIPlanCheckoutController(
         var vm = new PlanCheckoutViewModel()
         {
             CheckoutId = checkoutId,
+            BaseUrl = callbackGenerator.GetRequestBaseUrl(),
             StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, plan.Offering.App.StoreData.GetStoreBlob()),
             StoreName = plan.Offering.App.StoreData.StoreName,
             Title = plan.Name,

@@ -261,7 +261,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 return actionResult;
 
             var wallet = btcPayWalletProvider.GetWallet(network);
-            var tx = await wallet.FetchTransaction(derivationScheme.AccountDerivation, uint256.Parse(transactionId));
+            var transactionHash = uint256.Parse(transactionId);
+            var tx = await wallet.FetchTransaction(derivationScheme.AccountDerivation, transactionHash);
             if (!force && tx is null)
             {
                 return this.CreateAPIError(404, "transaction-not-found", "The transaction was not found.");
@@ -284,6 +285,18 @@ namespace BTCPayServer.Controllers.Greenfield
                 (await walletRepository.GetWalletTransactionsInfo(walletId, new[] { transactionId }))
                 .Values
                 .FirstOrDefault();
+
+            if (tx is null)
+            {
+                return Ok(new OnChainWalletTransactionData
+                {
+                    TransactionHash = transactionHash,
+                    Comment = walletTransactionsInfo?.Comment ?? string.Empty,
+#pragma warning disable CS0612 // Type or member is obsolete
+                    Labels = walletTransactionsInfo?.LegacyLabels ?? new Dictionary<string, LabelData>()
+#pragma warning restore CS0612 // Type or member is obsolete
+                });
+            }
 
             return Ok(ToModel(walletTransactionsInfo, tx, wallet));
         }

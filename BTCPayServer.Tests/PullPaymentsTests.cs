@@ -1036,6 +1036,20 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         //permission test around auto approved pps and payouts
         var nonApproved = await acc.CreateClient(Policies.CanCreateNonApprovedPullPayments);
         var approved = await acc.CreateClient(Policies.CanCreatePullPayments);
+        var payoutAddress = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString();
+        await AssertEx.AssertValidationError(["Amount"], () =>
+            nonApproved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest
+            {
+                Amount = -1,
+                PayoutMethodId = "BTC",
+                Destination = payoutAddress
+            }));
+        await AssertEx.AssertValidationError(["Destination"], () =>
+            nonApproved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest
+            {
+                PayoutMethodId = "BTC",
+                Destination = $"bitcoin:{payoutAddress}?amount=-1"
+            }));
         await AssertEx.AssertPermissionError(Policies.CanCreatePullPayments, async () =>
         {
             await nonApproved.CreatePullPayment(acc.StoreId, new CreatePullPaymentRequest()
@@ -1054,7 +1068,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
                 Amount = 100,
                 PayoutMethodId = "BTC",
                 Approved = true,
-                Destination = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString()
+                Destination = payoutAddress
             });
         });
 
@@ -1072,7 +1086,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Amount = 100,
             PayoutMethodId = "BTC",
             Approved = true,
-            Destination = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString()
+            Destination = payoutAddress
         });
     }
 

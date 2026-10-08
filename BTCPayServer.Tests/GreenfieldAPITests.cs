@@ -3166,6 +3166,21 @@ namespace BTCPayServer.Tests
             Assert.Equal(new Dictionary<string, LabelData>(), transaction.Labels);
 
             // transaction patch tests
+            var unknownTransactionHash = RandomUtils.GetUInt256();
+            await AssertEx.AssertApiError("transaction-not-found", () =>
+                client.PatchOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode,
+                    unknownTransactionHash.ToString(), new PatchOnChainTransactionRequest()));
+            var forcedTransaction = await client.PatchOnChainWalletTransaction(
+                walletId.StoreId, walletId.CryptoCode, unknownTransactionHash.ToString(),
+                new PatchOnChainTransactionRequest
+                {
+                    Comment = "pending transaction",
+                    Labels = ["pending"]
+                }, true);
+            Assert.Equal(unknownTransactionHash, forcedTransaction.TransactionHash);
+            Assert.Equal("pending transaction", forcedTransaction.Comment);
+            Assert.Contains("pending", forcedTransaction.Labels);
+
             var patchedTransaction = await client.PatchOnChainWalletTransaction(
                 walletId.StoreId, walletId.CryptoCode, txdata.TransactionHash.ToString(),
                 new PatchOnChainTransactionRequest()

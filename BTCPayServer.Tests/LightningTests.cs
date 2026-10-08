@@ -539,6 +539,16 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
 
         Assert.Empty(await adminClient.GetStoreLightningAddresses(store.Id));
         Assert.Empty(await adminClient.GetStoreLightningAddresses(store2));
+        await AssertEx.AssertValidationError(["Min"], () =>
+            adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1,
+                new LightningAddressData { Min = 0 }));
+        await AssertEx.AssertValidationError(["Max"], () =>
+            adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1,
+                new LightningAddressData { Max = 0 }));
+        await AssertEx.AssertValidationError(["Max"], () =>
+            adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1,
+                new LightningAddressData { Min = 2, Max = 1 }));
+        Assert.Empty(await adminClient.GetStoreLightningAddresses(store.Id));
         await adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1, new LightningAddressData());
 
         await adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1, new LightningAddressData()

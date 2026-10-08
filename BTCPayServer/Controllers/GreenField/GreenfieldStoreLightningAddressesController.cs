@@ -80,10 +80,16 @@ namespace BTCPayServer.Controllers.Greenfield
             string storeId, string username, LightningAddressData data)
         {
             if (data.Min <= 0)
-            {
                 ModelState.AddModelError(nameof(data.Min), "Minimum must be greater than 0 if provided.");
+
+            if (data.Max <= 0)
+                ModelState.AddModelError(nameof(data.Max), "Maximum must be greater than 0 if provided.");
+
+            if (data.Min is { } min && data.Max is { } max && min > max)
+                ModelState.AddModelError(nameof(data.Max), "Maximum must be greater than or equal to minimum.");
+
+            if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            }
             
             if (await _lightningAddressService.Set(new Data.LightningAddressData
             {

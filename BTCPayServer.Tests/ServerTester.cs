@@ -30,6 +30,7 @@ namespace BTCPayServer.Tests
         readonly string _Directory;
         readonly CancellationTokenSource _lifetimeCancellation;
         readonly TaskCompletionSource _disposeCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        static readonly Lazy<int> SharedDatabasePort = new(Utils.FreeTcpPort);
         int _disposed;
 
         public CancellationToken LifetimeToken => _lifetimeCancellation.Token;
@@ -88,7 +89,8 @@ namespace BTCPayServer.Tests
                 PayTester.Postgres = PayTester.Postgres.Replace("btcpayserver", $"btcpayserver{r}");
                 TestLogs.LogInformation($"Database used: btcpayserver{r}");
             }
-            PayTester.Port = int.Parse(GetEnvironment("TESTS_PORT", Utils.FreeTcpPort().ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
+            var port = newDb ? Utils.FreeTcpPort() : SharedDatabasePort.Value;
+            PayTester.Port = int.Parse(GetEnvironment("TESTS_PORT", port.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
             PayTester.HostName = GetEnvironment("TESTS_HOSTNAME", "127.0.0.1");
             PayTester.InContainer = bool.Parse(GetEnvironment("TESTS_INCONTAINER", "false"));
 

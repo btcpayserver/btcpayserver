@@ -169,6 +169,15 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
                 Amount = LightMoney.Satoshis(-1)
             }));
         Assert.Contains(validationErr.ValidationErrors, error => error.Path == "Amount");
+        validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(() =>
+            client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest
+            {
+                BOLT11 = merchantInvoice.BOLT11,
+                MaxFeePercent = -1,
+                MaxFeeFlat = Money.Satoshis(-1)
+            }));
+        Assert.Contains(validationErr.ValidationErrors, error => error.Path == "MaxFeePercent");
+        Assert.Contains(validationErr.ValidationErrors, error => error.Path == "MaxFeeFlat");
 
         var payResponse = await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest
         {

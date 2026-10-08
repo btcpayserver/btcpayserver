@@ -355,18 +355,21 @@
                     },
                     "amount": {
                         "type": "string",
+                        "minimum": 0,
                         "description": "Optional explicit payment amount in millisatoshi (if specified, it overrides the BOLT11 amount)",
                         "nullable": true
                     },
                     "maxFeePercent": {
                         "type": "string",
                         "format": "float",
+                        "minimum": 0,
                         "nullable": true,
                         "description": "The fee limit expressed as a percentage of the payment amount",
                         "example": "6.15"
                     },
                     "maxFeeFlat": {
                         "type": "string",
+                        "minimum": 0,
                         "nullable": true,
                         "description": "The fee limit expressed as a fixed amount in satoshi",
                         "example": "21"

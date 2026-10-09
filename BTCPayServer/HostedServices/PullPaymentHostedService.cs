@@ -426,6 +426,8 @@ namespace BTCPayServer.HostedServices
         private async Task HandleTopUp(TopUpRequest topUp)
         {
             var pp = await this.GetPullPayment(topUp.PullPaymentId, false);
+            if (pp is null)
+                return;
             using var ctx = _dbContextFactory.CreateContext();
 
             var payout = new Data.PayoutData()

@@ -194,7 +194,11 @@ namespace BTCPayServer.Controllers
                 var stores = await _repo.GetStoresByUserId(userId);
                 vm.IsFirstStore = !stores.Any();
                 var template = await _repo.GetDefaultStoreTemplate();
-                var defaultCurrency = template.GetStoreBlob().DefaultCurrency ?? StoreBlob.StandardDefaultCurrency;
+                var templateBlob = template.GetStoreBlob();
+                var defaultCurrency = templateBlob.DefaultCurrency ?? StoreBlob.StandardDefaultCurrency;
+                vm.CanEditPreferredExchange = templateBlob.GetRateSettings(false)?.RateScripting is not true;
+                if (!vm.CanEditPreferredExchange)
+                    vm.PreferredExchange = templateBlob.GetRateSettings(false)?.PreferredExchange;
                 vm.Exchanges = GetExchangesSelectList(defaultCurrency, null);
                 return View(vm);
             }
@@ -203,7 +207,7 @@ namespace BTCPayServer.Controllers
             store.StoreName = vm.Name;
             var blob = store.GetStoreBlob();
             blob.DefaultCurrency = vm.DefaultCurrency;
-            if (vm.CanEditPreferredExchange)
+            if (blob.GetRateSettings(false)?.RateScripting is not true)
             {
                 var rate = blob.GetOrCreateRateSettings(false);
                 rate.PreferredExchange = vm.PreferredExchange;
@@ -218,7 +222,11 @@ namespace BTCPayServer.Controllers
                 var stores = await _repo.GetStoresByUserId(userId);
                 vm.IsFirstStore = !stores.Any();
                 var template = await _repo.GetDefaultStoreTemplate();
-                var defaultCurrency = template.GetStoreBlob().DefaultCurrency ?? StoreBlob.StandardDefaultCurrency;
+                var templateBlob = template.GetStoreBlob();
+                var defaultCurrency = templateBlob.DefaultCurrency ?? StoreBlob.StandardDefaultCurrency;
+                vm.CanEditPreferredExchange = templateBlob.GetRateSettings(false)?.RateScripting is not true;
+                if (!vm.CanEditPreferredExchange)
+                    vm.PreferredExchange = templateBlob.GetRateSettings(false)?.PreferredExchange;
                 vm.Exchanges = GetExchangesSelectList(defaultCurrency, null);
                 return View(vm);
             }

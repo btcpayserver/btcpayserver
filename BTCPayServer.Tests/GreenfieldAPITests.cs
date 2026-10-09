@@ -521,7 +521,7 @@ namespace BTCPayServer.Tests
             {
                 await client.GetApp("some random ID lol");
             });
-            await AssertHttpError(404, async () =>
+            await AssertHttpError(403, async () =>
             {
                 await client.GetPosApp("some random ID lol");
             });
@@ -555,6 +555,11 @@ namespace BTCPayServer.Tests
             retrievedPosApp = await client.GetPosApp(app.Id);
             Assert.Equal("new app name", retrievedPosApp.AppName);
             Assert.Equal("new app title", retrievedPosApp.Title);
+
+            var otherUser = tester.NewAccount();
+            await otherUser.RegisterAsync();
+            var otherClient = await otherUser.CreateClient(Policies.CanViewStoreSettings);
+            await AssertPermissionError(Policies.CanViewStoreSettings, () => otherClient.GetPosApp(app.Id));
 
             // Make sure we return a 403 if we try to delete an app that doesn't exist
             await AssertHttpError(403, async () =>
@@ -726,7 +731,7 @@ namespace BTCPayServer.Tests
             {
                 await client.GetApp("some random ID lol");
             });
-            await AssertHttpError(404, async () =>
+            await AssertHttpError(403, async () =>
             {
                 await client.GetCrowdfundApp("some random ID lol");
             });
@@ -744,6 +749,11 @@ namespace BTCPayServer.Tests
             Assert.Equal(app.Title, retrievedCfApp.Title);
             Assert.Equal("test description", retrievedCfApp.Description);
             Assert.False(retrievedCfApp.Archived);
+
+            var otherUser = tester.NewAccount();
+            await otherUser.RegisterAsync();
+            var otherClient = await otherUser.CreateClient(Policies.CanViewStoreSettings);
+            await AssertPermissionError(Policies.CanViewStoreSettings, () => otherClient.GetCrowdfundApp(app.Id));
 
             // Full update: client GETs, modifies, then PUTs
             retrievedCfApp = await client.UpdateCrowdfundApp(

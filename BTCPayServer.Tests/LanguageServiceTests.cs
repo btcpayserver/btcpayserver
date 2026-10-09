@@ -544,5 +544,141 @@ namespace BTCPayServer.Tests
             Assert.All(items, i => Assert.Equal(i.Value, i.Text));
             Assert.Empty(LocalizerService.ToSelectListItems(Array.Empty<LocalizerService.Translation>()));
         }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void LocalizerService_IsInstalledTranslation_OnlyAcceptsInstalledNames()
+        {
+            var installed = new[]
+            {
+                new LocalizerService.Translation("English", null, "Default", new JObject()),
+                new LocalizerService.Translation("Cypherpunk", "English", "File", new JObject()),
+            };
+            Assert.True(LocalizerService.IsInstalledTranslation("Cypherpunk", installed));
+            Assert.False(LocalizerService.IsInstalledTranslation("Klingon", installed));
+            Assert.False(LocalizerService.IsInstalledTranslation("cypherpunk", installed));
+            Assert.False(LocalizerService.IsInstalledTranslation("", installed));
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanResolvePerUserTranslations()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var localizer = tester.PayTester.GetService<LocalizerService>();
+            var db = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext().Database.GetDbConnection();
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('French', 'English', 'Custom')");
+
+            async Task SetHello(string value)
+            {
+                var dict = await localizer.GetTranslation("French");
+                Assert.NotNull(dict);
+                await localizer.Save(dict, new Translations(new[] { ("Hello", value) }.Select(t => KeyValuePair.Create(t.Item1, t.Item2))));
+            }
+            static string Hello(Translations t) => t.Records.TryGetValue("Hello", out var v) ? v : null;
+
+            await SetHello("Salut");
+
+            TestLogs.LogInformation("No choice, or the server language, means the server language");
+            Assert.Null(await localizer.GetUserTranslations(null));
+            Assert.Null(await localizer.GetUserTranslations(""));
+            Assert.Null(await localizer.GetUserTranslations(localizer.ServerLanguage));
+
+            TestLogs.LogInformation("An installed choice loads that language");
+            var french = await localizer.GetUserTranslations("French");
+            Assert.NotNull(french);
+            Assert.Equal("French", french.LangName);
+            Assert.Equal("Salut", Hello(french.Translations));
+            Assert.Same(french, await localizer.GetUserTranslations("French"));
+
+            TestLogs.LogInformation("An unknown choice falls back to the server language");
+            Assert.Null(await localizer.GetUserTranslations("Klingon"));
+
+            TestLogs.LogInformation("The choice only applies to the request that set it");
+            await Task.Run(() =>
+            {
+                localizer.SetRequestTranslations(french);
+                Assert.Equal("Salut", Hello(localizer.Translations));
+            });
+            Assert.NotEqual("Salut", Hello(localizer.Translations));
+
+            TestLogs.LogInformation("Editing the language drops the cached set");
+            await SetHello("Bonjour");
+            var reloaded = await localizer.GetUserTranslations("French");
+            Assert.NotSame(french, reloaded);
+            Assert.Equal("Bonjour", Hello(reloaded!.Translations));
+            TestLogs.LogInformation("Editing a parent language drops cached children");
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('Quebecois', 'French', 'Custom')");
+            var quebec = await localizer.GetUserTranslations("Quebecois");
+            Assert.Equal("Bonjour", quebec!.Translations["Hello"]); 
+            await SetHello("Allo");
+            var quebecAgain = await localizer.GetUserTranslations("Quebecois");
+            Assert.NotSame(quebec, quebecAgain);
+            Assert.Equal("Allo", quebecAgain!.Translations["Hello"]);
+            await localizer.DeleteTranslation("Quebecois");
+
+            TestLogs.LogInformation("Removing the language falls back to the server language");
+            await localizer.DeleteTranslation("French");
+            Assert.Null(await localizer.GetUserTranslations("French"));
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Playwright", "Playwright")]
+        public async Task CanChooseOwnLanguageOnAccountPage()
+        {
+            await using var tester = CreatePlaywrightTester(newDb: true);
+            await tester.StartAsync();
+            await tester.RegisterNewUser(true);
+            await tester.CreateNewStore();
+
+            await tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            await tester.ClickPagePrimary();
+            await tester.Page.Locator("[name='Name']").FillAsync("English (Custom)");
+            await tester.ClickPagePrimary();
+            var translations = tester.Page.Locator("[name='Translations']");
+            await translations.ClearAsync();
+            await translations.FillAsync("{ \"Update your account\": \"Tweak your profile\" }");
+            await tester.ClickPagePrimary();
+
+            await tester.GoToProfile();
+            await Expect(tester.Page.Locator("body")).ToContainTextAsync("Update your account");
+            await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English");
+            await Expect(tester.Page.Locator("#LangTranslation option[value='']")).ToHaveCountAsync(0);
+
+            await tester.Page.Locator("#LangTranslation").SelectOptionAsync("English (Custom)");
+            await tester.ClickPagePrimary();
+            await tester.FindAlertMessage();
+            await Expect(tester.Page.Locator("body")).ToContainTextAsync("Tweak your profile");
+            await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English (Custom)");
+
+            await tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            await Expect(tester.Page.Locator("#Select-English\\ \\(Custom\\)")).ToBeVisibleAsync();
+
+            await tester.GoToProfile();
+            await tester.Page.EvalOnSelectorAsync("#LangTranslation", "s => { s.add(new Option('Klingon', 'Klingon')); s.value = 'Klingon'; }");
+            await tester.ClickPagePrimary();
+            await Expect(tester.Page.Locator("body")).ToContainTextAsync("The selected language is not installed on this server.");
+
+            await tester.GoToProfile();
+            await tester.Page.Locator("#LangTranslation").SelectOptionAsync("English");
+            await tester.ClickPagePrimary();
+            await Expect(tester.Page.Locator("body")).ToContainTextAsync("Update your account");
+            await Expect(tester.Page.Locator("body")).Not.ToContainTextAsync("Tweak your profile");
+            await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English");
+
+            await tester.GoToProfile();
+            await tester.Page.Locator("#LangTranslation").SelectOptionAsync("English");
+            await tester.ClickPagePrimary();
+            await Expect(tester.Page.Locator("body")).ToContainTextAsync("Update your account");
+            await Expect(tester.Page.Locator("body")).Not.ToContainTextAsync("Tweak your profile");
+            await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English");
+
+            await tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            await tester.Page.Locator("#Select-English\\ \\(Custom\\)").ClickAsync();
+            await tester.GoToProfile();
+            await Expect(tester.Page.Locator("body")).ToContainTextAsync("Update your account");
+            await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English");
+        }
     }
 }

@@ -28,7 +28,7 @@ public class MultisigSetupData
     => !string.IsNullOrEmpty(userId) &&
        Participants.Any(p => string.Equals(p.UserId, userId, StringComparison.Ordinal));
 
-    public DerivationSchemeSettings GetDiredivationSchemeSettings(BTCPayNetwork network)
+    public DerivationSchemeSettings GetDerivationSchemeSettings(BTCPayNetwork network)
     {
         var suffix = ScriptType.ToLowerInvariant() switch
         {

@@ -54,8 +54,6 @@ namespace BTCPayServer.Plugins.Bitpay.Models
         public decimal? Price { get; set; }
         [JsonProperty(PropertyName = "defaultPaymentMethod", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string DefaultPaymentMethod { get; set; }
-        [JsonProperty(PropertyName = "notificationEmail", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string NotificationEmail { get; set; }
         [JsonConverter(typeof(DateTimeJsonConverter))]
         [JsonProperty(PropertyName = "expirationTime", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public DateTimeOffset? ExpirationTime { get; set; }

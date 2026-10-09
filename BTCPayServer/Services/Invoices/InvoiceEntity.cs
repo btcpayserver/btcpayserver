@@ -507,8 +507,6 @@ namespace BTCPayServer.Services.Invoices
         [JsonProperty]
         public bool RedirectAutomatically { get; set; }
         public bool FullNotifications { get; set; }
-        [JsonProperty]
-        public string NotificationEmail { get; set; }
 
         [JsonProperty("notificationURL")]
         public string NotificationURLTemplate { get; set; }

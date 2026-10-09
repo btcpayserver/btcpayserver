@@ -1257,14 +1257,7 @@ namespace BTCPayServer.Controllers
                         DefaultPaymentMethod = model.DefaultPaymentMethod,
                         PaymentMethods = model.SupportedTransactionCurrencies?.ToArray()
                     },
-                }, store, HttpContext.Request.GetAbsoluteRoot(),
-                    entityManipulator: (entity) =>
-                    {
-                        entity.FullNotifications = true;
-                        entity.NotificationEmail = model.NotificationEmail;
-                        entity.ExtendedNotifications = model.NotificationEmail != null;
-                    },
-                    cancellationToken: cancellationToken);
+                }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Invoice {0} just created!", result.Id].Value;
                 CreatedInvoiceId = result.Id;

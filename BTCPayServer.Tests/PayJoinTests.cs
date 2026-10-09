@@ -184,6 +184,7 @@ namespace BTCPayServer.Tests
         public async Task CanOnlyUseCorrectAddressFormatsForPayjoin()
         {
             using var tester = CreateServerTester();
+            tester.PayTester.DisableSSRFProtection = true;
             await tester.StartAsync();
             var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
             tester.PayTester.GetService<UTXOLocker>();
@@ -243,6 +244,7 @@ namespace BTCPayServer.Tests
         public async Task CanUsePayjoinForTopUp()
         {
             await using var s = CreatePlaywrightTester();
+            s.Server.PayTester.DisableSSRFProtection = true;
             await s.StartAsync();
             await s.RegisterNewUser(true);
             var receiver = await s.CreateNewStore();
@@ -305,6 +307,7 @@ namespace BTCPayServer.Tests
         public async Task CanUsePayjoinViaUI()
         {
             await using var s = CreatePlaywrightTester();
+            s.Server.PayTester.DisableSSRFProtection = true;
             await s.StartAsync();
             var invoiceRepository = s.Server.PayTester.GetService<InvoiceRepository>();
             await s.RegisterNewUser(true);
@@ -428,6 +431,7 @@ namespace BTCPayServer.Tests
         public async Task CanUsePayjoin2()
         {
             using var tester = CreateServerTester();
+            tester.PayTester.DisableSSRFProtection = true;
             await tester.StartAsync();
             var pjClient = tester.PayTester.GetService<PayjoinClient>();
             var nbx = tester.PayTester.GetService<ExplorerClientProvider>().GetExplorerClient("BTC");
@@ -651,6 +655,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = CreateServerTester())
             {
+                tester.PayTester.DisableSSRFProtection = true;
                 await tester.StartAsync();
                 var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
                 var payjoinRepository = tester.PayTester.GetService<UTXOLocker>();
@@ -842,6 +847,7 @@ retry:
         {
             using (var tester = CreateServerTester())
             {
+                tester.PayTester.DisableSSRFProtection = true;
                 await tester.StartAsync();
 
                 ////var payJoinStateProvider = tester.PayTester.GetService<PayJoinStateProvider>();

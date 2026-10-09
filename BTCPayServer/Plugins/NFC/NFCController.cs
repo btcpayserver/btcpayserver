@@ -67,6 +67,22 @@ namespace BTCPayServer.Plugins.NFC
                 return NotFound();
             }
 
+            LightMoney topUpAmount = null;
+            if (invoice.Type == InvoiceType.TopUp)
+            {
+                if (request.Amount is null)
+                {
+                    return BadRequest("This is a top-up invoice and you need to provide the amount in sats to pay.");
+                }
+
+                if (request.Amount <= 0 || request.Amount > long.MaxValue / 1000)
+                {
+                    return BadRequest("The top-up amount must be a positive number of sats.");
+                }
+
+                topUpAmount = new LightMoney(request.Amount.Value, LightMoneyUnit.Satoshi);
+            }
+
             var methods = invoice.GetPaymentPrompts();
             PaymentPrompt lnPaymentMethod = null;
             if (!methods.TryGetValue(PaymentTypes.LNURL.GetPaymentMethodId("BTC"), out var lnurlPaymentMethod) &&
@@ -124,13 +140,9 @@ namespace BTCPayServer.Plugins.NFC
                     await _invoiceActivator.ActivateInvoicePaymentMethod(invoice.Id, lnPaymentMethod.PaymentMethodId);
                 }
                 LightMoney due;
-                if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
+                if (topUpAmount is not null)
                 {
-                    due = new LightMoney(request.Amount.Value, LightMoneyUnit.Satoshi);
-                }
-                else if (invoice.Type == InvoiceType.TopUp)
-                {
-                    return BadRequest("This is a top-up invoice and you need to provide the amount in sats to pay.");
+                    due = topUpAmount;
                 }
                 else
                 {
@@ -151,13 +163,9 @@ namespace BTCPayServer.Plugins.NFC
             if (lnurlPaymentMethod is not null)
             {
                 decimal due;
-                if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
+                if (topUpAmount is not null)
                 {
-                    due = new Money(request.Amount.Value, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC);
-                }
-                else if (invoice.Type == InvoiceType.TopUp)
-                {
-                    return BadRequest("This is a top-up invoice and you need to provide the amount in sats to pay.");
+                    due = topUpAmount.ToDecimal(LightMoneyUnit.BTC);
                 }
                 else
                 {

@@ -244,6 +244,7 @@ namespace BTCPayServer.Tests
         public async Task CanUsePayjoinForTopUp()
         {
             await using var s = CreatePlaywrightTester();
+            s.Server.PayTester.DisableSSRFProtection = true;
             await s.StartAsync();
             await s.RegisterNewUser(true);
             var receiver = await s.CreateNewStore();
@@ -306,6 +307,7 @@ namespace BTCPayServer.Tests
         public async Task CanUsePayjoinViaUI()
         {
             await using var s = CreatePlaywrightTester();
+            s.Server.PayTester.DisableSSRFProtection = true;
             await s.StartAsync();
             var invoiceRepository = s.Server.PayTester.GetService<InvoiceRepository>();
             await s.RegisterNewUser(true);

@@ -9,6 +9,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.Monetization;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -42,6 +43,7 @@ public partial class UIStoresController : Controller
         RateFetcher rateFactory,
         ExplorerClientProvider explorerProvider,
         LanguageService langService,
+        LocalizerService localizer,
         PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
         PoliciesSettings policiesSettings,
         IAuthorizationService authorizationService,
@@ -68,6 +70,7 @@ public partial class UIStoresController : Controller
         _storeRepo = storeRepo;
         _userManager = userManager;
         _langService = langService;
+        _localizer = localizer;
         _walletProvider = walletProvider;
         _handlers = paymentMethodHandlerDictionary;
         _policiesSettings = policiesSettings;
@@ -106,6 +109,7 @@ public partial class UIStoresController : Controller
     private readonly CurrencyNameTable _currencyNameTable;
     private readonly ExplorerClientProvider _explorerProvider;
     private readonly LanguageService _langService;
+    private readonly LocalizerService _localizer;
     private readonly PaymentMethodHandlerDictionary _handlers;
     private readonly DefaultRulesCollection _defaultRules;
     private readonly PoliciesSettings _policiesSettings;

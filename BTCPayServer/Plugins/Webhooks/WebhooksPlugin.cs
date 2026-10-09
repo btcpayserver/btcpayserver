@@ -1,7 +1,9 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Abstractions.Routing;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.HostedServices;
@@ -27,6 +29,8 @@ public class WebhooksPlugin : BaseBTCPayServerPlugin
 
     public override void Execute(IServiceCollection services)
     {
+        services.AddRegexRouteConvention("webhookId", RouteRegexPatterns.Base58);
+        services.AddRegexRouteConvention("deliveryId", RouteRegexPatterns.Base58);
         services.AddHostedService<WebhookProviderHostedService>();
         services.AddSingleton<WebhookSender>();
         services.AddSingleton<IHostedService, WebhookSender>(o => o.GetRequiredService<WebhookSender>());

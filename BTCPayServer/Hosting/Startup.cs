@@ -199,6 +199,8 @@ namespace BTCPayServer.Hosting
             .AddDataAnnotationsLocalization()
             .AddControllersAsServices();
 
+            RegexRouteConventionRouting.Register(services);
+
             services.AddServerSideBlazor().AddHubOptions(o =>
             {
                 // PSBT with previous transactions could become
@@ -337,6 +339,7 @@ namespace BTCPayServer.Hosting
             app.UsePayServer();
             app.UseRouting();
             app.UseCors(CorsPolicies.All);
+            app.UseMiddleware<RegexRouteConventionMiddleware>();
 
             app.UseStaticFiles(new StaticFileOptions
             {

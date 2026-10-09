@@ -9,6 +9,19 @@ Plugin APIs run inside BTCPay Server. Follow the same routing, authorization, JS
 - Scope store operations through authorization, not only by accepting a `storeId` parameter.
 - Return the standard validation and business-error shapes described in the API compatibility guide.
 
+### Route ID formats
+
+Register a regex convention when an entity ID has a stable format and is used as a route parameter:
+
+```csharp
+public override void Execute(IServiceCollection services)
+{
+    services.AddRegexRouteConvention("widgetId", $"^widget_{RouteRegexPatterns.Base58Characters}+\\z");
+}
+```
+
+The convention applies to attribute-route parameters with the exact same name. Invalid Greenfield route values return the standard validation response; invalid values on other MVC routes return 404.
+
 ## OpenAPI
 
 Implement `ISwaggerProvider` to merge the plugin's OpenAPI fragment into the instance document:
@@ -32,3 +45,5 @@ Register the provider as `ISwaggerProvider` and embed the JSON resource using th
 Use globally distinctive operation IDs, component schema names, and tags. A merge collision can overwrite another provider's document section. Validate the final merged document with the plugin installed, not only the standalone fragment.
 
 Treat OpenAPI as part of the shipped API contract. Update it in the same change as a controller and test that documented authentication, request bodies, response schemas, and error statuses match runtime behavior.
+
+Route regex conventions do not modify the merged OpenAPI document. Add a matching `pattern` to the plugin's path parameter schema when needed.

@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Abstractions.Routing;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -29,6 +31,10 @@ public class SubscriptionsPlugin : BaseBTCPayServerPlugin
 
     public override void Execute(IServiceCollection services)
     {
+        services.AddRegexRouteConvention("offeringId", $"^offering_{RouteRegexPatterns.Base58Characters}+\\z");
+        services.AddRegexRouteConvention("planId", $"^plan_{RouteRegexPatterns.Base58Characters}+\\z");
+        services.AddRegexRouteConvention("checkoutId", $"^plancheckout_{RouteRegexPatterns.Base58Characters}+\\z");
+        services.AddRegexRouteConvention("portalSessionId", $"^ps_{RouteRegexPatterns.Base58Characters}+\\z");
         services.AddUIExtension("header-nav", "/Plugins/Subscriptions/Views/NavExtension.cshtml");
         services.AddSingleton<AppBaseType, SubscriptionsAppType>();
         services.AddScheduledTask<SubscriptionHostedService>(TimeSpan.FromMinutes(5));

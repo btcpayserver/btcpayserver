@@ -8,7 +8,8 @@
                     "required": true,
                     "description": "The ID of the pull payment",
                     "schema": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^[1-9A-HJ-NP-Za-km-z]+$"
                     }
                 }
             ],
@@ -279,7 +280,8 @@
                     "required": true,
                     "description": "The ID of the pull payment",
                     "schema": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^[1-9A-HJ-NP-Za-km-z]+$"
                     }
                 }
             ],
@@ -340,7 +342,8 @@
                     "required": true,
                     "description": "The ID of the pull payment",
                     "schema": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^[1-9A-HJ-NP-Za-km-z]+$"
                     }
                 }
             ],
@@ -445,7 +448,8 @@
                     "required": true,
                     "description": "The ID of the pull payment",
                     "schema": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^[1-9A-HJ-NP-Za-km-z]+$"
                     }
                 },
                 {
@@ -454,7 +458,8 @@
                     "required": true,
                     "description": "The ID of the pull payment payout",
                     "schema": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^[1-9A-HJ-NP-Za-km-z]+$"
                     }
                 }
             ],
@@ -492,7 +497,8 @@
                     "required": true,
                     "description": "The ID of the pull payment",
                     "schema": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^[1-9A-HJ-NP-Za-km-z]+$"
                     }
                 }
             ],
@@ -639,7 +645,8 @@
                     "required": true,
                     "description": "The ID of the payout",
                     "schema": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^[1-9A-HJ-NP-Za-km-z]+$"
                     }
                 }
             ],
@@ -779,7 +786,8 @@
                     "required": true,
                     "description": "The ID of the payout",
                     "schema": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^[1-9A-HJ-NP-Za-km-z]+$"
                     }
                 }
             ],
@@ -836,7 +844,8 @@
                     "required": true,
                     "description": "The ID of the payout",
                     "schema": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^[1-9A-HJ-NP-Za-km-z]+$"
                     }
                 }
             ],

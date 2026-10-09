@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Routing;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -30,6 +31,7 @@ using BTCPayServer.Services.Stores;
 using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -49,6 +51,54 @@ namespace BTCPayServer.Tests
     public class GreenfieldAPITests(ITestOutputHelper helper) : UnitTestBase(helper)
     {
         public const int TestTimeout = TestUtils.TestTimeout;
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task RegexRouteConventionsValidateApiAndUiRoutes()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+
+            var expectedNames = tester.PayTester.GetService<IEnumerable<RegexRouteConvention>>()
+                .Select(c => c.RouteParameterName)
+                .Order();
+            var constrainedNames = tester.PayTester.GetService<EndpointDataSource>().Endpoints
+                .OfType<RouteEndpoint>()
+                .SelectMany(e => e.RoutePattern.Parameters)
+                .Where(p => p.ParameterPolicies.Any(policy => policy.Content == "btcpayRegex"))
+                .Select(p => p.Name)
+                .Distinct(StringComparer.Ordinal)
+                .Order();
+            Assert.Equal(expectedNames, constrainedNames);
+
+            using var apiResponse = await tester.PayTester.HttpClient.GetAsync("api/v1/apps/pos/not-valid");
+            Assert.Equal(HttpStatusCode.UnprocessableEntity, apiResponse.StatusCode);
+            var error = Assert.Single(JsonConvert.DeserializeObject<GreenfieldValidationError[]>(
+                await apiResponse.Content.ReadAsStringAsync()));
+            Assert.Equal("appId", error.Path);
+            Assert.Contains(RouteRegexPatterns.Base58, error.Message);
+
+            using var optionalIdResponse = await tester.PayTester.HttpClient.GetAsync(
+                "api/v1/stores/111111/webhooks");
+            Assert.Equal(HttpStatusCode.Unauthorized, optionalIdResponse.StatusCode);
+
+            using var invalidOptionalIdResponse = await tester.PayTester.HttpClient.GetAsync(
+                "api/v1/stores/111111/webhooks/not-valid");
+            Assert.Equal(HttpStatusCode.UnprocessableEntity, invalidOptionalIdResponse.StatusCode);
+
+            using var uiResponse = await tester.PayTester.HttpClient.GetAsync("api-keys/not-valid/delete");
+            Assert.Equal(HttpStatusCode.NotFound, uiResponse.StatusCode);
+
+            var links = tester.PayTester.GetService<LinkGenerator>();
+            Assert.Null(links.GetPathByName(RegexRouteConventionTestController.RouteName,
+                new { apiKeyId = "not-valid" }));
+            Assert.Equal("/route-convention-test/akid_0123456789abcdef",
+                links.GetPathByName(RegexRouteConventionTestController.RouteName,
+                    new { apiKeyId = "akid_0123456789abcdef" }));
+            Assert.Equal("/route-convention-case-test/not-valid",
+                links.GetPathByName(RegexRouteConventionTestController.CaseSensitiveRouteName,
+                    new { apikeyid = "not-valid" }));
+        }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
@@ -519,11 +569,11 @@ namespace BTCPayServer.Tests
             // Make sure we return a 403 if we try to get an app that doesn't exist
             await AssertHttpError(403, async () =>
             {
-                await client.GetApp("some random ID lol");
+                await client.GetApp("1111111111111111111111111111");
             });
             await AssertHttpError(403, async () =>
             {
-                await client.GetPosApp("some random ID lol");
+                await client.GetPosApp("1111111111111111111111111111");
             });
 
             // Test that we can retrieve the app data
@@ -564,7 +614,7 @@ namespace BTCPayServer.Tests
             // Make sure we return a 403 if we try to delete an app that doesn't exist
             await AssertHttpError(403, async () =>
             {
-                await client.DeleteApp("some random ID lol");
+                await client.DeleteApp("1111111111111111111111111111");
             });
 
             // Test deleting the newly created app
@@ -729,11 +779,11 @@ namespace BTCPayServer.Tests
             // Make sure we return a 404 if we try to get an app that doesn't exist
             await AssertHttpError(403, async () =>
             {
-                await client.GetApp("some random ID lol");
+                await client.GetApp("1111111111111111111111111111");
             });
             await AssertHttpError(403, async () =>
             {
-                await client.GetCrowdfundApp("some random ID lol");
+                await client.GetCrowdfundApp("1111111111111111111111111111");
             });
 
             // Test that we can retrieve the app data
@@ -818,7 +868,7 @@ namespace BTCPayServer.Tests
             // Make sure we return a 403 if we try to delete an app that doesn't exist
             await AssertHttpError(403, async () =>
             {
-                await client.DeleteApp("some random ID lol");
+                await client.DeleteApp("1111111111111111111111111111");
             });
 
             // Test deleting the newly created app
@@ -1928,7 +1978,7 @@ namespace BTCPayServer.Tests
             // test validation that the invoice exists
             await AssertHttpError(403, async () =>
             {
-                await client.RefundInvoice("lol fake invoice id", new RefundInvoiceRequest()
+                await client.RefundInvoice("1111111111111111111111", new RefundInvoiceRequest()
                 {
                     PayoutMethodId = method.PaymentMethodId,
                     RefundVariant = RefundVariant.RateThen

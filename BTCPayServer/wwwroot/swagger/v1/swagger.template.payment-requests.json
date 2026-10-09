@@ -124,7 +124,8 @@
                         "required": true,
                         "description": "The payment request to fetch",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
                         }
                     }
                 ],
@@ -171,7 +172,8 @@
                         "required": true,
                         "description": "The payment request to remove",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
                         }
                     }
                 ],
@@ -217,7 +219,8 @@
                         "required": true,
                         "description": "The payment request to update",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
                         }
                     }
                 ],
@@ -291,7 +294,8 @@
                         "required": true,
                         "description": "The payment request to create",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
                         }
                     }
                 ],

@@ -387,7 +387,8 @@
                 "required": true,
                 "description": "The webhook id",
                 "schema": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^[1-9A-HJ-NP-Za-km-z]+$"
                 }
             },
             "DeliveryId": {
@@ -396,7 +397,8 @@
                 "required": true,
                 "description": "The id of the delivery",
                 "schema": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^[1-9A-HJ-NP-Za-km-z]+$"
                 }
             }
         },

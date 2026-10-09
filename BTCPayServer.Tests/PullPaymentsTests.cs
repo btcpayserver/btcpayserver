@@ -740,7 +740,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var unauthenticated = new BTCPayServerClient(tester.PayTester.ServerUri);
         result = await unauthenticated.GetPullPayment(result.Id);
         VerifyResult();
-        await AssertEx.AssertHttpError(404, async () => await unauthenticated.GetPullPayment("lol"));
+        await AssertEx.AssertHttpError(404, async () => await unauthenticated.GetPullPayment("111"));
         // Can't list pull payments unauthenticated
         await AssertEx.AssertHttpError(401, async () => await unauthenticated.GetPullPayments(storeId));
 

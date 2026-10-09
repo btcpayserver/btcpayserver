@@ -151,11 +151,13 @@
       },
       "StoreId": {
         "type": "string",
+        "pattern": "^[1-9A-HJ-NP-Za-km-z]+$",
         "description": "Store ID of the item",
         "example": "9CiNzKoANXxmk5ayZngSXrHTiVvvgCrwrpFQd4m2K776"
       },
       "InvoiceId": {
         "type": "string",
+        "pattern": "^[1-9A-HJ-NP-Za-km-z]+$",
         "description": "The invoice ID",
         "example": "HMprBnL9BTXWuPvpoKBS6e"
       },

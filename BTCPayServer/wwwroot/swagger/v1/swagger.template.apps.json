@@ -656,7 +656,8 @@
                 "required": true,
                 "description": "App ID",
                 "schema": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^[1-9A-HJ-NP-Za-km-z]+$"
                 }
             }
         },

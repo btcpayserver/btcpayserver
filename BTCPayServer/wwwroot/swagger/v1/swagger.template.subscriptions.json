@@ -881,11 +881,13 @@
         "schemas": {
             "PortalSessionId": {
                 "type": "string",
+                "pattern": "^ps_[1-9A-HJ-NP-Za-km-z]+$",
                 "example": "ps_665afQ23ExGouiY4EZ",
                 "description": "Identifier of the portal session."
             },
             "PlanCheckoutId": {
                 "type": "string",
+                "pattern": "^plancheckout_[1-9A-HJ-NP-Za-km-z]+$",
                 "description": "Unique identifier of the plan checkout session.",
                 "example": "plancheckout_Hpm59L1NPCMUj477Q5"
             },
@@ -1119,11 +1121,13 @@
             },
             "PlanId": {
                 "type": "string",
+                "pattern": "^plan_[1-9A-HJ-NP-Za-km-z]+$",
                 "description": "Plan's ID",
                 "example": "plan_KZMVyuQp3v2vFWnEUM"
             },
             "OfferingId": {
                 "type": "string",
+                "pattern": "^offering_[1-9A-HJ-NP-Za-km-z]+$",
                 "description": "Offering's ID",
                 "example": "offering_DKWhZGB6PZsgTcPwpf"
             },

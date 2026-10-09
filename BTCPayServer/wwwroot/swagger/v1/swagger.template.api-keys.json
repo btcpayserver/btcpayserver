@@ -15,7 +15,8 @@
                         "required": true,
                         "description": "The ID of the API Key to revoke",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^akid_[0-9a-f]{16}$"
                         }
                     }
                 ],
@@ -55,7 +56,8 @@
                         "required": true,
                         "description": "The ID of the API Key to revoke",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^akid_[0-9a-f]{16}$"
                         }
                     }
                 ],

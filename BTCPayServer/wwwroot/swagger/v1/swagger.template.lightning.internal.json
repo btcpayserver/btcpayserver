@@ -345,7 +345,8 @@
                         "required": true,
                         "description": "The payment hash of the lightning payment.",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^[0-9a-fA-F]{64}$"
                         }
                     }
                 ],

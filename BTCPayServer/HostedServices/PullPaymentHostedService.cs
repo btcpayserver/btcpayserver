@@ -101,37 +101,93 @@ namespace BTCPayServer.HostedServices
         }
         public async Task<string> CreatePullPayment(Data.StoreData store, CreatePullPaymentRequest create)
         {
-            return (await CreatePullPaymentCore(store, create)).Id;
-        }
-
-        public async Task<string> CreateRefundPullPayment(Data.StoreData store, CreatePullPaymentRequest create, string invoiceId)
-        {
-            var pullPayment = await CreatePullPaymentCore(store, create);
+            var pullPayment = CreatePullPaymentCore(store, create);
             await using var ctx = _dbContextFactory.CreateContext();
-            ctx.Refunds.Add(new RefundData()
-            {
-                InvoiceDataId = invoiceId,
-                PullPaymentDataId = pullPayment.Id
-            });
+            ctx.PullPayments.Add(pullPayment);
             await ctx.SaveChangesAsync();
-            var invoice = await _invoiceRepository.GetInvoice(invoiceId);
-            if (invoice is not null)
-                _eventAggregator.Publish(new Events.InvoiceEvent(invoice, Events.InvoiceEvent.Refund) { PullPaymentId = pullPayment.Id });
             return pullPayment.Id;
         }
 
-        private async Task<Data.PullPaymentData> CreatePullPaymentCore(Data.StoreData store, CreatePullPaymentRequest create)
+        public async Task<string> CreateRefundPullPayment(Data.StoreData store, CreatePullPaymentRequest create,
+            string invoiceId)
         {
+            var completion = new TaskCompletionSource<string>();
+            if (!_Channel.Writer.TryWrite(new RefundRequest(store, create, invoiceId, completion)))
+                throw new InvalidOperationException("Channel is closed");
+            return await completion.Task;
+        }
+
+        private async Task HandleCreateRefund(RefundRequest request)
+        {
+            try
+            {
+                var pullPayment = CreatePullPaymentCore(request.Store, request.Create);
+                var cancelledPayouts = new Dictionary<string, PayoutData>();
+                await using var strategyCtx = _dbContextFactory.CreateContext();
+                await strategyCtx.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+                {
+                    await using var ctx = _dbContextFactory.CreateContext();
+                    await using var transaction = await ctx.Database.BeginTransactionAsync();
+
+                    // Serialize replacement refunds for this invoice so concurrent requests leave only one active.
+                    await ctx.Database.ExecuteSqlInterpolatedAsync(
+                        $"SELECT 1 FROM \"Invoices\" WHERE \"Id\" = {request.InvoiceId} FOR UPDATE");
+
+                    // A transient commit failure may retry after the first transaction actually committed.
+                    if (await ctx.Refunds.AnyAsync(r => r.InvoiceDataId == request.InvoiceId &&
+                                                       r.PullPaymentDataId == pullPayment.Id))
+                        return;
+
+                    var activeRefunds = await ctx.PullPayments
+                        .Include(pp => pp.Payouts)
+                        .Where(pp => !pp.Archived && ctx.Refunds.Any(r =>
+                            r.InvoiceDataId == request.InvoiceId && r.PullPaymentDataId == pp.Id))
+                        .ToListAsync();
+                    foreach (var existing in activeRefunds)
+                    {
+                        existing.Archived = true;
+                        foreach (var payout in existing.Payouts.Where(p =>
+                                     p.State is not PayoutState.Completed and not PayoutState.InProgress))
+                        {
+                            payout.State = PayoutState.Cancelled;
+                            cancelledPayouts[payout.Id] = payout;
+                        }
+                    }
+
+                    ctx.PullPayments.Add(pullPayment);
+                    ctx.Refunds.Add(new RefundData
+                    {
+                        InvoiceDataId = request.InvoiceId,
+                        PullPaymentDataId = pullPayment.Id
+                    });
+                    await ctx.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                });
+
+                foreach (var payout in cancelledPayouts.Values)
+                    _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payout));
+                var invoice = await _invoiceRepository.GetInvoice(request.InvoiceId);
+                if (invoice is not null)
+                    _eventAggregator.Publish(new Events.InvoiceEvent(invoice, Events.InvoiceEvent.Refund) { PullPaymentId = pullPayment.Id });
+                request.Completion.TrySetResult(pullPayment.Id);
+            }
+            catch (Exception ex)
+            {
+                request.Completion.TrySetException(ex);
+            }
+        }
+
+        private Data.PullPaymentData CreatePullPaymentCore(Data.StoreData store, CreatePullPaymentRequest create)
+        {
+            ArgumentNullException.ThrowIfNull(create);
             var supported = this._handlers.GetSupportedPayoutMethods(store);
             create.PayoutMethods ??= supported.Select(s => s.ToString()).ToArray();
             create.PayoutMethods = create.PayoutMethods.Where(pm => _handlers.Support(PayoutMethodId.Parse(pm))).ToArray();
             if (create.PayoutMethods.Length == 0)
                 throw new InvalidOperationException("request.PayoutMethods should have at least one payout method");
 
-            ArgumentNullException.ThrowIfNull(create);
             if (create.Amount <= 0.0m)
                 throw new ArgumentException("Amount out of bound", nameof(create));
-            using var ctx = this._dbContextFactory.CreateContext();
             var o = new Data.PullPaymentData();
             o.StartDate = create.StartsAt is DateTimeOffset date
                 ? date
@@ -156,8 +212,6 @@ namespace BTCPayServer.HostedServices
                 },
                 BOLT11Expiration = create.BOLT11Expiration ?? store.GetStoreBlob().RefundBOLT11Expiration
             });
-            ctx.PullPayments.Add(o);
-            await ctx.SaveChangesAsync();
             return o;
         }
 
@@ -292,6 +346,8 @@ namespace BTCPayServer.HostedServices
             return await query.FirstOrDefaultAsync(data => data.Id == pullPaymentId);
         }
         record TopUpRequest(string PullPaymentId, InvoiceEntity InvoiceEntity);
+        record RefundRequest(Data.StoreData Store, CreatePullPaymentRequest Create, string InvoiceId,
+            TaskCompletionSource<string> Completion);
         class PayoutRequest
         {
             public PayoutRequest(TaskCompletionSource<ClaimRequest.ClaimResponse> completionSource,
@@ -392,6 +448,11 @@ namespace BTCPayServer.HostedServices
                 if (o is PayoutRequest req)
                 {
                     await HandleCreatePayout(req);
+                }
+
+                if (o is RefundRequest refund)
+                {
+                    await HandleCreateRefund(refund);
                 }
 
                 if (o is PayoutApproval approv)

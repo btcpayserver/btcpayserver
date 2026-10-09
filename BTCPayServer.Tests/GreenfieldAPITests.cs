@@ -1984,16 +1984,47 @@ namespace BTCPayServer.Tests
             Assert.Contains("PayoutMethodId: Please select one of the payment methods which were available for the original invoice", validationError.Message);
 
             // test RefundVariant.RateThen
-            var pp = await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest()
+            var rateThenRequest = new RefundInvoiceRequest()
             {
                 PayoutMethodId = method.PaymentMethodId,
                 RefundVariant = RefundVariant.RateThen
-            });
+            };
+            var pp = await client.RefundInvoice(invoice.Id, rateThenRequest);
             Assert.Equal(pp.BOLT11Expiration, TimeSpan.FromDays(1));
             Assert.Equal("BTC", pp.Currency);
             Assert.True(pp.AutoApproveClaims);
             Assert.Equal(1, pp.Amount);
             Assert.Equal(pp.Name, $"Refund {invoice.Id}");
+
+            var pendingPayout = await client.CreatePayout(pp.Id, new CreatePayoutRequest
+            {
+                Destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString(),
+                PayoutMethodId = method.PaymentMethodId
+            });
+
+            var concurrentRequest = new RefundInvoiceRequest
+            {
+                PayoutMethodId = method.PaymentMethodId,
+                RefundVariant = RefundVariant.RateThen
+            };
+            var concurrentRefunds = await Task.WhenAll(
+                client.RefundInvoice(invoice.Id, concurrentRequest),
+                client.RefundInvoice(invoice.Id, concurrentRequest));
+            Assert.NotEqual(concurrentRefunds[0].Id, concurrentRefunds[1].Id);
+
+            await using (var ctx = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext())
+            {
+                var refunds = await ctx.Refunds
+                    .Where(r => r.InvoiceDataId == invoice.Id)
+                    .Select(r => r.PullPaymentData)
+                    .ToListAsync();
+                var activeRefund = Assert.Single(refunds, refund => !refund.Archived);
+                Assert.Contains(refunds, refund => refund.Id == pp.Id && refund.Archived);
+                Assert.Contains(activeRefund.Id, concurrentRefunds.Select(refund => refund.Id));
+                Assert.Single(concurrentRefunds, refund => refund.Id != activeRefund.Id);
+                Assert.Equal(PayoutState.Cancelled,
+                    (await ctx.Payouts.SingleAsync(payout => payout.Id == pendingPayout.Id)).State);
+            }
 
             // test RefundVariant.CurrentRate
             pp = await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest()

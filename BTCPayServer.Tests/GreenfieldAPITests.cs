@@ -558,8 +558,8 @@ namespace BTCPayServer.Tests
 
             var otherUser = tester.NewAccount();
             await otherUser.RegisterAsync();
-            var otherClient = await otherUser.CreateClient(Policies.CanModifyStoreSettings);
-            await AssertPermissionError(Policies.CanModifyStoreSettings, () => otherClient.GetPosApp(app.Id));
+            var otherClient = await otherUser.CreateClient(Policies.CanViewStoreSettings);
+            await AssertPermissionError(Policies.CanViewStoreSettings, () => otherClient.GetPosApp(app.Id));
 
             // Make sure we return a 403 if we try to delete an app that doesn't exist
             await AssertHttpError(403, async () =>
@@ -752,8 +752,8 @@ namespace BTCPayServer.Tests
 
             var otherUser = tester.NewAccount();
             await otherUser.RegisterAsync();
-            var otherClient = await otherUser.CreateClient(Policies.CanModifyStoreSettings);
-            await AssertPermissionError(Policies.CanModifyStoreSettings, () => otherClient.GetCrowdfundApp(app.Id));
+            var otherClient = await otherUser.CreateClient(Policies.CanViewStoreSettings);
+            await AssertPermissionError(Policies.CanViewStoreSettings, () => otherClient.GetCrowdfundApp(app.Id));
 
             // Full update: client GETs, modifies, then PUTs
             retrievedCfApp = await client.UpdateCrowdfundApp(

@@ -139,7 +139,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canviewstoresettings"
                         ],
                         "Basic": []
                     }
@@ -232,7 +232,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifystoresettings"
+                            "btcpay.store.canviewstoresettings"
                         ],
                         "Basic": []
                     }

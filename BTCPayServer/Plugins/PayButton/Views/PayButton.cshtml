@@ -351,15 +351,6 @@
                 <small class="text-danger">{{ errors.first('serverIpn') }}</small>
                 <div class="form-text" text-translate="true">The URL to post purchase data.</div>
             </div>
-            <div class="form-group" v-if="!srvModel.appIdEndpoint">
-                <label class="form-label" for="email-notifications" text-translate="true">Email Notifications</label>
-                <input name="notifyEmail" type="text" class="form-control" id="email-notifications"
-                       placeholder="@StringLocalizer["user@example.com"]"
-                       v-model="srvModel.notifyEmail" v-on:change="inputChanges"
-                       v-validate="'email'" :class="{'is-invalid': errors.has('notifyEmail') }">
-                <small class="text-danger">{{ errors.first('notifyEmail') }}</small>
-                <div class="form-text" text-translate="true">Receive email notification updates.</div>
-            </div>
             <div class="form-group">
                 <label class="form-label" for="browser-redirect" text-translate="true">Browser Redirect</label>
                 <input name="browserRedirect" type="text" class="form-control" id="browser-redirect"

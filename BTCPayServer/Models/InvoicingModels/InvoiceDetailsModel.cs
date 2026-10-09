@@ -124,7 +124,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public InvoiceMetadata TypedMetadata { get; set; }
         public DateTimeOffset MonitoringDate { get; internal set; }
         public InvoiceEventData[] Events { get; internal set; }
-        public string NotificationEmail { get; internal set; }
         public Dictionary<string, object> Metadata { get; set; }
         public Dictionary<string, object> ReceiptData { get; set; }
         public Dictionary<string, object> AdditionalData { get; set; }

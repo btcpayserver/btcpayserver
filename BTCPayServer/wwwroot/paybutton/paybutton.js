@@ -26,7 +26,7 @@ var dictionary = {
     en: {
         attributes: {
             price: 'Price', checkoutDesc: 'Checkout Description', orderId: 'Order Id',
-            serverIpn: 'Server IPN', notifyEmail: 'Send Email Notifications', browserRedirect: 'Browser Redirect',
+            serverIpn: 'Server IPN', browserRedirect: 'Browser Redirect',
             payButtonImageUrl: "Pay Button Image Url"
         }
     }
@@ -118,7 +118,6 @@ function inputChanges(vueApp, event, buttonSize) {
         if (srvModel.checkoutDesc) html += addInput("checkoutDesc", srvModel.checkoutDesc);
         if (srvModel.serverIpn) html += addInput("serverIpn", srvModel.serverIpn);
         if (srvModel.browserRedirect) html += addInput("browserRedirect", srvModel.browserRedirect);
-        if (srvModel.notifyEmail) html += addInput("notifyEmail", srvModel.notifyEmail);
         if (srvModel.checkoutQueryString) html += addInput("checkoutQueryString", srvModel.checkoutQueryString);
     }
 

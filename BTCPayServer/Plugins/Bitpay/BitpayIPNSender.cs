@@ -3,18 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Events;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Hosting;
-using MimeKit;
 using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json;
@@ -43,8 +39,6 @@ namespace BTCPayServer.Plugins.Bitpay
         readonly IBackgroundJobClient _JobClient;
         readonly EventAggregator _EventAggregator;
         readonly InvoiceRepository _InvoiceRepository;
-        private readonly EmailSenderFactory _EmailSenderFactory;
-        private readonly StoreRepository _StoreRepository;
         private readonly Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> _bitpayExtensions;
         private readonly CurrencyNameTable _currencyNameTable;
         public const string NamedClient = "bitpay-ipn";
@@ -53,22 +47,18 @@ namespace BTCPayServer.Plugins.Bitpay
             IBackgroundJobClient jobClient,
             EventAggregator eventAggregator,
             InvoiceRepository invoiceRepository,
-            StoreRepository storeRepository,
             Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> bitpayExtensions,
-            CurrencyNameTable currencyNameTable,
-            EmailSenderFactory emailSenderFactory)
+            CurrencyNameTable currencyNameTable)
         {
             _Client = httpClientFactory.CreateClient(NamedClient);
             _JobClient = jobClient;
             _EventAggregator = eventAggregator;
             _InvoiceRepository = invoiceRepository;
-            _EmailSenderFactory = emailSenderFactory;
-            _StoreRepository = storeRepository;
             _bitpayExtensions = bitpayExtensions;
             _currencyNameTable = currencyNameTable;
         }
 
-        async Task Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification, bool sendMail)
+        void Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification)
         {
             var dto = invoice.EntityToDTO(_bitpayExtensions, _currencyNameTable);
             var notification = new InvoicePaymentNotificationEventWrapper()
@@ -127,27 +117,6 @@ namespace BTCPayServer.Plugins.Bitpay
                 notification.Data.BTCPaid = dto.BTCPaid;
                 notification.Data.BTCPrice = dto.BTCPrice;
 #pragma warning restore CS0618
-            }
-
-            if (sendMail &&
-                invoice.NotificationEmail is String e &&
-                MailboxAddressValidator.TryParse(e, out MailboxAddress notificationEmail))
-            {
-                string Encode(object value) => HtmlEncoder.Default.Encode(value?.ToString() ?? string.Empty);
-
-                var json = Encode(NBitcoin.JsonConverters.Serializer.ToString(notification));
-                var store = await _StoreRepository.FindStore(invoice.StoreId);
-                var storeName = Encode(store.StoreName ?? "BTCPay Server");
-                var emailBody = $"Store: {storeName}<br>" +
-                                $"Invoice ID: {Encode(notification.Data.Id)}<br>" +
-                                $"Status: {Encode(notification.Data.Status)}<br>" +
-                                $"Amount: {Encode(notification.Data.Price)} {Encode(notification.Data.Currency)}<br>" +
-                                $"<br><details><summary>Details</summary><pre>{json}</pre></details>";
-
-                (await _EmailSenderFactory.GetEmailSender(invoice.StoreId)).SendEmail(
-                    notificationEmail,
-                    $"Invoice Notification - ${invoice.StoreId}",
-                    emailBody);
             }
 
             if (invoice.NotificationURL != null)
@@ -266,7 +235,6 @@ namespace BTCPayServer.Plugins.Bitpay
                 var invoice = await _InvoiceRepository.GetInvoice(e.Invoice.Id);
                 if (invoice == null)
                     return;
-                bool sendMail = true;
                 // we need to use the status in the event and not in the invoice. The invoice might now be in another status.
                 if (invoice.FullNotifications)
                 {
@@ -279,21 +247,18 @@ namespace BTCPayServer.Plugins.Bitpay
                        e.Name == InvoiceEvent.ExpiredPaidPartial
                      )
                     {
-                        await Notify(invoice, e, false, sendMail);
-                        sendMail = false;
+                        Notify(invoice, e, false);
                     }
                 }
 
                 if (e.Name == InvoiceEvent.Confirmed)
                 {
-                    await Notify(invoice, e, false, sendMail);
-                    sendMail = false;
+                    Notify(invoice, e, false);
                 }
 
                 if (invoice.ExtendedNotifications)
                 {
-                    await Notify(invoice, e, true, sendMail);
-                    sendMail = false;
+                    Notify(invoice, e, true);
                 }
             }));
             return Task.CompletedTask;

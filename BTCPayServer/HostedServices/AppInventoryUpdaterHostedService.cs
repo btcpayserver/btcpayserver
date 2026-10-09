@@ -49,20 +49,33 @@ namespace BTCPayServer.HostedServices
                 {
                     var appIds = AppService.GetAppInternalTags(invoiceEvent.Invoice);
 
-                    var items = cartItems?.ToList() ?? new List<AppCartItem>();
-                    if (!string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode))
-                    {
-                        items.Add(new AppCartItem
-                        {
-                            Id = invoiceEvent.Invoice.Metadata.ItemCode,
-                            Count = 1,
-                            Price = invoiceEvent.Invoice.Price
-                        });
-                    }
-
-                    var changes = items.Select(i => new AppService.InventoryChange(i.Id, i.Count * deduct)).ToArray();
                     foreach (var appId in appIds)
                     {
+                        var reservedChanges = AppService.GetAppInventoryReservedChanges(invoiceEvent.Invoice, appId);
+                        if (invoiceEvent.Name == InvoiceEvent.Created && reservedChanges.Length != 0)
+                            continue;
+
+                        if (reservedChanges.Length != 0)
+                        {
+                            await _appService.UpdateInventory(appId, reservedChanges
+                                .Select(change => new AppService.InventoryChange(change.ItemId, -change.Delta))
+                                .ToArray());
+                            continue;
+                        }
+
+                        var items = cartItems?.ToList() ?? new List<AppCartItem>();
+                        // Legacy POS invoices deducted both ItemCode and their cart. Preserve that symmetry on restoration.
+                        if (!string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode))
+                        {
+                            items.Add(new AppCartItem
+                            {
+                                Id = invoiceEvent.Invoice.Metadata.ItemCode,
+                                Count = 1,
+                                Price = invoiceEvent.Invoice.Price
+                            });
+                        }
+
+                        var changes = items.Select(i => new AppService.InventoryChange(i.Id, i.Count * deduct)).ToArray();
                         await _appService.UpdateInventory(appId, changes);
                     }
                 }

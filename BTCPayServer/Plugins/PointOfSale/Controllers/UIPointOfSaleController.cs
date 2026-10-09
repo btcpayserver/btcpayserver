@@ -385,6 +385,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var summary = order.Calculate();
             var isTopup = currentView == PosViewType.Static &&
                           selectedChoices.Any(c => c.PriceType == AppItemPriceType.Topup);
+            var inventoryChanges = jposData.Cart.Zip(selectedChoices)
+                .Where(item => item.Second.Inventory is not null)
+                .GroupBy(item => item.First.Id)
+                .Select(items => new AppService.InventoryChange(items.Key, -items.Sum(item => item.First.Count)))
+                .ToArray();
 
             var receiptData = PosReceiptData.Create(isTopup, selectedChoices, jposData, order, summary, settings.Currency, _displayFormatter);
             if (!isTopup && summary.PriceTaxIncludedWithTips <= 0m && settings.DisableZeroAmountInvoice is true)
@@ -430,6 +435,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                             meta.Merge(formResponseJObject);
                             entity.Metadata = InvoiceMetadata.FromJObject(meta);
                         }
+                    }, invoicePersisting: inventoryChanges.Length == 0 ? null : async (context, entity) =>
+                    {
+                        if (!await _appService.UpdateInventory(context, appId, inventoryChanges, true))
+                            throw new BitpayHttpException(400, StringLocalizer["Some items are no longer available"]);
+                        entity.InternalTags.AddRange(inventoryChanges.Select(change =>
+                            AppService.GetAppInventoryReservedTag(appId, change)));
                     });
                 var data = new { invoiceId = invoice.Id };
                 if (wantsJson)

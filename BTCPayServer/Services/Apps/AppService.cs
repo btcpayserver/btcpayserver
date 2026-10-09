@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -17,6 +18,7 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
@@ -204,6 +206,21 @@ namespace BTCPayServer.Services.Apps
             };
 
         public static string GetAppInternalTag(string appId) => $"APP#{appId}";
+        public static string GetAppInventoryReservedTag(string appId, InventoryChange change) =>
+            $"APPINV#{appId}#{Encoders.Hex.EncodeData(Encoding.UTF8.GetBytes(change.ItemId))}#{change.Delta.ToString(CultureInfo.InvariantCulture)}";
+        public static InventoryChange[] GetAppInventoryReservedChanges(InvoiceEntity invoice, string appId)
+        {
+            var prefix = $"APPINV#{appId}#";
+            return invoice.InternalTags
+                .Where(tag => tag.StartsWith(prefix, StringComparison.Ordinal))
+                .Select(tag => tag[prefix.Length..].Split('#'))
+                .Where(parts => parts.Length == 2 && HexEncoder.IsWellFormed(parts[0]) &&
+                                int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
+                .Select(parts => new InventoryChange(
+                    Encoding.UTF8.GetString(Encoders.Hex.DecodeData(parts[0])),
+                    int.Parse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture)))
+                .ToArray();
+        }
         public static string[] GetAppInternalTags(InvoiceEntity invoice)
         {
             return invoice.GetInternalTags("APP#");
@@ -401,17 +418,23 @@ namespace BTCPayServer.Services.Apps
 
         record AppSettingsWithXmin(string apptype, string settings, uint xmin);
         public record InventoryChange(string ItemId, int Delta);
-        public async Task UpdateInventory(string appId, InventoryChange[] changes)
+        public async Task<bool> UpdateInventory(string appId, InventoryChange[] changes, bool preventNegative = false)
         {
             await using var ctx = _ContextFactory.CreateContext();
+            return await UpdateInventory(ctx, appId, changes, preventNegative);
+        }
+
+        public async Task<bool> UpdateInventory(ApplicationDbContext ctx, string appId, InventoryChange[] changes, bool preventNegative = false)
+        {
             // We use xmin to make sure we don't override changes made by another process
-retry:
+        retry:
             var connection = ctx.Database.GetDbConnection();
+            var transaction = ctx.Database.CurrentTransaction?.GetDbTransaction();
             var row = connection.QueryFirstOrDefault<AppSettingsWithXmin>(
-                "SELECT \"AppType\" AS apptype, \"Settings\" AS settings, xmin FROM \"Apps\" WHERE \"Id\"=@appId", new { appId }
+                "SELECT \"AppType\" AS apptype, \"Settings\" AS settings, xmin FROM \"Apps\" WHERE \"Id\"=@appId", new { appId }, transaction
                 );
             if (row?.settings is null)
-                return;
+                return !preventNegative;
             var templatePath = row.apptype switch
             {
                 CrowdfundAppType.AppType => "PerksTemplate",
@@ -419,7 +442,7 @@ retry:
             };
             var settings = JObject.Parse(row.settings);
             if (!settings.TryGetValue(templatePath, out var template))
-                return;
+                return !preventNegative;
 
             var items = template.Type switch
             {
@@ -428,25 +451,32 @@ retry:
                 _ => null
             };
             if (items is null)
-                return;
+                return !preventNegative;
             bool hasChange = false;
             foreach (var change in changes)
             {
                 var item = items.FirstOrDefault(i => i["id"]?.Value<string>() == change.ItemId && i["inventory"]?.Type is JTokenType.Integer);
                 if (item is null)
+                {
+                    if (preventNegative)
+                        return false;
                     continue;
+                }
                 var inventory = item["inventory"]!.Value<int>();
-                inventory += change.Delta;
-                item["inventory"] = inventory;
+                var updatedInventory = (long)inventory + change.Delta;
+                if (preventNegative && updatedInventory < 0)
+                    return false;
+                item["inventory"] = checked((int)updatedInventory);
                 hasChange = true;
             }
             if (!hasChange)
-                return;
+                return true;
             settings[templatePath] = items.ToString(Formatting.None);
-            var updated = await connection.ExecuteAsync("UPDATE \"Apps\" SET \"Settings\"=@v::JSONB WHERE \"Id\"=@appId AND xmin=@xmin", new { appId, xmin = (int)row.xmin, v = settings.ToString(Formatting.None) }) == 1;
+            var updated = await connection.ExecuteAsync("UPDATE \"Apps\" SET \"Settings\"=@v::JSONB WHERE \"Id\"=@appId AND xmin=@xmin", new { appId, xmin = (int)row.xmin, v = settings.ToString(Formatting.None) }, transaction) == 1;
             // If we can't update, it means someone else updated the row, so we need to retry
             if (!updated)
                 goto retry;
+            return true;
         }
 
         public Task UpdateOrCreateApp(AppData app) => UpdateOrCreateApp(app, true);

@@ -159,7 +159,7 @@ namespace BTCPayServer.Controllers
         }
 
         [NonAction]
-        public async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null)
+        public async Task<InvoiceEntity> CreateInvoiceCoreRaw(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string>? additionalTags = null, CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null, Func<ApplicationDbContext, InvoiceEntity, Task>? invoicePersisting = null)
         {
             var storeBlob = store.GetStoreBlob();
             var entity = _InvoiceRepository.CreateNewInvoice(store.Id);
@@ -201,10 +201,10 @@ namespace BTCPayServer.Controllers
             entity.RedirectURLTemplate = invoice.Checkout.RedirectURL?.Trim();
             if (additionalTags != null)
                 entity.InternalTags.AddRange(additionalTags);
-            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, invoice.AdditionalSearchTerms, cancellationToken, entityManipulator);
+            return await CreateInvoiceCoreRaw(entity, store, excludeFilter, invoice.AdditionalSearchTerms, cancellationToken, entityManipulator, invoicePersisting);
         }
 
-        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(InvoiceEntity entity, StoreData store, IPaymentFilter? invoicePaymentMethodFilter, string[]? additionalSearchTerms = null, CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null)
+        internal async Task<InvoiceEntity> CreateInvoiceCoreRaw(InvoiceEntity entity, StoreData store, IPaymentFilter? invoicePaymentMethodFilter, string[]? additionalSearchTerms = null, CancellationToken cancellationToken = default, Action<InvoiceEntity>? entityManipulator = null, Func<ApplicationDbContext, InvoiceEntity, Task>? invoicePersisting = null)
         {
             InvoiceLogs logs = new InvoiceLogs();
             logs.Write("Creation of invoice starting", InvoiceEventData.EventSeverity.Info);
@@ -288,7 +288,8 @@ namespace BTCPayServer.Controllers
             }
             using (logs.Measure("Saving invoice"))
             {
-                await _InvoiceRepository.CreateInvoiceAsync(creationContext);
+                await _InvoiceRepository.CreateInvoiceAsync(creationContext,
+                    invoicePersisting is null ? null : context => invoicePersisting(context, entity));
                 await creationContext.ActivatingPaymentPrompt();
             }
             _ = _InvoiceRepository.AddInvoiceLogs(entity.Id, logs);

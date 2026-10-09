@@ -726,12 +726,14 @@ noninventoryitem:
                         Assert.NotEqual("UIInvoice", redirect.ControllerName);
                 }
 
-                //inventoryitem has 1 item available
-                await AssertCanBuy("inventoryitem", true);
-
-                //we already bought all available stock so this should fail
-                await Task.Delay(100);
-                await AssertCanBuy("inventoryitem", false);
+                //inventoryitem has 1 item available, so only one concurrent purchase can reserve it
+                var purchases = await Task.WhenAll(Enumerable.Range(0, 2).Select(async _ =>
+                {
+                    var controller = user.GetController<UIPointOfSaleController>();
+                    return await controller.ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "inventoryitem");
+                }));
+                Assert.Single(purchases.OfType<RedirectToActionResult>(),
+                    result => result.ControllerName == "UIInvoice");
 
                 //inventoryitem has unlimited items available
                 await AssertCanBuy("noninventoryitem", true);
@@ -753,6 +755,34 @@ noninventoryitem:
                     vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                     Assert.Equal(1,
                         AppService.Parse(vmpos.Template).Single(item => item.Id == "inventoryitem").Inventory);
+                }, 10000);
+
+                // Only restore items that were tracked when a mixed cart reserved inventory.
+                var mixedCart = new JObject
+                {
+                    ["cart"] = new JArray
+                    {
+                        new JObject { ["id"] = "inventoryitem", ["count"] = 1 },
+                        new JObject { ["id"] = "noninventoryitem", ["count"] = 1 }
+                    }
+                }.ToString();
+                var mixedPurchase = Assert.IsType<RedirectToActionResult>(await publicApps
+                    .ViewPointOfSale(app.Id, PosViewType.Cart, posData: mixedCart));
+                var mixedInvoiceId = mixedPurchase.RouteValues["invoiceId"].ToString();
+
+                vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
+                var mixedItems = AppService.Parse(vmpos.Template);
+                mixedItems.Single(item => item.Id == "noninventoryitem").Inventory = 5;
+                vmpos.Template = AppService.SerializeTemplate(mixedItems);
+                Assert.IsType<RedirectToActionResult>(await pos.UpdatePointOfSale(app.Id, vmpos));
+
+                Assert.IsType<JsonResult>(await controller.ChangeInvoiceState(mixedInvoiceId, "invalid"));
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
+                    var items = AppService.Parse(vmpos.Template);
+                    Assert.Equal(1, items.Single(item => item.Id == "inventoryitem").Inventory);
+                    Assert.Equal(5, items.Single(item => item.Id == "noninventoryitem").Inventory);
                 }, 10000);
 
                 //test topup option

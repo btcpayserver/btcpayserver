@@ -124,6 +124,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             var store = await appService.GetStore(app);
             decimal? price = request.Amount;
             var title = settings.Title;
+            AppItem selectedChoice = null;
             Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
             if (!string.IsNullOrEmpty(request.ChoiceKey))
             {
@@ -132,6 +133,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 if (choice == null)
                     return NotFound("Incorrect option provided");
                 title = choice.Title;
+                selectedChoice = choice;
 
                 if (choice.PriceType == AppItemPriceType.Topup)
                 {
@@ -240,6 +242,12 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                         var meta = entity.Metadata.ToJObject();
                         meta.Merge(formResponseJObject);
                         entity.Metadata = InvoiceMetadata.FromJObject(meta);
+                    }, invoicePersisting: selectedChoice?.Inventory is null ? null : async (context, entity) =>
+                    {
+                        var changes = new[] { new AppService.InventoryChange(selectedChoice.Id, -1) };
+                        if (!await appService.UpdateInventory(context, appId, changes, true))
+                            throw new BitpayHttpException(400, StringLocalizer["This option is no longer available"]);
+                        entity.InternalTags.Add(AppService.GetAppInventoryReservedTag(appId, changes[0]));
                     });
 
                 if (request.RedirectToCheckout)

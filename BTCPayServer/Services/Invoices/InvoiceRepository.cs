@@ -240,12 +240,13 @@ retry:
             _eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoiceId));
         }
 
-        public async Task CreateInvoiceAsync(InvoiceCreationContext creationContext)
+        public async Task CreateInvoiceAsync(InvoiceCreationContext creationContext, Func<ApplicationDbContext, Task> beforeSave = null)
         {
             var invoice = creationContext.InvoiceEntity;
-            var textSearch = new HashSet<string>();
-            using (var context = _applicationDbContextFactory.CreateContext())
+
+            async Task SaveInvoice(ApplicationDbContext context)
             {
+                var textSearch = new HashSet<string>();
                 var invoiceData = new InvoiceData
                 {
                     StoreDataId = invoice.StoreId,
@@ -253,7 +254,6 @@ retry:
                     Status = invoice.Status.ToString(),
                     Archived = false
                 };
-                invoiceData.SetBlob(invoice);
                 await context.Invoices.AddAsync(invoiceData);
 
                 foreach (var ctx in creationContext.PaymentMethodContexts.Where(p => p.Value.Status is PaymentMethodContext.ContextStatus.Created or PaymentMethodContext.ContextStatus.WaitingForActivation))
@@ -286,8 +286,28 @@ retry:
                 textSearch.AddRange(creationContext.GetAllSearchTerms());
                 AddToTextSearch(context, invoiceData, textSearch.ToArray());
 
+                if (beforeSave is not null)
+                    await beforeSave(context);
+                invoiceData.SetBlob(invoice);
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
+
+            if (beforeSave is null)
+            {
+                await using var context = _applicationDbContextFactory.CreateContext();
+                await SaveInvoice(context);
+                return;
+            }
+
+            await using var strategyContext = _applicationDbContextFactory.CreateContext();
+            var strategy = strategyContext.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async () =>
+            {
+                await using var context = _applicationDbContextFactory.CreateContext();
+                await using var transaction = await context.Database.BeginTransactionAsync();
+                await SaveInvoice(context);
+                await transaction.CommitAsync();
+            });
         }
 
         public async Task AddInvoiceLogs(string invoiceId, InvoiceLogs logs)

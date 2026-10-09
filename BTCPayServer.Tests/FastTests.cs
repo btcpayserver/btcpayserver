@@ -573,6 +573,23 @@ namespace BTCPayServer.Tests
             Assert.Equal(1, items[0].Count);
             Assert.Equal(8.49m, items[0].Price);
 
+            static JObject CartItem(int count, JToken price) => new()
+            {
+                { "cart", new JArray(new JObject
+                    {
+                        { "id", "ddd" },
+                        { "price", price },
+                        { "count", count }
+                    })
+                }
+            };
+
+            Assert.False(AppService.TryParsePosCartItems(CartItem(0, 1), out items));
+            Assert.False(AppService.TryParsePosCartItems(CartItem(-1, 1), out items));
+            Assert.False(AppService.TryParsePosCartItems(CartItem(1, -1), out items));
+            Assert.False(AppService.TryParsePosCartItems(CartItem(1, new JObject { { "value", -1 } }), out items));
+            Assert.True(AppService.TryParsePosCartItems(CartItem(1, 0), out items));
+
             Assert.False(AppService.TryParsePosCartItems(new JObject()
             {
                 {"cart", new JArray()

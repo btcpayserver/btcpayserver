@@ -426,6 +426,12 @@ namespace BTCPayServer.HostedServices
         private async Task HandleTopUp(TopUpRequest topUp)
         {
             var pp = await this.GetPullPayment(topUp.PullPaymentId, false);
+            if (pp is null)
+            {
+                _logger.LogWarning("Ignoring top-up invoice {InvoiceId} for missing pull payment {PullPaymentId}",
+                    topUp.InvoiceEntity.Id, topUp.PullPaymentId);
+                return;
+            }
             using var ctx = _dbContextFactory.CreateContext();
 
             var payout = new Data.PayoutData()

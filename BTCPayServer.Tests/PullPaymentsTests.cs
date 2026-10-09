@@ -590,6 +590,13 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             PayoutMethods = ["BTC-CHAIN"]
         });
         var controller = user.GetController<UIInvoiceController>();
+        var orphanedInvoice = await controller.CreateInvoiceCoreRaw(new()
+        {
+            Amount = 0.5m,
+            Currency = "BTC",
+        }, controller.HttpContext.GetStoreData(), controller.Url.Link(null, null)!, [PullPaymentHostedService.GetInternalTag("missing")]);
+        await client.MarkInvoiceStatus(orphanedInvoice.Id, new() { Status = InvoiceStatus.Settled });
+
         var invoice = await controller.CreateInvoiceCoreRaw(new()
         {
             Amount = 0.5m,

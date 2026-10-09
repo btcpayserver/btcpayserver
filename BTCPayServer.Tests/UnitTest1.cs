@@ -2376,6 +2376,41 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CreateStoreDoesNotTrustCanEditPreferredExchange()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var account = tester.NewAccount();
+            await account.RegisterAsync();
+
+            var repository = tester.PayTester.GetService<StoreRepository>();
+            var template = new Data.StoreData { StoreName = "Template" };
+            var templateBlob = template.GetStoreBlob();
+            var rateSettings = templateBlob.GetOrCreateRateSettings(false);
+            rateSettings.PreferredExchange = "coingecko";
+            rateSettings.RateScript = "X_X = kraken(X_X)";
+            rateSettings.RateScripting = true;
+            template.SetStoreBlob(templateBlob);
+            await repository.SetDefaultStoreTemplate(template);
+
+            var controller = account.GetController<UIUserStoresController>(false);
+            await controller.CreateStore(new CreateStoreViewModel
+            {
+                Name = "Test Store",
+                DefaultCurrency = "USD",
+                CanEditPreferredExchange = true,
+                PreferredExchange = "attacker"
+            });
+
+            var store = await repository.FindStore(controller.CreatedStoreId);
+            rateSettings = store.GetStoreBlob().GetRateSettings(false);
+            Assert.True(rateSettings.RateScripting);
+            Assert.Equal("X_X = kraken(X_X)", rateSettings.RateScript);
+            Assert.Equal("coingecko", rateSettings.PreferredExchange);
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanMigratePaymentRequestsAmountCurrency()
         {
             var tester = CreateDBTester();

@@ -175,6 +175,11 @@ namespace BTCPayServer.Plugins.NFC
                 try
                 {
                     var amount = LightMoney.Coins(due);
+                    if (info.MinWithdrawable > amount || amount > info.MaxWithdrawable)
+                    {
+                        return BadRequest("Invoice amount is not payable with the LNURL allowed amounts.");
+                    }
+
                     _lnurlController.ControllerContext = ControllerContext;
                     var response = await _lnurlController.GetLNURLForInvoice(request.InvoiceId, "BTC", amount.MilliSatoshi);
                     if (response is OkObjectResult { Value: JObject callbackResponse })

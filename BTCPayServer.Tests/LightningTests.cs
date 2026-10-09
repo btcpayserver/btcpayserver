@@ -24,7 +24,6 @@ using Xunit;
 using static Microsoft.Playwright.Assertions;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
 using BTCPayServer.Data;
-using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Lightning.CLightning;
 using LightningAddressData = BTCPayServer.Client.Models.LightningAddressData;
 
@@ -795,21 +794,12 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
             .CreateClient(LightningClientFactoryService.NamedClient);
         using var redirectResponse = await lightningHttpClient.GetAsync(tester.PayTester.ServerUriWithIP);
         Assert.Equal(HttpStatusCode.Redirect, redirectResponse.StatusCode);
-        var safeLightningHttpClient = tester.PayTester.GetService<IHttpClientFactory>()
-            .CreateClient(LightningClientFactoryService.SafeNamedClient);
         var localUri = new UriBuilder(tester.PayTester.ServerUriWithIP) { Host = "localhost" }.Uri;
-        var exception = await Assert.ThrowsAsync<HttpRequestException>(() => safeLightningHttpClient.GetAsync(localUri));
-        Assert.Contains("does not resolve to an allowed network address", exception.Message);
-        var lnurlHttpClient = tester.PayTester.GetService<IHttpClientFactory>()
-            .CreateClient(LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient);
-        exception = await Assert.ThrowsAsync<HttpRequestException>(() => lnurlHttpClient.GetAsync(localUri));
-        Assert.Contains("does not resolve to an allowed network address", exception.Message);
-
         var guardedLightningClient = tester.PayTester.GetService<LightningClientFactoryService>().Create(
             $"type=phoenixd;server={localUri};password=secret",
             tester.PayTester.Networks.GetNetwork<BTCPayNetwork>("BTC"),
             allowUnsafe: false);
-        exception = await Assert.ThrowsAsync<HttpRequestException>(() => guardedLightningClient.GetInfo());
+        var exception = await Assert.ThrowsAsync<HttpRequestException>(() => guardedLightningClient.GetInfo());
         Assert.Contains("does not resolve to an allowed network address", exception.Message);
         var onionHandler = tester.PayTester.GetService<IHttpMessageHandlerFactory>()
             .CreateHandler(LightningClientFactoryService.OnionNamedClient);

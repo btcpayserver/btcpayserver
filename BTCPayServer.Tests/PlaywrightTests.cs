@@ -185,12 +185,13 @@ namespace BTCPayServer.Tests
             await s.Page.Locator("#enable-pay-button").ClickAsync();
             await s.Page.Locator("#price").FillAsync("10");
             await s.Page.Locator("#useModal").CheckAsync();
-            await Expect(s.Page.Locator("#mainCode")).ToContainTextAsync("btcpay-form");
+            await Expect(s.Page.Locator("#mainCode")).ToContainTextAsync("modal/btcpay.js");
+            await s.Page.WaitForFunctionAsync("() => !!window.btcpay");
             var payButtonCode = await s.Page.Locator("#mainCode").InnerTextAsync();
 
             using var merchantServer = new FakeServer();
             await merchantServer.Start();
-            var merchantUrl = new UriBuilder(merchantServer.ServerUri) { Host = "localhost" }.Uri;
+            var merchantUrl = merchantServer.ServerUri;
             var navigation = s.Page.GotoAsync(merchantUrl.AbsoluteUri);
             var request = await merchantServer.GetNextRequest();
             var body = System.Text.Encoding.UTF8.GetBytes($"<!doctype html><html><body>{payButtonCode}</body></html>");

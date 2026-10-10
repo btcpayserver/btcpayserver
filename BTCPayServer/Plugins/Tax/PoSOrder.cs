@@ -1,0 +1,96 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace BTCPayServer.Plugins.Tax;
+
+public class PoSOrder
+{
+    private readonly int _decimals;
+    decimal _discount;
+    decimal _tip;
+    decimal? _tipTaxRate;
+    public List<ItemLine> ItemLines = new();
+
+    public PoSOrder(int decimals)
+    {
+        _decimals = decimals;
+    }
+
+    public record ItemLine(string ItemId, int Count, decimal UnitPrice, decimal TaxRate, bool TaxIncluded = false);
+    public void AddLine(ItemLine line)
+    {
+        ItemLines.Add(line);
+    }
+
+    public class OrderSummary
+    {
+        public decimal Discount { get; set; }
+        public decimal Tax { get; set; }
+        public decimal TaxOnTip { get; set; }
+        public decimal ItemsTotal { get; set; }
+        public decimal PriceTaxExcluded { get; set; }
+        public decimal Tip { get; set; }
+        public decimal PriceTaxIncluded { get; set; }
+        public decimal PriceTaxIncludedWithTips { get; set; }
+    }
+
+    public OrderSummary Calculate()
+    {
+        var ctx = new OrderSummary();
+        foreach (var item in ItemLines)
+        {
+            var linePrice = item.UnitPrice * item.Count;
+            var discount = linePrice * _discount / 100.0m;
+            discount = Round(discount);
+            ctx.Discount += discount;
+            linePrice -= discount;
+            var result = TaxCalculator.Calculate(linePrice, item.TaxRate, item.TaxIncluded, _decimals);
+            ctx.Tax += result.Tax;
+            ctx.PriceTaxExcluded += result.PriceTaxExcluded;
+        }
+        ctx.PriceTaxExcluded = Round(ctx.PriceTaxExcluded);
+        ctx.PriceTaxIncluded = ctx.PriceTaxExcluded + ctx.Tax;
+        ctx.Tip = Round(_tip);
+        if (_tipTaxRate is { } rate && rate > 0 && ctx.Tip > 0)
+        {
+            ctx.TaxOnTip = Round(ctx.Tip * rate / 100.0m);
+            ctx.Tax += ctx.TaxOnTip;
+        }
+        ctx.PriceTaxIncludedWithTips = ctx.PriceTaxIncluded + ctx.Tip + ctx.TaxOnTip;
+        ctx.PriceTaxIncludedWithTips = Round(ctx.PriceTaxIncludedWithTips);
+        ctx.ItemsTotal = ctx.PriceTaxExcluded + ctx.Discount;
+        return ctx;
+    }
+
+    decimal Round(decimal value) => Math.Round(value, _decimals, MidpointRounding.AwayFromZero);
+
+    public void AddTip(decimal tip)
+    {
+        _tip = Round(tip);
+    }
+
+    public void SetTipTaxRate(decimal? tipTaxRate)
+    {
+        if (tipTaxRate is < 0m)
+            throw new ArgumentOutOfRangeException(nameof(tipTaxRate), "Tip tax rate cannot be negative.");
+
+        _tipTaxRate = tipTaxRate;
+    }
+    public decimal? GetTipTaxRate()
+    {
+        return _tipTaxRate;
+    }
+
+    public decimal? GetTaxRate()
+    {
+        if (!ItemLines.Any())
+            return null;
+        return ItemLines.GroupBy(i => i.TaxRate).Count() == 1 ? ItemLines[0].TaxRate : null;
+    }
+
+    public void AddDiscountRate(decimal discount)
+    {
+        _discount = discount;
+    }
+}

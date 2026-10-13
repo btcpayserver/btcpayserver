@@ -55,7 +55,6 @@ namespace BTCPayServer.Controllers
         private readonly UriResolver _uriResolver;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly StoreLabelRepository _storeLabelRepository;
-        private readonly LocalizerService _localizer;
 
 
         public FormDataService FormDataService { get; }
@@ -77,8 +76,7 @@ namespace BTCPayServer.Controllers
             ViewLocalizer viewLocalizer,
             ApplicationDbContextFactory dbContextFactory,
             BTCPayNetworkProvider networkProvider,
-            StoreLabelRepository storeLabelRepository,
-            LocalizerService localizer)
+            StoreLabelRepository storeLabelRepository)
         {
             _InvoiceController = invoiceController;
             _handlers = handlers;
@@ -95,7 +93,6 @@ namespace BTCPayServer.Controllers
             ViewLocalizer = viewLocalizer;
             _networkProvider = networkProvider;
             _storeLabelRepository = storeLabelRepository;
-            _localizer = localizer;
         }
 
         [HttpGet("/stores/{storeId}/payment-requests")]
@@ -330,6 +327,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}")]
         [AllowAnonymous]
+        [UseStoreLanguage]
         public async Task<IActionResult> ViewPaymentRequest(string payReqId)
         {
             var vm = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());
@@ -345,7 +343,6 @@ namespace BTCPayServer.Controllers
             }
 
             var storeBlob = store.GetStoreBlob();
-            await _localizer.UseStoreLanguage(storeBlob.StoreLanguage);
             vm.HubPath = PaymentRequestHub.GetHubPath(Request);
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
@@ -357,6 +354,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("{payReqId}/form")]
         [HttpPost("{payReqId}/form")]
         [AllowAnonymous]
+        [UseStoreLanguage]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> ViewPaymentRequestForm(string payReqId, FormViewModel viewModel)
         {
@@ -367,7 +365,6 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction("PayPaymentRequest", new { payReqId });
             }
 
-            await _localizer.UseStoreLanguage(result.StoreData.GetStoreBlob().StoreLanguage);
             var prFormId = prBlob.FormId;
             var formData = await FormDataService.GetForm(prFormId);
             if (formData is null)
@@ -415,6 +412,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}/pay")]
         [AllowAnonymous]
+        [UseStoreLanguage]
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> PayPaymentRequest(string payReqId, bool redirectToInvoice = true,
             decimal? amount = null, CancellationToken cancellationToken = default)
@@ -425,8 +423,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             var store = await _storeRepository.FindStore(result.StoreId);
-            await _localizer.UseStoreLanguage(store?.GetStoreBlob().StoreLanguage);
-
             if (amount.HasValue && amount.Value <= 0)
             {
                 return BadRequest(StringLocalizer["Please provide an amount greater than 0"]);
@@ -501,6 +497,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}/cancel")]
         [AllowAnonymous]
+        [UseStoreLanguage]
         public async Task<IActionResult> CancelUnpaidPendingInvoice(string payReqId, bool redirect = true)
         {
             var result = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());
@@ -509,7 +506,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            await UseStoreLanguage(result.StoreId);
             if (!result.AllowCustomPaymentAmounts)
             {
                 return BadRequest(StringLocalizer["Not allowed to cancel this invoice"]);
@@ -651,11 +647,6 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(PaymentRequestLabels), new { storeId });
         }
 
-        private async Task UseStoreLanguage(string storeId)
-        {
-            if (await _storeRepository.FindStore(storeId) is { } store)
-                await _localizer.UseStoreLanguage(store.GetStoreBlob().StoreLanguage);
-        }
         private string GetUserId() => User.GetIdOrNull();
 
         private PaymentRequestData GetCurrentPaymentRequest(string payReqId = null) =>

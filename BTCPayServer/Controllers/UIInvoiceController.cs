@@ -61,8 +61,6 @@ namespace BTCPayServer.Controllers
         private readonly AppService _appService;
         private readonly UriResolver _uriResolver;
         private readonly PermissionService _permissionService;
-        private readonly LocalizerService _localizer;
-
         public WebhookSender WebhookNotificationManager { get; }
         public IEnumerable<IGlobalCheckoutModelExtension> GlobalCheckoutModelExtensions { get; }
         public IStringLocalizer StringLocalizer { get; }
@@ -95,8 +93,7 @@ namespace BTCPayServer.Controllers
             IStringLocalizer stringLocalizer,
             ViewLocalizer viewLocalizer,
             PrettyNameProvider prettyName,
-            PermissionService permissionService,
-            LocalizerService localizer)
+            PermissionService permissionService)
         {
             _displayFormatter = displayFormatter;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -125,7 +122,6 @@ namespace BTCPayServer.Controllers
             StringLocalizer = stringLocalizer;
             ViewLocalizer = viewLocalizer;
             _permissionService = permissionService;
-            _localizer = localizer;
         }
 
         internal async Task<InvoiceEntity> CreatePaymentRequestInvoice(Data.PaymentRequestData prData, decimal? amount, decimal amountDue, StoreData storeData, HttpRequest request, CancellationToken cancellationToken)

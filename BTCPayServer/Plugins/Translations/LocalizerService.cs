@@ -151,7 +151,9 @@ namespace BTCPayServer.Plugins.Translations
                 if (await GetUserTranslations(translationName) is { } translations)
                     SetRequestTranslations(translations);
             }
-            catch (Exception) { }
+            catch (Exception ex) {
+                logger.LogWarning(ex, "Failed to load the language {Language} of a store, the page keeps its current language", translationName);
+            }
         }
 
         void InvalidateUserTranslations() => Interlocked.Exchange(ref _translationsChanged, new CancellationTokenSource()).Cancel();

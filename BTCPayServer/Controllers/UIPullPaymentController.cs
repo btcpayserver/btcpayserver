@@ -35,13 +35,13 @@ namespace BTCPayServer.Controllers
         BTCPayNetworkJsonSerializerSettings serializerSettings,
         PayoutMethodHandlerDictionary payoutHandlers,
         StoreRepository storeRepository,
-        LocalizerService localizer,
         IStringLocalizer stringLocalizer)
         : Controller
     {
         public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
         [AllowAnonymous]
+        [UseStoreLanguage]
         [HttpGet("pull-payments/{pullPaymentId}")]
         public async Task<IActionResult> ViewPullPayment(string pullPaymentId)
         {
@@ -55,7 +55,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var storeBlob = store.GetStoreBlob();
-            await localizer.UseStoreLanguage(storeBlob.StoreLanguage);
             var payouts = (await ctx.Payouts.Where(p => p.PullPaymentDataId == pp.Id)
                     .OrderByDescending(o => o.Date)
                     .ToListAsync())
@@ -170,6 +169,7 @@ namespace BTCPayServer.Controllers
         }
 
         [AllowAnonymous]
+        [UseStoreLanguage]
         [HttpPost("pull-payments/{pullPaymentId}")]
         public async Task<IActionResult> ClaimPullPayment(string pullPaymentId, ViewPullPaymentModel vm, CancellationToken cancellationToken)
         {
@@ -180,9 +180,6 @@ namespace BTCPayServer.Controllers
             var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
             if (pp is null)
                 return NotFound();
-
-            if (await storeRepository.FindStore(pp.StoreId) is { } store)
-                await localizer.UseStoreLanguage(store.GetStoreBlob().StoreLanguage);
 
             if (string.IsNullOrEmpty(vm.Destination))
             {

@@ -3,6 +3,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Forms;
 using BTCPayServer.Plugins.GlobalSearch;
 using BTCPayServer.Plugins.Webhooks.Controllers;
+using BTCPayServer.Security;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Plugins.Forms;
@@ -24,6 +25,9 @@ public class FormsPlugin : BaseBTCPayServerPlugin
         services.AddSingleton<IFormComponentProvider, HtmlFieldsetFormProvider>();
         services.AddSingleton<IFormComponentProvider, HtmlSelectFormProvider>();
         services.AddSingleton<IFormComponentProvider, FieldValueMirror>();
+        services.AddSingleton(new BuiltInPermissionScopeProvider.RouteValueToStoreIdQuery(
+            "formId", "SELECT \"StoreId\" FROM \"Forms\" WHERE \"Id\" = @id"
+        ));
 
         services.AddStaticSearch(new ActionResultItemViewModel()
         {

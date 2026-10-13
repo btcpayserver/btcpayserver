@@ -19,6 +19,7 @@ using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payouts;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Plugins.Webhooks.Views;
 using BTCPayServer.Rating;
@@ -195,6 +196,7 @@ namespace BTCPayServer.Controllers
         }
 
         [XFrameOptions(null)]
+        [UseStoreLanguage]
         [HttpGet("i/{invoiceId}/receipt")]
         public async Task<IActionResult> InvoiceReceipt(string invoiceId, [FromQuery] bool print = false)
         {
@@ -216,7 +218,6 @@ namespace BTCPayServer.Controllers
             }
 
             var storeBlob = store.GetStoreBlob();
-            await _localizer.UseStoreLanguage(storeBlob.StoreLanguage);
             var vm = new InvoiceReceiptViewModel
             {
                 InvoiceId = i.Id,

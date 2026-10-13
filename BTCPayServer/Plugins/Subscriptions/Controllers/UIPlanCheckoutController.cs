@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services;
 using BTCPayServer.Views.UIStoreMembership;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +17,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
 
 [AllowAnonymous]
+[UseStoreLanguage]
 [Area(SubscriptionsPlugin.Area)]
 [Route("plan-checkout/{checkoutId}")]
 public class UIPlanCheckoutController(

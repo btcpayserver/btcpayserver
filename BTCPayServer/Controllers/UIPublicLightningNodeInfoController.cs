@@ -8,6 +8,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
@@ -28,6 +29,7 @@ namespace BTCPayServer.Controllers
     {
         [HttpGet]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
+        [UseStoreLanguage]
         public async Task<IActionResult> ShowLightningNodeInfo(string storeId, string cryptoCode, bool showLocal = false)
         {
             showLocal &= env.CheatMode;

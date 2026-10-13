@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Models;
@@ -17,6 +18,8 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json.Linq;
@@ -1137,5 +1140,94 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         Assert.Equal(System.Net.HttpStatusCode.NotFound, malformedResponse.StatusCode);
         var malformedBody = JObject.Parse(await malformedResponse.Content.ReadAsStringAsync());
         Assert.Equal("Not found", malformedBody["reason"]?.ToString());
+    }
+
+    [Fact(Timeout = 60 * 2 * 1000)]
+    [Trait("Integration", "Integration")]
+    [Trait("Lightning", "Lightning")]
+    public async Task CanRecoverLNURLPaymentsAfterRestart()
+    {
+        using var tester = CreateServerTester(newDb: true);
+        tester.ActivateLightning();
+        await tester.StartAsync();
+        await tester.EnsureChannelsSetup();
+        var user = tester.NewAccount();
+        await user.GrantAccessAsync(true);
+        await user.RegisterLightningNodeAsync("BTC", LightningTestImplementation.CoreLightning);
+        var client = await user.CreateClient(Policies.Unrestricted);
+
+        // Simulate the server going down: from now on, invoices and their BOLT11s only exist in the database
+        var listener = tester.PayTester.ServiceProvider.GetServices<IHostedService>().OfType<LightningListener>().Single();
+        await listener.StopAsync(CancellationToken.None);
+
+        async Task<(string InvoiceId, BOLT11PaymentRequest Bolt11)> CreateInvoiceAndLNURLBolt11(decimal? amount, params string[] paymentMethods)
+        {
+            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest
+            {
+                Currency = "BTC",
+                Amount = amount,
+                Checkout = new CreateInvoiceRequest.CheckoutOptions { PaymentMethods = paymentMethods }
+            });
+            var lnurlMethod = Assert.Single(await client.GetInvoicePaymentMethods(invoice.Id), m => m.PaymentMethodId == "BTC-LNURL");
+            var lnurl = LNURL.LNURL.Parse(lnurlMethod.PaymentLink, out var tag);
+            var payRequest = (LNURL.LNURLPayRequest)await LNURL.LNURL.FetchInformation(lnurl, tag, tester.PayTester.HttpClient);
+            var callback = await payRequest.SendRequest(payRequest.MinSendable, Network.RegTest, tester.PayTester.HttpClient);
+            var bolt11 = BOLT11PaymentRequest.Parse(callback.Pr, Network.RegTest);
+
+            // The callback persisted the BOLT11 in the LNURL prompt
+            lnurlMethod = Assert.Single(await client.GetInvoicePaymentMethods(invoice.Id), m => m.PaymentMethodId == "BTC-LNURL");
+            Assert.Equal(callback.Pr, lnurlMethod.Destination);
+            Assert.Equal(bolt11.PaymentHash.ToString(), ((JObject)lnurlMethod.AdditionalData).GetValue("paymentHash"));
+            return (invoice.Id, bolt11);
+        }
+
+        // Top-ups with only LNURL (BTC-LN is not monitored for them), an invoice with both LN and LNURL, and one with only LN
+        var paidWhileDown = await CreateInvoiceAndLNURLBolt11(null, "BTC-LNURL");
+        var paidAfterRestart = await CreateInvoiceAndLNURLBolt11(null, "BTC-LNURL");
+        var withBothMethods = await CreateInvoiceAndLNURLBolt11(0.00001m, "BTC-LN", "BTC-LNURL");
+        var lnOnlyInvoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest
+        {
+            Currency = "BTC",
+            Amount = 0.00001m,
+            Checkout = new CreateInvoiceRequest.CheckoutOptions { PaymentMethods = new[] { "BTC-LN" } }
+        });
+        var lnMethod = Assert.Single(await client.GetInvoicePaymentMethods(lnOnlyInvoice.Id));
+        Assert.Equal("BTC-LN", lnMethod.PaymentMethodId);
+        var lnOnly = (lnOnlyInvoice.Id, Bolt11: BOLT11PaymentRequest.Parse(lnMethod.Destination, Network.RegTest));
+
+        Assert.Equal(PayResult.Ok, (await tester.CustomerLightningD.Pay(paidWhileDown.Bolt11.ToString())).Result);
+        Assert.Equal(PayResult.Ok, (await tester.CustomerLightningD.Pay(withBothMethods.Bolt11.ToString())).Result);
+        Assert.Equal(PayResult.Ok, (await tester.CustomerLightningD.Pay(lnOnly.Bolt11.ToString())).Result);
+
+        var restarted = ActivatorUtilities.CreateInstance<LightningListener>(tester.PayTester.ServiceProvider);
+        await restarted.StartAsync(CancellationToken.None);
+        try
+        {
+            async Task AssertPaidOnce((string InvoiceId, BOLT11PaymentRequest Bolt11) paid, string paymentMethodId)
+            {
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    Assert.Equal(InvoiceStatus.Settled, (await client.GetInvoice(paid.InvoiceId)).Status);
+                    var methods = await client.GetInvoicePaymentMethods(paid.InvoiceId);
+                    var payment = Assert.Single(methods.SelectMany(m => m.Payments));
+                    Assert.Equal(paymentMethodId, Assert.Single(methods, m => m.Payments.Count > 0).PaymentMethodId);
+                    Assert.Equal(paid.Bolt11.PaymentHash.ToString(), payment.Id);
+                    Assert.True(payment.Value > 0m);
+                    Assert.Equal(paid.Bolt11.MinimumAmount.ToDecimal(LightMoneyUnit.BTC), payment.Value);
+                });
+            }
+
+            await AssertPaidOnce(paidWhileDown, "BTC-LNURL");
+            await AssertPaidOnce(withBothMethods, "BTC-LNURL");
+            await AssertPaidOnce(lnOnly, "BTC-LN");
+
+            // Once recovered, the invoice is also listened for new payments
+            Assert.Equal(PayResult.Ok, (await tester.CustomerLightningD.Pay(paidAfterRestart.Bolt11.ToString())).Result);
+            await AssertPaidOnce(paidAfterRestart, "BTC-LNURL");
+        }
+        finally
+        {
+            await restarted.StopAsync(CancellationToken.None);
+        }
     }
 }

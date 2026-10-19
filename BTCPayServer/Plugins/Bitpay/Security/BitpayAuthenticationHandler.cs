@@ -80,6 +80,10 @@ namespace BTCPayServer.Plugins.Bitpay.Security
                 httpContext.Request.Body.Position = 0;
             }
 
+            if ((HttpMethods.IsGet(httpContext.Request.Method) || HttpMethods.IsHead(httpContext.Request.Method)) &&
+                body.Length != 0)
+                return null;
+
             var url = httpContext.Request.GetEncodedUrl();
             try
             {

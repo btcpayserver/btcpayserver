@@ -264,8 +264,6 @@ namespace BTCPayServer.Controllers
                     else
                     {
                         message.AppendLine("Error retrieving a matching payment method or rate.");
-                        foreach (var error in logs.ToList())
-                            message.AppendLine(error.ToString());
                     }
 
                     throw new BitpayHttpException(400, message.ToString());

@@ -99,7 +99,7 @@ public class BitpayInvoiceController : ControllerBase
 
         var query = new InvoiceQuery()
         {
-            Take = limit,
+            Take = Math.Clamp(limit ?? 100, 1, 100),
             Skip = offset,
             EndDate = dateEnd,
             StartDate = dateStart,

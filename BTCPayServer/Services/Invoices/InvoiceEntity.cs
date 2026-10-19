@@ -971,21 +971,21 @@ namespace BTCPayServer.Services.Invoices
                 accounting.TxRequired++;
                 grossDue += rate * PaymentMethodFee;
             }
-            accounting.TotalDue = Coins(grossDue / rate, divisibility);
-            accounting.TotalDueSettled = Coins((i.Price + i.GrossSettled - i.NetSettled) / rate, divisibility);
-            accounting.Paid = Coins(i.PaidAmount.Gross / rate, divisibility);
-            accounting.PaidSettled = Coins(i.GrossSettled / rate, divisibility);
+            accounting.TotalDue = Coins(grossDue, rate, divisibility);
+            accounting.TotalDueSettled = Coins(i.Price + i.GrossSettled - i.NetSettled, rate, divisibility);
+            accounting.Paid = Coins(i.PaidAmount.Gross, rate, divisibility);
+            accounting.PaidSettled = Coins(i.GrossSettled, rate, divisibility);
             accounting.PaymentMethodPaid = Coins(thisPaymentMethodPayments.Sum(p => p.PaidAmount.Gross), divisibility);
 
             // This one deal with the fact where it might looks like a slight over payment due to the dust of another payment method.
             // So if we detect the NetDue is zero, just cap dueUncapped to 0
             var dueUncapped = i.NetDue == 0.0m ? 0.0m : grossDue - i.PaidAmount.Gross;
-            accounting.DueUncapped = Coins(dueUncapped / rate, divisibility);
+            accounting.DueUncapped = Coins(dueUncapped, rate, divisibility);
             accounting.Due = Max(accounting.DueUncapped, 0.0m);
 
-            accounting.PaymentMethodFee = Coins((grossDue - i.Price) / rate, divisibility);
+            accounting.PaymentMethodFee = Coins(grossDue - i.Price, rate, divisibility);
 
-            accounting.MinimumTotalDue = Max(Smallest(divisibility), Coins((grossDue * (1.0m - ((decimal)i.PaymentTolerance / 100.0m))) / rate, divisibility));
+            accounting.MinimumTotalDue = Max(Smallest(divisibility), Coins(grossDue * (1.0m - ((decimal)i.PaymentTolerance / 100.0m)), rate, divisibility));
             return accounting;
         }
 
@@ -1014,6 +1014,15 @@ namespace BTCPayServer.Services.Invoices
         decimal Max(decimal a, decimal b) => a > b ? a : b;
 
         const decimal MaxCoinValue = decimal.MaxValue / 1_0000_0000m;
+        private static decimal Coins(decimal v, decimal rate, int precision)
+        {
+            if (rate is > 0m and < 1m)
+            {
+                var maxValueBeforeConversion = MaxCoinValue * rate;
+                v = Math.Clamp(v, -maxValueBeforeConversion, maxValueBeforeConversion);
+            }
+            return Coins(v / rate, precision);
+        }
         internal static decimal Coins(decimal v, int precision)
         {
             v = Extensions.RoundUp(v, precision);

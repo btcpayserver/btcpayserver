@@ -591,6 +591,16 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             Price = 10m,
             Features = ["can-access2222"]
         }));
+        await AssertEx.AssertValidationError(["Currency"], () =>
+            client.UpdateOfferingPlan(user.StoreId, offering.Id, plan.Id, new CreatePlanRequest
+            {
+                Currency = new string('X', 2 * 1024 * 1024)
+            }));
+        await AssertEx.AssertValidationError(["Metadata"], () =>
+            client.UpdateOfferingPlan(user.StoreId, offering.Id, plan.Id, new CreatePlanRequest
+            {
+                Metadata = new JObject { ["payload"] = new string('X', 2 * 1024 * 1024) }
+            }));
 
         await client.CreateOfferingPlan(user.StoreId, offering.Id, new()
         {
@@ -623,6 +633,18 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             client.UpdateOffering(user.StoreId, offering.Id, new OfferingModel
             {
                 AppName = "Test Updated",
+                SuccessRedirectUrl = "https://example.com/" + new string('X', 2 * 1024 * 1024)
+            }));
+        await AssertEx.AssertValidationError(["Metadata"], () =>
+            client.UpdateOffering(user.StoreId, offering.Id, new OfferingModel
+            {
+                AppName = "Test Updated",
+                Metadata = new JObject { ["payload"] = new string('X', 2 * 1024 * 1024) }
+            }));
+        await AssertEx.AssertValidationError(["SuccessRedirectUrl"], () =>
+            client.UpdateOffering(user.StoreId, offering.Id, new OfferingModel
+            {
+                AppName = "Test Updated",
                 SuccessRedirectUrl = "data:text/html,<script>alert(1)</script>"
             }));
 
@@ -651,6 +673,34 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             Metadata = new JObject() { ["checkout"] = "metatest" },
             PlanId = plan.Id,
         };
+        var oversizedMetadata = new JObject
+        {
+            ["attackerControlled"] = new string('X', 2 * 1024 * 1024)
+        };
+        await AssertEx.AssertValidationError(
+            [
+                nameof(CreatePlanCheckoutRequest.NewSubscriberMetadata),
+                nameof(CreatePlanCheckoutRequest.InvoiceMetadata),
+                nameof(CreatePlanCheckoutRequest.Metadata)
+            ],
+            () => client.CreatePlanCheckout(new CreatePlanCheckoutRequest
+            {
+                StoreId = user.StoreId,
+                OfferingId = offering.Id,
+                PlanId = plan.Id,
+                NewSubscriberMetadata = oversizedMetadata,
+                InvoiceMetadata = oversizedMetadata,
+                Metadata = oversizedMetadata
+            }));
+        await AssertEx.AssertValidationError(
+            [nameof(CreatePlanCheckoutRequest.NewSubscriberEmail)],
+            () => client.CreatePlanCheckout(new CreatePlanCheckoutRequest
+            {
+                StoreId = user.StoreId,
+                OfferingId = offering.Id,
+                PlanId = plan.Id,
+                NewSubscriberEmail = new string('X', 2 * 1024 * 1024) + "@example.com"
+            }));
         var planCheckout = await client.CreatePlanCheckout(planCheckoutRequest);
 
         var planCheckout2 = await client.GetPlanCheckout(planCheckout.Id);

@@ -56,11 +56,6 @@ namespace BTCPayServer.Plugins
                     preloadedPlugin = plugin;
                     return true;
                 }
-                if (exception.Message.Contains(assemblyName, StringComparison.Ordinal))
-                {
-                    preloadedPlugin = plugin;
-                    return true;
-                }
                 // For TypeLoadException, check if it might come from a referenced assembly
                 if (!string.IsNullOrEmpty(fromAssembly) && assembly.GetReferencedAssemblies().Select(a => a.Name).Contains(fromAssembly))
                 {

@@ -20,7 +20,8 @@ namespace BTCPayServer.Plugins
 
         public ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
-            if (!GetDisablePluginIfCrash(httpContext) ||
+            if (!httpContext.User.IsInRole(Roles.ServerAdmin) ||
+                !GetDisablePluginIfCrash(httpContext) ||
                 !PluginManager.IsExceptionByPlugin(exception, out var plugin) ||
                 plugin.Instance.SystemPlugin)
                 return ValueTask.FromResult(false);

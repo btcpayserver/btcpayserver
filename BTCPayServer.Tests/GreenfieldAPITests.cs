@@ -206,6 +206,64 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task StoreScopedAdminKeyCannotUseServerPermissions()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(isAdmin: true);
+
+            var accountClient = await admin.CreateClient();
+            var scopedKey = await accountClient.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Label = "Store-scoped admin key",
+                Permissions = new[] { Permission.Create(Policies.Unrestricted, admin.StoreId) }
+            });
+            var scopedClient = admin.CreateClientFromAPIKey(scopedKey.ApiKey);
+
+            await AssertPermissionError(Policies.CanModifyServerSettings, () => scopedClient.GetServerRoles());
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task StoreScopedUnrestrictedKeyCannotDeleteUserAccount()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+
+            var accountClient = await user.CreateClient();
+            var scopedKey = await accountClient.CreateAPIKey(new CreateApiKeyRequest
+            {
+                Label = "Store-scoped key",
+                Permissions = new[] { Permission.Create(Policies.Unrestricted, user.StoreId) }
+            });
+            var scopedClient = user.CreateClientFromAPIKey(scopedKey.ApiKey);
+
+            await AssertHttpError(403, () => scopedClient.DeleteCurrentUser());
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task ServerSettingsKeyCannotMintUnrestrictedKey()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(isAdmin: true);
+
+            var restrictedClient = await admin.CreateClient(Policies.CanModifyServerSettings);
+            await AssertPermissionError(Policies.Unrestricted, () => restrictedClient.CreateAPIKey(
+                admin.UserId,
+                new CreateApiKeyRequest
+                {
+                    Permissions = new[] { Permission.Create(Policies.Unrestricted) }
+                }));
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanUseMiscAPIs()
         {
             using (var tester = CreateServerTester())

@@ -6,6 +6,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Security.Greenfield;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -18,7 +19,10 @@ namespace BTCPayServer.Controllers.Greenfield
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
     [EnableCors(CorsPolicies.All)]
-    public class GreenfieldApiKeysController(APIKeyRepository apiKeyRepository, UserManager<ApplicationUser> userManager) : ControllerBase
+    public class GreenfieldApiKeysController(
+        APIKeyRepository apiKeyRepository,
+        UserManager<ApplicationUser> userManager,
+        PermissionService permissionService) : ControllerBase
     {
         [HttpGet("~/api/v1/api-keys/current")]
         public async Task<IActionResult> GetKey()
@@ -45,6 +49,27 @@ namespace BTCPayServer.Controllers.Greenfield
             request ??= new CreateApiKeyRequest();
             request.Permissions ??= System.Array.Empty<Permission>();
 
+            var grantedPermissions = Permission.ToPermissions(User.Claims
+                .Where(c => c.Type == GreenfieldConstants.ClaimTypes.Permission)
+                .Select(c => c.Value)
+                .ToArray()).Select(permission => permission.ToString()).ToHashSet();
+            var requestedPermissions = request.Permissions.Distinct().ToArray();
+            var deniedPermission = requestedPermissions.FirstOrDefault(requested =>
+                !IsPermissionGranted(requested));
+            if (deniedPermission is not null)
+                return this.CreateAPIPermissionError(deniedPermission.ToString());
+
+            bool IsPermissionGranted(Permission requested)
+            {
+                if (!permissionService.PermissionNodesByPolicy.TryGetValue(requested.Policy, out var node))
+                    return false;
+
+                return node.EnumerateParents().Any(parent =>
+                    grantedPermissions.Contains(parent.Definition.Policy) ||
+                    requested.Scope is not null &&
+                    grantedPermissions.Contains($"{parent.Definition.Policy}:{requested.Scope}"));
+            }
+
             var userId = (await userManager.FindByIdOrEmail(idOrEmail))?.Id;
             if (userId is null)
                 return this.UserNotFound();
@@ -54,7 +79,7 @@ namespace BTCPayServer.Controllers.Greenfield
             key.Label = request.Label;
             key.SetBlob(new APIKeyBlob()
             {
-                Permissions = request.Permissions.Select(p => p.ToString()).Distinct().ToArray()
+                Permissions = requestedPermissions.Select(p => p.ToString()).ToArray()
             });
             await apiKeyRepository.CreateKey(key);
             return Ok(FromModel(key));

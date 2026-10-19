@@ -36,7 +36,9 @@ namespace BTCPayServer.Tests
             var baseUri = new Uri("https://btcpay.example/");
             Assert.False(CrowdfundResourcePolicy.IsSafePassiveResourceUrl("/logout", baseUri));
             Assert.False(CrowdfundResourcePolicy.IsSafePassiveResourceUrl("https://btcpay.example/logout", baseUri));
+            Assert.False(CrowdfundResourcePolicy.IsSafePassiveResourceUrl("https://btcpay.example:8443/logout", baseUri));
             Assert.True(CrowdfundResourcePolicy.IsSafePassiveResourceUrl("fileid:image", baseUri));
+            Assert.True(CrowdfundResourcePolicy.IsSafePassiveResourceUrl("~/img/pos-sample/green-tea.jpg", baseUri));
             Assert.True(CrowdfundResourcePolicy.IsSafePassiveResourceUrl("https://cdn.example/image.png", baseUri));
             Assert.False(CrowdfundResourcePolicy.AreValidSounds(["https://btcpay.example/logout"], baseUri));
             Assert.True(CrowdfundResourcePolicy.AreValidSounds(["https://cdn.example/sound.wav"], baseUri));

@@ -603,6 +603,8 @@ namespace BTCPayServer.Controllers
         [HttpGet("/logout")]
         public async Task<IActionResult> Logout()
         {
+            if (Request.Headers["Sec-Fetch-Dest"].ToString() is "image" or "audio" or "video")
+                return BadRequest();
             await signInManager.SignOutAsync();
             HttpContext.DeleteUserPrefsCookie();
             return RedirectToAction(nameof(Login));

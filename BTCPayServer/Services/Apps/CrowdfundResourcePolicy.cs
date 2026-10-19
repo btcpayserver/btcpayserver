@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.IO;
 using System.Linq;
 
 namespace BTCPayServer.Services.Apps;
@@ -9,6 +10,10 @@ public static class CrowdfundResourcePolicy
     public const int MaxSounds = 50;
     public const int MaxSoundLength = 2_048;
     public const int MaxTotalSoundCharacters = 20_000;
+    private static readonly string[] PassiveExtensions =
+    [
+        ".avif", ".gif", ".jpeg", ".jpg", ".mp3", ".ogg", ".png", ".svg", ".wav", ".webm", ".webp"
+    ];
 
     public static bool IsSafePassiveResourceUrl(string url, Uri? baseUri)
     {
@@ -16,15 +21,18 @@ public static class CrowdfundResourcePolicy
             return false;
         if (url.StartsWith("fileid:", StringComparison.OrdinalIgnoreCase))
             return true;
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
-            uri.Scheme is not ("http" or "https"))
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            var path = url.Split('?', '#')[0];
+            return !url.StartsWith("//", StringComparison.Ordinal) &&
+                   !url.StartsWith("/\\", StringComparison.Ordinal) &&
+                   PassiveExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
+        }
+        if (uri.Scheme is not ("http" or "https"))
             return false;
         if (baseUri is null)
             return true;
-        return !string.Equals(
-            uri.GetComponents(UriComponents.SchemeAndServer, UriFormat.UriEscaped),
-            baseUri.GetComponents(UriComponents.SchemeAndServer, UriFormat.UriEscaped),
-            StringComparison.OrdinalIgnoreCase);
+        return !string.Equals(uri.Host, baseUri.Host, StringComparison.OrdinalIgnoreCase);
     }
 
     public static bool AreValidSounds(string[] sounds, Uri? baseUri)

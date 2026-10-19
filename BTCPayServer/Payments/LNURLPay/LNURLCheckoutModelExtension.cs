@@ -32,14 +32,15 @@ namespace BTCPayServer.Payments.LNURLPay
         private const string UriScheme = "lightning:";
         public void ModifyCheckoutModel(CheckoutModelContext context)
         {
-            if (context is not { Handler: LNURLPayPaymentHandler })
+            if (context is not { Handler: LNURLPayPaymentHandler handler })
                 return;
             var lnurl = paymentLinkExtension.GetPaymentLink(context.Prompt, context.UrlHelper);
             if (lnurl is not null)
             {
+                var details = handler.ParsePaymentPromptDetails(context.Prompt.Details);
                 context.Model.Address = lnurl.Replace(UriScheme, "");
                 context.Model.InvoiceBitcoinUrl = lnurl;
-                context.Model.InvoiceBitcoinUrlQR = lnurl.ToUpperInvariant().Replace(UriScheme.ToUpperInvariant(), UriScheme);
+                context.Model.InvoiceBitcoinUrlQR = LNURLPayPaymentLinkExtension.FormatPaymentLinkForQRCode(lnurl, details.Bech32Mode);
             }
             context.Model.CheckoutBodyComponentName = LNCheckoutModelExtension.CheckoutBodyComponentName;
             if (context.StoreBlob.LightningAmountInSatoshi && context.Model.PaymentMethodCurrency == "BTC")

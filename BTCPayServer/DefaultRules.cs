@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Rating;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace BTCPayServer;
 public record DefaultRules(RateRules Rules)
@@ -49,7 +50,7 @@ public class DefaultRulesCollection
 
     public RateRules WithPreferredExchange(string? preferredExchange)
     {
-        if (string.IsNullOrEmpty(preferredExchange))
+        if (string.IsNullOrEmpty(preferredExchange) || !SyntaxFacts.IsValidIdentifier(preferredExchange))
         {
             return Consolidated;
         }

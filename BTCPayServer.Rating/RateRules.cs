@@ -158,6 +158,8 @@ namespace BTCPayServer.Rating
 
         public RateRule GetRuleFor(CurrencyPair currencyPair)
         {
+            if (!SyntaxFacts.IsValidIdentifier(currencyPair.Left) || !SyntaxFacts.IsValidIdentifier(currencyPair.Right))
+                return new RateRule(this, currencyPair, CreateExpression("ERR_INVALID_CURRENCY_PAIR()"));
             if (currencyPair.Left == "X" || currencyPair.Right == "X")
                 return new RateRule(this, currencyPair, CreateExpression($"ERR_INVALID_CURRENCY_PAIR({currencyPair})"));
             if (currencyPair.Left == currencyPair.Right)

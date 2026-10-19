@@ -261,14 +261,17 @@ app = new Vue({
                 fireworks();
             }
             amount = parseFloat(amount).noExponents();
+            var message = document.createElement("span");
             if (onChain) {
-                Vue.toasted.show('New payment of ' + amount + " " + currency + " " + prettyPMI, {
+                message.textContent = 'New payment of ' + amount + " " + currency + " " + prettyPMI;
+                Vue.toasted.show(message, {
                     iconPack: "fontawesome",
                     icon: "plus",
                     duration: 10000
                 });
             } else {
-                Vue.toasted.show('New payment of ' + amount + " " + cryptoCode + " " + prettyPMI, {
+                message.textContent = 'New payment of ' + amount + " " + cryptoCode + " " + prettyPMI;
+                Vue.toasted.show(message, {
                     iconPack: "fontawesome",
                     icon: "bolt",
                     duration: 10000

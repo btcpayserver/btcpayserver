@@ -20,6 +20,11 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldStoreWebhooksController : ControllerBase
     {
+        private const int MaxSecretLength = 64;
+        private const int MaxSpecificEvents = 100;
+        private const int MaxSpecificEventLength = 100;
+        private const int MaxSpecificEventCharacters = 10_000;
+
         public GreenfieldStoreWebhooksController(StoreRepository storeRepository, WebhookSender webhookSender)
         {
             StoreRepository = storeRepository;
@@ -67,6 +72,18 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
         {
             if (!Uri.TryCreate(create?.Url, UriKind.Absolute, out _))
                 ModelState.AddModelError(nameof(Url), "Invalid Url");
+            if (create?.Secret is { Length: > MaxSecretLength })
+                ModelState.AddModelError(nameof(create.Secret), $"The secret should be maximum {MaxSecretLength} characters.");
+            if (create?.AuthorizedEvents?.SpecificEvents is { } specificEvents)
+            {
+                if (specificEvents.Length > MaxSpecificEvents ||
+                    specificEvents.Any(e => e is null || e.Length > MaxSpecificEventLength) ||
+                    specificEvents.Sum(e => (long)(e?.Length ?? 0)) > MaxSpecificEventCharacters)
+                {
+                    ModelState.AddModelError(nameof(create.AuthorizedEvents),
+                        $"Invalid event filter. A webhook can select at most {MaxSpecificEvents} events.");
+                }
+            }
         }
 
         [HttpPut("~/api/v1/stores/{storeId}/webhooks/{webhookId}")]
@@ -103,6 +120,7 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
         }
         private WebhookBlob ToModel(StoreWebhookBaseData create)
         {
+            var specificEvents = create.AuthorizedEvents?.SpecificEvents ?? Array.Empty<string>();
             return new WebhookBlob()
             {
                 Active = create.Enabled,
@@ -112,7 +130,9 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
                                     new AuthorizedWebhookEvents()
                                     {
                                         Everything = aed.Everything,
-                                        SpecificEvents = aed.SpecificEvents
+                                        SpecificEvents = specificEvents
+                                            .Distinct(StringComparer.Ordinal)
+                                            .ToArray()
                                     } :
                                     new AuthorizedWebhookEvents() { Everything = true },
                 AutomaticRedelivery = create.AutomaticRedelivery,

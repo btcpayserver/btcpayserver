@@ -15,7 +15,7 @@ namespace BTCPayServer.Data
         public string[] SpecificEvents { get; set; } = Array.Empty<string>();
         public bool Match(string evt)
         {
-            return Everything || SpecificEvents.Contains(evt);
+            return Everything || SpecificEvents?.Contains(evt) == true;
         }
     }
 

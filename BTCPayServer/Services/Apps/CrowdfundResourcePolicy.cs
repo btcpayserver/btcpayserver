@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.IO;
 using System.Linq;
 
 namespace BTCPayServer.Services.Apps;
@@ -10,11 +9,6 @@ public static class CrowdfundResourcePolicy
     public const int MaxSounds = 50;
     public const int MaxSoundLength = 2_048;
     public const int MaxTotalSoundCharacters = 20_000;
-    private static readonly string[] PassiveExtensions =
-    [
-        ".avif", ".gif", ".jpeg", ".jpg", ".mp3", ".ogg", ".png", ".svg", ".wav", ".webm", ".webp"
-    ];
-
     public static bool IsSafePassiveResourceUrl(string url, Uri? baseUri)
     {
         if (string.IsNullOrWhiteSpace(url))
@@ -22,12 +16,7 @@ public static class CrowdfundResourcePolicy
         if (url.StartsWith("fileid:", StringComparison.OrdinalIgnoreCase))
             return true;
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-        {
-            var path = url.Split('?', '#')[0];
-            return !url.StartsWith("//", StringComparison.Ordinal) &&
-                   !url.StartsWith("/\\", StringComparison.Ordinal) &&
-                   PassiveExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
-        }
+            return false;
         if (uri.Scheme is not ("http" or "https"))
             return false;
         if (baseUri is null)

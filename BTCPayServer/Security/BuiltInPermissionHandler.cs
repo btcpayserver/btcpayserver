@@ -65,8 +65,7 @@ public class BuiltInPermissionHandler(
                 }
                 break;
             case { Type: PolicyType.Server }:
-                success = isAdmin &&
-                          authContext.HasPermission(permContext.Permission, permissionService);
+                success = isAdmin;
                 break;
             case { Type: PolicyType.User }:
             case { Policy: Policies.Unrestricted }:

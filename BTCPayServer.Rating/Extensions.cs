@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Rates;
@@ -18,6 +19,11 @@ namespace BTCPayServer.Rating
             {
                 return rateProvider.GetRatesAsync(cancellationToken);
             }
+        }
+        internal static async Task<T> ReadRateResponseAsAsync<T>(this HttpContent content, CancellationToken cancellationToken)
+        {
+            await content.LoadIntoBufferAsync(1024 * 1024, cancellationToken);
+            return await content.ReadAsAsync<T>(cancellationToken);
         }
         public static decimal RoundToSignificant(this decimal value, int divisibility)
         {

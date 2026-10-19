@@ -63,7 +63,7 @@ public class RateSecurityTests
         ];
 
         foreach (var provider in providers)
-            await Assert.ThrowsAnyAsync<Exception>(() => provider.GetRatesAsync(CancellationToken.None));
+            await Assert.ThrowsAsync<HttpRequestException>(() => provider.GetRatesAsync(CancellationToken.None));
     }
 
     private sealed class FixedRateProvider(params PairRate[] rates) : IRateProvider

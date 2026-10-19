@@ -22,8 +22,10 @@ namespace BTCPayServer.Rating
         }
         internal static async Task<T> ReadRateResponseAsAsync<T>(this HttpContent content, CancellationToken cancellationToken)
         {
-            await content.LoadIntoBufferAsync(1024 * 1024, cancellationToken);
-            return await content.ReadAsAsync<T>(cancellationToken);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(30));
+            await content.LoadIntoBufferAsync(1024 * 1024, timeout.Token);
+            return await content.ReadAsAsync<T>(timeout.Token);
         }
         public static decimal RoundToSignificant(this decimal value, int divisibility)
         {

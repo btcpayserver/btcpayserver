@@ -302,6 +302,7 @@ namespace BTCPayServer.Payments
         public Data.StoreBlob StoreBlob { get; }
         public Data.StoreData Store { get; }
         public PaymentPrompt Prompt { get; set; }
+        public string? PublicErrorMessage { get; set; }
         public PaymentMethodContext(
             Data.StoreData store,
             Data.StoreBlob storeBlob,
@@ -398,6 +399,8 @@ namespace BTCPayServer.Payments
                 }
                 catch (PaymentMethodUnavailableException ex)
                 {
+                    if (ex.IsSafeToExpose)
+                        PublicErrorMessage = ex.Message;
                     Logs.Write($"Payment method unavailable ({ex.Message})", InvoiceEventData.EventSeverity.Error);
                     Status = ContextStatus.Failed;
                     return;

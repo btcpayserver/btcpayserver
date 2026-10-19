@@ -19,9 +19,11 @@ public class BitpayAuthenticationHandlerMethodTests
 {
     [Theory]
     [Trait("FastTest", "FastTest")]
-    [InlineData("{\"price\":1,\"currency\":\"USD\"}")]
-    [InlineData("\uFEFF")]
-    public async Task RejectsBodyBearingReadRequests(string postBody)
+    [InlineData("GET", "{\"price\":1,\"currency\":\"USD\"}")]
+    [InlineData("GET", "\uFEFF")]
+    [InlineData("HEAD", "{\"price\":1,\"currency\":\"USD\"}")]
+    [InlineData("HEAD", "\uFEFF")]
+    public async Task RejectsBodyBearingReadRequests(string method, string postBody)
     {
         const string url = "https://merchant.example/invoices";
         var key = new Key();
@@ -32,7 +34,7 @@ public class BitpayAuthenticationHandlerMethodTests
         context.Request.Scheme = "https";
         context.Request.Host = new HostString("merchant.example");
         context.Request.Path = "/invoices";
-        context.Request.Method = HttpMethods.Get;
+        context.Request.Method = method;
         context.Request.ContentType = "application/json";
         context.Request.ContentLength = bodyBytes.Length;
         context.Request.Body = new MemoryStream(bodyBytes);

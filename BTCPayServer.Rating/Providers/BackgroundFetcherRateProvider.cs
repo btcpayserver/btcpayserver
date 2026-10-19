@@ -119,7 +119,7 @@ namespace BTCPayServer.Services.Rates
             {
                 var fetch = new LatestFetch()
                 {
-                    Latest = rates.Select(r => new PairRate(r.Pair, r.BidAsk)).ToArray(),
+                    Latest = rates.Where(IsValidRate).Select(r => new PairRate(r.Pair, r.BidAsk)).ToArray(),
                     Updated = updated,
                     NextRefresh = updated + RefreshRate,
                     Expiration = updated + ValidatyTime
@@ -243,7 +243,7 @@ namespace BTCPayServer.Services.Rates
             try
             {
                 var rates = await _Inner.GetRatesAsyncWithMaybeContext(context, cancellationToken);
-                fetch.Latest = rates;
+                fetch.Latest = rates.Where(IsValidRate).ToArray();
                 fetch.Context = context;
                 fetch.Updated = DateTimeOffset.UtcNow;
                 fetch.Expiration = fetch.Updated + ValidatyTime;
@@ -270,6 +270,13 @@ namespace BTCPayServer.Services.Rates
             fetch.GetResult(); // Will throw if not valid
             return fetch;
         }
+
+        private static bool IsValidRate(PairRate rate)
+            => rate.BidAsk is { Bid: > 0m, Ask: > 0m } &&
+               !rate.CurrencyPair.ToString().Contains('|');
+        private static bool IsValidRate(BackgroundFetcherRate rate)
+            => rate.BidAsk is { Bid: > 0m, Ask: > 0m } &&
+               !rate.Pair.ToString().Contains('|');
 
         public void InvalidateCache()
         {

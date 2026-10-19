@@ -30,6 +30,8 @@ namespace BTCPayServer.Tests
             await user.MakeAdmin();
             var client = await user.CreateClient(Policies.Unrestricted);
             var viewOnly = await user.CreateClient(Policies.CanViewPaymentRequests);
+            var paymentRequestInvoiceCreator = await user.CreateClient(
+                Policies.CanViewPaymentRequests, Policies.CanCreateInvoice);
 
             //create payment request
 
@@ -191,6 +193,9 @@ namespace BTCPayServer.Tests
             var expectedInvoiceId = invoiceData.Id;
             invoiceData = await client.PayPaymentRequest(paymentTestPaymentRequest.Id, new PayPaymentRequestRequest() { AllowPendingInvoiceReuse = true });
             Assert.Equal(expectedInvoiceId, invoiceData.Id);
+            await AssertEx.AssertPermissionError(Policies.CanViewInvoices, () =>
+                paymentRequestInvoiceCreator.PayPaymentRequest(paymentTestPaymentRequest.Id,
+                    new PayPaymentRequestRequest() { AllowPendingInvoiceReuse = true }));
 
             var notExpectedInvoiceId = invoiceData.Id;
             invoiceData = await client.PayPaymentRequest(paymentTestPaymentRequest.Id, new PayPaymentRequestRequest() { AllowPendingInvoiceReuse = false });

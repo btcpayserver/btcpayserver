@@ -32,6 +32,7 @@ namespace BTCPayServer.Controllers.Greenfield
 		private readonly PaymentRequestRepository _paymentRequestRepository;
 		private readonly CurrencyNameTable _currencyNameTable;
 		private readonly LinkGenerator _linkGenerator;
+		private readonly IAuthorizationService _authorizationService;
 
 		public GreenfieldPaymentRequestsController(
 			InvoiceRepository invoiceRepository,
@@ -39,7 +40,8 @@ namespace BTCPayServer.Controllers.Greenfield
 			PaymentRequestRepository paymentRequestRepository,
 			PaymentRequestService paymentRequestService,
 			CurrencyNameTable currencyNameTable,
-			LinkGenerator linkGenerator)
+			LinkGenerator linkGenerator,
+			IAuthorizationService authorizationService)
 		{
 			_InvoiceRepository = invoiceRepository;
 			_invoiceController = invoiceController;
@@ -47,6 +49,7 @@ namespace BTCPayServer.Controllers.Greenfield
 			PaymentRequestService = paymentRequestService;
 			_currencyNameTable = currencyNameTable;
 			_linkGenerator = linkGenerator;
+			_authorizationService = authorizationService;
 		}
 
 		[Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -112,6 +115,9 @@ namespace BTCPayServer.Controllers.Greenfield
 			{
 				if (pr.Invoices.GetReusableInvoice(amount)?.Id is string invoiceId)
 				{
+					if (!(await _authorizationService.AuthorizeAsync(User, p.StoreDataId,
+							Policies.CanViewInvoices)).Succeeded)
+						return this.CreateAPIPermissionError(Policies.CanViewInvoices);
 					var inv = await _InvoiceRepository.GetInvoice(invoiceId);
 					return Ok(GreenfieldInvoiceController.ToModel(inv, _linkGenerator, _currencyNameTable, Request));
 				}

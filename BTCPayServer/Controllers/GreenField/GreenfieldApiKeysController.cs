@@ -6,6 +6,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Security.Greenfield;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -18,7 +19,10 @@ namespace BTCPayServer.Controllers.Greenfield
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
     [EnableCors(CorsPolicies.All)]
-    public class GreenfieldApiKeysController(APIKeyRepository apiKeyRepository, UserManager<ApplicationUser> userManager) : ControllerBase
+    public class GreenfieldApiKeysController(
+        APIKeyRepository apiKeyRepository,
+        UserManager<ApplicationUser> userManager,
+        PermissionService permissionService) : ControllerBase
     {
         [HttpGet("~/api/v1/api-keys/current")]
         public async Task<IActionResult> GetKey()
@@ -44,6 +48,16 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             request ??= new CreateApiKeyRequest();
             request.Permissions ??= System.Array.Empty<Permission>();
+
+            var grantedPermissions = Permission.ToPermissions(User.Claims
+                .Where(c => c.Type == GreenfieldConstants.ClaimTypes.Permission)
+                .Select(c => c.Value)
+                .ToArray()).ToArray();
+            var deniedPermission = request.Permissions.FirstOrDefault(requested =>
+                !grantedPermissions.Any(granted =>
+                    permissionService.Contains(granted, requested)));
+            if (deniedPermission is not null)
+                return this.CreateAPIPermissionError(deniedPermission.ToString());
 
             var userId = (await userManager.FindByIdOrEmail(idOrEmail))?.Id;
             if (userId is null)

@@ -30,6 +30,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
     public abstract class GreenfieldLightningNodeApiController : ControllerBase
     {
+        private const int MaxBolt11Length = 7089;
         private readonly PoliciesSettings _policiesSettings;
         private readonly IAuthorizationService _authorizationService;
         private readonly PaymentMethodHandlerDictionary _handlers;
@@ -235,7 +236,11 @@ namespace BTCPayServer.Controllers.Greenfield
             var network =  GetNetwork(cryptoCode);
             BOLT11PaymentRequest bolt11 = null;
 
-            if (string.IsNullOrEmpty(lightningInvoice.BOLT11) ||
+            if (lightningInvoice.BOLT11?.Length > MaxBolt11Length)
+            {
+                ModelState.AddModelError(nameof(lightningInvoice.BOLT11), "The BOLT11 invoice is too large.");
+            }
+            else if (string.IsNullOrEmpty(lightningInvoice.BOLT11) ||
                 !BOLT11PaymentRequest.TryParse(lightningInvoice.BOLT11, out bolt11, network.NBitcoinNetwork))
             {
                 ModelState.AddModelError(nameof(lightningInvoice.BOLT11), "The BOLT11 invoice was invalid.");

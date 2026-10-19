@@ -202,6 +202,13 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
             {
                 BOLT11 = "lol"
             }));
+        var oversizedInvoice = await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.PayLightningInvoice(user.StoreId, "BTC",
+            new PayLightningInvoiceRequest()
+            {
+                BOLT11 = "lnbc1" + new string('q', 8_000)
+            }));
+        Assert.Contains(oversizedInvoice.ValidationErrors,
+            error => error.Message.Contains("too large", StringComparison.OrdinalIgnoreCase));
 
         validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.CreateLightningInvoice(user.StoreId, "BTC",
             new CreateLightningInvoiceRequest()
@@ -592,6 +599,21 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         var lnAddresses = await adminClient.GetStoreLightningAddresses(store3);
         Assert.Single(lnAddresses);
         Assert.Equal(metadata, lnAddresses[0].InvoiceMetadata);
+        await AssertEx.AssertValidationError(
+            [nameof(LightningAddressData.InvoiceMetadata)],
+            () => adminClient.AddOrUpdateStoreLightningAddress(
+                store3,
+                Guid.NewGuid().ToString("n"),
+                new LightningAddressData
+                {
+                    InvoiceMetadata = new JObject { ["payload"] = new string('X', 2 * 1024 * 1024) }
+                }));
+        await AssertEx.AssertValidationError(
+            [nameof(LightningAddressData.CurrencyCode)],
+            () => adminClient.AddOrUpdateStoreLightningAddress(
+                store3,
+                Guid.NewGuid().ToString("n"),
+                new LightningAddressData { CurrencyCode = new string('X', 2 * 1024 * 1024) }));
     }
 
     [Fact]

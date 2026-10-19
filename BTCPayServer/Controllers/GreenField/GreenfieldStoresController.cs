@@ -337,15 +337,18 @@ namespace BTCPayServer.Controllers.Greenfield
             else if (request.Name.Length < 1 || request.Name.Length > 50)
                 ModelState.AddModelError(nameof(request.Name), "Name can only be between 1 and 50 characters");
             if (!string.IsNullOrEmpty(request.Website) &&
-                (!Uri.TryCreate(request.Website, UriKind.Absolute, out var websiteUri) || websiteUri.Scheme is not ("http" or "https")))
+                (request.Website.Length > 500 ||
+                 !Uri.TryCreate(request.Website, UriKind.Absolute, out var websiteUri) || websiteUri.Scheme is not ("http" or "https")))
             {
                 ModelState.AddModelError(nameof(request.Website), "Website is not a valid url");
             }
-            if (!string.IsNullOrEmpty(request.LogoUrl) && !Uri.TryCreate(request.LogoUrl, UriKind.Absolute, out _))
+            if (!string.IsNullOrEmpty(request.LogoUrl) &&
+                (request.LogoUrl.Length > 2048 || !Uri.TryCreate(request.LogoUrl, UriKind.Absolute, out _)))
             {
                 ModelState.AddModelError(nameof(request.LogoUrl), "Logo is not a valid url");
             }
-            if (!string.IsNullOrEmpty(request.CssUrl) && !Uri.TryCreate(request.CssUrl, UriKind.Absolute, out _))
+            if (!string.IsNullOrEmpty(request.CssUrl) &&
+                (request.CssUrl.Length > 500 || !Uri.TryCreate(request.CssUrl, UriKind.Absolute, out _)))
             {
                 ModelState.AddModelError(nameof(request.CssUrl), "CSS is not a valid url");
             }

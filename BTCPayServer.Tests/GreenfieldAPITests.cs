@@ -1531,6 +1531,13 @@ namespace BTCPayServer.Tests
                     Website = "javascript:document.body.dataset.pwned=1",
                     BrandColor = "invalid"
                 }));
+            await AssertValidationError(["CssUrl", "LogoUrl", "Website"], async () =>
+                await client.UpdateStore(newStore.Id, new UpdateStoreRequest
+                {
+                    CssUrl = "https://example.org/" + new string('a', 1_000_000),
+                    LogoUrl = "https://example.org/" + new string('a', 1_000_000),
+                    Website = "https://example.org/" + new string('a', 1_000_000)
+                }));
             await AssertValidationError(["InvoiceExpiration", "DisplayExpirationTimer", "MonitoringExpiration"], async () =>
                 await client.UpdateStore(newStore.Id, new UpdateStoreRequest
                 {

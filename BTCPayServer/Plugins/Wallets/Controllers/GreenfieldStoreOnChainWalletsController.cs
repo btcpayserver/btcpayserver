@@ -784,6 +784,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Type), "Type is required");
             if (request?.Id is null)
                 ModelState.AddModelError(nameof(request.Id), "Id is required");
+            if (request?.Type == WalletObjectData.Types.Tx &&
+                request.Data?["comment"]?.Value<string>()?.Length > WalletRepository.MaxCommentSize)
+                ModelState.AddModelError(nameof(request.Data), "The transaction comment is too long");
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 

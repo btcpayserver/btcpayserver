@@ -164,6 +164,10 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
             }
+            if (request.Name?.Length > 50)
+                ModelState.AddModelError(nameof(request.Name), "Name is too long");
+            if (request.ImageUrl?.Length > 2048)
+                ModelState.AddModelError(nameof(request.ImageUrl), "ImageUrl is too long");
 
             bool needUpdate = false;
             var setNewPassword = !string.IsNullOrEmpty(request.NewPassword);

@@ -1311,6 +1311,15 @@ namespace BTCPayServer.Tests
             await tester.StartAsync();
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
 
+            await AssertValidationError(["Name", "ImageUrl"], () =>
+                unauthClient.CreateUser(new CreateApplicationUserRequest
+                {
+                    Email = "oversized-profile@gmail.com",
+                    Password = "abceudhqw",
+                    Name = new string('A', 51),
+                    ImageUrl = new string('B', 2049)
+                }));
+
             // We have no admin, so it should work
             var user = await unauthClient.CreateUser(
                 new CreateApplicationUserRequest { Email = "test@gmail.com", Password = "abceudhqw" });
@@ -1358,6 +1367,12 @@ namespace BTCPayServer.Tests
             Assert.Equal("administrator@gmail.com", changed.Email);
             Assert.Equal("Changed Admin", changed.Name);
             Assert.Equal("avatar.jpg", changed.ImageUrl);
+            await AssertValidationError(["Name", "ImageUrl"], () =>
+                adminClient.UpdateCurrentUser(new UpdateApplicationUserRequest
+                {
+                    Name = new string('A', 51),
+                    ImageUrl = new string('B', 2049)
+                }));
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -4367,6 +4382,26 @@ namespace BTCPayServer.Tests
             var client = await admin.CreateClient(Policies.Unrestricted);
 
             Assert.Empty(await client.GetOnChainWalletObjects(admin.StoreId, "BTC"));
+            await AssertValidationError([nameof(AddOnChainWalletObjectRequest.Data)], () =>
+                client.AddOrUpdateOnChainWalletObject(admin.StoreId, "BTC",
+                    new AddOnChainWalletObjectRequest(WalletObjectData.Types.Tx,
+                        "0000000000000000000000000000000000000000000000000000000000000005")
+                    {
+                        Data = new JObject
+                        {
+                            ["comment"] = new string('x', WalletRepository.MaxCommentSize + 1)
+                        }
+                    }));
+            await AssertValidationError([nameof(AddOnChainWalletObjectRequest.Data)], () =>
+                client.AddOrUpdateOnChainWalletObject(admin.StoreId, "BTC",
+                    new AddOnChainWalletObjectRequest(WalletObjectData.Types.Tx,
+                        "0000000000000000000000000000000000000000000000000000000000000006")
+                    {
+                        Data = new JObject
+                        {
+                            ["comment"] = new JObject()
+                        }
+                    }));
             var test = new OnChainWalletObjectId("test", "test");
             Assert.NotNull(await client.AddOrUpdateOnChainWalletObject(admin.StoreId, "BTC", new AddOnChainWalletObjectRequest(test.Type, test.Id)));
 

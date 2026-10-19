@@ -114,6 +114,7 @@ public class WebhookSender(
             var wh = (await StoreRepository.GetWebhook(ctx.WebhookId))?.GetBlob();
             if (wh is null || !wh.ShouldDeliver(ctx.WebhookEvent.Type))
                 return;
+            ctx = new(ctx.WebhookId, ctx.WebhookEvent, ctx.Delivery, wh);
             var result = await SendAndSaveDelivery(ctx, cancellationToken);
             if (ctx.WebhookBlob.AutomaticRedelivery &&
                 result is { ShouldRetry: true, DeliveryId: not null })

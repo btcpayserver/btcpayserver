@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -60,7 +61,7 @@ public class PermissionAuthorizationHandler(
             // Now imagine that the api key has "btcpay.store.canviewstoresettings:StoreA"
             // The route should still be accessible by the API key.
             // However, the action is responsible for only allowing `StoreA` to be shown in the list.
-            if (!context.HasPermission(ctx.Permission, permissionService, anyScope: true))
+            if (!context.HasPermission(ctx.Permission, permissionService, anyScope: ctx.Permission.Type is PolicyType.Store))
                 return;
         }
 

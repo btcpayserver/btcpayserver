@@ -181,7 +181,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.CurrentPassword), "The current password is not correct.");
             }
 
-            if (setNewPassword && currentPasswordValid)
+            if (setNewPassword && currentPasswordValid && ModelState.IsValid)
             {
                 var passwordValidation = await _passwordValidator.ValidateAsync(_userManager, user, request.NewPassword);
                 if (passwordValidation.Succeeded)
@@ -331,6 +331,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Email), "Email is missing");
             if (!MailboxAddressValidator.IsMailboxAddress(request.Email))
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
+            if (request.Name?.Length > 50)
+                ModelState.AddModelError(nameof(request.Name), "Name is too long");
+            if (request.ImageUrl?.Length > 2048)
+                ModelState.AddModelError(nameof(request.ImageUrl), "ImageUrl is too long");
 
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);

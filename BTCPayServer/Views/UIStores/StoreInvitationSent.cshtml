@@ -25,7 +25,7 @@
         {
             @StringLocalizer["{0} was invited as {1}.", Model.Email, Model.Role]
         }
-        <span>@StringLocalizer["The invitation expires {0}.", Model.Expiry.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)]</span>
+        <span>@StringLocalizer["The invitation expires {0}.", Model.Expiry.ToTimeAgo()]</span>
     </p>
 </header>
 

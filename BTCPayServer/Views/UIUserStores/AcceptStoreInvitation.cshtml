@@ -51,7 +51,7 @@
             @ViewLocalizer["You have been invited to join <strong>{0}</strong> as {1}.", Html.Encode(Model.StoreName), Html.Encode(Model.Role)]
         </p>
         <p class="text-center text-secondary store-invitation__expiry">
-            @StringLocalizer["This invitation expires {0}.", Model.Expiry.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)]
+            @StringLocalizer["This invitation expires {0}.", Model.Expiry.ToTimeAgo()]
         </p>
         <form method="post" class="d-grid gap-3 mt-4">
             <button type="submit" name="command" value="accept" class="btn btn-primary store-invitation__accept" text-translate="true">Accept invitation</button>

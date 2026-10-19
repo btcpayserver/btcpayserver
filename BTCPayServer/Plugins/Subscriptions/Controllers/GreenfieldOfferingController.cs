@@ -32,6 +32,8 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         CurrencyNameTable currencyNameTable,
         AppService appService) : ControllerBase
     {
+    private const int MaxMetadataLength = 64 * 1024;
+
         [HttpGet("~/api/v1/stores/{storeId}/offerings/{offeringId?}")]
         public async Task<IActionResult> GetOffering(string storeId, string? offeringId = null)
         {
@@ -123,6 +125,9 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             {
                 ModelState.AddModelError(nameof(request.SuccessRedirectUrl), "SuccessRedirectUrl must be an HTTP or HTTPS URL");
             }
+            if (request?.SuccessRedirectUrl?.Length > 500)
+                ModelState.AddModelError(nameof(request.SuccessRedirectUrl), "SuccessRedirectUrl is too long");
+            ValidateMetadata(nameof(OfferingModel.Metadata), request?.Metadata);
 
             if (request?.Features is null)
                 return;
@@ -152,6 +157,9 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 ModelState.AddModelError(nameof(request.Price), "Price cannot be negative");
             if (request?.Name is null)
                 ModelState.AddModelError(nameof(request.Name), "Name is required");
+            if (request?.Currency?.Length > 10)
+                ModelState.AddModelError(nameof(request.Currency), "Currency is too long");
+            ValidateMetadata(nameof(CreatePlanRequest.Metadata), request?.Metadata);
 
             var features = new List<FeatureData>();
             if (request?.Features is not null)
@@ -220,6 +228,9 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 return PlanNotFound();
             if (request?.Price < 0m)
                 ModelState.AddModelError(nameof(request.Price), "Price cannot be negative");
+            if (request?.Currency?.Length > 10)
+                ModelState.AddModelError(nameof(request.Currency), "Currency is too long");
+            ValidateMetadata(nameof(CreatePlanRequest.Metadata), request?.Metadata);
 
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
@@ -465,6 +476,12 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 ModelState.AddModelError(nameof(model.PlanId), "PlanId is required");
             if (model.NewSubscriberEmail is not null && model.CustomerSelector is not null)
                 ModelState.AddModelError(nameof(model.NewSubscriberEmail), "If customerSelector is specified, newSubscriberEmail cannot be specified");
+            if (model.NewSubscriberEmail is not null &&
+                (model.NewSubscriberEmail.Length > 254 || !model.NewSubscriberEmail.IsValidEmail()))
+                ModelState.AddModelError(nameof(model.NewSubscriberEmail), "Invalid email");
+            ValidateMetadata(nameof(model.NewSubscriberMetadata), model.NewSubscriberMetadata);
+            ValidateMetadata(nameof(model.InvoiceMetadata), model.InvoiceMetadata);
+            ValidateMetadata(nameof(model.Metadata), model.Metadata);
             if (!await CanManageSubscribers(model.StoreId))
                 return this.CreateAPIPermissionError(SubscriptionsPolicies.CanManageSubscribers);
             var plan = await ctx.Plans.GetPlanFromId(model.PlanId ?? "", model.OfferingId ?? "", model.StoreId ?? "");
@@ -569,6 +586,12 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 return selector;
             ModelState.AddModelError(fieldName, CustomerSelectorModelBinder.InvalidFormat);
             return null;
+        }
+
+        private void ValidateMetadata(string fieldName, JObject? metadata)
+        {
+            if (metadata?.ToString().Length > MaxMetadataLength)
+                ModelState.AddModelError(fieldName, "Metadata is too large");
         }
 
         private IActionResult PortalSessionNotFound()

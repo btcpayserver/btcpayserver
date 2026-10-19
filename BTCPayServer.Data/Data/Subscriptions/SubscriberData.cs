@@ -82,8 +82,10 @@ public class SubscriberData : BaseEntityData
         {
             var total = pe - PlanStarted;
             var remaining = pe - now;
-            var unused = (decimal)(remaining.TotalMilliseconds / total.TotalMilliseconds);
-            return pa * unused;
+            if (total <= TimeSpan.Zero)
+                return null;
+            var unused = Math.Clamp(remaining.TotalMilliseconds / total.TotalMilliseconds, 0.0, 1.0);
+            return pa * (decimal)unused;
         }
 
         return null;

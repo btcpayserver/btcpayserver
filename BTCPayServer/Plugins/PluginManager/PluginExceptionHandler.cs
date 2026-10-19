@@ -41,8 +41,7 @@ namespace BTCPayServer.Plugins
 
         public static bool GetDisablePluginIfCrash(HttpContext httpContext)
         {
-            return httpContext.Items.TryGetValue("DisablePluginIfCrash", out object renderingDashboard) ||
-                            renderingDashboard is not true;
+            return httpContext.Items.TryGetValue("DisablePluginIfCrash", out var value) && value is true;
         }
         public static void SetDisablePluginIfCrash(HttpContext httpContext)
         {

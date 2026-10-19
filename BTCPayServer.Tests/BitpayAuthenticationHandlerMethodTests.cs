@@ -17,12 +17,13 @@ namespace BTCPayServer.Tests;
 
 public class BitpayAuthenticationHandlerMethodTests
 {
-    [Fact]
+    [Theory]
     [Trait("FastTest", "FastTest")]
-    public async Task RejectsPostPayloadSignatureWhenRequestMethodIsGet()
+    [InlineData("{\"price\":1,\"currency\":\"USD\"}")]
+    [InlineData("\uFEFF")]
+    public async Task RejectsBodyBearingReadRequests(string postBody)
     {
         const string url = "https://merchant.example/invoices";
-        const string postBody = "{\"price\":1,\"currency\":\"USD\"}";
         var key = new Key();
         var signature = NBitpayClient.Extensions.BitIdExtensions.GetBitIDSignature(key, url, postBody);
         var bodyBytes = Encoding.UTF8.GetBytes(postBody);

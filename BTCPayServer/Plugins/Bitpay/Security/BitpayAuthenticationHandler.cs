@@ -70,19 +70,24 @@ namespace BTCPayServer.Plugins.Bitpay.Security
         private async Task<string> CheckBitId(HttpContext httpContext, string sig, string id)
         {
             httpContext.Request.EnableBuffering();
+            using var bodyBuffer = new MemoryStream();
+            await httpContext.Request.Body.CopyToAsync(bodyBuffer);
+            httpContext.Request.Body.Position = 0;
+            var rawBody = bodyBuffer.ToArray();
+
+            if ((HttpMethods.IsGet(httpContext.Request.Method) || HttpMethods.IsHead(httpContext.Request.Method)) &&
+                rawBody.Length != 0)
+                return null;
+
             string body = string.Empty;
-            if (httpContext.Request.ContentLength != 0 && httpContext.Request.Body != null)
+            if (rawBody.Length != 0)
             {
-                using (StreamReader reader = new StreamReader(httpContext.Request.Body, Encoding.UTF8, true, 1024, true))
+                using (var bodyStream = new MemoryStream(rawBody))
+                using (StreamReader reader = new StreamReader(bodyStream, Encoding.UTF8, true, 1024, true))
                 {
                     body = await reader.ReadToEndAsync();
                 }
-                httpContext.Request.Body.Position = 0;
             }
-
-            if ((HttpMethods.IsGet(httpContext.Request.Method) || HttpMethods.IsHead(httpContext.Request.Method)) &&
-                body.Length != 0)
-                return null;
 
             var url = httpContext.Request.GetEncodedUrl();
             try

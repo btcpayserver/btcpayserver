@@ -26,6 +26,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -51,7 +52,8 @@ public class UIStoreOnChainWalletsController(
     IHtmlHelper html,
     IStringLocalizer stringLocalizer,
     UserManager<ApplicationUser> userManager,
-    HotwalletSafe hotwalletSafe)
+    HotwalletSafe hotwalletSafe,
+    ILogger<UIStoreOnChainWalletsController> logger)
     : Controller
 {
     private readonly IDataProtector _dataProtector = dataProtector.CreateProtector("ConfigProtector");
@@ -357,10 +359,11 @@ public class UIStoreOnChainWalletsController(
         }
         catch (Exception e)
         {
+            logger.LogError(e, "Failed to generate wallet for store {StoreId}", vm.StoreId);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
-                Message = StringLocalizer["There was an error generating your wallet: {0}", e.Message].Value
+                Message = StringLocalizer["There was an error generating your wallet."].Value
             });
             return View(vm.ViewName, vm);
         }

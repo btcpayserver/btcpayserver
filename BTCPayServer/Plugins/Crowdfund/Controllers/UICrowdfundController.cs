@@ -428,7 +428,15 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             try
             {
-                vm.PerksTemplate = AppService.SerializeTemplate(AppService.Parse(vm.PerksTemplate, true, true));
+                var perks = AppService.Parse(vm.PerksTemplate, true, true);
+                if (perks.Any(perk =>
+                        !string.IsNullOrWhiteSpace(perk.Image) &&
+                        !CrowdfundResourcePolicy.IsSafePassiveResourceUrl(perk.Image, Request.GetAbsoluteRootUri())))
+                {
+                    ModelState.AddModelError(nameof(vm.PerksTemplate),
+                        "Perk images must use uploaded files or external URLs");
+                }
+                vm.PerksTemplate = AppService.SerializeTemplate(perks);
             }
             catch (Exception ex)
             {
@@ -467,7 +475,13 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             var parsedSounds = vm.Sounds?.Split(
                 new[] { "\r\n", "\r", "\n" },
                 StringSplitOptions.None
-            ).Select(s => s.Trim()).ToArray();
+            ).Select(s => s.Trim()).Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
+            if (parsedSounds is { Length: > 0 } &&
+                !CrowdfundResourcePolicy.AreValidSounds(parsedSounds, Request.GetAbsoluteRootUri()))
+            {
+                ModelState.AddModelError(nameof(vm.Sounds),
+                    $"Sounds must contain at most {CrowdfundResourcePolicy.MaxSounds} external URLs");
+            }
             if (vm.SoundsEnabled && (parsedSounds == null || !parsedSounds.Any()))
             {
                 vm.SoundsEnabled = false;

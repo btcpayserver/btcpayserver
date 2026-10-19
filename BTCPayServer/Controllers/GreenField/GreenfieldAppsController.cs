@@ -531,11 +531,14 @@ namespace BTCPayServer.Controllers.Greenfield
                 return null;
             }
 
-            return arr.Select(s => s.Trim()).ToArray();
+            return arr.Select(s => s.Trim())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .ToArray();
         }
 
         private void ValidateCrowdfundAppRequest(CrowdfundAppRequest request)
         {
+            var baseUri = Request.GetAbsoluteRootUri();
             if (request.Description != null && string.IsNullOrWhiteSpace(request.Description))
             {
                 ModelState.AddModelError(nameof(request.Description), "Description cannot be empty");
@@ -550,8 +553,15 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 try
                 {
-                    // Just checking if we can serialize
-                    AppService.SerializeTemplate(AppService.Parse(request.PerksTemplate, true, true));
+                    var perks = AppService.Parse(request.PerksTemplate, true, true);
+                    if (perks.Any(perk =>
+                            !string.IsNullOrWhiteSpace(perk.Image) &&
+                            !CrowdfundResourcePolicy.IsSafePassiveResourceUrl(perk.Image, baseUri)))
+                    {
+                        ModelState.AddModelError(nameof(request.PerksTemplate),
+                            "Perk images must use uploaded files or external URLs");
+                    }
+                    AppService.SerializeTemplate(perks);
                 }
                 catch (Exception ex)
                 {
@@ -571,10 +581,16 @@ namespace BTCPayServer.Controllers.Greenfield
                 }
             }
 
-            if (request.Sounds != null && ValidateStringArray(request.Sounds) == null)
+            var sounds = ValidateStringArray(request.Sounds);
+            if (request.Sounds != null &&
+                (sounds is null || !CrowdfundResourcePolicy.AreValidSounds(sounds, baseUri)))
             {
-                ModelState.AddModelError(nameof(request.Sounds), "Sounds must be a non-empty array of non-empty strings");
+                ModelState.AddModelError(nameof(request.Sounds),
+                    $"Sounds must contain at most {CrowdfundResourcePolicy.MaxSounds} external URLs");
             }
+            if (request.MainImageUrl != null &&
+                !CrowdfundResourcePolicy.IsSafePassiveResourceUrl(request.MainImageUrl, baseUri))
+                ModelState.AddModelError(nameof(request.MainImageUrl), "The image must use an uploaded file or an external URL");
 
             if (request.AnimationColors != null && ValidateStringArray(request.AnimationColors) == null)
             {

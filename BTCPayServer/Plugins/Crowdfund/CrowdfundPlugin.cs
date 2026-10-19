@@ -171,7 +171,14 @@ namespace BTCPayServer.Plugins.Crowdfund
                         entities.Sum(entity => entity.PaidAmount.Net));
             }
 
+            var baseUri = _httpContextAccessor.HttpContext?.Request.GetAbsoluteRootUri();
             var perks = AppService.Parse(settings.PerksTemplate, false);
+            foreach (var perk in perks)
+            {
+                if (!string.IsNullOrWhiteSpace(perk.Image) &&
+                    !CrowdfundResourcePolicy.IsSafePassiveResourceUrl(perk.Image, baseUri))
+                    perk.Image = null;
+            }
             if (settings.SortPerksByPopularity)
             {
                 var ordered = perkCount.OrderByDescending(pair => pair.Value);
@@ -217,7 +224,9 @@ namespace BTCPayServer.Plugins.Crowdfund
                 PerkValue = perkValue,
                 NeverReset = settings.ResetEvery == Services.Apps.CrowdfundResetEvery.Never,
                 FormUrl = formUrl,
-                Sounds = settings.Sounds,
+                Sounds = CrowdfundResourcePolicy.AreValidSounds(settings.Sounds, baseUri)
+                    ? settings.Sounds
+                    : Array.Empty<string>(),
                 AnimationColors = settings.AnimationColors,
                 CurrencyData = _currencyNameTable.GetCurrencyData(settings.TargetCurrency, true),
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo
@@ -234,7 +243,9 @@ namespace BTCPayServer.Plugins.Crowdfund
                 }
             };
             var httpContext = _httpContextAccessor.HttpContext;
-            if (httpContext != null && settings.MainImageUrl != null)
+            if (httpContext != null &&
+                settings.MainImageUrl != null &&
+                CrowdfundResourcePolicy.IsSafePassiveResourceUrl(settings.MainImageUrl.ToString(), baseUri))
             {
                 vm.MainImageUrl = await _uriResolver.Resolve(httpContext.Request.GetAbsoluteRootUri(), settings.MainImageUrl);
             }

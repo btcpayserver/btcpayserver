@@ -29,6 +29,19 @@ namespace BTCPayServer.Tests
         {
         }
 
+        [Fact]
+        [Trait("FastTest", "FastTest")]
+        public void PassiveResourcesCannotTargetTheServerOrigin()
+        {
+            var baseUri = new Uri("https://btcpay.example/");
+            Assert.False(CrowdfundResourcePolicy.IsSafePassiveResourceUrl("/logout", baseUri));
+            Assert.False(CrowdfundResourcePolicy.IsSafePassiveResourceUrl("https://btcpay.example/logout", baseUri));
+            Assert.True(CrowdfundResourcePolicy.IsSafePassiveResourceUrl("fileid:image", baseUri));
+            Assert.True(CrowdfundResourcePolicy.IsSafePassiveResourceUrl("https://cdn.example/image.png", baseUri));
+            Assert.False(CrowdfundResourcePolicy.AreValidSounds(["https://btcpay.example/logout"], baseUri));
+            Assert.True(CrowdfundResourcePolicy.AreValidSounds(["https://cdn.example/sound.wav"], baseUri));
+        }
+
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteCrowdfundApp()

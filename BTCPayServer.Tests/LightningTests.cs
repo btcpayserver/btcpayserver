@@ -202,11 +202,13 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
             {
                 BOLT11 = "lol"
             }));
-        await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.PayLightningInvoice(user.StoreId, "BTC",
+        var oversizedInvoice = await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.PayLightningInvoice(user.StoreId, "BTC",
             new PayLightningInvoiceRequest()
             {
                 BOLT11 = "lnbc1" + new string('q', 8_000)
             }));
+        Assert.Contains(oversizedInvoice.ValidationErrors,
+            error => error.Message.Contains("too large", StringComparison.OrdinalIgnoreCase));
 
         validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.CreateLightningInvoice(user.StoreId, "BTC",
             new CreateLightningInvoiceRequest()

@@ -1,6 +1,7 @@
 #nullable enable
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
@@ -93,7 +94,8 @@ namespace BTCPayServer.Controllers.Greenfield
             if (data.CurrencyCode?.Length > MaxCurrencyCodeLength)
                 ModelState.AddModelError(nameof(data.CurrencyCode), "Currency code is too long.");
 
-            if (data.InvoiceMetadata?.ToString().Length > MaxInvoiceMetadataLength)
+            if (data.InvoiceMetadata is not null &&
+                Encoding.UTF8.GetByteCount(data.InvoiceMetadata.ToString()) > MaxInvoiceMetadataLength)
                 ModelState.AddModelError(nameof(data.InvoiceMetadata), "Invoice metadata is too large.");
 
             if (!ModelState.IsValid)

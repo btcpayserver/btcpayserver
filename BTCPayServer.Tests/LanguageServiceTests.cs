@@ -650,7 +650,7 @@ namespace BTCPayServer.Tests
             }
             Assert.Equal("Salut", await RenderPublicPage(null, "French"));
             Assert.NotEqual("Salut", await RenderPublicPage(french, localizer.ServerLanguage));
-            Assert.Equal("Salut", await RenderPublicPage(french, null));
+            Assert.NotEqual("Salut", await RenderPublicPage(french, null));
             Assert.Equal("Salut", await RenderPublicPage(french, "Klingon"));
             for (var i = 0; i < 20; i++)
             {

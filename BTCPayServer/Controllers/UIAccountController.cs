@@ -600,7 +600,7 @@ namespace BTCPayServer.Controllers
         public string RegisteredUserId { get; set; }
         public bool RegisteredAdmin { get; set; }
 
-        [HttpGet("/logout")]
+        [HttpPost("/logout")]
         public async Task<IActionResult> Logout()
         {
             await signInManager.SignOutAsync();

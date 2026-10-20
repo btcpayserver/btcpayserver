@@ -26,7 +26,7 @@ namespace BTCPayServer.Models.ManageViewModels
 
         [Display(Name = "Allow Basic authentication for Greenfield API")]
         public bool AllowGreenfieldBasicAuth { get; set; }
-        [Display(Name = "Language")]
+        [Display(Name = "User Language")]
         public string LangTranslation { get; set; }   
         public List<SelectListItem> LangTranslations { get; set; }  
     }

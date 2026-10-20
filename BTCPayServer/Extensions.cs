@@ -464,6 +464,20 @@ namespace BTCPayServer
             }
         }
 
+        public static decimal RoundDown(decimal value, int precision)
+        {
+            for (int i = 0; i < precision; i++)
+            {
+                value = value * 10m;
+            }
+            value = Math.Floor(value);
+            for (int i = 0; i < precision; i++)
+            {
+                value = value / 10m;
+            }
+            return value;
+        }
+
         public static IServiceCollection AddUIExtension(this IServiceCollection services, string location, string partialViewName)
         {
 #pragma warning disable CS0618 // Type or member is obsolete

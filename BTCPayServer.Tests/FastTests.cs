@@ -60,6 +60,13 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void RoundDownRejectsOverflow()
+        {
+            Assert.Equal(0.00014729m, BTCPayServer.Extensions.RoundDown(0.00014729443m, 8));
+            Assert.Throws<OverflowException>(() => BTCPayServer.Extensions.RoundDown(decimal.MaxValue, 1));
+        }
+
+        [Fact]
         public void BTCPayServerClientEscapesPathIdentifiers()
         {
             var client = new RequestInspectingClient(new Uri("https://example.com/root/"));

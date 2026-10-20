@@ -4000,6 +4000,43 @@ namespace BTCPayServer.Tests
                     PayoutMethodId = "BTC_LightningNetwork",
                     Destination = customerInvoice.BOLT11
                 });
+            Assert.Equal(0.0000001m, payout.PayoutAmount);
+
+            var fractionalAmount = LightMoney.MilliSatoshis(14_729_443);
+            customerInvoice = await tester.CustomerLightningD.CreateInvoice(fractionalAmount,
+                Guid.NewGuid().ToString(), TimeSpan.FromDays(40));
+            var fractionalPayout = await adminClient.CreatePayout(admin.StoreId,
+                new CreatePayoutThroughStoreRequest()
+                {
+                    Approved = true,
+                    PayoutMethodId = "BTC_LightningNetwork",
+                    Destination = customerInvoice.BOLT11
+                });
+            Assert.Equal(0.00014729443m, fractionalPayout.PayoutAmount);
+
+            var recipient = tester.NewAccount();
+            await recipient.GrantAccessAsync(true);
+            recipient.RegisterLightningNode("BTC", LightningTestImplementation.CoreLightning, false);
+            var username = await recipient.CreateLNAddress();
+            var lnurl = LNURL.LNURL.EncodeUri(
+                new Uri(tester.PayTester.ServerUri, $"/.well-known/lnurlp/{username}"), "payRequest", false);
+            var pullPayment = await adminClient.CreatePullPayment(admin.StoreId, new CreatePullPaymentRequest
+            {
+                Amount = 1m,
+                Currency = "USD",
+                PayoutMethods = ["BTC-LN"],
+                AutoApproveClaims = true
+            });
+            var lnurlPayout = await adminClient.CreatePayout(pullPayment.Id,
+                new CreatePayoutRequest()
+                {
+                    Amount = fractionalAmount.ToDecimal(LightMoneyUnit.BTC) * 5000m,
+                    PayoutMethodId = "BTC-LN",
+                    Destination = lnurl.ToString()
+                });
+            Assert.Equal(0.00014729m, lnurlPayout.PayoutAmount);
+            await adminClient.CancelPayout(lnurlPayout.Id);
+
             Assert.Equal(payout.Metadata.ToString(), new JObject().ToString()); //empty
             Assert.Empty(await adminClient.GetStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork"));
             await adminClient.UpdateStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork",

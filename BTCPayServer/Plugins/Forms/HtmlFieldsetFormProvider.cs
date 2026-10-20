@@ -25,5 +25,6 @@ public class HtmlFieldsetFormProvider : IFormComponentProvider
 
     public void Validate(Form form, Field field)
     {
+        field.Value = null;
     }
 }

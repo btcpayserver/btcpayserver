@@ -339,7 +339,8 @@ namespace BTCPayServer.Tests
                 [
                     Field.Create("Enter your email", "item1", "test@toto.com", true, null, "email"),
                     Field.Create("Name", "item2", 2.ToString(), true, null),
-                    Field.Create("Item3", "invoice_item3", 3.ToString(), true, null)
+                    Field.Create("Item3", "invoice_item3", 3.ToString(), true, null),
+                    Field.Create("Amount", "invoice_amount", "0.01", true, null)
                 ]
             };
             var frmData = new FormData
@@ -363,6 +364,9 @@ namespace BTCPayServer.Tests
             var res = await crowdfund.CrowdfundFormSubmit(app.Id, (decimal)0.01, "", vm2);
             Assert.IsNotType<NotFoundObjectResult>(res);
             Assert.IsNotType<BadRequest>(res);
+            var forgedAmountResult = await crowdfund.ContributeToCrowdfund(app.Id,
+                new ContributeToCrowdfund { Amount = 0.01m }, """{"invoice_amount":"not-a-number"}""");
+            Assert.IsType<OkObjectResult>(forgedAmountResult);
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

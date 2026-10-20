@@ -159,6 +159,52 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
+        // Store owners manage their own stores through UIStoresController, which requires membership.
+        // These admin-scoped equivalents are the only way to reach a store nobody owns any more,
+        // which is what is left behind when the last member's account is deleted.
+        [HttpPost("server/stores/{storeId}/archive")]
+        public async Task<IActionResult> ToggleStoreArchive(string storeId)
+        {
+            var store = await _StoreRepository.FindStore(storeId);
+            if (store == null)
+                return NotFound();
+
+            store.Archived = !store.Archived;
+            await _StoreRepository.UpdateStore(store);
+
+            TempData[WellKnownTempData.SuccessMessage] = store.Archived
+                ? StringLocalizer["The store {0} has been archived.", store.StoreName].Value
+                : StringLocalizer["The store {0} has been unarchived.", store.StoreName].Value;
+            return RedirectToAction(nameof(ListStores));
+        }
+
+        [HttpGet("server/stores/{storeId}/delete")]
+        public async Task<IActionResult> DeleteStore(string storeId)
+        {
+            var store = await _StoreRepository.FindStore(storeId);
+            if (store == null)
+                return NotFound();
+
+            return View("Confirm", new ConfirmModel(StringLocalizer["Delete store"],
+                StringLocalizer["The store <strong>{0}</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store. Are you sure?", Html.Encode(store.StoreName)],
+                StringLocalizer["Delete"]));
+        }
+
+        [HttpPost("server/stores/{storeId}/delete")]
+        public async Task<IActionResult> DeleteStorePost(string storeId)
+        {
+            var store = await _StoreRepository.FindStore(storeId);
+            if (store == null)
+                return NotFound();
+
+            var storeName = store.StoreName;
+            if (await _StoreRepository.DeleteStore(storeId))
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The store {0} has been deleted.", storeName].Value;
+            else
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["The store {0} could not be deleted.", storeName].Value;
+            return RedirectToAction(nameof(ListStores));
+        }
+
         static TimeSpan ShortOperation = TimeSpan.FromSeconds(10);
         public IHtmlHelper Html { get; }
         public BTCPayServerEnvironment Environment { get; }

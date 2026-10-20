@@ -26,7 +26,7 @@ internal class StoreLanguageFilter(LocalizerService localizer, StoreRepository s
     {
         var storeId = await FindStoreId(context.RouteData);
         if (storeId is not null && await storeRepository.FindStore(storeId) is { } store)
-            await localizer.UseStoreLanguage(store.GetStoreBlob().StoreLanguage);
+            await localizer.UseStoreLanguage(store.GetStoreBlob().StorefrontLanguage);
         await next();
     }
 

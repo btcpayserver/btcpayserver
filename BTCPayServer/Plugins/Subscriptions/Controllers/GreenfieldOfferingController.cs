@@ -32,7 +32,13 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         CurrencyNameTable currencyNameTable,
         AppService appService) : ControllerBase
     {
-    private const int MaxMetadataLength = 64 * 1024;
+        private const int MaxMetadataLength = 64 * 1024;
+        private const int MaxAppNameLength = 100;
+        private const int MaxFeatures = 100;
+        private const int MaxFeatureIdLength = 50;
+        private const int MaxFeatureDescriptionLength = 500;
+        private const int MaxPlanDescriptionLength = 1_000;
+        private const int MaxCreditDescriptionLength = 500;
 
         [HttpGet("~/api/v1/stores/{storeId}/offerings/{offeringId?}")]
         public async Task<IActionResult> GetOffering(string storeId, string? offeringId = null)
@@ -58,8 +64,6 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanModifyOfferings)]
         public async Task<IActionResult> CreateOffering(string storeId, [FromBody] OfferingModel request)
         {
-            if (request?.AppName is null)
-                ModelState.AddModelError(nameof(request.AppName), "AppName is required");
             ValidateOffering(request);
             if (!ModelState.IsValid || request?.AppName is null)
                 return this.CreateValidationError(ModelState);
@@ -87,8 +91,6 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanModifyOfferings)]
         public async Task<IActionResult> UpdateOffering(string storeId, string offeringId, [FromBody] OfferingModel request)
         {
-            if (request?.AppName is null)
-                ModelState.AddModelError(nameof(request.AppName), "AppName is required");
             ValidateOffering(request);
             if (!ModelState.IsValid || request?.AppName is null)
                 return this.CreateValidationError(ModelState);
@@ -120,6 +122,10 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
 
         private void ValidateOffering(OfferingModel? request)
         {
+            if (request?.AppName is null)
+                ModelState.AddModelError(nameof(request.AppName), "AppName is required");
+            else if (request.AppName.Length > MaxAppNameLength)
+                ModelState.AddModelError(nameof(request.AppName), $"AppName must be at most {MaxAppNameLength} characters");
             if (!string.IsNullOrEmpty(request?.SuccessRedirectUrl) &&
                 !PlanCheckoutData.IsSafeRedirectUrl(request.SuccessRedirectUrl))
             {
@@ -131,6 +137,8 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
 
             if (request?.Features is null)
                 return;
+            if (request.Features.Count > MaxFeatures)
+                ModelState.AddModelError(nameof(request.Features), $"At most {MaxFeatures} features are allowed");
             for (var i = 0; i < request.Features.Count; i++)
             {
                 var feature = request.Features[i];
@@ -142,6 +150,10 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
 
                 if (string.IsNullOrWhiteSpace(feature.Id))
                     ModelState.AddModelError($"{nameof(request.Features)}[{i}].{nameof(feature.Id)}", "Feature id is required");
+                else if (feature.Id.Length > MaxFeatureIdLength)
+                    ModelState.AddModelError($"{nameof(request.Features)}[{i}].{nameof(feature.Id)}", $"Feature id must be at most {MaxFeatureIdLength} characters");
+                if (feature.Description?.Length > MaxFeatureDescriptionLength)
+                    ModelState.AddModelError($"{nameof(request.Features)}[{i}].{nameof(feature.Description)}", $"Feature description must be at most {MaxFeatureDescriptionLength} characters");
             }
         }
 
@@ -157,6 +169,8 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 ModelState.AddModelError(nameof(request.Price), "Price cannot be negative");
             if (request?.Name is null)
                 ModelState.AddModelError(nameof(request.Name), "Name is required");
+            if (request?.Description?.Length > MaxPlanDescriptionLength)
+                ModelState.AddModelError(nameof(request.Description), $"Description must be at most {MaxPlanDescriptionLength} characters");
             if (request?.Currency?.Length > 10)
                 ModelState.AddModelError(nameof(request.Currency), "Currency is too long");
             ValidateMetadata(nameof(CreatePlanRequest.Metadata), request?.Metadata);
@@ -228,6 +242,8 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 return PlanNotFound();
             if (request?.Price < 0m)
                 ModelState.AddModelError(nameof(request.Price), "Price cannot be negative");
+            if (request?.Description?.Length > MaxPlanDescriptionLength)
+                ModelState.AddModelError(nameof(request.Description), $"Description must be at most {MaxPlanDescriptionLength} characters");
             if (request?.Currency?.Length > 10)
                 ModelState.AddModelError(nameof(request.Currency), "Currency is too long");
             ValidateMetadata(nameof(CreatePlanRequest.Metadata), request?.Metadata);
@@ -342,6 +358,11 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             string? currency,
             [FromBody] UpdateCreditRequest request)
         {
+            var update = request ?? new UpdateCreditRequest();
+            if (update.Description?.Length > MaxCreditDescriptionLength)
+                ModelState.AddModelError(nameof(update.Description), $"Description must be at most {MaxCreditDescriptionLength} characters");
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
             var subscriber = await ctx.Subscribers.GetBySelector(offeringId, customerSelector, storeId);
             if (subscriber is null)
                 return SubscriberNotFound();
@@ -350,10 +371,10 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             {
                 SubscriberId = subscriber.Id,
                 Currency = currency,
-                Description = request.Description,
-                Credit = request.Credit,
-                Charge = request.Charge,
-                AllowOverdraft = request.AllowOverdraft
+                Description = update.Description,
+                Credit = update.Credit,
+                Charge = update.Charge,
+                AllowOverdraft = update.AllowOverdraft
             });
             if (newTotal is null)
                 return this.CreateAPIError(400, "overdraft", "The subscriber's balance would be overdrawn. Use allowOverdraft to allow this.");
@@ -460,7 +481,16 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
             if (checkout is null)
                 return CheckoutNotFound();
-            return Ok(Mapper.MapPlanCheckout(checkout));
+            var model = Mapper.MapPlanCheckout(checkout);
+            if (!checkout.PlanStarted &&
+                !(await CanManageSubscribers(checkout.Plan.Offering.App.StoreDataId)))
+            {
+                model.SuccessRedirectUrl = null;
+                model.RedirectUrl = null;
+                if (model.Subscriber is not null)
+                    model.Subscriber.Offering.SuccessRedirectUrl = null;
+            }
+            return Ok(model);
         }
 
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield, Policy = SubscriptionsPolicies.CanManageSubscribers)]

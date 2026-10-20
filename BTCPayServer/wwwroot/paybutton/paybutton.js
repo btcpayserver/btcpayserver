@@ -178,7 +178,7 @@ function inputChanges(vueApp, event, buttonSize) {
     const formData = new FormData(form);
     let url = new URL(form.getAttribute("action"));
     formData.forEach((value, key) => {
-        if (key !== "jsonResponse") {
+        if (key !== "jsonResponse" && key !== "serverIpn" && key !== "notifyEmail" && key !== "notificationUrl") {
             url.searchParams.append(key, value);
         }
     });

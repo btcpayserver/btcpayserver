@@ -165,7 +165,8 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 var onChain = pmi.endsWith('-CHAIN');
                 var amountFormatted = parseFloat(amount).noExponents();
                 var icon = onChain ? "plus" : "bolt";
-                var title = "New payment of " + amountFormatted + " " + currency + " " + prettyPMI;
+                var title = document.createElement("span");
+                title.textContent = "New payment of " + amountFormatted + " " + currency + " " + prettyPMI;
                 Vue.toasted.success(title, Object.assign({}, toastOptions), { icon });
             });
             eventAggregator.$on("info-updated", function (model) {

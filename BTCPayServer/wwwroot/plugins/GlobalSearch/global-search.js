@@ -310,6 +310,7 @@
         };
 
         const renderResults = entries => {
+            entries = entries.map(normalizeResult).filter(Boolean);
             firstMatch = entries[0] ?? null;
             resultsElement.innerHTML = '';
             if (!entries.length) {

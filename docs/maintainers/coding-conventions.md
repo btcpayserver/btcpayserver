@@ -9,6 +9,15 @@
 - Do not use `ConfigureAwait(false)`; BTCPay Server does not rely on a
   synchronization context.
 
+## Logging and Exceptions
+
+- Use `ILogger` only for messages that are relevant to server administrators.
+  As a rule of thumb, a malicious actor should not be able to spam the logs by
+  repeatedly triggering application behavior.
+- Treat internal exception messages as safe to expose to end users for
+  diagnostic purposes unless there is a specific reason to believe they contain
+  sensitive data.
+
 ## Pull Requests
 
 Write descriptions for users, merchants, operators, support contributors,

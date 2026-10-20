@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
@@ -544,6 +545,20 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
                 AppName = "Unsafe",
                 SuccessRedirectUrl = " "
             }));
+        await AssertEx.AssertValidationError(["AppName"], () => client.CreateOffering(user.StoreId, new OfferingModel
+        {
+            AppName = new string('a', 101)
+        }));
+        await AssertEx.AssertValidationError(["Features[0].Description"], () => client.CreateOffering(user.StoreId, new OfferingModel
+        {
+            AppName = "Test",
+            Features = [new() { Id = "feature", Description = new string('d', 501) }]
+        }));
+        await AssertEx.AssertValidationError(["Features"], () => client.CreateOffering(user.StoreId, new OfferingModel
+        {
+            AppName = "Test",
+            Features = Enumerable.Range(0, 101).Select(i => new FeatureModel() { Id = $"feature-{i}" }).ToList()
+        }));
         var offering = await client.CreateOffering(user.StoreId, new OfferingModel()
         {
             AppName = "Test",
@@ -566,6 +581,10 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             Features = ["can-access"]
         });
         Assert.Contains("can-access", plan.Features);
+        await AssertEx.AssertValidationError(["Description"], () => client.UpdateOfferingPlan(user.StoreId, offering.Id, plan.Id, new()
+        {
+            Description = new string('d', 1_001)
+        }));
         plan = await client.UpdateOfferingPlan(user.StoreId, offering.Id, plan.Id, new()
         {
             Name = "NewPlanV2",
@@ -672,6 +691,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             InvoiceMetadata = new JObject() { ["inv"] = "invtest" },
             Metadata = new JObject() { ["checkout"] = "metatest" },
             PlanId = plan.Id,
+            SuccessRedirectLink = "https://example.com/success?token=secret"
         };
         var oversizedMetadata = new JObject
         {
@@ -702,10 +722,24 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
                 NewSubscriberEmail = new string('X', 2 * 1024 * 1024) + "@example.com"
             }));
         var planCheckout = await client.CreatePlanCheckout(planCheckoutRequest);
+        var unauthClient = new BTCPayServerClient(s.PayTester.ServerUri);
+        var planCheckoutBeforePayment = await unauthClient.GetPlanCheckout(planCheckout.Id);
+        Assert.Null(planCheckoutBeforePayment.SuccessRedirectUrl);
+        Assert.Null(planCheckoutBeforePayment.RedirectUrl);
+
+        var unrelatedUser = s.NewAccount();
+        await unrelatedUser.RegisterAsync(true);
+        await unrelatedUser.CreateStoreAsync();
+        var unrelatedClient = await unrelatedUser.CreateClient();
+        var planCheckoutForUnrelatedUser = await unrelatedClient.GetPlanCheckout(planCheckout.Id);
+        Assert.Null(planCheckoutForUnrelatedUser.SuccessRedirectUrl);
+        Assert.Null(planCheckoutForUnrelatedUser.RedirectUrl);
 
         var planCheckout2 = await client.GetPlanCheckout(planCheckout.Id);
         Assert.Equal(planCheckout.Id, planCheckout2.Id);
         Assert.Equal("metatest", planCheckout2.Metadata["checkout"]?.ToString());
+        Assert.Equal("https://example.com/success?token=secret", planCheckout2.SuccessRedirectUrl);
+        Assert.Equal($"https://example.com/success?token=secret&checkoutPlanId={planCheckout.Id}", planCheckout2.RedirectUrl);
         Assert.Null(planCheckout.InvoiceId);
 
         await CanAccessUrl(planCheckout.Url);
@@ -737,6 +771,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
         planCheckout = await client.GetPlanCheckout(planCheckout.Id);
         Assert.NotNull(planCheckout.Subscriber);
+        Assert.Equal("https://example.com/success?token=secret", planCheckout.SuccessRedirectUrl);
         Assert.Equal(2, planCheckout.Subscriber.Offering.Plans.Count);
         Assert.Equal("test", planCheckout.Subscriber.Metadata["sub"]?.ToString());
 
@@ -749,6 +784,22 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         Assert.False(planCheckout.IsExpired);
 
         Assert.True(subscriber.IsActive);
+        var existingSubscriberCheckout = await client.CreatePlanCheckout(new()
+        {
+            StoreId = user.StoreId,
+            OfferingId = offering.Id,
+            PlanId = plan.Id,
+            CustomerSelector = subscriber.Customer.Id,
+            SuccessRedirectLink = "https://example.com/existing?token=secret"
+        });
+        var existingSubscriberCheckoutAuthenticated = await client.GetPlanCheckout(existingSubscriberCheckout.Id);
+        Assert.Equal("https://example.com/ok", existingSubscriberCheckoutAuthenticated.Subscriber.Offering.SuccessRedirectUrl);
+        var existingSubscriberCheckoutAnon = await unauthClient.GetPlanCheckout(existingSubscriberCheckout.Id);
+        Assert.NotNull(existingSubscriberCheckoutAnon.Subscriber);
+        Assert.Null(existingSubscriberCheckoutAnon.Subscriber.Offering.SuccessRedirectUrl);
+        var existingSubscriberCheckoutUnrelated = await unrelatedClient.GetPlanCheckout(existingSubscriberCheckout.Id);
+        Assert.NotNull(existingSubscriberCheckoutUnrelated.Subscriber);
+        Assert.Null(existingSubscriberCheckoutUnrelated.Subscriber.Offering.SuccessRedirectUrl);
 
         subscriber = await client.SuspendSubscriber(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "booh");
         Assert.False(subscriber.IsActive);
@@ -797,6 +848,12 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
         var result = await client.GetCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "USD");
         Assert.Equal(0m, result.Value);
+        await AssertEx.AssertValidationError(["Description"], () => client.UpdateCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "USD",
+            new()
+            {
+                Description = new string('d', 501),
+                Credit = 1m
+            }));
 
         await AssertEx.AssertApiError(400, "overdraft", () => client.UpdateCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "USD",
             new()

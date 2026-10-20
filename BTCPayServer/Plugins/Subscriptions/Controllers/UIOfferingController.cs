@@ -325,6 +325,9 @@ public partial class UIOfferingController(
     public async Task<IActionResult> Offering(string storeId, string offeringId, SubscriptionSection section = SubscriptionSection.Plans,
         string? checkoutPlanId = null, string? searchTerm = null)
     {
+        if (section == SubscriptionSection.Subscribers &&
+            !(await authorizationService.AuthorizeAsync(User, storeId, SubscriptionsPolicies.CanManageSubscribers)).Succeeded)
+            return Forbid();
         await using var ctx = DbContextFactory.CreateContext();
         var offering = await ctx.Offerings.GetOfferingData(offeringId, storeId);
         if (offering is null)

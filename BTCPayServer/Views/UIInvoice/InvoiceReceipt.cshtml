@@ -6,7 +6,7 @@
 @inject DisplayFormatter DisplayFormatter
 @{
     Layout = null;
-    ViewData.SetTitle($"Receipt from {Model.StoreName}");
+    ViewData.SetTitle(StringLocalizer["Receipt from {0}", Model.StoreName]);
     ViewData["StoreBranding"] = Model.StoreBranding;
     var isProcessing = Model.Status == InvoiceStatus.Processing;
     var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.InvoiceAmount == 0);
@@ -69,7 +69,7 @@
                                 @if (Model.IsOverpaid)
                                 {
                                     <div class="invoice-summary__invoice-amount d-flex flex-column">
-                                        <dd class="text-muted mb-0 fw-semibold">Invoice Amount</dd>
+                                        <dd class="text-muted mb-0 fw-semibold" text-translate="true">Invoice Amount</dd>
                                         <dt class="fs-5 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.InvoiceAmount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>
                                     </div>
                                 }
@@ -80,7 +80,7 @@
                                 @if (Model.TaxIncluded != 0.0m)
                                 {
                                     <div class="d-flex flex-column">
-                                        <dd class="text-muted mb-0 fw-semibold">Total Taxes</dd>
+                                        <dd class="text-muted mb-0 fw-semibold" text-translate="true">Total Taxes</dd>
                                         <dt class="fs-5 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.TaxIncluded, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>
                                     </div>
                                 }
@@ -110,7 +110,7 @@
                     if (Model.AdditionalData?.Any() is true)
                     {
                         <div id="AdditionalData" class="tile">
-                            <h2 class="h4 mb-3">Additional Data</h2>
+                            <h2 class="h4 mb-3" text-translate="true">Additional Data</h2>
                             <div class="table-responsive my-0">
                                 <partial name="PosData" model="(Model.AdditionalData, 1)"/>
                             </div>
@@ -119,7 +119,7 @@
                     if (Model.CartData?.Any() is true)
                     {
                         <div id="CartData" class="tile">
-                            <h2 class="h4 mb-3">Cart</h2>
+                            <h2 class="h4 mb-3" text-translate="true">Cart</h2>
                             <div class="table-responsive my-0">
                                 <partial name="PosData" model="(Model.CartData, 1)" />
                             </div>

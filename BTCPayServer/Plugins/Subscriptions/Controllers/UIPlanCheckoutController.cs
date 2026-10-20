@@ -25,6 +25,7 @@ public class UIPlanCheckoutController(
     LinkGenerator linkGenerator,
     UriResolver uriResolver,
     IStringLocalizer stringLocalizer,
+    LocalizerService localizer,
     SubscriptionHostedService subsService)
     : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
@@ -65,9 +66,11 @@ public class UIPlanCheckoutController(
         if (checkout is null)
             return NotFound();
 
+        var storeBlob = checkout.Plan.Offering.App.StoreData.GetStoreBlob();
+        await localizer.UseStoreLanguage(storeBlob.StoreLanguage);
         return View(new PlanCheckoutDefaultRedirectViewModel(checkout)
         {
-            StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, checkout.Plan.Offering.App.StoreData.GetStoreBlob()),
+            StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, storeBlob),
             StoreName = checkout.Plan.Offering.App.StoreData.StoreName,
         });
     }

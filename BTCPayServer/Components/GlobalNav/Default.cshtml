@@ -179,9 +179,11 @@
                 }
                 <li><hr class="dropdown-divider" /></li>
                 <li>
-                    <a asp-area="" asp-controller="UIAccount" asp-action="Logout" class="dropdown-item text-danger" id="Nav-Logout">
-                        <span text-translate="true">Logout</span>
-                    </a>
+                    <form method="post" asp-area="" asp-controller="UIAccount" asp-action="Logout">
+                        <button type="submit" class="dropdown-item text-danger global-nav__logout" id="Nav-Logout">
+                            <span text-translate="true">Logout</span>
+                        </button>
+                    </form>
                 </li>
             </ul>
         </div>

@@ -776,7 +776,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         Assert.DoesNotContain($"/stores/{storeId}/roles/", serverRoleUrl);
 
         // Verify we can see the permissions form
-        await Expect(s.Page.Locator("form")).ToBeVisibleAsync();
+        await Expect(s.Page.Locator("#mainContent form")).ToBeVisibleAsync();
 
         // Verify we have permission checkboxes
         await Expect(s.Page.Locator("input.policy-cb")).Not.ToHaveCountAsync(0);

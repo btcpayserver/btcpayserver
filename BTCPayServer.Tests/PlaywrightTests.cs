@@ -87,7 +87,6 @@ namespace BTCPayServer.Tests
                 invoiceId = s.Page.Url[(s.Page.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
             }
 
-            await s.Page.Context.Pages.First().BringToFrontAsync();
             await s.GoToUrl($"/invoices/{invoiceId}/");
             await Expect(s.Page.Locator("text=aa@aa.com")).ToBeVisibleAsync();
             // Payment Request
@@ -108,7 +107,6 @@ namespace BTCPayServer.Tests
             await popOutPage.ClickAsync("#page-primary");
             invoiceId = popOutPage.Url.Split('/').Last();
             await popOutPage.CloseAsync();
-            await s.Page.Context.Pages.First().BringToFrontAsync();
             await s.GoToUrl(editUrl.PathAndQuery);
 
             await Expect(s.Page.Locator("#Email")).ToHaveValueAsync("aa@aa.com");
@@ -2035,7 +2033,8 @@ namespace BTCPayServer.Tests
                     Policies.CanModifyServerSettings
              });
 
-            await s.GoToUrl("/logout");
+            await s.GoToHome();
+            await s.Logout();
             await alice.MakeAdmin();
 
             await s.GoToLogin();

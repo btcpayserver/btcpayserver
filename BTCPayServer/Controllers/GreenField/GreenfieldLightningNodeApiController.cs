@@ -282,17 +282,28 @@ namespace BTCPayServer.Controllers.Greenfield
 
                 var paymentHash = bolt11.PaymentHash.ToString();
                 var payment = await lightningClient.GetPayment(paymentHash, cancellationToken);
-                var data = new LightningPaymentData
-                {
-                    Id = payment.Id,
-                    PaymentHash = paymentHash,
-                    Status = payment.Status,
-                    BOLT11 = payment.BOLT11,
-                    Preimage = payment.Preimage,
-                    CreatedAt = payment.CreatedAt,
-                    TotalAmount = payment.AmountSent,
-                    FeeAmount = payment.Fee,
-                };
+                // The node may not list the payment yet: answer with what Pay returned
+                var data = payment is null
+                    ? new LightningPaymentData
+                    {
+                        PaymentHash = paymentHash,
+                        Status = result.Result is PayResult.Ok ? LightningPaymentStatus.Complete : LightningPaymentStatus.Unknown,
+                        BOLT11 = lightningInvoice.BOLT11,
+                        Preimage = result.Details?.Preimage?.ToString(),
+                        TotalAmount = result.Details?.TotalAmount,
+                        FeeAmount = result.Details?.FeeAmount,
+                    }
+                    : new LightningPaymentData
+                    {
+                        Id = payment.Id,
+                        PaymentHash = paymentHash,
+                        Status = payment.Status,
+                        BOLT11 = payment.BOLT11,
+                        Preimage = payment.Preimage,
+                        CreatedAt = payment.CreatedAt,
+                        TotalAmount = payment.AmountSent,
+                        FeeAmount = payment.Fee,
+                    };
                 return result.Result is PayResult.Ok ? Ok(data) : Accepted(data);
             }
 

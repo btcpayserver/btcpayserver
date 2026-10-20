@@ -6,7 +6,7 @@
 @inject LocalizerService LocalizerService
 @{
     Layout = null;
-    ViewData.SetTitle($"Receipt from {Model.StoreName}");
+    ViewData.SetTitle(StringLocalizer["Receipt from {0}", Model.StoreName]);
     var isProcessing = Model.Status == InvoiceStatus.Processing;
     var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.InvoiceAmount == 0);
     var isSettled = Model.Status == InvoiceStatus.Settled;
@@ -160,35 +160,35 @@
                         @if (posData.Discount != null)
                         {
                             <tr class="sums-data">
-                                <td class="key text-secondary">Discount</td>
+                                <td class="key text-secondary" text-translate="true">Discount</td>
                                 <td class="val text-end">@posData.Discount</td>
                             </tr>
                         }
                         @if (posData.Subtotal != null)
                         {
                             <tr class="sums-data">
-                                <td class="key text-secondary">Subtotal</td>
+                                <td class="key text-secondary" text-translate="true">Subtotal</td>
                                 <td class="val text-end">@posData.Subtotal</td>
                             </tr>
                         }
                         @if (posData.Tax != null)
                         {
                             <tr class="sums-data">
-                                <td class="key text-secondary">Tax</td>
+                                <td class="key text-secondary" text-translate="true">Tax</td>
                                 <td class="val text-end">@posData.Tax</td>
                             </tr>
                         }
                         @if (posData.Tip != null)
                         {
                             <tr class="sums-data">
-                                <td class="key text-secondary">Tip</td>
+                                <td class="key text-secondary" text-translate="true">Tip</td>
                                 <td class="val text-end">@posData.Tip</td>
                             </tr>
                         }
 						@if (posData.TaxOnTip != null)
 						{
 							<tr class="sums-data">
-								<td class="key text-secondary">Tax on tip</td>
+								<td class="key text-secondary" text-translate="true">Tax on tip</td>
 								<td class="val text-end">@posData.TaxOnTip</td>
 							</tr>
 						}
@@ -198,7 +198,7 @@
                                 <td colspan="2"><hr class="w-100 my-0"/></td>
                             </tr>
                             <tr class="sums-data">
-                                <td class="key text-secondary">Total</td>
+                                <td class="key text-secondary" text-translate="true">Total</td>
                                 <td class="val text-end fw-semibold">@posData.Total</td>
                             </tr>
                         }
@@ -206,14 +206,14 @@
                     else
                     {
                         <tr class="sums-data">
-                            <td class="key text-nowrap text-secondary">Total</td>
+                            <td class="key text-nowrap text-secondary" text-translate="true">Total</td>
                             <td class="val text-end fw-semibold">@DisplayFormatter.Currency(Model.InvoiceAmount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
                         </tr>
                     }
                     @if (Model.IsOverpaid)
                     {
                         <tr class="invoice-summary__amount-paid">
-                            <td class="key text-nowrap text-secondary">Amount paid</td>
+                            <td class="key text-nowrap text-secondary" text-translate="true">Amount paid</td>
                             <td class="val text-end fw-semibold">@DisplayFormatter.Currency(Model.PaidAmount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
                         </tr>
                     }
@@ -231,7 +231,7 @@
                                     <td colspan="2" class="text-nowrap text-secondary">@StringLocalizer["Payment {0}", i + 1]</td>
                                 </tr>
                                 <tr class="payment-data">
-                                    <td class="text-nowrap">Received</td>
+                                    <td class="text-nowrap" text-translate="true">Received</td>
                                     <td>@payment.ReceivedDate.ToBrowserDate()</td>
                                 </tr>
                             }
@@ -243,13 +243,13 @@
                                 <td colspan="2" class="text-end">@payment.PaidFormatted</td>
                             </tr>
                             <tr class="payment-data">
-                                <td class="text-nowrap text-secondary">Rate</td>
+                                <td class="text-nowrap text-secondary" text-translate="true">Rate</td>
                                 <td class="text-end">@payment.RateFormatted</td>
                             </tr>
                             @if (!string.IsNullOrEmpty(payment.Destination))
                             {
                                 <tr class="payment-data">
-                                    <td class="text-nowrap text-secondary">Destination</td>
+                                    <td class="text-nowrap text-secondary" text-translate="true">Destination</td>
                                     <td class="text-break">
                                         @if (payment.Destination.Length > 69)
                                         {
@@ -269,7 +269,7 @@
                             @if (!string.IsNullOrEmpty(payment.PaymentProof))
                             {
                                 <tr class="payment-data">
-                                    <td class="text-nowrap text-secondary">Pay Proof</td>
+                                    <td class="text-nowrap text-secondary" text-translate="true">Pay Proof</td>
                                     <td class="text-break">@payment.PaymentProof</td>
                                 </tr>
                             }

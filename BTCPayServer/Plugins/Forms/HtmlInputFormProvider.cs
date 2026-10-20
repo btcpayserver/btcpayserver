@@ -7,6 +7,8 @@ namespace BTCPayServer.Forms;
 
 public class HtmlInputFormProvider : FormComponentProviderBase
 {
+    private const int MaxValueLength = 10_000;
+
     public override void Register(Dictionary<string, IFormComponentProvider> typeToComponentProvider)
     {
         foreach (var t in new[] {
@@ -39,9 +41,9 @@ public class HtmlInputFormProvider : FormComponentProviderBase
         else if (string.IsNullOrEmpty(field.Value))
             return;
 
+        if (field.Value.Length > MaxValueLength)
+            field.ValidationErrors.Add($"The value must be at most {MaxValueLength} characters.");
         if (field.Type == "email")
-        {
             ValidateField<MailboxAddressAttribute>(field);
-        }
     }
 }

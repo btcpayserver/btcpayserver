@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Forms;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -16,6 +18,75 @@ public class FormTests : UnitTestBase
 {
     public FormTests(ITestOutputHelper helper) : base(helper)
     {
+    }
+
+    [Fact]
+    [Trait("FastTest", "FastTest")]
+    public void FormProvidersRejectOversizedValuesAndForgedFieldsetValues()
+    {
+        var oversized = new string('x', 10_001);
+        var input = new Field { Name = "reference", Type = "text", Value = oversized };
+        var textarea = new Field { Name = "notes", Type = "textarea", Value = oversized };
+
+        new HtmlInputFormProvider().Validate(new Form(), input);
+        new HtmlTextareaFormProvider().Validate(new Form(), textarea);
+
+        Assert.NotEmpty(input.ValidationErrors);
+        Assert.NotEmpty(textarea.ValidationErrors);
+
+        var fieldset = new Field
+        {
+            Name = "server",
+            Type = "fieldset",
+            Value = "forged"
+        };
+        new HtmlFieldsetFormProvider().Validate(new Form(), fieldset);
+        Assert.Null(fieldset.Value);
+    }
+
+    [Fact]
+    [Trait("FastTest", "FastTest")]
+    public void ConstantFieldsAreSerializedAndInvalidAdjustmentsAreRejected()
+    {
+        var providers = new FormComponentProviders(
+        [
+            new HtmlInputFormProvider(),
+            new HtmlTextareaFormProvider(),
+            new HtmlFieldsetFormProvider()
+        ]);
+        var service = new FormDataService(null!, providers);
+        var form = new Form
+        {
+            Fields =
+            [
+                new Field
+                {
+                    Name = "server",
+                    Type = "fieldset",
+                    Constant = true,
+                    Fields = [new Field { Name = "secret", Type = "hidden", Value = "server-only" }]
+                }
+            ]
+        };
+
+        Assert.Equal("server-only", service.GetValues(form)["server"]["secret"]);
+        Assert.Equal("server-only", service.GenerateInvoiceParametersFromForm(form).Metadata["server"]["secret"]);
+
+        form = new Form
+        {
+            Fields =
+            [
+                new Field
+                {
+                    Name = $"{FormDataService.InvoiceParameterPrefix}amount_adjustment",
+                    Type = "hidden",
+                    Value = "not-a-number"
+                }
+            ]
+        };
+        var modelState = new ModelStateDictionary();
+        Assert.False(service.Validate(form, modelState));
+        Assert.False(modelState.IsValid);
     }
 
 
@@ -170,6 +241,8 @@ public class FormTests : UnitTestBase
         var obj = service.GetValues(form);
         Assert.Equal("original", obj["invoice"]["test"].Value<string>());
         Assert.Equal("updated", obj["invoice_item3"].Value<string>());
+        Assert.Equal("original",
+            service.GenerateInvoiceParametersFromForm(form).Metadata["invoice"]["test"].Value<string>());
         Clear(form);
         service.SetValues(form, obj);
         obj = service.GetValues(form);

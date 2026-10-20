@@ -351,12 +351,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     formResponseJObject = TryParseJObject(formResponse) ?? new JObject();
                     var form = Form.Parse(formData.Config);
                     FormDataService.SetValues(form, formResponseJObject);
-                    if (!FormDataService.Validate(form, ModelState))
-                    {
-                        //someone tried to bypass validation
-                        return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
-                    }
-
                     var amtField = form.GetFieldByFullName($"{FormDataService.InvoiceParameterPrefix}amount");
                     if (amtField is null)
                     {
@@ -370,6 +364,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     }
                     var originalAmount = order.Calculate().PriceTaxExcluded;
                     amtField.Value = originalAmount.ToString(CultureInfo.InvariantCulture);
+                    if (!FormDataService.Validate(form, ModelState))
+                    {
+                        //someone tried to bypass validation
+                        return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
+                    }
                     formResponseJObject = FormDataService.GetValues(form);
 
                     var invoiceRequest = FormDataService.GenerateInvoiceParametersFromForm(form);

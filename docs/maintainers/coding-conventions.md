@@ -6,6 +6,8 @@
   formatting and C# style.
 - Prefer `Newtonsoft.Json` over `System.Text.Json` when adding or changing JSON
   serialization.
+- Do not use `ConfigureAwait(false)`; BTCPay Server does not rely on a
+  synchronization context.
 
 ## Pull Requests
 

@@ -47,17 +47,8 @@ public class MempoolSpaceFeeProvider(
     }
 
     private readonly TimeSpan _expiration = TimeSpan.FromMinutes(25);
-    public async Task RefreshCache()
-    {
-        var rate = await GetFeeRatesCore();
-        memoryCache.Set(cacheKey, rate, _expiration);
-    }
-
-    public bool CachedOnly { get; set; }
     internal async Task<BlockFeeRate[]> GetFeeRatesAsync()
     {
-        if (CachedOnly)
-            return memoryCache.Get(cacheKey) as BlockFeeRate[] ?? throw new InvalidOperationException("Fee rates unavailable");
         try
         {
             return  (await  memoryCache.GetOrCreateAsync(cacheKey, async entry =>

@@ -86,13 +86,8 @@ namespace BTCPayServer.Tests
                     "test" + isTestnet,
                     prov.GetService<IHttpClientFactory>(),
                     isTestnet);
-                mempoolSpaceFeeProvider.CachedOnly = true;
-                await Assert.ThrowsAsync<InvalidOperationException>(() => mempoolSpaceFeeProvider.GetFeeRateAsync());
-                mempoolSpaceFeeProvider.CachedOnly = false;
                 var rates = await mempoolSpaceFeeProvider.GetFeeRatesAsync();
-                mempoolSpaceFeeProvider.CachedOnly = true;
                 await mempoolSpaceFeeProvider.GetFeeRateAsync();
-                mempoolSpaceFeeProvider.CachedOnly = false;
                 Assert.NotEmpty(rates);
 
 

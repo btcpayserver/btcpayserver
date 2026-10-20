@@ -77,7 +77,7 @@ namespace BTCPayServer.Data
         }
 
         public string DefaultLang { get; set; }
-        public string StoreLanguage { get; set; }
+        public string StorefrontLanguage { get; set; }
         [DefaultValue(typeof(TimeSpan), "1.00:00:00")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [JsonConverter(typeof(TimeSpanJsonConverter.Minutes))]

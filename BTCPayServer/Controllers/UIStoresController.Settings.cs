@@ -33,7 +33,7 @@ public partial class UIStoresController
             Id = store.Id,
             StoreName = store.StoreName,
             StoreWebsite = store.StoreWebsite,
-            StoreLanguage = storeBlob.StoreLanguage,
+            StorefrontLanguage = storeBlob.StorefrontLanguage,
             LogoUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.LogoUrl),
             CssUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.CssUrl),
             BrandColor = storeBlob.BrandColor,
@@ -56,7 +56,7 @@ public partial class UIStoresController
 
     private async Task<IActionResult> GeneralSettingsView(GeneralSettingsViewModel model)
     {
-        model.StoreLanguages =
+        model.StorefrontLanguages =
         [
             new SelectListItem(StringLocalizer["Server language ({0})", _localizer.ServerLanguage], ""),
             .. await _localizer.GetTranslationsSelectList()
@@ -109,14 +109,14 @@ public partial class UIStoresController
         blob.BrandColor = model.BrandColor;
         blob.ApplyBrandColorToBackend = model.ApplyBrandColorToBackend && !string.IsNullOrEmpty(model.BrandColor);
 
-        var storeLanguage = string.IsNullOrEmpty(model.StoreLanguage) ? null : model.StoreLanguage;
+        var storeLanguage = string.IsNullOrEmpty(model.StorefrontLanguage) ? null : model.StorefrontLanguage;
         if(storeLanguage is not null && !LocalizerService.IsInstalledTranslation(storeLanguage, await _localizer.GetTranslations()))
         {
-            ModelState.AddModelError(nameof(model.StoreLanguage), StringLocalizer["The selected language is not installed on this server."]);
+            ModelState.AddModelError(nameof(model.StorefrontLanguage), StringLocalizer["The selected language is not installed on this server."]);
         }
         else
         {
-            blob.StoreLanguage = storeLanguage;
+            blob.StorefrontLanguage = storeLanguage;
         }
 
         var userId = GetUserId();

@@ -24,9 +24,9 @@ namespace BTCPayServer.Models.StoreViewModels
         [MaxLength(500)]
         public string StoreWebsite { get; set; }
 
-        [Display(Name = "Store language")]
-        public string StoreLanguage { get; set; }
-        public List<SelectListItem> StoreLanguages { get; set; } = new();
+        [Display(Name = "Storefront language")]
+        public string StorefrontLanguage { get; set; }
+        public List<SelectListItem> StorefrontLanguages { get; set; } = new();
 
         [Display(Name = "Brand Color")]
         public string BrandColor { get; set; }

@@ -1794,6 +1794,7 @@ namespace BTCPayServer.Plugins.Translations
   "Store Id QR Code": "",
   "Store invitation": "",
   "Store language": "",
+  "Storefront language": "",
   "Store Name": "",
   "Store Overview": "",
   "Store owners can add users to their store without an invitation": "",

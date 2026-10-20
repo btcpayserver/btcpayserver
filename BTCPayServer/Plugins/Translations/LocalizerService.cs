@@ -139,7 +139,10 @@ namespace BTCPayServer.Plugins.Translations
         public async Task UseStoreLanguage(string? translationName)
         {
             if (string.IsNullOrEmpty(translationName))
+            {
+                SetRequestTranslations(new LoadedTranslations(Translations.Default, Translations.Default, Translations.DefaultLanguage, false));
                 return;
+            }
 
             if (translationName == ServerLanguage)
             {

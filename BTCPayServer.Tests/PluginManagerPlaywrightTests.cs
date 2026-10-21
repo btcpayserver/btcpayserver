@@ -72,11 +72,11 @@ public class PluginManagerPlaywrightTests(ITestOutputHelper helper) : UnitTestBa
     }
 
     [Fact]
-    public async Task DisablesPluginWhenManifestIdentifierDoesNotMatch()
+    public async Task DisablesPluginWhenAssemblyIdentifierDoesNotMatch()
     {
         await using var s = CreatePlaywrightTester(newDb: true);
-        const string manifestIdentifier = "BTCPayServer.Tests.UnexpectedPlugin";
-        await InstallCrashPlugin(s, new Version(1, 2, 3), manifestIdentifier);
+        const string assemblyIdentifier = "BTCPayServer.Tests.UnexpectedPlugin";
+        await InstallCrashPlugin(s, new Version(1, 2, 3), assemblyIdentifier);
 
         await Assert.ThrowsAsync<ConfigException>(() => s.Server.StartAsync());
         await s.StartAsync();
@@ -85,30 +85,32 @@ public class PluginManagerPlaywrightTests(ITestOutputHelper helper) : UnitTestBa
 
         await s.GoToUrl("/server/plugins");
         var disabledPlugin = s.Page.Locator("li.list-group-item")
-            .Filter(new LocatorFilterOptions { HasText = manifestIdentifier });
+            .Filter(new LocatorFilterOptions { HasText = PluginIdentifier });
         await Expect(disabledPlugin).ToBeVisibleAsync();
         await disabledPlugin.Locator(".plugin-failure__summary").ClickAsync();
         var failure = disabledPlugin.Locator(".plugin-failure");
         await Expect(failure).ToContainTextAsync("Plugin discovery");
         await Expect(failure).ToContainTextAsync("The plugin identifier does not match.");
         await Expect(failure).ToContainTextAsync(
-            $"Expected {manifestIdentifier}, but found: {PluginIdentifier}");
+            $"Expected {PluginIdentifier}, but found: {assemblyIdentifier}");
     }
 
     private static async Task InstallCrashPlugin(
         PlaywrightTester s,
         Version manifestVersion,
-        string manifestIdentifier = PluginIdentifier)
+        string assemblyIdentifier = PluginIdentifier)
     {
         var pluginDir = Path.Combine(TestUtils.TestDirectory, s.Server.Scope, "pay", "plugins");
         var installedPluginDir = Path.Combine(pluginDir, PluginIdentifier);
         Directory.CreateDirectory(installedPluginDir);
-        CompileCrashPlugin(Path.Combine(installedPluginDir, PluginIdentifier + ".dll"));
+        CompileCrashPlugin(
+            Path.Combine(installedPluginDir, PluginIdentifier + ".dll"),
+            assemblyIdentifier);
         await File.WriteAllTextAsync(
             Path.Combine(installedPluginDir, PluginIdentifier + ".json"),
             JsonConvert.SerializeObject(new PluginService.AvailablePlugin
             {
-                Identifier = manifestIdentifier,
+                Identifier = PluginIdentifier,
                 Name = "Crashing test plugin",
                 Version = manifestVersion,
                 Description = "Throws an expected exception for plugin crash diagnostics tests."
@@ -116,7 +118,7 @@ public class PluginManagerPlaywrightTests(ITestOutputHelper helper) : UnitTestBa
         s.Server.PayTester.PluginDir = pluginDir;
     }
 
-    private static void CompileCrashPlugin(string assemblyPath)
+    private static void CompileCrashPlugin(string assemblyPath, string assemblyIdentifier)
     {
         var source = $$"""
             using System;
@@ -129,7 +131,7 @@ public class PluginManagerPlaywrightTests(ITestOutputHelper helper) : UnitTestBa
 
             public class CrashPlugin : BaseBTCPayServerPlugin
             {
-                public override string Identifier => "{{PluginIdentifier}}";
+                public override string Identifier => "{{assemblyIdentifier}}";
                 public override string Name => "Crashing test plugin";
                 public override string Description => "Throws an expected exception for plugin crash diagnostics tests.";
                 public override Version Version => new(1, 2, 3);

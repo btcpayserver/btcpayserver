@@ -127,8 +127,7 @@ namespace BTCPayServer.Plugins
         public sealed class PluginLoadingContext
         {
             public required string PluginDir { get; init; }
-            public required string StorageIdentifier { get; init; }
-            public required string ExpectedIdentifier { get; init; }
+            public required string Identifier { get; init; }
             public required string AssemblyPath { get; init; }
             public Version? ManifestVersion { get; init; }
             public PluginLifecyclePhase Phase { get; set; }
@@ -214,8 +213,7 @@ namespace BTCPayServer.Plugins
                 var context = new PluginLoadingContext
                 {
                     PluginDir = pluginsFolder,
-                    StorageIdentifier = plugin.Identifier,
-                    ExpectedIdentifier = plugin.Identifier,
+                    Identifier = plugin.Identifier,
                     AssemblyPath = systemAssembly.Location,
                     ManifestVersion = plugin.Version,
                     Phase = PluginLifecyclePhase.PluginExecution
@@ -278,7 +276,7 @@ namespace BTCPayServer.Plugins
 
             foreach (var context in pluginsToPreload)
             {
-                if (pluginLoadingContexts.Contains(context.ExpectedIdentifier))
+                if (pluginLoadingContexts.Contains(context.Identifier))
                     continue;
 
                 context.Phase = PluginLifecyclePhase.AssemblyLoad;
@@ -298,14 +296,14 @@ namespace BTCPayServer.Plugins
 
                     context.Phase = PluginLifecyclePhase.PluginActivation;
                     var instances = GetPluginInstancesFromAssembly(pluginAssembly, silentlyFails: true).ToArray();
-                    var p = instances.FirstOrDefault(plugin => plugin.Identifier == context.ExpectedIdentifier);
+                    var p = instances.FirstOrDefault(plugin => plugin.Identifier == context.Identifier);
                     if (p == null)
                     {
                         context.Phase = PluginLifecyclePhase.PluginDiscovery;
                         var actualIdentifiers = string.Join(", ", instances.Select(plugin => plugin.Identifier));
                         var details = instances.Length == 0
-                            ? $"The plugin assembly doesn't contain a plugin with identifier {context.ExpectedIdentifier}."
-                            : $"The plugin identifier does not match. Expected {context.ExpectedIdentifier}, but found: {actualIdentifiers}.";
+                            ? $"The plugin assembly doesn't contain a plugin with identifier {context.Identifier}."
+                            : $"The plugin identifier does not match. Expected {context.Identifier}, but found: {actualIdentifiers}.";
                         logger.LogError(details);
                         RecordPluginFailure(context, details);
                         toDisable.Add(context);
@@ -328,7 +326,7 @@ namespace BTCPayServer.Plugins
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e, $"Error when loading plugin {context.ExpectedIdentifier}.");
+                    logger.LogError(e, $"Error when loading plugin {context.Identifier}.");
                     RecordPluginFailure(context, e);
                     toDisable.Add(context);
 				}
@@ -385,9 +383,9 @@ namespace BTCPayServer.Plugins
             _pluginLoadingContexts = pluginLoadingContexts;
 			if (toDisable.Count > 0)
 			{
-				foreach (var plugin in toDisable.DistinctBy(plugin => plugin.StorageIdentifier, StringComparer.OrdinalIgnoreCase))
+				foreach (var plugin in toDisable.DistinctBy(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase))
 					DisablePlugin(plugin);
-				var crashedPluginsStr = string.Join(", ", toDisable.Select(plugin => plugin.StorageIdentifier));
+				var crashedPluginsStr = string.Join(", ", toDisable.Select(plugin => plugin.Identifier));
 				throw new ConfigException($"The following plugin(s) crashed at startup, they will be disabled and the server will restart: {crashedPluginsStr}");
 			}
 			return mvcBuilder;
@@ -461,14 +459,12 @@ namespace BTCPayServer.Plugins
             string storageIdentifier,
             string assemblyPath)
         {
-            var manifest = TryReadPluginManifest(Path.GetDirectoryName(assemblyPath)!, storageIdentifier);
             return new PluginLoadingContext
             {
                 PluginDir = pluginDir,
-                StorageIdentifier = storageIdentifier,
-                ExpectedIdentifier = manifest?.Identifier ?? storageIdentifier,
+                Identifier = storageIdentifier,
                 AssemblyPath = assemblyPath,
-                ManifestVersion = manifest?.Version,
+                ManifestVersion = TryReadPluginVersion(Path.GetDirectoryName(assemblyPath)!, storageIdentifier),
                 Phase = PluginLifecyclePhase.AssemblyLoad
             };
         }
@@ -654,7 +650,7 @@ namespace BTCPayServer.Plugins
         public static void DisablePlugins(string pluginDir)
         {
             foreach (var plugin in _pluginLoadingContexts.Where(plugin => !plugin.Instance.SystemPlugin))
-                DisablePlugin(pluginDir, plugin.StorageIdentifier);
+                DisablePlugin(pluginDir, plugin.Identifier);
         }
 
         public static void DisablePlugins(Exception exception)
@@ -670,7 +666,7 @@ namespace BTCPayServer.Plugins
         public static void DisablePlugin(PluginLoadingContext plugin)
         {
             if (plugin.PreloadedPlugin?.Instance.SystemPlugin is true) return;
-            DisablePlugin(plugin.PluginDir, plugin.StorageIdentifier);
+            DisablePlugin(plugin.PluginDir, plugin.Identifier);
         }
 
         public static void DisablePlugin(PluginLoadingContext plugin, Exception exception,
@@ -711,7 +707,7 @@ namespace BTCPayServer.Plugins
             var diagnostic = new PluginFailureDiagnostic
             {
                 Timestamp = DateTimeOffset.UtcNow,
-                PluginIdentifier = plugin.PreloadedPlugin?.Instance.Identifier ?? plugin.ExpectedIdentifier,
+                PluginIdentifier = plugin.Identifier,
                 PluginVersion = plugin.PreloadedPlugin?.Instance.Version ?? plugin.ManifestVersion,
                 BTCPayVersion = BTCPayServerEnvironment.GetInformationalVersion(),
                 Phase = plugin.Phase,
@@ -722,7 +718,7 @@ namespace BTCPayServer.Plugins
             lock (FailureDiagnosticsLock)
             {
                 var failures = ReadPluginFailures(plugin.PluginDir);
-                failures[plugin.StorageIdentifier] = diagnostic;
+                failures[plugin.Identifier] = diagnostic;
                 WritePluginFailures(plugin.PluginDir, failures);
             }
         }
@@ -738,7 +734,7 @@ namespace BTCPayServer.Plugins
                     var context = _pluginLoadingContexts.TryGet(plugin.Identifier);
                     if (context is not null)
                         context.Phase = PluginLifecyclePhase.Running;
-                    return context?.StorageIdentifier ?? plugin.Identifier;
+                    return context?.Identifier ?? plugin.Identifier;
                 })
                 .ToArray();
             ClearPluginFailures(pluginDir, storageIdentifiers);

@@ -67,7 +67,7 @@ public class UIPlanCheckoutController(
             return NotFound();
 
         var storeBlob = checkout.Plan.Offering.App.StoreData.GetStoreBlob();
-        await localizer.UseStoreLanguage(storeBlob.StoreLanguage);
+        await localizer.UseStoreLanguage(storeBlob.StorefrontLanguage);
         return View(new PlanCheckoutDefaultRedirectViewModel(checkout)
         {
             StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, storeBlob),

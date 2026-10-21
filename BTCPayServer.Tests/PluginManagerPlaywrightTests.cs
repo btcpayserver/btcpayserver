@@ -1,9 +1,12 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Plugins;
-using BTCPayServer.Tests.Plugins;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Playwright;
 using Newtonsoft.Json;
 using Xunit;
@@ -15,6 +18,10 @@ namespace BTCPayServer.Tests;
 [Collection(nameof(NonParallelizableCollectionDefinition))]
 public class PluginManagerPlaywrightTests(ITestOutputHelper helper) : UnitTestBase(helper)
 {
+    private const string PluginIdentifier = "BTCPayServer.Tests.CrashPlugin";
+    private const string CrashPath = "/test/crashing-plugin";
+    private const string FailureMessage = "Expected runtime failure from the crashing test plugin.";
+
     [Fact]
     public async Task ShowsRuntimeFailureForAutomaticallyDisabledPlugin()
     {
@@ -25,20 +32,20 @@ public class PluginManagerPlaywrightTests(ITestOutputHelper helper) : UnitTestBa
         await s.RegisterNewUser(true);
         await s.SkipWizard();
 
-        await s.GoToUrl(CrashPlugin.CrashPath, ignoreResponse: true);
+        await s.GoToUrl(CrashPath, ignoreResponse: true);
         await s.Server.PayTester.RestartAsync();
 
         await s.GoToUrl("/server/plugins");
         var disabledPlugin = s.Page.Locator("li.list-group-item")
-            .Filter(new LocatorFilterOptions { HasText = CrashPlugin.PluginIdentifier });
+            .Filter(new LocatorFilterOptions { HasText = PluginIdentifier });
         await Expect(disabledPlugin).ToBeVisibleAsync();
         await disabledPlugin.Locator(".plugin-failure__summary").ClickAsync();
         var failure = disabledPlugin.Locator(".plugin-failure");
         await Expect(failure).ToContainTextAsync("Runtime request");
         await Expect(failure).ToContainTextAsync("Confirmed");
-        await Expect(failure).ToContainTextAsync(CrashPlugin.FailureMessage);
+        await Expect(failure).ToContainTextAsync(FailureMessage);
         await Expect(failure.Locator(".plugin-failure__details"))
-            .ToContainTextAsync(nameof(CrashPlugin));
+            .ToContainTextAsync("CrashPlugin");
         await Expect(failure.Locator(".plugin-failure__copy")).ToBeVisibleAsync();
     }
 
@@ -55,7 +62,7 @@ public class PluginManagerPlaywrightTests(ITestOutputHelper helper) : UnitTestBa
 
         await s.GoToUrl("/server/plugins");
         var disabledPlugin = s.Page.Locator("li.list-group-item")
-            .Filter(new LocatorFilterOptions { HasText = CrashPlugin.PluginIdentifier });
+            .Filter(new LocatorFilterOptions { HasText = PluginIdentifier });
         await Expect(disabledPlugin).ToBeVisibleAsync();
         await disabledPlugin.Locator(".plugin-failure__summary").ClickAsync();
         var failure = disabledPlugin.Locator(".plugin-failure");
@@ -85,22 +92,20 @@ public class PluginManagerPlaywrightTests(ITestOutputHelper helper) : UnitTestBa
         await Expect(failure).ToContainTextAsync("Plugin discovery");
         await Expect(failure).ToContainTextAsync("The plugin identifier does not match.");
         await Expect(failure).ToContainTextAsync(
-            $"Expected {manifestIdentifier}, but found: {CrashPlugin.PluginIdentifier}");
+            $"Expected {manifestIdentifier}, but found: {PluginIdentifier}");
     }
 
     private static async Task InstallCrashPlugin(
         PlaywrightTester s,
         Version manifestVersion,
-        string manifestIdentifier = CrashPlugin.PluginIdentifier)
+        string manifestIdentifier = PluginIdentifier)
     {
         var pluginDir = Path.Combine(TestUtils.TestDirectory, s.Server.Scope, "pay", "plugins");
-        var installedPluginDir = Path.Combine(pluginDir, CrashPlugin.PluginIdentifier);
+        var installedPluginDir = Path.Combine(pluginDir, PluginIdentifier);
         Directory.CreateDirectory(installedPluginDir);
-        File.Copy(
-            typeof(CrashPlugin).Assembly.Location,
-            Path.Combine(installedPluginDir, CrashPlugin.PluginIdentifier + ".dll"));
+        CompileCrashPlugin(Path.Combine(installedPluginDir, PluginIdentifier + ".dll"));
         await File.WriteAllTextAsync(
-            Path.Combine(installedPluginDir, CrashPlugin.PluginIdentifier + ".json"),
+            Path.Combine(installedPluginDir, PluginIdentifier + ".json"),
             JsonConvert.SerializeObject(new PluginService.AvailablePlugin
             {
                 Identifier = manifestIdentifier,
@@ -109,5 +114,48 @@ public class PluginManagerPlaywrightTests(ITestOutputHelper helper) : UnitTestBa
                 Description = "Throws an expected exception for plugin crash diagnostics tests."
             }));
         s.Server.PayTester.PluginDir = pluginDir;
+    }
+
+    private static void CompileCrashPlugin(string assemblyPath)
+    {
+        var source = $$"""
+            using System;
+            using System.Threading.Tasks;
+            using BTCPayServer.Abstractions.Models;
+            using Microsoft.AspNetCore.Builder;
+            using Microsoft.AspNetCore.Http;
+
+            namespace BTCPayServer.Tests.Plugins;
+
+            public class CrashPlugin : BaseBTCPayServerPlugin
+            {
+                public override string Identifier => "{{PluginIdentifier}}";
+                public override string Name => "Crashing test plugin";
+                public override string Description => "Throws an expected exception for plugin crash diagnostics tests.";
+                public override Version Version => new(1, 2, 3);
+
+                public override void Execute(IApplicationBuilder applicationBuilder,
+                    IServiceProvider applicationBuilderApplicationServices)
+                {
+                    applicationBuilder.Map("{{CrashPath}}", crashApp => crashApp.Run(Crash));
+                }
+
+                private static Task Crash(HttpContext context)
+                {
+                    throw new InvalidOperationException("{{FailureMessage}}");
+                }
+            }
+            """;
+        var references = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))!
+            .Split(Path.PathSeparator)
+            .Select(path => MetadataReference.CreateFromFile(path))
+            .Append(MetadataReference.CreateFromFile(typeof(BaseBTCPayServerPlugin).Assembly.Location));
+        var compilation = CSharpCompilation.Create(
+            $"{PluginIdentifier}.{Guid.NewGuid():N}",
+            [CSharpSyntaxTree.ParseText(source, path: "CrashPlugin.cs")],
+            references,
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        var result = compilation.Emit(assemblyPath);
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Diagnostics));
     }
 }

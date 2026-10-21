@@ -1,7 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../Build/Common.csproj" />
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <ProjectReference Include="../BTCPayServer.Abstractions/BTCPayServer.Abstractions.csproj" />
-  </ItemGroup>
-</Project>

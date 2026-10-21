@@ -22,6 +22,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins
@@ -34,6 +35,8 @@ namespace BTCPayServer.Plugins
         /// This avoid loading the same plugin twice.
         /// </summary>
         private static PreloadedPlugins _preloadedPlugins = new();
+        private static readonly object FailureDiagnosticsLock = new();
+        private const string FailureDiagnosticsFileName = "plugin-failures.json";
 
         public static bool IsExceptionByPlugin(Exception exception, [MaybeNullWhen(false)] out PreloadedPlugin preloadedPlugin)
         {
@@ -119,7 +122,8 @@ namespace BTCPayServer.Plugins
                 return false;
         }
 
-        public record PreloadedPlugin(IBTCPayServerPlugin Instance, PluginLoader? Loader, Assembly Assembly);
+        public record PreloadedPlugin(IBTCPayServerPlugin Instance, PluginLoader? Loader, Assembly Assembly,
+            string? StorageIdentifier = null);
 
         class PreloadedPlugins : IEnumerable<PreloadedPlugin>
         {
@@ -244,6 +248,7 @@ namespace BTCPayServer.Plugins
                 if (preloadedPlugins.Contains(toLoad.PluginIdentifier))
                     continue;
 
+                var failurePhase = PluginFailurePhase.AssemblyLoad;
                 try
                 {
                     var loader = PluginLoader.CreateFromAssemblyFile(
@@ -258,21 +263,38 @@ namespace BTCPayServer.Plugins
                         });
                     var pluginAssembly = loader.LoadDefaultAssembly();
 
+                    failurePhase = PluginFailurePhase.PluginActivation;
                     var p = GetPluginInstanceFromAssembly(toLoad.PluginIdentifier, pluginAssembly, silentlyFails: true);
                     if (p == null)
                     {
                         logger.LogError($"The plugin assembly doesn't contain the plugin {toLoad.PluginIdentifier}");
+						RecordPluginFailure(
+							pluginsFolder,
+							toLoad.PluginIdentifier,
+							toLoad.PluginIdentifier,
+							TryReadPluginVersion(Path.GetDirectoryName(toLoad.PluginFilePath)!, toLoad.PluginIdentifier),
+							PluginFailurePhase.PluginDiscovery,
+							PluginFailureAttribution.Confirmed,
+							details: $"The plugin assembly doesn't contain a plugin with identifier {toLoad.PluginIdentifier}.");
 						toDisable.Add(toLoad.PluginIdentifier);
 					}
                     else
                     {
                         p.SystemPlugin = false;
-                        preloadedPlugins.Add(new(p, loader, pluginAssembly));
+                        preloadedPlugins.Add(new(p, loader, pluginAssembly, toLoad.PluginIdentifier));
                     }
                 }
                 catch (Exception e)
                 {
                     logger.LogError(e, $"Error when loading plugin {toLoad.PluginIdentifier}.");
+					RecordPluginFailure(
+						pluginsFolder,
+						toLoad.PluginIdentifier,
+						toLoad.PluginIdentifier,
+						TryReadPluginVersion(Path.GetDirectoryName(toLoad.PluginFilePath)!, toLoad.PluginIdentifier),
+						failurePhase,
+						PluginFailureAttribution.Confirmed,
+						e);
 					toDisable.Add(toLoad.PluginIdentifier);
 				}
             }
@@ -318,13 +340,23 @@ namespace BTCPayServer.Plugins
                 {
                     logger.LogError(e, $"Error when executing plugin {plugin.Identifier} - {plugin.Version}.");
                     if (!plugin.SystemPlugin)
-                        toDisable.Add(plugin.Identifier);
+                    {
+                        RecordPluginFailure(
+                            pluginsFolder,
+                            GetStorageIdentifier(preloadedPlugin),
+                            plugin.Identifier,
+                            plugin.Version,
+                            PluginFailurePhase.PluginExecution,
+                            PluginFailureAttribution.Confirmed,
+                            e);
+                        toDisable.Add(GetStorageIdentifier(preloadedPlugin));
+                    }
                 }
             }
             _preloadedPlugins = preloadedPlugins;
 			if (toDisable.Count > 0)
 			{
-				foreach (var plugin in toDisable)
+				foreach (var plugin in toDisable.Distinct(StringComparer.OrdinalIgnoreCase))
 					DisablePlugin(pluginsFolder, plugin);
 				var crashedPluginsStr = string.Join(", ", toDisable);
 				throw new ConfigException($"The following plugin(s) crashed at startup, they will be disabled and the server will restart: {crashedPluginsStr}");
@@ -465,6 +497,7 @@ namespace BTCPayServer.Plugins
                         File.Delete(dirName);
                     if (Directory.Exists(dirName))
                         Directory.Delete(dirName, true);
+                    ClearPluginFailure(pluginsFolder, command.extension);
                     break;
 
                 case "install":
@@ -578,17 +611,166 @@ namespace BTCPayServer.Plugins
                 DisablePlugin(pluginDir, plugin);
         }
 
+        public static void DisablePlugins(string pluginDir, Exception exception)
+        {
+            foreach (var plugin in _preloadedPlugins.Where(plugin => !plugin.Instance.SystemPlugin))
+            {
+                RecordPluginFailure(
+                    pluginDir,
+                    GetStorageIdentifier(plugin),
+                    plugin.Instance.Identifier,
+                    plugin.Instance.Version,
+                    PluginFailurePhase.Startup,
+                    PluginFailureAttribution.PossiblyInvolvedCulpritUnknown,
+                    exception);
+                DisablePlugin(pluginDir, plugin);
+            }
+        }
+
         public static void DisablePlugin(string pluginDir, PreloadedPlugin plugin)
         {
             if (plugin.Instance.SystemPlugin) return;
-            var name = plugin.Assembly.GetName()?.Name;
-            if (name is null) return;
-            DisablePlugin(pluginDir, name);
+            DisablePlugin(pluginDir, GetStorageIdentifier(plugin));
+        }
+
+        public static void DisablePlugin(string pluginDir, PreloadedPlugin plugin, Exception exception,
+            PluginFailurePhase phase)
+        {
+            if (plugin.Instance.SystemPlugin) return;
+            RecordPluginFailure(
+                pluginDir,
+                GetStorageIdentifier(plugin),
+                plugin.Instance.Identifier,
+                plugin.Instance.Version,
+                phase,
+                PluginFailureAttribution.Confirmed,
+                exception);
+            DisablePlugin(pluginDir, plugin);
         }
 
         public static void DisablePlugin(string pluginDir, string plugin)
         {
             QueueCommands(pluginDir, ("disable", plugin));
+        }
+
+        private static string GetStorageIdentifier(PreloadedPlugin plugin)
+        {
+            return plugin.StorageIdentifier ?? plugin.Assembly.GetName().Name ?? plugin.Instance.Identifier;
+        }
+
+        public static IReadOnlyDictionary<string, PluginFailureDiagnostic> GetPluginFailures(string pluginDir)
+        {
+            lock (FailureDiagnosticsLock)
+            {
+                return ReadPluginFailures(pluginDir);
+            }
+        }
+
+        internal static void RecordPluginFailure(
+            string pluginDir,
+            string storageIdentifier,
+            string pluginIdentifier,
+            Version? pluginVersion,
+            PluginFailurePhase phase,
+            PluginFailureAttribution attribution,
+            Exception? exception = null,
+            string? details = null,
+            DateTimeOffset? timestamp = null)
+        {
+            var diagnostic = new PluginFailureDiagnostic
+            {
+                Timestamp = timestamp ?? DateTimeOffset.UtcNow,
+                PluginIdentifier = pluginIdentifier,
+                PluginVersion = pluginVersion,
+                BTCPayVersion = BTCPayServerEnvironment.GetInformationalVersion(),
+                Phase = phase,
+                Attribution = attribution,
+                Details = exception?.ToString() ?? details ?? string.Empty
+            };
+
+            lock (FailureDiagnosticsLock)
+            {
+                var failures = ReadPluginFailures(pluginDir);
+                failures[storageIdentifier] = diagnostic;
+                WritePluginFailures(pluginDir, failures);
+            }
+        }
+
+        public static void ClearFailureDiagnosticsForStartedPlugins(
+            string pluginDir,
+            IEnumerable<IBTCPayServerPlugin> startedPlugins)
+        {
+            var storageIdentifiers = startedPlugins
+                .Where(plugin => !plugin.SystemPlugin)
+                .Select(plugin => _preloadedPlugins.TryGet(plugin.Identifier) is { } preloaded
+                    ? GetStorageIdentifier(preloaded)
+                    : plugin.Identifier)
+                .ToArray();
+            ClearPluginFailures(pluginDir, storageIdentifiers);
+        }
+
+        public static void ClearPluginFailure(string pluginDir, string storageIdentifier)
+        {
+            ClearPluginFailures(pluginDir, [storageIdentifier]);
+        }
+
+        private static void ClearPluginFailures(string pluginDir, IEnumerable<string> storageIdentifiers)
+        {
+            lock (FailureDiagnosticsLock)
+            {
+                var failures = ReadPluginFailures(pluginDir);
+                var changed = false;
+                foreach (var identifier in storageIdentifiers)
+                    changed |= failures.Remove(identifier);
+                if (changed)
+                    WritePluginFailures(pluginDir, failures);
+            }
+        }
+
+        private static Dictionary<string, PluginFailureDiagnostic> ReadPluginFailures(string pluginDir)
+        {
+            var path = Path.Join(pluginDir, FailureDiagnosticsFileName);
+            if (!File.Exists(path))
+                return new Dictionary<string, PluginFailureDiagnostic>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                var persisted = JsonConvert.DeserializeObject<Dictionary<string, PluginFailureDiagnostic>>(
+                    File.ReadAllText(path));
+                return persisted is null
+                    ? new Dictionary<string, PluginFailureDiagnostic>(StringComparer.OrdinalIgnoreCase)
+                    : new Dictionary<string, PluginFailureDiagnostic>(persisted, StringComparer.OrdinalIgnoreCase);
+            }
+            catch (JsonException)
+            {
+                return new Dictionary<string, PluginFailureDiagnostic>(StringComparer.OrdinalIgnoreCase);
+            }
+            catch (IOException)
+            {
+                return new Dictionary<string, PluginFailureDiagnostic>(StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
+        private static void WritePluginFailures(string pluginDir,
+            Dictionary<string, PluginFailureDiagnostic> failures)
+        {
+            Directory.CreateDirectory(pluginDir);
+            var path = Path.Join(pluginDir, FailureDiagnosticsFileName);
+            if (failures.Count == 0)
+            {
+                File.Delete(path);
+                return;
+            }
+
+            var temporaryPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
+            {
+                File.WriteAllText(temporaryPath, JsonConvert.SerializeObject(failures, Formatting.Indented));
+                File.Move(temporaryPath, path, true);
+            }
+            finally
+            {
+                File.Delete(temporaryPath);
+            }
         }
 
 

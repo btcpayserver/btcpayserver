@@ -36,6 +36,7 @@ namespace BTCPayServer.Plugins.PluginManagement.Models
         public string Identifier { get; set; }
         public Version DisabledVersion { get; set; }
         public Version RecommendedUpdateVersion { get; set; }
+        public PluginFailureDiagnostic Failure { get; set; }
         public List<PluginActionViewModel> Actions { get; set; } = [];
     }
 

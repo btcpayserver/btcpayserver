@@ -30,6 +30,155 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void PluginFailureDiagnostics_PersistLatestFailureAndFullException()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-failure-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                var firstTimestamp = new DateTimeOffset(2026, 10, 14, 13, 45, 17, TimeSpan.Zero);
+                PluginManager.RecordPluginFailure(
+                    pluginDir,
+                    "Plugin.Storage",
+                    "Plugin.Identifier",
+                    new Version(1, 2, 3),
+                    PluginFailurePhase.AssemblyLoad,
+                    PluginFailureAttribution.Confirmed,
+                    new InvalidOperationException("first failure"),
+                    timestamp: firstTimestamp);
+                var latestException = new ApplicationException("latest failure", new Exception("inner failure"));
+                var latestTimestamp = firstTimestamp.AddMinutes(1);
+                PluginManager.RecordPluginFailure(
+                    pluginDir,
+                    "plugin.storage",
+                    "Plugin.Identifier",
+                    new Version(1, 2, 4),
+                    PluginFailurePhase.PluginExecution,
+                    PluginFailureAttribution.Confirmed,
+                    latestException,
+                    timestamp: latestTimestamp);
+
+                var failure = Assert.Single(PluginManager.GetPluginFailures(pluginDir)).Value;
+                Assert.Equal(latestTimestamp, failure.Timestamp);
+                Assert.Equal("Plugin.Identifier", failure.PluginIdentifier);
+                Assert.Equal(new Version(1, 2, 4), failure.PluginVersion);
+                Assert.Equal(PluginFailurePhase.PluginExecution, failure.Phase);
+                Assert.Equal(PluginFailureAttribution.Confirmed, failure.Attribution);
+                Assert.Equal(latestException.ToString(), failure.Details);
+                Assert.False(string.IsNullOrEmpty(failure.BTCPayVersion));
+                Assert.Empty(Directory.GetFiles(pluginDir, "*.tmp"));
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
+        [Fact]
+        public void PluginFailureDiagnostics_ClearOnUninstall()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-failure-uninstall-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                PluginManager.RecordPluginFailure(
+                    pluginDir,
+                    "TestPlugin",
+                    "TestPlugin",
+                    new Version(1, 0),
+                    PluginFailurePhase.RuntimeRequest,
+                    PluginFailureAttribution.Confirmed,
+                    new Exception("request failure"));
+                using var httpClient = new HttpClient { BaseAddress = new Uri("https://plugins.example/") };
+                var service = CreatePluginService(pluginDir, [], httpClient);
+
+                service.UninstallPlugin("TestPlugin");
+
+                Assert.Empty(PluginManager.GetPluginFailures(pluginDir));
+                Assert.False(File.Exists(Path.Combine(pluginDir, "plugin-failures.json")));
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
+        [Fact]
+        public void PluginFailureDiagnostics_ClearAfterSuccessfulStartup()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-failure-start-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                PluginManager.RecordPluginFailure(
+                    pluginDir,
+                    "StartedPlugin",
+                    "StartedPlugin",
+                    new Version(1, 0),
+                    PluginFailurePhase.Startup,
+                    PluginFailureAttribution.Confirmed,
+                    new Exception("old startup failure"));
+
+                PluginManager.ClearFailureDiagnosticsForStartedPlugins(
+                    pluginDir,
+                    [MakeLoadedPlugin("StartedPlugin")]);
+
+                Assert.Empty(PluginManager.GetPluginFailures(pluginDir));
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
+        [Fact]
+        public void PluginFailureDetailsView_UsesEncodedCollapsedRenderingAndCopyControl()
+        {
+            var viewPath = Path.Combine(
+                TestUtils.TryGetSolutionDirectoryInfo().FullName,
+                "BTCPayServer",
+                "Plugins",
+                "PluginManager",
+                "Views",
+                "ListPlugins.cshtml");
+            var view = File.ReadAllText(viewPath);
+
+            Assert.Contains("<details class=\"plugin-failure", view);
+            Assert.Contains("class=\"plugin-failure__copy", view);
+            Assert.Contains(">@failure.Details</pre>", view);
+            Assert.DoesNotContain("Html.Raw(failure.Details)", view);
+        }
+
+        [Fact]
+        public async Task InstalledPluginsViewModel_ProjectsFailureAndLeavesLegacyDisableEmpty()
+        {
+            var timestamp = new DateTimeOffset(2026, 10, 14, 13, 45, 17, TimeSpan.Zero);
+            var model = await CreateInstalledPluginsViewModel(
+                disabled: new Dictionary<string, Version>
+                {
+                    { "FailedPlugin", new Version(1, 0) },
+                    { "LegacyPlugin", new Version(2, 0) }
+                },
+                allAvailable: [],
+                failure: new PluginFailureDiagnostic
+                {
+                    Timestamp = timestamp,
+                    PluginIdentifier = "FailedPlugin",
+                    PluginVersion = new Version(1, 0),
+                    BTCPayVersion = "2.3.4",
+                    Phase = PluginFailurePhase.Startup,
+                    Attribution = PluginFailureAttribution.PossiblyInvolvedCulpritUnknown,
+                    Details = "<script>alert('encoded')</script>"
+                });
+
+            var failed = Assert.Single(model.DisabledPlugins, plugin => plugin.Identifier == "FailedPlugin");
+            Assert.Equal(timestamp, failed.Failure.Timestamp);
+            Assert.Equal("<script>alert('encoded')</script>", failed.Failure.Details);
+            Assert.Equal(PluginFailureAttribution.PossiblyInvolvedCulpritUnknown, failed.Failure.Attribution);
+            Assert.Null(Assert.Single(model.DisabledPlugins, plugin => plugin.Identifier == "LegacyPlugin").Failure);
+        }
+
+        [Fact]
         public async Task InstalledPluginsViewModel_ReturnsDisabledPluginUpdateWhenNewerVersionAvailable()
         {
             var model = await CreateInstalledPluginsViewModel(
@@ -754,7 +903,8 @@ namespace BTCPayServer.Tests
             IEnumerable<PluginService.AvailablePlugin> allAvailable = null,
             IEnumerable<IBTCPayServerPlugin> loadedPlugins = null,
             (string action, string plugin)? command = null,
-            PluginService.AvailablePlugin pendingManifest = null)
+            PluginService.AvailablePlugin pendingManifest = null,
+            PluginFailureDiagnostic failure = null)
         {
             var loaded = loadedPlugins?.ToArray() ?? [];
             var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-projection-test-{Guid.NewGuid():N}");
@@ -762,6 +912,18 @@ namespace BTCPayServer.Tests
             try
             {
                 WritePluginState(pluginDir, disabled, command, pendingManifest);
+                if (failure is not null)
+                {
+                    PluginManager.RecordPluginFailure(
+                        pluginDir,
+                        failure.PluginIdentifier,
+                        failure.PluginIdentifier,
+                        failure.PluginVersion,
+                        failure.Phase,
+                        failure.Attribution,
+                        details: failure.Details,
+                        timestamp: failure.Timestamp);
+                }
                 using var httpClient = new HttpClient { BaseAddress = new Uri("https://plugins.example/") };
                 var controller = CreatePluginManagerController(pluginDir, loaded, httpClient);
                 return await controller.CreateInstalledPluginsViewModel(allAvailable ?? []);

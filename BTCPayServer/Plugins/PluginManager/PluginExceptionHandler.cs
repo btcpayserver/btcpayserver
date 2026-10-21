@@ -31,7 +31,7 @@ namespace BTCPayServer.Plugins
                 logs.Configuration.LogWarning("Debugger attached detected, so we didn't disable the plugin and do not restart the server");
                 return ValueTask.FromResult(false);
             }
-            PluginManager.DisablePlugin(_pluginDir, plugin);
+            PluginManager.DisablePlugin(_pluginDir, plugin, exception, PluginFailurePhase.RuntimeRequest);
             _ = Task.Delay(3000).ContinueWith((t) => applicationLifetime.StopApplication());
             // Returning true here means we will see Error 500 error message.
             // Returning false means that the user will see a stacktrace.

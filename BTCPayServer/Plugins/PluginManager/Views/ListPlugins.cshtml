@@ -282,9 +282,9 @@
 @section PageFootContent {
     <script>
         document.querySelectorAll('.plugin-failure__copy').forEach(button => {
-            button.addEventListener('click', () => {
+            button.addEventListener('click', event => {
                 const details = button.closest('.plugin-failure')?.querySelector('.plugin-failure__details')
-                if (details) navigator.clipboard.writeText(details.textContent)
+                if (details) window.copyToClipboard(event, details.textContent)
             })
         })
     </script>

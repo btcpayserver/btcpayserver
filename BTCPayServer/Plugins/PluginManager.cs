@@ -685,9 +685,16 @@ namespace BTCPayServer.Plugins
 
         public static IReadOnlyDictionary<string, PluginFailureDiagnostic> GetPluginFailures(string pluginDir)
         {
-            lock (FailureDiagnosticsLock)
+            try
             {
-                return ReadPluginFailures(pluginDir);
+                lock (FailureDiagnosticsLock)
+                {
+                    return ReadPluginFailures(pluginDir);
+                }
+            }
+            catch
+            {
+                return new Dictionary<string, PluginFailureDiagnostic>(StringComparer.OrdinalIgnoreCase);
             }
         }
 
@@ -715,11 +722,18 @@ namespace BTCPayServer.Plugins
                 Details = details
             };
 
-            lock (FailureDiagnosticsLock)
+            try
             {
-                var failures = ReadPluginFailures(plugin.PluginDir);
-                failures[plugin.Identifier] = diagnostic;
-                WritePluginFailures(plugin.PluginDir, failures);
+                lock (FailureDiagnosticsLock)
+                {
+                    var failures = ReadPluginFailures(plugin.PluginDir);
+                    failures[plugin.Identifier] = diagnostic;
+                    WritePluginFailures(plugin.PluginDir, failures);
+                }
+            }
+            catch
+            {
+                // Diagnostics must never prevent crash protection from disabling a plugin.
             }
         }
 
@@ -747,14 +761,21 @@ namespace BTCPayServer.Plugins
 
         private static void ClearPluginFailures(string pluginDir, IEnumerable<string> identifiers)
         {
-            lock (FailureDiagnosticsLock)
+            try
             {
-                var failures = ReadPluginFailures(pluginDir);
-                var changed = false;
-                foreach (var identifier in identifiers)
-                    changed |= failures.Remove(identifier);
-                if (changed)
-                    WritePluginFailures(pluginDir, failures);
+                lock (FailureDiagnosticsLock)
+                {
+                    var failures = ReadPluginFailures(pluginDir);
+                    var changed = false;
+                    foreach (var identifier in identifiers)
+                        changed |= failures.Remove(identifier);
+                    if (changed)
+                        WritePluginFailures(pluginDir, failures);
+                }
+            }
+            catch
+            {
+                // Diagnostics cleanup must never prevent the server from starting.
             }
         }
 

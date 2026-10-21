@@ -46,7 +46,9 @@ public class PluginManagerPlaywrightTests(ITestOutputHelper helper) : UnitTestBa
         await Expect(failure).ToContainTextAsync(FailureMessage);
         await Expect(failure.Locator(".plugin-failure__details"))
             .ToContainTextAsync("CrashPlugin");
-        await Expect(failure.Locator(".plugin-failure__copy")).ToBeVisibleAsync();
+        var copy = failure.Locator(".plugin-failure__copy");
+        await copy.ClickAsync();
+        await Expect(copy).ToContainTextAsync("Copied");
     }
 
     [Fact]

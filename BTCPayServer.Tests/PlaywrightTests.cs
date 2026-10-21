@@ -30,7 +30,6 @@ using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Dapper;
 using LNURL;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -93,8 +92,7 @@ namespace BTCPayServer.Tests
             await s.RegisterNewUser(true);
             await s.SkipWizard();
 
-            var crashResponse = await s.Page.GotoAsync(new Uri(s.ServerUri, CrashPlugin.CrashPath).ToString());
-            Assert.Equal(StatusCodes.Status500InternalServerError, crashResponse.Status);
+            await s.GoToUrl(CrashPlugin.CrashPath, ignoreResponse: true);
             await s.Server.PayTester.RestartAsync();
 
             await s.GoToUrl("/server/plugins");

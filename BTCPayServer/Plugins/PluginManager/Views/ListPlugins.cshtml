@@ -87,12 +87,14 @@
                                 <dd class="col-sm-8">
                                     @switch (failure.Phase)
                                     {
-                                        case PluginFailurePhase.AssemblyLoad: <span text-translate="true">Assembly load</span> break;
-                                        case PluginFailurePhase.PluginDiscovery: <span text-translate="true">Plugin discovery</span> break;
-                                        case PluginFailurePhase.PluginActivation: <span text-translate="true">Plugin activation</span> break;
-                                        case PluginFailurePhase.PluginExecution: <span text-translate="true">Plugin execution</span> break;
-                                        case PluginFailurePhase.Startup: <span text-translate="true">Startup</span> break;
-                                        case PluginFailurePhase.RuntimeRequest: <span text-translate="true">Runtime request</span> break;
+                                        case PluginLifecyclePhase.AssemblyLoad: <span text-translate="true">Assembly load</span> break;
+                                        case PluginLifecyclePhase.PluginDiscovery: <span text-translate="true">Plugin discovery</span> break;
+                                        case PluginLifecyclePhase.PluginActivation: <span text-translate="true">Plugin activation</span> break;
+                                        case PluginLifecyclePhase.PluginValidation: <span text-translate="true">Plugin validation</span> break;
+                                        case PluginLifecyclePhase.PluginExecution: <span text-translate="true">Plugin execution</span> break;
+                                        case PluginLifecyclePhase.Startup: <span text-translate="true">Startup</span> break;
+                                        case PluginLifecyclePhase.RuntimeRequest: <span text-translate="true">Runtime request</span> break;
+                                        case PluginLifecyclePhase.Running: <span text-translate="true">Running</span> break;
                                     }
                                 </dd>
                                 <dt class="col-sm-4" text-translate="true">Attribution</dt>

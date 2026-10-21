@@ -261,7 +261,8 @@ public class UIPluginManagerController(
                     pair.Value,
                     versionsByIdentifier.GetValueOrDefault(pair.Key),
                     runtimeState.PendingCommands,
-                    pluginFailures.GetValueOrDefault(pair.Key)))
+                    pluginFailures.GetValueOrDefault(pair.Key) ?? pluginFailures.Values.FirstOrDefault(failure =>
+                        failure.PluginIdentifier.Equals(pair.Key, StringComparison.OrdinalIgnoreCase))))
                 .ToList(),
             InstalledPlugins = runtimeState.VisibleLoadedPlugins
                 .OrderBy(plugin => plugin.Name, StringComparer.OrdinalIgnoreCase)

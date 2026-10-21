@@ -112,17 +112,16 @@ namespace BTCPayServer
             }
             catch (Exception e) when (PluginManager.IsExceptionByPlugin(e, out var plugin))
             {
-                var pluginDir = new DataDirectories().Configure(conf).PluginDir;
                 // This happen when a plugin fails to resolve some dependencies in startup services
                 if (plugin.Instance.SystemPlugin && e.Source == "Microsoft.Extensions.DependencyInjection")
                 {
                     logs.Configuration.LogError(e, "Plugin crash during startup detected. We couldn't figure out which plugin caused it, disabling all plugins.");
-                    PluginManager.DisablePlugins(pluginDir, e);
+                    PluginManager.DisablePlugins(e);
                 }
                 else
                 {
                     logs.Configuration.LogError(e, $"Plugin crash during startup detected, disabling {plugin.Assembly.GetName().Name}...");
-                    PluginManager.DisablePlugin(pluginDir, plugin, e, PluginFailurePhase.Startup);
+                    PluginManager.DisablePlugin(plugin, e, PluginLifecyclePhase.Startup);
                 }
             }
             finally

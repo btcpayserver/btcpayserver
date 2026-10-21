@@ -6,13 +6,15 @@ using Newtonsoft.Json.Converters;
 namespace BTCPayServer.Plugins;
 
 [JsonConverter(typeof(StringEnumConverter))]
-public enum PluginFailurePhase
+public enum PluginLifecyclePhase
 {
     AssemblyLoad,
     PluginDiscovery,
     PluginActivation,
+    PluginValidation,
     PluginExecution,
     Startup,
+    Running,
     RuntimeRequest
 }
 
@@ -29,7 +31,7 @@ public class PluginFailureDiagnostic
     public string PluginIdentifier { get; set; } = string.Empty;
     public Version? PluginVersion { get; set; }
     public string BTCPayVersion { get; set; } = string.Empty;
-    public PluginFailurePhase Phase { get; set; }
+    public PluginLifecyclePhase Phase { get; set; }
     public PluginFailureAttribution Attribution { get; set; }
     public string Details { get; set; } = string.Empty;
 }

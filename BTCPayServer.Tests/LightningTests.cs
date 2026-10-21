@@ -1,10 +1,13 @@
 using System;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.Lightning;
@@ -158,6 +161,23 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         Assert.NotEmpty(merchantPendingInvoices);
         Assert.Contains(merchantPendingInvoices, i => i.Id == merchantInvoice.Id);
 
+        var validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(async () =>
+            await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest
+            {
+                BOLT11 = merchantInvoice.BOLT11,
+                Amount = LightMoney.Satoshis(-1)
+            }));
+        Assert.Contains(validationErr.ValidationErrors, error => error.Path == "Amount");
+        validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(() =>
+            client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest
+            {
+                BOLT11 = merchantInvoice.BOLT11,
+                MaxFeePercent = -1,
+                MaxFeeFlat = Money.Satoshis(-1)
+            }));
+        Assert.Contains(validationErr.ValidationErrors, error => error.Path == "MaxFeePercent");
+        Assert.Contains(validationErr.ValidationErrors, error => error.Path == "MaxFeeFlat");
+
         var payResponse = await client.PayLightningInvoice(user.StoreId, "BTC", new PayLightningInvoiceRequest
         {
             BOLT11 = merchantInvoice.BOLT11
@@ -182,8 +202,15 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
             {
                 BOLT11 = "lol"
             }));
+        var oversizedInvoice = await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.PayLightningInvoice(user.StoreId, "BTC",
+            new PayLightningInvoiceRequest()
+            {
+                BOLT11 = "lnbc1" + new string('q', 8_000)
+            }));
+        Assert.Contains(oversizedInvoice.ValidationErrors,
+            error => error.Message.Contains("too large", StringComparison.OrdinalIgnoreCase));
 
-        var validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.CreateLightningInvoice(user.StoreId, "BTC",
+        validationErr = await Assert.ThrowsAsync<GreenfieldValidationException>(async () => await client.CreateLightningInvoice(user.StoreId, "BTC",
             new CreateLightningInvoiceRequest()
             {
                 Amount = -1,
@@ -336,6 +363,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         Assert.Null(method.Config);
         method = await adminClient.GetStorePaymentMethod(store.Id, "BTC-LN", includeConfig: true);
         Assert.NotNull(method.Config);
+        Assert.Null(method.Config["allowUnsafeConnection"]);
         await AssertEx.AssertHttpError(403, async () =>
         {
             await viewOnlyClient.RemoveStorePaymentMethod(store.Id, "BTC-LN");
@@ -351,6 +379,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         foreach (var forbidden in new[]
                  {
                      "type=clightning;server=tcp://127.0.0.1",
+                     "type=clightning;server=tcp://example.com:9735",
                      "type=clightning;server=tcp://test",
                      "type=clightning;server=tcp://test.lan",
                      "type=clightning;server=tcp://test.local",
@@ -382,16 +411,31 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
                 Enabled = true
             });
         }
+        var unsafeMethod = await admin2Client.GetStorePaymentMethod(admin2.StoreId, "BTC-LN", includeConfig: true);
+        Assert.True(unsafeMethod.Config?["allowUnsafeConnection"]?.Value<bool>());
+        await admin2Client.UpdateStorePaymentMethod(admin2.StoreId, "BTC-LN", new UpdatePaymentMethodRequest
+        {
+            Config = new JObject
+            {
+                ["connectionString"] = "type=clightning;server=unix://[0:0:0:0:0:0:0:1]"
+            },
+            Enabled = false
+        });
+        unsafeMethod = await admin2Client.GetStorePaymentMethod(admin2.StoreId, "BTC-LN", includeConfig: true);
+        Assert.True(unsafeMethod.Config?["allowUnsafeConnection"]?.Value<bool>());
 
         // Allowed ip should be ok
         await adminClient.UpdateStorePaymentMethod(store.Id, "BTC-LN", new UpdatePaymentMethodRequest()
         {
             Config = new JObject()
             {
-                ["connectionString"] = "type=clightning;server=tcp://8.8.8.8"
+                ["connectionString"] = "type=clightning;server=tcp://8.8.8.8",
+                ["allowUnsafeConnection"] = true
             },
             Enabled = true
         });
+        method = await adminClient.GetStorePaymentMethod(store.Id, "BTC-LN", includeConfig: true);
+        Assert.False(method.Config?["allowUnsafeConnection"]?.Value<bool>());
         // If we strip the admin's right, he should not be able to set unsafe anymore, even if the API key is still valid
         await admin2.MakeAdmin(false);
         await AssertEx.AssertValidationError(new[] { "ConnectionString" }, async () =>
@@ -472,11 +516,13 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
             Enabled = method.Enabled,
             Config = new JObject()
             {
-                ["connectionString"] = "Internal Node"
+                ["internalNodeRef"] = "Internal Node",
+                ["allowUnsafeConnection"] = true
             }
         });
         Assert.NotNull(data);
         Assert.NotNull(data.Config["internalNodeRef"]?.Value<string>());
+        Assert.Null(data.Config["allowUnsafeConnection"]);
         // Make sure that the nonAdmin can toggle enabled, ConnectionString unchanged.
         await nonAdminUserClient.UpdateStorePaymentMethod(nonAdminUser.StoreId, "BTC-LN", new UpdatePaymentMethodRequest()
         {
@@ -508,6 +554,16 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
 
         Assert.Empty(await adminClient.GetStoreLightningAddresses(store.Id));
         Assert.Empty(await adminClient.GetStoreLightningAddresses(store2));
+        await AssertEx.AssertValidationError(["Min"], () =>
+            adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1,
+                new LightningAddressData { Min = 0 }));
+        await AssertEx.AssertValidationError(["Max"], () =>
+            adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1,
+                new LightningAddressData { Max = 0 }));
+        await AssertEx.AssertValidationError(["Max"], () =>
+            adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1,
+                new LightningAddressData { Min = 2, Max = 1 }));
+        Assert.Empty(await adminClient.GetStoreLightningAddresses(store.Id));
         await adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1, new LightningAddressData());
 
         await adminClient.AddOrUpdateStoreLightningAddress(store.Id, address1, new LightningAddressData()
@@ -543,6 +599,21 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         var lnAddresses = await adminClient.GetStoreLightningAddresses(store3);
         Assert.Single(lnAddresses);
         Assert.Equal(metadata, lnAddresses[0].InvoiceMetadata);
+        await AssertEx.AssertValidationError(
+            [nameof(LightningAddressData.InvoiceMetadata)],
+            () => adminClient.AddOrUpdateStoreLightningAddress(
+                store3,
+                Guid.NewGuid().ToString("n"),
+                new LightningAddressData
+                {
+                    InvoiceMetadata = new JObject { ["payload"] = new string('X', 2 * 1024 * 1024) }
+                }));
+        await AssertEx.AssertValidationError(
+            [nameof(LightningAddressData.CurrencyCode)],
+            () => adminClient.AddOrUpdateStoreLightningAddress(
+                store3,
+                Guid.NewGuid().ToString("n"),
+                new LightningAddressData { CurrencyCode = new string('X', 2 * 1024 * 1024) }));
     }
 
     [Fact]
@@ -741,6 +812,22 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         tester.ActivateLightning();
         await tester.StartAsync();
         await tester.EnsureChannelsSetup();
+        var lightningHttpClient = tester.PayTester.GetService<IHttpClientFactory>()
+            .CreateClient(LightningClientFactoryService.NamedClient);
+        using var redirectResponse = await lightningHttpClient.GetAsync(tester.PayTester.ServerUriWithIP);
+        Assert.Equal(HttpStatusCode.Redirect, redirectResponse.StatusCode);
+        var localUri = new UriBuilder(tester.PayTester.ServerUriWithIP) { Host = "localhost" }.Uri;
+        var guardedLightningClient = tester.PayTester.GetService<LightningClientFactoryService>().Create(
+            $"type=phoenixd;server={localUri};password=secret",
+            tester.PayTester.Networks.GetNetwork<BTCPayNetwork>("BTC"),
+            allowUnsafe: false);
+        var exception = await Assert.ThrowsAsync<HttpRequestException>(() => guardedLightningClient.GetInfo());
+        Assert.Contains("does not resolve to an allowed network address", exception.Message);
+        var onionHandler = tester.PayTester.GetService<IHttpMessageHandlerFactory>()
+            .CreateHandler(LightningClientFactoryService.OnionNamedClient);
+        while (onionHandler is DelegatingHandler delegatingHandler)
+            onionHandler = delegatingHandler.InnerHandler;
+        Assert.False(Assert.IsType<Socks5HttpClientHandler>(onionHandler).AllowAutoRedirect);
         var user = tester.NewAccount();
         await user.GrantAccessAsync(true);
         var storeController = user.GetController<UIStoresController>();
@@ -751,6 +838,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         var address = ((CLightningClient)tester.CustomerLightningD).Address.AbsoluteUri;
         await storeController.SetupLightningNode(user.StoreId, new LightningNodeViewModel
         {
+            LightningNodeType = LightningNodeType.Custom,
             ConnectionString = $"type=clightning;server={address}",
             SkipPortTest = true // We can't test this as the IP can't be resolved by the test host :(
         }, "test", "BTC");
@@ -761,12 +849,19 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         Assert.IsType<RedirectToActionResult>(await storeController.SetupLightningNode(user.StoreId,
             new LightningNodeViewModel
             {
-                ConnectionString = $"type=clightning;server={address}"
+                LightningNodeType = LightningNodeType.Custom,
+                ConnectionString = "type=clightning;server=tcp://127.0.0.1:1234"
             }, "save", "BTC"));
+        var store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
+        var handlers = tester.PayTester.GetService<PaymentMethodHandlerDictionary>();
+        var lightningConfig = store?.GetPaymentMethodConfig<LightningPaymentMethodConfig>(
+            PaymentTypes.LN.GetPaymentMethodId("BTC"), handlers);
+        Assert.Equal("type=clightning;server=tcp://127.0.0.1:1234", lightningConfig?.ConnectionString);
+        Assert.True(lightningConfig?.AllowUnsafeConnection);
 
         // Make sure old connection string format does not work
         Assert.IsType<RedirectToActionResult>(await storeController.SetupLightningNode(user.StoreId,
-            new LightningNodeViewModel { ConnectionString = address },
+            new LightningNodeViewModel { LightningNodeType = LightningNodeType.Custom, ConnectionString = address },
             "save", "BTC"));
 
         storeResponse = storeController.LightningSettings(user.StoreId, "BTC");

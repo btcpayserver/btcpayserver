@@ -362,7 +362,7 @@ namespace BTCPayServer.Tests
         public async Task Logout()
         {
             await Page.Locator("#menu-item-Account").ClickAsync();
-            await Page.Locator("#Nav-Logout").ClickAsync();
+            await Page.Locator(".global-nav__logout").ClickAsync();
         }
 
         public Task SkipWizard() => Page.ClickAsync("#SkipWizard");
@@ -455,7 +455,7 @@ namespace BTCPayServer.Tests
             foreach (var locator in await linkLocator.AllAsync())
             {
                 var link = await locator.GetAttributeAsync("href");
-                if (link is null or "/logout")
+                if (link is null)
                     continue;
                 Assert.NotNull(link);
                 links.Add(link);

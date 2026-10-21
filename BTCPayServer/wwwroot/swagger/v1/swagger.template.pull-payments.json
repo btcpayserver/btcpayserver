@@ -928,6 +928,8 @@
                     "amount": {
                         "type": "string",
                         "format": "decimal",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
                         "example": "10399.18",
                         "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
                     },

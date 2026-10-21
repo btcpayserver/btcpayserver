@@ -505,8 +505,7 @@ namespace BTCPayServer
             if (!string.Equals(details.PaymentHash?.ToString(), paymentHash, StringComparison.Ordinal))
                 return NotFound(new LNUrlStatusResponse { Status = "ERROR", Reason = "Not found" });
 
-            var settled = invoice.Status == InvoiceStatus.Settled ||
-                          invoice.Status == InvoiceStatus.Processing;
+            var settled = invoice.Status == InvoiceStatus.Settled;
             var preimage = settled ? details.Preimage?.ToString() : null;
 
             return Ok(new
@@ -574,9 +573,11 @@ namespace BTCPayServer
             if (store is null)
                 return NotFound();
 
-			var blob = store.GetStoreBlob();
+            var blob = store.GetStoreBlob();
             if (!blob.AnyoneCanInvoice)
                 return NotFound(StringLocalizer["'Anyone can invoice' is turned off"]);
+            if (amount is <= 0)
+                return BadRequest(StringLocalizer["Please provide an amount greater than 0"]);
             var metadata = new InvoiceMetadata();
             if (!string.IsNullOrEmpty(orderId))
             {
@@ -814,20 +815,13 @@ namespace BTCPayServer
                         updatePaymentMethod = true;
                     }
                 }
+                ILightningClient replacementClient = null;
+                string replacedInvoiceId = null;
                 if (string.IsNullOrEmpty(lightningPaymentMethod.Destination) || promptDetails.GeneratedBoltAmount != amt)
                 {
-                    var client = _handlers.GetLightningHandler(network).CreateLightningClient(lnConfig);
+                    replacementClient = _handlers.GetLightningHandler(network).CreateLightningClient(lnConfig);
                     if (!string.IsNullOrEmpty(lightningPaymentMethod.Destination))
-                    {
-                        try
-                        {
-                            await client.CancelInvoice(promptDetails.InvoiceId);
-                        }
-                        catch (Exception)
-                        {
-                            //not a fully supported option
-                        }
-                    }
+                        replacedInvoiceId = promptDetails.InvoiceId;
 
                     LightningInvoice invoice;
                     try
@@ -843,7 +837,7 @@ namespace BTCPayServer
                             PrivateRouteHints = blob.LightningPrivateRouteHints,
                             DescriptionHashOnly = true
                         };
-                        invoice = await client.CreateInvoice(param);
+                        invoice = await replacementClient.CreateInvoice(param);
                     }
                     catch (Exception ex)
                     {
@@ -872,6 +866,12 @@ namespace BTCPayServer
                         ? new[] { promptDetails.PaymentHash.ToString().ToLowerInvariant() }
                         : null;
                     await _invoiceRepository.UpdatePrompt(invoiceId, lightningPaymentMethod, trackedDestinations);
+                    if (replacementClient is not null &&
+                        !string.IsNullOrEmpty(replacedInvoiceId) &&
+                        replacedInvoiceId != promptDetails.InvoiceId)
+                    {
+                        await replacementClient.TryCancelInvoice(replacedInvoiceId);
+                    }
                     _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoiceId, promptDetails, pmi));
                 }
 
@@ -954,6 +954,12 @@ namespace BTCPayServer
                     currencyNameTable.GetCurrencyData(vm.Add.CurrencyCode, false) is null)
                 {
                     vm.AddModelError(addressVm => addressVm.Add.CurrencyCode, StringLocalizer["Currency is invalid"], this);
+                }
+
+                if (vm.Add.Min is { } min && vm.Add.Max is { } max && min > max)
+                {
+                    vm.AddModelError(addressVm => addressVm.Add.Max,
+                        StringLocalizer["Maximum must be greater than or equal to minimum"], this);
                 }
 
                 JObject metadata = null;

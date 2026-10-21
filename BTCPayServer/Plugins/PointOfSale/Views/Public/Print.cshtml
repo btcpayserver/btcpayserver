@@ -1,6 +1,7 @@
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Payments
 @using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Payments.LNURLPay
 @using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
 @using BTCPayServer.Services.Invoices
@@ -128,7 +129,7 @@ else
                                 }, Context.Request.Scheme, Context.Request.Host.ToString())!);
                                 var lnUrl = LNURL.EncodeUri(lnurlEndpoint, "payRequest", supported.UseBech32Scheme);
                                 <a href="@lnUrl" rel="noreferrer noopener" class="card-img-bottom">
-                                    <vc:qr-code data="@lnUrl.ToString().ToUpperInvariant()" />
+                                    <vc:qr-code data="@LNURLPayPaymentLinkExtension.FormatPaymentLinkForQRCode(lnUrl.ToString(), supported.UseBech32Scheme)" />
                                 </a>
                             }
                         }

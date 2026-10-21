@@ -83,9 +83,8 @@ namespace BTCPayServer.Plugins.PayButton.Controllers
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                 entityManipulator: (entity) =>
                 {
-                    entity.NotificationEmail = model.NotifyEmail;
                     entity.NotificationURLTemplate = model.ServerIpn;
-                    entity.FullNotifications = true;
+                    entity.FullNotifications = !string.IsNullOrEmpty(model.ServerIpn);
                 },
                 cancellationToken: cancellationToken);
             }

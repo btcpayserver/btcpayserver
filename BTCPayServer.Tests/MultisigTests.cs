@@ -574,7 +574,6 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var storeRepo = scope.ServiceProvider.GetRequiredService<StoreRepository>();
         var multisigService = scope.ServiceProvider.GetRequiredService<MultisigService>();
-
         var signerAUser = await userManager.FindByEmailAsync(signerA);
         var signerBUser = await userManager.FindByEmailAsync(signerB);
         var walletManagerUser = await userManager.FindByEmailAsync(walletManager);

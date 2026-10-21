@@ -6,6 +6,8 @@ namespace BTCPayServer.Forms;
 
 public class HtmlTextareaFormProvider : FormComponentProviderBase
 {
+    private const int MaxValueLength = 10_000;
+
     public override void Register(Dictionary<string, IFormComponentProvider> typeToComponentProvider)
     {
         typeToComponentProvider.Add("textarea", this);
@@ -16,8 +18,8 @@ public class HtmlTextareaFormProvider : FormComponentProviderBase
     public override void Validate(Form form, Field field)
     {
         if (field.Required)
-        {
             ValidateField<RequiredAttribute>(field);
-        }
+        if (field.Value?.Length > MaxValueLength)
+            field.ValidationErrors.Add($"The value must be at most {MaxValueLength} characters.");
     }
 }

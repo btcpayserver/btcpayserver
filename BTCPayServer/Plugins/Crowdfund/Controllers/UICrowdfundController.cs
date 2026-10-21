@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -170,27 +171,22 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                     formResponseJObject = TryParseJObject(formResponse) ?? new JObject();
                     var form = Form.Parse(formData.Config);
                     FormDataService.SetValues(form, formResponseJObject);
+                    var amtField = form.GetFieldByFullName($"{FormDataService.InvoiceParameterPrefix}amount");
+                    if (amtField is null)
+                    {
+                        amtField = new Field
+                        {
+                            Name = $"{FormDataService.InvoiceParameterPrefix}amount",
+                            Type = "hidden",
+                            Constant = true
+                        };
+                        form.Fields.Add(amtField);
+                    }
+                    amtField.Value = price?.ToString(CultureInfo.InvariantCulture);
                     if (!FormDataService.Validate(form, ModelState))
                     {
                         // someone tried to bypass validation
                         return RedirectToAction(nameof(ViewCrowdfund), new { appId });
-                    }
-
-
-                    var amtField = form.GetFieldByFullName($"{FormDataService.InvoiceParameterPrefix}amount");
-                    if (amtField is null)
-                    {
-                        form.Fields.Add(new Field
-                        {
-                            Name = $"{FormDataService.InvoiceParameterPrefix}amount",
-                            Type = "hidden",
-                            Value = price?.ToString(),
-                            Constant = true
-                        });
-                    }
-                    else
-                    {
-                        amtField.Value = price?.ToString();
                     }
                     formResponseJObject = FormDataService.GetValues(form);
 

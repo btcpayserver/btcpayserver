@@ -135,7 +135,15 @@
                     "404": {
                         "description": "POS app with specified ID was not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
             }
         },
         "/api/v1/apps/crowdfund/{appId}": {
@@ -220,7 +228,15 @@
                     "404": {
                         "description": "Crowdfund app with specified ID was not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
             }
         },
         "/api/v1/stores/{storeId}/apps/crowdfund": {
@@ -802,7 +818,8 @@
                             },
                             "notificationUrl": {
                                 "type": "string",
-                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
+                                "description": "Deprecated. Use webhooks instead. Callback notification URL to POST to once when an invoice is paid and once when there are enough blockchain confirmations.",
+                                "deprecated": true,
                                 "nullable": true
                             },
                             "redirectUrl": {
@@ -971,7 +988,8 @@
                             },
                             "notificationUrl": {
                                 "type": "string",
-                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
+                                "description": "Deprecated. Use webhooks instead. Callback notification URL to POST to once when an invoice is paid and once when there are enough blockchain confirmations.",
+                                "deprecated": true,
                                 "nullable": true
                             },
                             "tagline": {

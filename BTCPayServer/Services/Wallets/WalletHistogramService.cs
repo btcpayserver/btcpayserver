@@ -61,7 +61,15 @@ public class WalletHistogramService
                     series.Add((decimal)r.balance);
                     labels.Add((DateTimeOffset)r.date);
                 }
-                series[^1] = balance;
+                if (series.Count is 0)
+                {
+                    series.Add(balance);
+                    labels.Add(to);
+                }
+                else
+                {
+                    series[^1] = balance;
+                }
                 return new HistogramData
                 {
                     Series = series,

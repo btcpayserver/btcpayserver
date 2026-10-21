@@ -475,7 +475,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const { invoiceId, newState } = $button.dataset
 
         $badge.classList.add('pe-none'); // disable further interaction
-        const response = await fetch(`${baseUrl}/invoices/${invoiceId}/changestate/${newState}`, { method: 'POST' })
+        const tokenInput = $badge.querySelector('input[name="__RequestVerificationToken"]')
+        const headers = {}
+        if (tokenInput?.value) headers.RequestVerificationToken = tokenInput.value
+        const response = await fetch(`${baseUrl}/invoices/${invoiceId}/changestate/${newState}`, { method: 'POST', headers })
         if (response.ok) {
             const { statusString } = await response.json()
             $badge.outerHTML = `<div class="badge badge-${newState}" data-invoice-state-badge="${invoiceId}">${statusString}</div>`

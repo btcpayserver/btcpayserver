@@ -167,7 +167,8 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
         try
         {
             var lnurlPayRequestCallbackResponse =
-                await lnurlInfo.SendRequest(lm, this.Network.NBitcoinNetwork, httpClient, cancellationToken: cancellationToken);
+                await lnurlInfo.SendRequest(lm, this.Network.NBitcoinNetwork,
+                    handler.CreateClient(lnurlInfo.Callback), cancellationToken: cancellationToken);
 
             return (lnurlPayRequestCallbackResponse.GetPaymentRequest(this.Network.NBitcoinNetwork), null);
         }

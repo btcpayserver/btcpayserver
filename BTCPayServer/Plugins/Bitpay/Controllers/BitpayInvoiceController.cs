@@ -142,7 +142,6 @@ public class BitpayInvoiceController : ControllerBase
         entity.FullNotifications = invoice.FullNotifications || invoice.ExtendedNotifications;
         entity.ExtendedNotifications = invoice.ExtendedNotifications;
         entity.NotificationURLTemplate = invoice.NotificationURL;
-        entity.NotificationEmail = invoice.NotificationEmail;
         if (additionalTags != null)
             entity.InternalTags.AddRange(additionalTags);
         FillBuyerInfo(invoice, entity);

@@ -500,6 +500,15 @@ namespace BTCPayServer.Controllers
             else
             {
                 await signInManager.SignInAsync(user, session.ToAuthenticationProperties(false), session.AuthenticationMethod);
+                if (await userManager.IsInRoleAsync(user, Roles.ServerAdmin))
+                {
+                    var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+                    if (string.IsNullOrWhiteSpace(serverSettings.BaseUrl))
+                    {
+                        serverSettings.UpdateBaseUrl(Request.GetRequestBaseUrl());
+                        await settingsRepository.UpdateSetting(serverSettings);
+                    }
+                }
             }
             await userManager.ResetAccessFailedCountAsync(user);
             return RedirectToLocal(session.ReturnUrl);
@@ -591,7 +600,7 @@ namespace BTCPayServer.Controllers
         public string RegisteredUserId { get; set; }
         public bool RegisteredAdmin { get; set; }
 
-        [HttpGet("/logout")]
+        [HttpPost("/logout")]
         public async Task<IActionResult> Logout()
         {
             await signInManager.SignOutAsync();

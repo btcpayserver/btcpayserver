@@ -147,7 +147,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListRoles));
         }
 
-        [HttpGet("server/roles/{role}/default")]
+        [HttpPost("server/roles/{role}/default")]
         public async Task<IActionResult> SetDefaultRole(string role)
         {
             var resolved = await _StoreRepository.ResolveStoreRoleId(null, role);

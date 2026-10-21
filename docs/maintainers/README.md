@@ -131,3 +131,15 @@ When creating a release:
 8. After CI builds the Docker images, copy the new version's changelog section into the GitHub release.
 
 Before publishing, confirm that the release type and timing follow the [release cycle policy](#release-cycles).
+
+### Post-release
+
+After the release tag and Docker images are available:
+
+1. Bump the BTCPay Server version in
+   [`btcpayserver-docker`](https://github.com/btcpayserver/btcpayserver-docker).
+2. Publish the release on GitHub.
+3. In
+   [`btcpayserver-plugin-template`](https://github.com/btcpayserver/btcpayserver-plugin-template),
+   bump the BTCPay Server version in `Plugin.cs` and update the BTCPay Server
+   submodule to the release.

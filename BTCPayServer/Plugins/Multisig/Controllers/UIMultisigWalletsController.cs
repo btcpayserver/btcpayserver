@@ -12,6 +12,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Plugins.Multisig.Models;
 using BTCPayServer.Plugins.Multisig.Services;
 using BTCPayServer.Plugins.Wallets;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -33,6 +34,7 @@ public class UIMultisigWalletsController(
     BTCPayWalletProvider walletProvider,
     MultisigService multisigService,
     MultisigNotificationService multisigNotificationService,
+    CallbackGenerator callbackGenerator,
     PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
     IStringLocalizer stringLocalizer) : Controller
 {
@@ -143,7 +145,7 @@ public class UIMultisigWalletsController(
                         UserId = selectedId
                     })
                 .ToList(),
-            RequestBaseUrl = HttpContext.Request.GetRequestBaseUrl()
+            RequestBaseUrl = callbackGenerator.GetRequestBaseUrl()
         };
 
         await multisigService.SavePendingMultisigSetup(pending);

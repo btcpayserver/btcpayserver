@@ -54,13 +54,6 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-        [Uri]
-        [DisplayName("Notification URL")]
-        public string NotificationUrl
-        {
-            get; set;
-        }
-
         [DisplayName("Supported Transaction Currencies")]
         public List<string> SupportedTransactionCurrencies
         {
@@ -69,13 +62,6 @@ namespace BTCPayServer.Models.InvoicingModels
 
         [DisplayName("Available Payment Methods")]
         public SelectList AvailablePaymentMethods
-        {
-            get; set;
-        }
-
-        [MailboxAddress]
-        [DisplayName("Notification Email")]
-        public string NotificationEmail
         {
             get; set;
         }

@@ -47,12 +47,15 @@
                                         <span id="delivery-status-icon"
                                               data-bs-toggle="tooltip"
                                               data-bs-html="true"
-                                              title="Error: @wh.LastDeliveryErrorMessage. <br/> Delivery last attempted <span id='last-delivery-time'>@wh.LastDeliveryTimeStamp?.ToTimeAgo()</span>">
+                                              title="Error: @Html.Encode(wh.LastDeliveryErrorMessage). <br/> Delivery last attempted <span id='last-delivery-time'>@wh.LastDeliveryTimeStamp?.ToTimeAgo()</span>">
                                             <vc:icon symbol="cross" css-class="text-danger" />
                                         </span>
                                     }
                                 </td>
-                                <td class="d-block text-break">@wh.Url</td>
+                                <td class="d-block text-break">
+                                    <span permission="@Policies.CanModifyStoreSettings">@wh.Url</span>
+                                    <span not-permission="@Policies.CanModifyStoreSettings">@wh.RedactedUrl</span>
+                                </td>
                                 <td class="actions-col text-md-nowrap" permission="@Policies.CanModifyStoreSettings">
                                     <a asp-action="ModifyWebhook" asp-route-webhookId="@wh.Id" text-translate="true">Modify</a> -
                                     <a asp-action="DeleteWebhook" asp-route-webhookId="@wh.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="@StringLocalizer["Delete"]" text-translate="true">Delete</a>

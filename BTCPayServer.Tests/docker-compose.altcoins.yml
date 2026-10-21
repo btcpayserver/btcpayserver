@@ -61,7 +61,7 @@ services:
       - mailpit
 
   devlnd:
-    image: btcpayserver/bitcoin:31.1-1
+    image: btcpayserver/bitcoin:32.0-rc4
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -125,7 +125,7 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:31.1-1
+    image: btcpayserver/bitcoin:32.0-rc4
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_RPCUSERS: lnd
@@ -302,7 +302,7 @@ services:
 
   tor:
     restart: unless-stopped
-    image: btcpayserver/tor:0.4.9.13
+    image: btcpayserver/tor:0.4.9.14
     container_name: tor
     environment:
         TOR_PASSWORD: btcpayserver

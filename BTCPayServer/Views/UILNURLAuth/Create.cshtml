@@ -5,7 +5,7 @@
     var formats = new Dictionary<string, string>
     {
         { "Bech32", LNURL.EncodeUri(Model, "login", true).ToString().ToUpperInvariant() },
-        { "URI", LNURL.EncodeUri(Model, "login", false).ToString().ToUpperInvariant() }
+        { "URI", LNURL.EncodeUri(Model, "login", false).ToString() }
     };
 }
 

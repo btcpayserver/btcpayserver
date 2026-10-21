@@ -19,7 +19,7 @@ namespace BTCPayServer.Storage.Services.Providers.GoogleCloudStorage
         protected override Task<IStorageProvider> GetStorageProvider(
             GoogleCloudStorageConfiguration configuration)
         {
-            return Task.FromResult<IStorageProvider>(new GoogleStorageProvider(GoogleCredential.FromJson(configuration.JsonCredentials), configuration));
+            return Task.FromResult<IStorageProvider>(new GoogleStorageProvider(CredentialFactory.FromJson<ServiceAccountCredential>(configuration.JsonCredentials).ToGoogleCredential(), configuration));
         }
     }
 }

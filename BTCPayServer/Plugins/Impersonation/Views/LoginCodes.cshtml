@@ -1,5 +1,6 @@
 @using BTCPayServer.Plugins.Impersonation
 @using BTCPayServer.Views.Manage
+@inject BTCPayServer.Services.CallbackGenerator CallbackGenerator
 @{
     ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.LoginCodes), StringLocalizer["Login Codes"])
         .SetCategory(nameof(ManageNavPages)));
@@ -12,4 +13,4 @@
 </div>
 <partial name="_StatusMessage" />
 <p text-translate="true">Easily log into BTCPay Server on another device using a simple login code from an already authenticated device.</p>
-<component type="typeof(UserLoginCode)" render-mode="ServerPrerendered" param-id="@("LoginCode")"/>
+<component type="typeof(UserLoginCode)" render-mode="ServerPrerendered" param-id="@("LoginCode")" param-BaseUrl="@CallbackGenerator.GetRequestBaseUrl().ToString()"/>

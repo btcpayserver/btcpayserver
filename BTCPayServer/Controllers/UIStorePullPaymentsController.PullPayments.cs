@@ -313,6 +313,14 @@ namespace BTCPayServer.Controllers
                 .TryGet(payoutMethodId);
             var commandState = Enum.Parse<PayoutState>(vm.Command.Split("-").First());
             var payoutIds = vm.GetSelectedPayouts(commandState);
+            if (payoutIds.Length != 0)
+            {
+                await using var ctx = this._dbContextFactory.CreateContext();
+                ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+                payoutIds = (await GetPayoutsForPaymentMethod(payoutMethodId, ctx, payoutIds, storeId, cancellationToken))
+                    .Select(payout => payout.Id)
+                    .ToArray();
+            }
             if (payoutIds.Length == 0)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel

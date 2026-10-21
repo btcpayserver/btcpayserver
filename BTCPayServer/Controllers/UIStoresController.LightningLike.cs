@@ -177,6 +177,7 @@ public partial class UIStoresController
             ModelState.AddModelError(nameof(vm.ConnectionString), StringLocalizer["You do not have the permissions to change this settings"]);
         if (!ModelState.IsValid)
             return View(vm);
+        paymentMethod = handler.ParsePaymentMethodConfig(ctx.Config);
 
         switch (command)
         {
@@ -368,7 +369,8 @@ public partial class UIStoresController
 
         if (existing.GetExternalLightningUrl() is { } connectionString)
         {
-            return _lightningClientFactory.Create(connectionString, network);
+            return _lightningClientFactory.Create(connectionString, network,
+                existing.IsUnsafeConnectionAllowed());
         }
         if (existing.IsInternalNode && _lightningNetworkOptions.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var internalLightningNode))
         {

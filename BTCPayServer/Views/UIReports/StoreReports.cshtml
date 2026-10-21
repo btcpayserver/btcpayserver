@@ -140,7 +140,7 @@
                         <a :href="getInvoiceUrl(value)"
                            target="_blank"
                            v-if="srv.result.fields[columnIndex].type === 'invoice_id'">{{ displayValue(value) }}</a>
-                        <template v-else-if="srv.result.fields[columnIndex].type === 'tx_id'">
+                        <template v-else-if="value && srv.result.fields[columnIndex].type === 'tx_id'">
                             <vc:truncate-center text="value" is-vue="true" padding="15" classes="truncate-center-id"
                                                 link="getExplorerUrl(value, row[columnIndex-1])" />
                         </template>

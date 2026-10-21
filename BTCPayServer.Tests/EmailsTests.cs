@@ -1,8 +1,10 @@
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Plugins.Emails.Controllers;
+using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Services;
@@ -13,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Playwright;
 using MimeKit;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace BTCPayServer.Tests;
@@ -29,6 +32,58 @@ public class EmailsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         string[] expected = ["\"Nicolas, The, Great\" <emperor@btc.pay>", "{SomeTemplate}", "\"Madd,Test\" <madd@example.com>"];
         Assert.Equal(expected, actual);
     }
+
+    [Theory]
+    [Trait("FastTest", "FastTest")]
+    [InlineData("Invoice.Metadata.recipient", "first@example.com", 1)]
+    [InlineData("Invoice.Metadata.recipient", "first@example.com,second@example.com", 0)]
+    [InlineData("Invoice.Buyer.MailboxAddress", "first@example.com,second@example.com", 0)]
+    [InlineData("Invoice.Metadata.recipients", "first@example.com,second@example.com", 2)]
+    [InlineData("Invoice.Metadata.addresses", "first@example.com,second@example.com", 2)]
+    public void TemplateNameControlsRecipientFanout(string placeholder, string value, int expectedCount)
+    {
+        var model = new JObject
+        {
+            ["Invoice"] = new JObject
+            {
+                ["Buyer"] = new JObject { ["MailboxAddress"] = value },
+                ["Metadata"] = new JObject
+                {
+                    ["recipient"] = value,
+                    ["recipients"] = value,
+                    ["addresses"] = value
+                }
+            }
+        };
+
+        var recipients = StoreEmailRuleProcessorSender.ParseEmailAddresses(model, $"{{{placeholder}}}");
+
+        Assert.Equal(expectedCount, recipients.Length);
+    }
+
+    [Fact]
+    [Trait("FastTest", "FastTest")]
+    public void LimitsRecipientsAfterTemplateRendering()
+    {
+        var renderedRecipients = string.Join(",",
+            Enumerable.Range(0, 101).Select(i => $"recipient{i}@example.com"));
+        var model = new JObject
+        {
+            ["Invoice"] = new JObject
+            {
+                ["Metadata"] = new JObject { ["recipients"] = renderedRecipients }
+            }
+        };
+
+        var recipients = StoreEmailRuleProcessorSender.ParseEmailAddresses(
+            model, "{Invoice.Metadata.recipients}");
+
+        Assert.Equal(101, recipients.Length);
+        Assert.True(StoreEmailRuleProcessorSender.IsWithinRecipientLimit(
+            recipients[..98], recipients[98..99], recipients[99..100]));
+        Assert.False(StoreEmailRuleProcessorSender.IsWithinRecipientLimit(recipients, [], []));
+    }
+
     [Fact(Timeout = TestUtils.LongRunningTestTimeout)]
     [Trait("Integration", "Integration")]
     public async Task EmailSenderTests()

@@ -23,6 +23,7 @@ public class UIUserMonetizationController(
     MonetizationSettings settings,
     PoliciesSettings policies,
     LinkGenerator linkGenerator,
+    CallbackGenerator callbackGenerator,
     IStringLocalizer stringLocalizer
     ) : Controller
 {
@@ -45,11 +46,11 @@ public class UIUserMonetizationController(
             Plan = plan,
             NewSubscriber = true,
             IsTrial = plan.TrialDays > 0,
-            BaseUrl = Request.GetRequestBaseUrl()
+            BaseUrl = callbackGenerator.GetRequestBaseUrl()
         };
         ctx.PlanCheckouts.Add(checkout);
         await ctx.SaveChangesAsync();
-        return Redirect(linkGenerator.PlanCheckout(checkout.Id, checkout.BaseUrl));
+        return Redirect(linkGenerator.PlanCheckout(checkout.Id, Request.GetRequestBaseUrl()));
     }
 
     [HttpGet("~/account/billing")]

@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Reflection;
 using System.Security.Claims;
@@ -291,6 +292,26 @@ namespace BTCPayServer
 
             Dictionary<string, string> dictionary = new Dictionary<string, string>();
             connectionString = null;
+            if (str.StartsWith("lndhub://", StringComparison.OrdinalIgnoreCase))
+            {
+                var parts = str.Replace("lndhub://", "").Split('@');
+                if (parts.Length != 2 ||
+                    !Uri.TryCreate(parts[1].Replace("://", $"://{parts[0]}@"), UriKind.Absolute, out var uri))
+                {
+                    return false;
+                }
+
+                dictionary.Add("type", "lndhub");
+                dictionary.Add("server", uri.AbsoluteUri);
+                if (uri.Scheme == "http")
+                {
+                    dictionary.Add("allowinsecure", "true");
+                }
+
+                connectionString = dictionary;
+                return true;
+            }
+
             if (!Uri.TryCreate(str, UriKind.Absolute, out var result))
             {
                 return false;
@@ -367,6 +388,13 @@ namespace BTCPayServer
             return kv;
         }
 
+        internal static bool TryGetLightningServer(string connectionString, [MaybeNullWhen(false)] out Uri server)
+        {
+            server = null;
+            var values = ExtractValues(connectionString);
+            return values.TryGetValue("server", out var value) && Uri.TryCreate(value, UriKind.Absolute, out server);
+        }
+
         [Obsolete("Use IsSafe(this ILightningClient client, string connectionString) instead")]
         public static bool IsSafe(this ILightningClient client) => IsSafe(client, client.ToString()!);
         public static bool IsSafe(this ILightningClient client, string connectionString) => IsSafeLightningConnectionString(connectionString);
@@ -375,15 +403,26 @@ namespace BTCPayServer
             var kv = ExtractValues(connectionString);
             if (kv.Keys.Any(k => k.EndsWith("filepath", StringComparison.OrdinalIgnoreCase) || k.EndsWith("directorypath", StringComparison.OrdinalIgnoreCase)))
                 return false;
+            var isLnd = kv.TryGetValue("type", out var type) &&
+                        type is "lnd-rest" or "lnd-grpc";
+            // LND replaces BTCPay's redirect-disabled HttpClient when certificate pinning is used,
+            // or when certificate validation is disabled for HTTPS. Keep those paths admin-only.
+            if (isLnd && kv.ContainsKey("certthumbprint"))
+                return false;
 
             if (!kv.TryGetValue("server", out var server))
-            {
-                return true;
-            }
+                return false;
             var uri = new Uri(server, UriKind.Absolute);
+            if (isLnd && uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase) &&
+                kv.TryGetValue("allowinsecure", out var allowInsecure) &&
+                bool.TryParse(allowInsecure, out var enabled) && enabled)
+                return false;
             if (uri.Scheme.Equals("unix", StringComparison.OrdinalIgnoreCase))
                 return false;
             if (!Utils.TryParseEndpoint(uri.DnsSafeHost, 80, out _))
+                return false;
+            if (!IPAddress.TryParse(uri.DnsSafeHost, out _) &&
+                uri.Scheme is not ("http" or "https"))
                 return false;
             return !IsLocalNetwork(uri.DnsSafeHost);
         }
@@ -423,6 +462,20 @@ namespace BTCPayServer
             {
                 return value;
             }
+        }
+
+        public static decimal RoundDown(decimal value, int precision)
+        {
+            for (int i = 0; i < precision; i++)
+            {
+                value = value * 10m;
+            }
+            value = Math.Floor(value);
+            for (int i = 0; i < precision; i++)
+            {
+                value = value / 10m;
+            }
+            return value;
         }
 
         public static IServiceCollection AddUIExtension(this IServiceCollection services, string location, string partialViewName)
@@ -663,6 +716,7 @@ namespace BTCPayServer
         public static bool IsLocalNetwork(string server)
         {
             ArgumentNullException.ThrowIfNull(server);
+            server = server.TrimEnd('.');
             if (Uri.CheckHostName(server) == UriHostNameType.Dns)
             {
                 return server.EndsWith(".internal", StringComparison.OrdinalIgnoreCase) ||
@@ -672,9 +726,43 @@ namespace BTCPayServer
             }
             if (IPAddress.TryParse(server, out var ip))
             {
-                return ip.IsLocal() || ip.IsRFC1918();
+                return !IsPublicAddress(ip);
             }
             return false;
+        }
+
+        private static bool IsPublicAddress(IPAddress ip)
+        {
+            if (ip.IsIPv4MappedToIPv6)
+                ip = ip.MapToIPv4();
+            if (ip.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                var bytes = ip.GetAddressBytes();
+                return !IPAddress.IPv6Any.Equals(ip) &&
+                       !IPAddress.IPv6Loopback.Equals(ip) &&
+                       !ip.IsIPv6LinkLocal &&
+                       !ip.IsIPv6SiteLocal &&
+                       !ip.IsIPv6Multicast &&
+                       !(bytes[0] == 0x20 && bytes[1] == 0x01 && bytes[2] == 0x00 && bytes[3] == 0x02 && bytes[4] == 0x00 && bytes[5] == 0x00) &&
+                       !(bytes[0] == 0x20 && bytes[1] == 0x01 && bytes[2] == 0x0d && bytes[3] == 0xb8) &&
+                       !(bytes[0] == 0x3f && bytes[1] == 0xff && (bytes[2] & 0xf0) == 0) &&
+                       (bytes[0] & 0xfe) != 0xfc;
+            }
+
+            if (ip.AddressFamily != AddressFamily.InterNetwork)
+                return false;
+            var b = ip.GetAddressBytes();
+            return b[0] is not (0 or 10 or 127) &&
+                   !(b[0] == 100 && b[1] is >= 64 and <= 127) &&
+                   !(b[0] == 169 && b[1] == 254) &&
+                   !(b[0] == 172 && b[1] is >= 16 and <= 31) &&
+                   !(b[0] == 192 && b[1] == 0 && b[2] == 0) &&
+                   !(b[0] == 192 && b[1] == 0 && b[2] == 2) &&
+                   !(b[0] == 192 && b[1] == 168) &&
+                   !(b[0] == 198 && b[1] is 18 or 19) &&
+                   !(b[0] == 198 && b[1] == 51 && b[2] == 100) &&
+                   !(b[0] == 203 && b[1] == 0 && b[2] == 113) &&
+                   b[0] < 224;
         }
 #nullable enable
         public static LNURLPayPaymentHandler GetLNURLHandler(this PaymentMethodHandlerDictionary handlers, BTCPayNetwork network)

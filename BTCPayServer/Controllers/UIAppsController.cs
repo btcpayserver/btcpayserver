@@ -228,7 +228,6 @@ namespace BTCPayServer.Controllers
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("{appId}/upload-file")]
-        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> FileUpload(IFormFile file)
         {
             var app = GetCurrentApp();

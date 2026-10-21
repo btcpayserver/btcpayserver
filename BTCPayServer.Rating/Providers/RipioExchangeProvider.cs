@@ -18,9 +18,9 @@ namespace BTCPayServer.Services.Rates
         }
         public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
         {
-            using var response = await _httpClient.GetAsync("https://api.ripiotrade.co/v4/public/tickers", cancellationToken);
+            using var response = await _httpClient.GetAsync("https://api.ripiotrade.co/v4/public/tickers", HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
-            var jarray = (JArray)(await response.Content.ReadAsAsync<JObject>(cancellationToken))["data"];
+            var jarray = (JArray)(await response.Content.ReadRateResponseAsAsync<JObject>(cancellationToken))["data"];
             return jarray
                 .Children<JObject>()
                 .Select(jobj => ParsePair(jobj))

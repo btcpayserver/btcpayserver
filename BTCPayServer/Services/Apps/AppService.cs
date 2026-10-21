@@ -516,14 +516,13 @@ retry:
                         JObject v2 => v2["value"]?.Value<decimal>() ?? 0m,
                         _ => 0m
                     };
-                    if (int.TryParse(countStr, out var count))
-                    {
-                        cartItems.Add(new AppCartItem { Id = id, Title = title, Count = count, Price = price });
-                    }
+                    if (!int.TryParse(countStr, out var count) || count <= 0 || price < 0)
+                        return false;
+                    cartItems.Add(new AppCartItem { Id = id, Title = title, Count = count, Price = price });
                 }
                 return true;
             }
-            catch (FormatException)
+            catch (Exception ex) when (ex is FormatException or OverflowException)
             {
                 return false;
             }

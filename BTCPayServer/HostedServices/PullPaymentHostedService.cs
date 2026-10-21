@@ -426,6 +426,8 @@ namespace BTCPayServer.HostedServices
         private async Task HandleTopUp(TopUpRequest topUp)
         {
             var pp = await this.GetPullPayment(topUp.PullPaymentId, false);
+            if (pp is null)
+                return;
             using var ctx = _dbContextFactory.CreateContext();
 
             var payout = new Data.PayoutData()
@@ -553,7 +555,17 @@ namespace BTCPayServer.HostedServices
                 var dest = await payoutHandler.ParseClaimDestination(payoutBlob.Destination, default);
                 decimal minimumCryptoAmount =
                     await payoutHandler.GetMinimumPayoutAmount(dest.destination);
-                if (cryptoAmount < minimumCryptoAmount)
+                var isLnurl = dest.destination is LNURLPayClaimDestinaton;
+                var divisibility = payoutHandler is LightningLikePayoutHandler && !isLnurl
+                    ? network.Divisibility + 3
+                    : network.Divisibility;
+                // Strike does not support sub-satoshi Lightning Address payments and rounds the
+                // generated invoice to whole satoshis (https://github.com/btcpayserver/btcpayserver/issues/7702).
+                // Round down so split claims cannot amplify the sub-satoshi difference into an overpayment.
+                var roundedAmount = isLnurl
+                    ? Extensions.RoundDown(cryptoAmount, divisibility)
+                    : Extensions.RoundUp(cryptoAmount, divisibility);
+                if (cryptoAmount < minimumCryptoAmount || roundedAmount < minimumCryptoAmount)
                 {
                     req.Completion.TrySetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.TooLowAmount, null));
                     payout.State = PayoutState.Cancelled;
@@ -561,8 +573,7 @@ namespace BTCPayServer.HostedServices
                     return;
                 }
 
-                payout.Amount = Extensions.RoundUp(cryptoAmount,
-                    payoutHandler is LightningLikePayoutHandler ? network.Divisibility + 3 : network.Divisibility);
+                payout.Amount = roundedAmount;
                 await ctx.SaveChangesAsync();
 
                 _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Approved, payout));

@@ -242,6 +242,7 @@ public class UIPluginManagerController(
         IEnumerable<AvailablePlugin> remotePlugins = null)
     {
         var runtimeState = GetPluginRuntimeState();
+        var pluginFailures = pluginService.GetPluginFailures();
         remotePlugins ??= await LoadLatestVersionsForInstalledPlugins(runtimeState);
         var versionsByIdentifier = remotePlugins
             .GroupBy(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase)
@@ -259,7 +260,8 @@ public class UIPluginManagerController(
                     pair.Key,
                     pair.Value,
                     versionsByIdentifier.GetValueOrDefault(pair.Key),
-                    runtimeState.PendingCommands))
+                    runtimeState.PendingCommands,
+                    pluginFailures.GetValueOrDefault(pair.Key)))
                 .ToList(),
             InstalledPlugins = runtimeState.VisibleLoadedPlugins
                 .OrderBy(plugin => plugin.Name, StringComparer.OrdinalIgnoreCase)
@@ -400,7 +402,8 @@ public class UIPluginManagerController(
         string identifier,
         Version disabledVersion,
         IEnumerable<AvailablePlugin> availableVersions,
-        (string command, string plugin)[] pendingCommands)
+        (string command, string plugin)[] pendingCommands,
+        PluginFailureDiagnostic failure)
     {
         var bestUpdate = disabledVersion is null
             ? null
@@ -449,6 +452,7 @@ public class UIPluginManagerController(
             Identifier = identifier,
             DisabledVersion = disabledVersion,
             RecommendedUpdateVersion = bestUpdate?.Version,
+            Failure = failure,
             Actions = actions
         };
     }

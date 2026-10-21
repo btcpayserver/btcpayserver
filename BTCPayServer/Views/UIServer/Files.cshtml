@@ -121,7 +121,10 @@ else
                         <td>@file.ApplicationUser.UserName</td>
                         <td class="text-end">
                             <a href="@Url.Action("Files", "UIServer", new {fileIds = new [] { file.Id }})" class="text-nowrap" text-translate="true">Get Link</a>
-                            - <a asp-action="DeleteFile" asp-route-fileId="@file.Id" text-translate="true">Remove</a>
+                            -
+                            <form method="post" asp-action="DeleteFile" asp-route-fileId="@file.Id" class="d-inline">
+                                <button type="submit" class="btn btn-link p-0 align-baseline" text-translate="true">Remove</button>
+                            </form>
                         </td>
                     </tr>
                 }

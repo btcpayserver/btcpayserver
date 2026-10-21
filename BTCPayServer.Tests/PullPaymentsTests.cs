@@ -13,9 +13,11 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Views.Stores;
 using Dapper;
 using LNURL;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -42,12 +44,15 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             }, e => e.Type == PayoutEvent.PayoutEventType.Created)).Payout;
         }
         s.Server.DeleteStore = false;
+        s.Server.PayTester.DisableSSRFProtection = true;
         s.Server.ActivateLightning(LightningTestImplementation.LND);
         await s.StartAsync();
         await s.Server.EnsureChannelsSetup();
         await s.RegisterNewUser(true);
         await s.CreateNewStore();
         await s.GenerateWallet("BTC", "", true);
+        var webhookAccount = s.AsTestAccount();
+        await webhookAccount.SetupWebhook();
 
         await s.Server.ExplorerNode.GenerateAsync(1);
         await s.FundStoreWallet(denomination: 50.0m);
@@ -73,6 +78,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.ClickPagePrimary();
 
         string viewPullPaymentUrl;
+        PayoutData payoutForWebhook;
         // This should select the first View, ie, the last one PP2
         await using (await s.SwitchPage(async () =>
                      {
@@ -82,7 +88,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             var address = await s.Server.ExplorerNode.GetNewAddressAsync();
             await s.Page.FillAsync("#Destination", address.ToString());
             await s.Page.FillAsync("#ClaimedAmount", "15");
-            await ClickClaimAmount();
+            payoutForWebhook = await ClickClaimAmount();
             await s.FindAlertMessage();
 
             // We should not be able to use an address already used
@@ -125,6 +131,15 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await pmo.AssertHasLabels("payout");
         await pmo.AssertHasLabels("pull-payment");
 
+        var client = await webhookAccount.CreateClient();
+        var payoutTransaction = Assert.Single(await client.ShowOnChainWalletTransactions(s.StoreId, "BTC"),
+            transaction => transaction.Confirmations == 0);
+        await pmo.BumpFee(payoutTransaction.TransactionHash);
+        await Expect(s.Page.Locator("#BumpMethod option:checked")).ToHaveTextAsync("RBF");
+        await s.ClickPagePrimary();
+        await s.Page.ClickAsync("#BroadcastTransaction");
+        await s.FindAlertMessage(partialText: "Transaction broadcasted successfully");
+
         await s.GoToStore(s.StoreId, StoreNavPages.Payouts);
         await s.Page.ClickAsync($"#{PayoutState.InProgress}-view");
 
@@ -135,6 +150,11 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await Expect(s.Page.Locator("body")).ToContainTextAsync(PayoutState.InProgress.GetStateString());
 
         await s.Server.ExplorerNode.GenerateAsync(1);
+        await webhookAccount.AssertHasWebhookEvent(WebhookEventType.PayoutUpdated, (WebhookPayoutEvent payoutEvent) =>
+        {
+            Assert.Equal(payoutForWebhook.Id, payoutEvent.PayoutId);
+            Assert.Equal(PayoutState.Completed, payoutEvent.PayoutState);
+        });
 
         await TestUtils.EventuallyAsync(async () =>
         {
@@ -515,6 +535,46 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
     [Fact]
     [Trait("Integration", "Integration")]
+    public async Task PayingPayoutsIsScopedToStore()
+    {
+        using var tester = CreateServerTester();
+        await tester.StartAsync();
+
+        var victim = tester.NewAccount();
+        await victim.GrantAccessAsync();
+        var victimStoreId = (await victim.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
+        var victimClient = await victim.CreateClient();
+        var victimPayout = await victimClient.CreatePayout(victimStoreId, new CreatePayoutThroughStoreRequest
+        {
+            Approved = true,
+            PayoutMethodId = "BTC",
+            Amount = 0.0001m,
+            Destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString()
+        });
+        Assert.Equal(PayoutState.AwaitingPayment, victimPayout.State);
+
+        var attacker = tester.NewAccount();
+        await attacker.GrantAccessAsync();
+        await attacker.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true);
+        var controller = attacker.GetController<UIStorePullPaymentsController>();
+
+        var result = await controller.PayoutsPost(new PayoutsModel
+        {
+            Command = $"{PayoutState.AwaitingPayment}-pay",
+            PayoutMethodId = "BTC-CHAIN",
+            Payouts =
+            [
+                new() { PayoutId = victimPayout.Id, Selected = true }
+            ]
+        }, CancellationToken.None);
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(UIStorePullPaymentsController.Payouts), redirect.ActionName);
+        Assert.Equal(attacker.StoreId, redirect.RouteValues["storeId"]);
+    }
+
+    [Fact]
+    [Trait("Integration", "Integration")]
     public async Task CanTopUpPullPayment()
     {
         using var tester = CreateServerTester();
@@ -530,6 +590,13 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             PayoutMethods = ["BTC-CHAIN"]
         });
         var controller = user.GetController<UIInvoiceController>();
+        var orphanedInvoice = await controller.CreateInvoiceCoreRaw(new()
+        {
+            Amount = 0.5m,
+            Currency = "BTC",
+        }, controller.HttpContext.GetStoreData(), controller.Url.Link(null, null)!, [PullPaymentHostedService.GetInternalTag("missing")]);
+        await client.MarkInvoiceStatus(orphanedInvoice.Id, new() { Status = InvoiceStatus.Settled });
+
         var invoice = await controller.CreateInvoiceCoreRaw(new()
         {
             Amount = 0.5m,
@@ -976,6 +1043,20 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         //permission test around auto approved pps and payouts
         var nonApproved = await acc.CreateClient(Policies.CanCreateNonApprovedPullPayments);
         var approved = await acc.CreateClient(Policies.CanCreatePullPayments);
+        var payoutAddress = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString();
+        await AssertEx.AssertValidationError(["Amount"], () =>
+            nonApproved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest
+            {
+                Amount = -1,
+                PayoutMethodId = "BTC",
+                Destination = payoutAddress
+            }));
+        await AssertEx.AssertValidationError(["Destination"], () =>
+            nonApproved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest
+            {
+                PayoutMethodId = "BTC",
+                Destination = $"bitcoin:{payoutAddress}?amount=-1"
+            }));
         await AssertEx.AssertPermissionError(Policies.CanCreatePullPayments, async () =>
         {
             await nonApproved.CreatePullPayment(acc.StoreId, new CreatePullPaymentRequest()
@@ -994,7 +1075,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
                 Amount = 100,
                 PayoutMethodId = "BTC",
                 Approved = true,
-                Destination = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString()
+                Destination = payoutAddress
             });
         });
 
@@ -1012,7 +1093,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Amount = 100,
             PayoutMethodId = "BTC",
             Approved = true,
-            Destination = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString()
+            Destination = payoutAddress
         });
     }
 

@@ -43,22 +43,20 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
         var diff = tx.Diff;
         if (diff >= 0)
             force = true;
-        var amountCondition = force ? "1=1" : "new_amount >= 0";
 
         var amount = await ctx.Database.GetDbConnection()
             .ExecuteScalarAsync<decimal?>($"""
                                            WITH
-                                           change AS (
-                                                SELECT o.id, o.currency,  COALESCE(c.amount, 0) + o.diff AS new_amount
-                                                FROM (SELECT @id id, @currency currency, @diff diff) AS o
-                                                LEFT JOIN subs_subscriber_credits c ON c.subscriber_id = o.id AND c.currency = o.currency
-                                           ),
                                            up AS (
                                                INSERT INTO subs_subscriber_credits AS c (subscriber_id, currency, amount)
-                                               SELECT id, currency, new_amount FROM change
-                                               WHERE {amountCondition}
+                                               SELECT @id, @currency, @diff
+                                               WHERE @force OR EXISTS (
+                                                   SELECT FROM subs_subscriber_credits
+                                                   WHERE subscriber_id = @id AND currency = @currency
+                                               )
                                                ON CONFLICT (subscriber_id, currency)
-                                               DO UPDATE SET amount = EXCLUDED.amount
+                                               DO UPDATE SET amount = c.amount + EXCLUDED.amount
+                                               WHERE @force OR c.amount + EXCLUDED.amount >= 0
                                                RETURNING c.subscriber_id, c.currency, @diff AS diff, c.amount AS balance
                                            ),
                                            hist AS (
@@ -73,7 +71,7 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
                                                FROM up
                                            )
                                            SELECT balance from up;
-                                           """, new { id = tx.SubscriberId, currency = tx.Currency, diff, desc = tx.Description });
+                                           """, new { id = tx.SubscriberId, currency = tx.Currency, diff, force, desc = tx.Description });
         return amount;
     }
 

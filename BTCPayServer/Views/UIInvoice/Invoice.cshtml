@@ -239,9 +239,9 @@
                     <tr>
                         <th text-translate="true">Order Id</th>
                         <td>
-                            @if (!string.IsNullOrEmpty(Model.TypedMetadata.OrderUrl))
+                            @if (!string.IsNullOrEmpty(Model.OrderUrl))
                             {
-                                <a href="@Model.TypedMetadata.OrderUrl" rel="noreferrer noopener" target="_blank">
+                                <a class="invoice-order-link" href="@Model.OrderUrl" rel="noreferrer noopener" target="_blank">
                                     @if (string.IsNullOrEmpty(Model.TypedMetadata.OrderId))
                                     {
                                         <span text-translate="true">View Order</span>

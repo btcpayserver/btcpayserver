@@ -108,10 +108,11 @@ namespace BTCPayServer.Data
                     blob.Move(["productInformation", prop.Name], ["metadata", prop.Name]);
             }
             blob.Move(["orderId"], ["metadata", "orderId"]);
-            foreach (string prop in new string[] { "posData", "defaultLanguage", "notificationEmail", "notificationURL", "storeSupportUrl", "redirectURL" })
+            foreach (string prop in new string[] { "posData", "defaultLanguage", "notificationURL", "storeSupportUrl", "redirectURL" })
             {
                 blob.RemoveIfNull(prop);
             }
+            blob.Remove("notificationEmail");
             blob.RemoveIfValue<bool>("fullNotifications", false);
             if (blob["receiptOptions"] is JObject receiptOptions)
             {

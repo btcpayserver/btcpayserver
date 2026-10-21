@@ -216,10 +216,10 @@ namespace BTCPayServer.Payments
                     Logs.Write($"Rate for {fetching.Key}: {rateResult.Rule} = {rateResult.EvaluatedRule} = {bidLog}", InvoiceEventData.EventSeverity.Info);
                     if (rateResult is RateResult { BidAsk: { } bidAsk })
                     {
-                        if (bidAsk.Bid == 0.0m)
+                        if (bidAsk.Bid <= 0.0m)
                         {
                             failedRates.Add(fetching.Key);
-                            Logs.Write($"The calculated rate should not be 0.", InvoiceEventData.EventSeverity.Error);
+                            Logs.Write($"The calculated rate should be greater than 0.", InvoiceEventData.EventSeverity.Error);
                         }
                         else
                         {

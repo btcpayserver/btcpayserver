@@ -1,13 +1,23 @@
 using System;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Configuration;
+using BTCPayServer.Events;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Emails.HostedServices;
+using BTCPayServer.Plugins.Webhooks;
 using BTCPayServer.Plugins.Webhooks.HostedServices;
+using BTCPayServer.Plugins.Webhooks.TriggerProviders;
+using BTCPayServer.Plugins.Webhooks.Views;
+using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Views.Stores;
+using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
@@ -22,10 +32,109 @@ namespace BTCPayServer.Tests;
 public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
 {
     [Fact]
+    [Trait("FastTest", "FastTest")]
+    public void WebhookListRedactsCredentialsAndNullFiltersAreSafe()
+    {
+        var webhook = new WebhooksViewModel.WebhookViewModel
+        {
+            Url = "https://receiver:bearer@receiver.example.test/hooks/secret"
+        };
+        Assert.Equal("https://receiver.example.test/...", webhook.RedactedUrl);
+
+        var filters = new BTCPayServer.Data.AuthorizedWebhookEvents { Everything = false, SpecificEvents = null! };
+        Assert.False(filters.Match(nameof(WebhookEventType.InvoiceCreated)));
+    }
+
+    [Fact]
+    [Trait("FastTest", "FastTest")]
+    public async Task CustomerEmailHidesInternalRecipients()
+    {
+        var invoice = new InvoiceEntity
+        {
+            Id = "invoice",
+            StoreId = "store",
+            Metadata = new InvoiceMetadata()
+        };
+        invoice.Metadata.BuyerEmail = "buyer@example.com";
+        var invoiceEvent = new InvoiceEvent(invoice, InvoiceEvent.Created);
+        var rule = new BTCPayServer.Data.EmailRuleData
+        {
+            AdditionalData = """{"btcpay":{"customerEmail":true}}"""
+        };
+        var match = new EmailRuleMatchContext(
+            new TriggerEvent("store", "WH-InvoiceCreated", new JObject(), null),
+            rule);
+        match.To.Add(new MimeKit.MailboxAddress("", "operations@example.com"));
+        match.CC.Add(new MimeKit.MailboxAddress("", "accounting@example.com"));
+
+        var webhook = new WebhookInvoiceEvent(WebhookEventType.InvoiceCreated, "store");
+        var webhookContext = new WebhookTriggerContext<InvoiceEvent>(
+            new BTCPayServer.Data.StoreData { Id = "store" }, invoiceEvent, webhook);
+
+        await new TestInvoiceTriggerProvider().Apply(match, webhookContext);
+
+        Assert.Equal(["buyer@example.com"], match.To.Select(address => address.Address));
+        Assert.Empty(match.CC);
+        Assert.Equal(
+            ["operations@example.com", "accounting@example.com"],
+            match.BCC.Select(address => address.Address));
+    }
+
+    [Fact]
+    [Trait("Integration", "Integration")]
+    [Trait("WebhookSecurity", "WebhookSecurity")]
+    public async Task GreenfieldWebhookRejectsOversizedFieldsAndNormalizesFilters()
+    {
+        using var tester = CreateServerTester(newDb: true);
+        await tester.StartAsync();
+        var user = tester.NewAccount();
+        await user.GrantAccessAsync();
+        var client = await user.CreateClient(Policies.CanModifyWebhooks);
+
+        var oversizedSecret = await Assert.ThrowsAsync<GreenfieldValidationException>(async () =>
+            await client.CreateWebhook(user.StoreId, new CreateStoreWebhookRequest
+            {
+                Url = "https://example.invalid/webhook",
+                Secret = new string('s', 65),
+                AutomaticRedelivery = false
+            }));
+        Assert.Contains(oversizedSecret.ValidationErrors,
+            error => error.Path.Contains("Secret", StringComparison.OrdinalIgnoreCase));
+
+        var oversizedFilter = await Assert.ThrowsAsync<GreenfieldValidationException>(async () =>
+            await client.CreateWebhook(user.StoreId, new CreateStoreWebhookRequest
+            {
+                Url = "https://example.invalid/webhook",
+                AutomaticRedelivery = false,
+                AuthorizedEvents = new StoreWebhookBaseData.AuthorizedEventsData
+                {
+                    Everything = false,
+                    SpecificEvents = Enumerable.Repeat(
+                        nameof(WebhookEventType.InvoiceProcessing), 101).ToArray()
+                }
+            }));
+        Assert.Contains(oversizedFilter.ValidationErrors,
+            error => error.Path.Contains("AuthorizedEvents", StringComparison.OrdinalIgnoreCase));
+
+        var normalized = await client.CreateWebhook(user.StoreId, new CreateStoreWebhookRequest
+        {
+            Url = "https://example.invalid/webhook",
+            AutomaticRedelivery = false,
+            AuthorizedEvents = new StoreWebhookBaseData.AuthorizedEventsData
+            {
+                Everything = false,
+                SpecificEvents = null
+            }
+        });
+        Assert.Empty(normalized.AuthorizedEvents.SpecificEvents);
+    }
+
+    [Fact]
     [Trait("Playwright", "Playwright-2")]
     public async Task CanUseWebhooks()
     {
         await using var s = CreatePlaywrightTester();
+        s.Server.PayTester.DisableSSRFProtection = true;
         await s.StartAsync();
         await s.RegisterNewUser(true);
         await s.CreateNewStore();
@@ -158,6 +267,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
         public async Task EnsureWebhooksInvoiceExpiredPaidLatePartial()
         {
             using var tester = CreateServerTester();
+            tester.PayTester.DisableSSRFProtection = true;
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -215,6 +325,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
         public async Task EnsureWebhooksTrigger()
         {
             using var tester = CreateServerTester();
+            tester.PayTester.DisableSSRFProtection = true;
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -389,6 +500,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             using var tester = CreateServerTester(newDb: true);
             using var fakeServer = new FakeServer();
             await fakeServer.Start();
+            tester.PayTester.DisableSSRFProtection = true;
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -477,4 +589,10 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             Assert.True(await clientProfile.DeleteWebhook(hook.Id));
             Assert.False(await clientProfile.DeleteWebhook(hook.Id));
         }
+}
+
+file sealed class TestInvoiceTriggerProvider() : InvoiceTriggerProvider(null!, null!)
+{
+    public Task Apply(EmailRuleMatchContext context, WebhookTriggerContext<InvoiceEvent> webhookContext)
+        => BeforeSending(context, webhookContext);
 }

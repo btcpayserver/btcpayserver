@@ -239,7 +239,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
         }
 
-        [Authorize(Policy = Policies.CanModifyInvoices,
+        [Authorize(Policy = Policies.CanManageInvoiceStatus,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/status")]
         [HttpPost("~/api/v1/invoices/{invoiceId}/status")]
@@ -431,6 +431,12 @@ namespace BTCPayServer.Controllers.Greenfield
                     break;
 
                 case RefundVariant.CurrentRate:
+                    if (rateResult.BidAsk is null)
+                    {
+                        ModelState.AddModelError(nameof(request.RefundVariant),
+                            $"Impossible to fetch rate: {rateResult.EvaluatedRule}");
+                        return this.CreateValidationError(ModelState);
+                    }
                     createPullPayment.Currency = paymentPrompt.Currency;
                     createPullPayment.Amount = Math.Round(paidCurrency / rateResult.BidAsk.Bid, appliedDivisibility);
                     createPullPayment.AutoApproveClaims = true;

@@ -182,7 +182,7 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "createpending":
-                    await pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
+                    await pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, callbackGenerator.GetRequestBaseUrl());
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     return await WalletSign(walletId, vm);
@@ -526,9 +526,9 @@ namespace BTCPayServer.Controllers
                             return ViewVault(walletId, vm);
                         }
                     }
-                    catch (PayjoinReceiverException ex)
+                    catch (PayjoinReceiverException)
                     {
-                        error = StringLocalizer["The payjoin receiver could not complete the payjoin: {0}", ex.Message];
+                        error = StringLocalizer["The payjoin receiver could not complete the payjoin request."];
                     }
                     catch (PayjoinSenderException ex)
                     {

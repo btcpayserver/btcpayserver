@@ -22,9 +22,9 @@ namespace BTCPayServer.Services.Rates
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, RateSourceInfo.Url);
             request.Headers.UserAgent.ParseAdd("BTCPay-BitcoinKenya/1.0");
-            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
-            var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
+            var jobj = await response.Content.ReadRateResponseAsAsync<JObject>(cancellationToken);
             if (jobj["BTC"] is not JObject results)
                 return Array.Empty<PairRate>();
             var list = new List<PairRate>();

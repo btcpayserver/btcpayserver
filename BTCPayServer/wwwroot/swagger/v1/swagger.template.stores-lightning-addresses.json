@@ -213,11 +213,15 @@
                     },
                     "min": {
                         "type": "string",
+                        "format": "decimal",
+                        "minimum": 1,
                         "nullable": true,
                         "description": "The minimum amount in sats this ln address allows"
                     },
                     "max": {
                         "type": "string",
+                        "format": "decimal",
+                        "minimum": 1,
                         "nullable": true,
                         "description": "The maximum amount in sats this ln address allows"
                     },

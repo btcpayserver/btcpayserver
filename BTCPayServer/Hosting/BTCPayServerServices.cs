@@ -132,8 +132,19 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
                 new LndHubConnectionStringHandler(client));
             services.TryAddSingleton<LightningClientFactoryService>();
+            services.AddHttpClient(LightningClientFactoryService.NamedClient)
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+            services.AddHttpClient(LightningClientFactoryService.SafeNamedClient)
+                .UseSSRFProtection()
+                .ConfigurePrimaryHttpMessageHandler((handler, _) =>
+                    ((SocketsHttpHandler)handler).AllowAutoRedirect = false);
             services.AddHttpClient(LightningClientFactoryService.OnionNamedClient)
-                .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
+                .ConfigurePrimaryHttpMessageHandler(sp =>
+                {
+                    var handler = ActivatorUtilities.CreateInstance<Socks5HttpClientHandler>(sp);
+                    handler.AllowAutoRedirect = false;
+                    return handler;
+                });
 
 
             services.TryAddSingleton<InvoicePaymentNotification>();
@@ -388,6 +399,8 @@ namespace BTCPayServer.Hosting
 
             services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
+            services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient)
+                .UseSSRFProtection();
             services.AddSingleton<HostedServices.PullPaymentHostedService>();
             services.AddSingleton<IHostedService, HostedServices.PullPaymentHostedService>(o => o.GetRequiredService<PullPaymentHostedService>());
 
@@ -542,10 +555,15 @@ namespace BTCPayServer.Hosting
                     new PermissionDisplay("Create an invoice", "Allows creating new invoices."),
                     new PermissionDisplay("Create an invoice", "Allows creating new invoices on the selected stores.")),
                 new PolicyDefinition(
+                    Policies.CanManageInvoiceStatus,
+                    new PermissionDisplay("Manage invoice status", "Allows viewing invoices and marking them as settled or invalid."),
+                    new PermissionDisplay("Manage invoice status", "Allows viewing invoices and marking them as settled or invalid on the selected stores."),
+                    new[] { Policies.CanViewInvoices }),
+                new PolicyDefinition(
                     Policies.CanModifyInvoices,
                     new PermissionDisplay("Modify invoices", "Allows viewing and modifying invoices."),
                     new PermissionDisplay("Modify invoices", "Allows viewing and modifying invoices on the selected stores."),
-                    new[] { Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanCreateLightningInvoiceInStore }),
+                    new[] { Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanManageInvoiceStatus, Policies.CanCreateLightningInvoiceInStore }),
                 new PolicyDefinition(
                     Policies.CanModifyWebhooks,
                     new PermissionDisplay("Modify stores webhooks", "Allows modifying the webhooks of all your stores."),
@@ -554,11 +572,6 @@ namespace BTCPayServer.Hosting
                     Policies.CanSendStoreEmail,
                     new PermissionDisplay("Send store emails", "Allows sending emails on behalf of all your stores."),
                     new PermissionDisplay("Send selected stores' emails", "Allows sending emails on behalf of the selected stores.")),
-                new PolicyDefinition(
-                    Policies.CanManageStoreCredentials,
-                    new PermissionDisplay("Manage access tokens", "Allows managing the access tokens of all your stores."),
-                    new PermissionDisplay("Manage selected stores' access tokens", "Allows managing the access tokens of the selected stores."),
-                    includedByPermissions: new[] { Policies.CanModifyStoreSettings }),
                 new PolicyDefinition(
                     Policies.CanModifyServerSettings,
                     new PermissionDisplay("Manage your server", "Grants total control on the server settings of your server."),

@@ -22,6 +22,13 @@ namespace BTCPayServer.Payments.LNURLPay
         }
         public PaymentMethodId PaymentMethodId { get; }
 
+        internal static string FormatPaymentLinkForQRCode(string paymentLink, bool bech32Mode)
+        {
+            return bech32Mode
+                ? paymentLink.ToUpperInvariant().Replace("LIGHTNING:", "lightning:")
+                : paymentLink;
+        }
+
         public string? GetPaymentLink(PaymentPrompt paymentPrompt, IUrlHelper? urlHelper)
         {
             if (!_handlers.TryGetValue(PaymentMethodId, out var o) || o is not LNURLPayPaymentHandler handler)

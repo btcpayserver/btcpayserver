@@ -113,6 +113,11 @@ public class LightningPendingPayoutListener : BaseAsyncService
                         continue;
                     }
 
+                    // A missing lookup result does not establish that the payment failed.
+                    // Keep its proof so the next iteration can check the same payment again.
+                    if (proof is not null && payment is null)
+                        continue;
+
                     payoutData.State = payment?.Status switch
                     {
                         LightningPaymentStatus.Complete => PayoutState.Completed,

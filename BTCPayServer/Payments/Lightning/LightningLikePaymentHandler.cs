@@ -78,13 +78,10 @@ namespace BTCPayServer.Payments.Lightning
         {
             var paymentPrompt = context.Prompt;
 
-            var preferOnion = Uri.TryCreate(context.InvoiceEntity.ServerUrl, UriKind.Absolute, out var u) && u.IsOnion();
-
             var storeBlob = context.StoreBlob;
             var store = context.Store;
 
             var config = ParsePaymentMethodConfig(context.PaymentMethodConfig);
-            var nodeInfo = GetNodeInfo(config, context.Logs, preferOnion);
 
             var invoice = context.InvoiceEntity;
             decimal due = paymentPrompt.Calculate().Due;
@@ -137,8 +134,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 PaymentHash = lightningInvoice.GetPaymentHash(_Network.NBitcoinNetwork),
                 Preimage = string.IsNullOrEmpty(lightningInvoice.Preimage) ? null : uint256.Parse(lightningInvoice.Preimage),
-                InvoiceId = lightningInvoice.Id,
-                NodeInfo = (await nodeInfo).FirstOrDefault()?.ToString()
+                InvoiceId = lightningInvoice.Id
             };
             if (details.PaymentHash is {} h)
                 context.TrackedDestinations.Add(h.ToString());
@@ -265,7 +261,7 @@ namespace BTCPayServer.Payments.Lightning
                 validationContext.Config = new JObject() { ["connectionString"] = validationContext.Config.Value<string>()! };
 #pragma warning disable CS0618 // Type or member is obsolete
             var config = ParsePaymentMethodConfig(validationContext.Config);
-            if (config.ConnectionString == LightningPaymentMethodConfig.InternalNode)
+            if (config.ConnectionString == LightningPaymentMethodConfig.InternalNode || config.IsInternalNode)
                 config.SetInternalNode();
             LightningPaymentMethodConfig? oldConfig = null;
             if (validationContext.PreviousConfig is not null)
@@ -276,19 +272,22 @@ namespace BTCPayServer.Payments.Lightning
                 // Let's check the connection string can be parsed and is safe to use for non-admin.
                 try
                 {
-                    if (!BTCPayServer.Extensions.IsSafeLightningConnectionString(config.ConnectionString))
+                    var safe = BTCPayServer.Extensions.IsSafeLightningConnectionString(config.ConnectionString);
+                    if (!safe)
                     {
                         var canManage = (await validationContext.AuthorizationService.AuthorizeAsync(validationContext.User, null,
                             new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
                         if (!canManage)
                         {
                             validationContext.ModelState.AddModelError(nameof(config.ConnectionString),
-                                $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contain parameters ending in 'filepath' or 'directorypath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
+                                $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contain parameters ending in 'filepath' or 'directorypath', use custom LND TLS handling, point to a local endpoint, or use a DNS name for a non-HTTP endpoint.");
                             return;
                         }
                     }
+                    config.AllowUnsafeConnection = !safe;
 
-                    var client = _lightningClientFactory.Create(config.ConnectionString, _Network);
+                    var client = _lightningClientFactory.Create(config.ConnectionString, _Network,
+                        config.IsUnsafeConnectionAllowed());
                     if (client is IExtendedLightningClient vlc)
                     {
                         var result = await vlc.Validate();
@@ -310,6 +309,10 @@ namespace BTCPayServer.Payments.Lightning
                     validationContext.ModelState.AddModelError(nameof(config.ConnectionString), "Invalid connection string");
                     return;
                 }
+            }
+            else if (!connectionStringChanged && !config.IsInternalNode)
+            {
+                config.AllowUnsafeConnection = oldConfig?.AllowUnsafeConnection;
             }
 
             if (oldConfig?.IsInternalNode != config.IsInternalNode && config.IsInternalNode)

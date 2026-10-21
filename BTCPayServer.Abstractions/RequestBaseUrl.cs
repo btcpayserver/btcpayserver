@@ -8,7 +8,12 @@ namespace BTCPayServer.Abstractions;
 public record RequestBaseUrl(string Scheme, HostString Host, PathString PathBase)
 {
     public static RequestBaseUrl FromUrl(Uri url)
-    => new RequestBaseUrl(url.Scheme, new HostString(url.Authority), new PathString(url.AbsolutePath == "" ? "/" : url.AbsolutePath));
+    {
+        ArgumentNullException.ThrowIfNull(url);
+        if (url.Host.Length == 0 || url.Scheme is not ("http" or "https"))
+            throw new FormatException("Invalid RequestBaseUrl");
+        return new RequestBaseUrl(url.Scheme, new HostString(url.Authority), new PathString(url.AbsolutePath == "" ? "/" : url.AbsolutePath));
+    }
 
     public static RequestBaseUrl FromUrl(string url)
     {
@@ -20,10 +25,19 @@ public record RequestBaseUrl(string Scheme, HostString Host, PathString PathBase
     {
         ArgumentNullException.ThrowIfNull(url);
         result = null;
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var o))
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var o) ||
+            o.Host.Length == 0 ||
+            o.Scheme is not ("http" or "https"))
             return false;
-        result = FromUrl(o);
-        return true;
+        try
+        {
+            result = FromUrl(o);
+            return true;
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException)
+        {
+            return false;
+        }
     }
 
     public RequestBaseUrl(HttpRequest request) : this(request.Scheme, request.Host, request.PathBase)

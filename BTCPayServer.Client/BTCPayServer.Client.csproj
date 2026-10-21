@@ -27,11 +27,11 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.111" PrivateAssets="All" />
   </ItemGroup>
     <ItemGroup>
-      <PackageReference Include="BTCPayServer.Lightning.Common" Version="1.7.3" />
-      <PackageReference Include="NBitcoin" Version="10.0.14" />
+      <PackageReference Include="BTCPayServer.Lightning.Common" Version="1.7.4" />
+      <PackageReference Include="NBitcoin" Version="10.0.15" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     </ItemGroup>
   <ItemGroup>

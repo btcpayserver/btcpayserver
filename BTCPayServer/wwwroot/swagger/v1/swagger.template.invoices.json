@@ -458,7 +458,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmodifyinvoices"
+                            "btcpay.store.canmanageinvoicestatus"
                         ],
                         "Basic": []
                     }

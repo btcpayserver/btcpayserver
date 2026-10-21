@@ -91,6 +91,8 @@ namespace BTCPayServer.Plugins.Translations
   "Accept invitation": "",
   "Access to vault granted by owner.": "",
   "Access Tokens": "",
+  "Access tokens are for legacy integrations": "",
+  "Access tokens provide access to the legacy BitPay-compatible API and are discouraged for new integrations. Use the {0} instead.": "",
   "Access Type": "",
   "Account": "",
   "Account created.": "",

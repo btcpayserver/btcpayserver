@@ -456,15 +456,15 @@ namespace BTCPayServer.Plugins
 
         private static PluginLoadingContext CreateLoadingContext(
             string pluginDir,
-            string storageIdentifier,
+            string identifier,
             string assemblyPath)
         {
             return new PluginLoadingContext
             {
                 PluginDir = pluginDir,
-                Identifier = storageIdentifier,
+                Identifier = identifier,
                 AssemblyPath = assemblyPath,
-                ManifestVersion = TryReadPluginVersion(Path.GetDirectoryName(assemblyPath)!, storageIdentifier),
+                ManifestVersion = TryReadPluginVersion(Path.GetDirectoryName(assemblyPath)!, identifier),
                 Phase = PluginLifecyclePhase.AssemblyLoad
             };
         }
@@ -727,7 +727,7 @@ namespace BTCPayServer.Plugins
             string pluginDir,
             IEnumerable<IBTCPayServerPlugin> startedPlugins)
         {
-            var storageIdentifiers = startedPlugins
+            var identifiers = startedPlugins
                 .Where(plugin => !plugin.SystemPlugin)
                 .Select(plugin =>
                 {
@@ -737,21 +737,21 @@ namespace BTCPayServer.Plugins
                     return context?.Identifier ?? plugin.Identifier;
                 })
                 .ToArray();
-            ClearPluginFailures(pluginDir, storageIdentifiers);
+            ClearPluginFailures(pluginDir, identifiers);
         }
 
-        public static void ClearPluginFailure(string pluginDir, string storageIdentifier)
+        public static void ClearPluginFailure(string pluginDir, string identifier)
         {
-            ClearPluginFailures(pluginDir, [storageIdentifier]);
+            ClearPluginFailures(pluginDir, [identifier]);
         }
 
-        private static void ClearPluginFailures(string pluginDir, IEnumerable<string> storageIdentifiers)
+        private static void ClearPluginFailures(string pluginDir, IEnumerable<string> identifiers)
         {
             lock (FailureDiagnosticsLock)
             {
                 var failures = ReadPluginFailures(pluginDir);
                 var changed = false;
-                foreach (var identifier in storageIdentifiers)
+                foreach (var identifier in identifiers)
                     changed |= failures.Remove(identifier);
                 if (changed)
                     WritePluginFailures(pluginDir, failures);

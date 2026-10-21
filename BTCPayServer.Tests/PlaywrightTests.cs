@@ -18,16 +18,19 @@ using BTCPayServer.Events;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.Tests;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins;
 using BTCPayServer.Plugins.Maintenance;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
+using BTCPayServer.Tests.Plugins;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
 using Dapper;
 using LNURL;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,6 +66,51 @@ namespace BTCPayServer.Tests
             await s.GoToServer(ServerNavPages.Logs);
             await s.Page.Locator("a:has-text('.log')").First.ClickAsync();
             Assert.Contains("Starting listening NBXplorer", await s.Page.ContentAsync());
+        }
+
+        [Fact]
+        public async Task ShowsRuntimeFailureForAutomaticallyDisabledPlugin()
+        {
+            await using var s = CreatePlaywrightTester(newDb: true);
+            var pluginDir = Path.GetFullPath(Path.Combine(s.Server.PayTester._Directory, "plugins"));
+            var installedPluginDir = Path.Combine(pluginDir, CrashPlugin.PluginIdentifier);
+            Directory.CreateDirectory(installedPluginDir);
+            File.Copy(
+                typeof(CrashPlugin).Assembly.Location,
+                Path.Combine(installedPluginDir, CrashPlugin.PluginIdentifier + ".dll"));
+            await File.WriteAllTextAsync(
+                Path.Combine(installedPluginDir, CrashPlugin.PluginIdentifier + ".json"),
+                JsonConvert.SerializeObject(new PluginService.AvailablePlugin
+                {
+                    Identifier = CrashPlugin.PluginIdentifier,
+                    Name = "Crashing test plugin",
+                    Version = new Version(1, 2, 3),
+                    Description = "Throws an expected exception for plugin crash diagnostics tests."
+                }));
+            s.Server.PayTester.PluginDir = pluginDir;
+
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.SkipWizard();
+
+            var crashResponse = await s.Page.GotoAsync(new Uri(s.ServerUri, CrashPlugin.CrashPath).ToString());
+            Assert.Equal(StatusCodes.Status500InternalServerError, crashResponse.Status);
+            await s.Server.PayTester.RestartAsync();
+
+            await s.GoToUrl("/server/plugins");
+            var disabledPlugin = s.Page.Locator("li.list-group-item")
+                .Filter(new LocatorFilterOptions { HasText = CrashPlugin.PluginIdentifier });
+            await Expect(disabledPlugin).ToBeVisibleAsync();
+            await s.TakeScreenshot("plugin-failure-diagnostics-collapsed.png");
+            await disabledPlugin.Locator(".plugin-failure__summary").ClickAsync();
+            var failure = disabledPlugin.Locator(".plugin-failure");
+            await Expect(failure).ToContainTextAsync("Runtime request");
+            await Expect(failure).ToContainTextAsync("Confirmed");
+            await Expect(failure).ToContainTextAsync(CrashPlugin.FailureMessage);
+            await Expect(failure.Locator(".plugin-failure__details"))
+                .ToContainTextAsync(nameof(CrashPlugin));
+            await Expect(failure.Locator(".plugin-failure__copy")).ToBeVisibleAsync();
+            await s.TakeScreenshot("plugin-failure-diagnostics.png");
         }
 
         [Fact]

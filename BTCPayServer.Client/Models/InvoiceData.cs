@@ -109,7 +109,7 @@ namespace BTCPayServer.Client.Models
         public InvoiceStatus[] AvailableStatusesForManualMarking { get; set; }
         public bool Archived { get; set; }
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public InvoicePaymentMethodDataModel[] PaymentMethods { get; set; } = Array.Empty<InvoicePaymentMethodDataModel>();
+        public InvoicePaymentMethodDataModel[] PaymentMethods { get; set; }
     }
 
     public enum InvoiceStatus

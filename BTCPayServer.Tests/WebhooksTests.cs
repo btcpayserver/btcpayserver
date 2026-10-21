@@ -32,7 +32,7 @@ namespace BTCPayServer.Tests;
 public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
 {
     [Fact]
-    [Trait("FastTest", "FastTest")]
+    [Trait("Fast", "Fast")]
     public void WebhookListRedactsCredentialsAndNullFiltersAreSafe()
     {
         var webhook = new WebhooksViewModel.WebhookViewModel
@@ -46,7 +46,7 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
     }
 
     [Fact]
-    [Trait("FastTest", "FastTest")]
+    [Trait("Fast", "Fast")]
     public async Task CustomerEmailHidesInternalRecipients()
     {
         var invoice = new InvoiceEntity

@@ -24,7 +24,7 @@ namespace BTCPayServer.Tests;
 public class EmailsTests(ITestOutputHelper helper) : UnitTestBase(helper)
 {
     [Fact]
-    [Trait("FastTest", "FastTest")]
+    [Trait("Fast", "Fast")]
     public void CanParseEmailDestination()
     {
         var vm = new StoreEmailRuleViewModel();
@@ -34,7 +34,7 @@ public class EmailsTests(ITestOutputHelper helper) : UnitTestBase(helper)
     }
 
     [Theory]
-    [Trait("FastTest", "FastTest")]
+    [Trait("Fast", "Fast")]
     [InlineData("Invoice.Metadata.recipient", "first@example.com", 1)]
     [InlineData("Invoice.Metadata.recipient", "first@example.com,second@example.com", 0)]
     [InlineData("Invoice.Buyer.MailboxAddress", "first@example.com,second@example.com", 0)]
@@ -62,7 +62,7 @@ public class EmailsTests(ITestOutputHelper helper) : UnitTestBase(helper)
     }
 
     [Fact]
-    [Trait("FastTest", "FastTest")]
+    [Trait("Fast", "Fast")]
     public void LimitsRecipientsAfterTemplateRendering()
     {
         var renderedRecipients = string.Join(",",

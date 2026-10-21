@@ -99,7 +99,6 @@ namespace BTCPayServer.Tests
             var disabledPlugin = s.Page.Locator("li.list-group-item")
                 .Filter(new LocatorFilterOptions { HasText = CrashPlugin.PluginIdentifier });
             await Expect(disabledPlugin).ToBeVisibleAsync();
-            await s.TakeScreenshot("plugin-failure-diagnostics-collapsed.png");
             await disabledPlugin.Locator(".plugin-failure__summary").ClickAsync();
             var failure = disabledPlugin.Locator(".plugin-failure");
             await Expect(failure).ToContainTextAsync("Runtime request");
@@ -108,7 +107,6 @@ namespace BTCPayServer.Tests
             await Expect(failure.Locator(".plugin-failure__details"))
                 .ToContainTextAsync(nameof(CrashPlugin));
             await Expect(failure.Locator(".plugin-failure__copy")).ToBeVisibleAsync();
-            await s.TakeScreenshot("plugin-failure-diagnostics.png");
         }
 
         [Fact]

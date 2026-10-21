@@ -792,16 +792,7 @@ namespace BTCPayServer.Plugins
                 return;
             }
 
-            var temporaryPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
-            try
-            {
-                File.WriteAllText(temporaryPath, JsonConvert.SerializeObject(failures, Formatting.Indented));
-                File.Move(temporaryPath, path, true);
-            }
-            finally
-            {
-                File.Delete(temporaryPath);
-            }
+            File.WriteAllText(path, JsonConvert.SerializeObject(failures, Formatting.Indented));
         }
 
 

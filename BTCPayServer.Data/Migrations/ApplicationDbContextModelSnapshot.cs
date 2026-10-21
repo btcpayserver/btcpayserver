@@ -481,6 +481,9 @@ namespace BTCPayServer.Migrations
 
                     b.HasIndex("StoreDataId");
 
+                    b.HasIndex("StoreDataId", "Created")
+                        .IsDescending(false, true);
+
                     b.ToTable("Invoices");
                 });
 

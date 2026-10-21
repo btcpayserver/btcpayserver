@@ -72,7 +72,7 @@ namespace BTCPayServer.Tests
         public async Task ShowsRuntimeFailureForAutomaticallyDisabledPlugin()
         {
             await using var s = CreatePlaywrightTester(newDb: true);
-            var pluginDir = Path.GetFullPath(Path.Combine(s.Server.PayTester._Directory, "plugins"));
+            var pluginDir = Path.Combine(TestUtils.TestDirectory, s.Server.Scope, "pay", "plugins");
             var installedPluginDir = Path.Combine(pluginDir, CrashPlugin.PluginIdentifier);
             Directory.CreateDirectory(installedPluginDir);
             File.Copy(

@@ -10,7 +10,7 @@ namespace BTCPayServer.Tests
     public class PSBTTests(ITestOutputHelper helper) : UnitTestBase(helper)
     {
         [Fact]
-        [Trait("FastTest", "FastTest")]
+        [Trait("Fast", "Fast")]
         public async Task RejectsOversizedTextualPSBTBeforeParsing()
         {
             var modelState = new ModelStateDictionary();

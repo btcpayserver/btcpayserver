@@ -1141,7 +1141,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        [Trait("FastTest", "FastTest")]
+        [Trait("Fast", "Fast")]
         public void TestMailTemplate()
         {
             var template = new TextTemplate("Hello mister {Name.Firstname} {Name.Lastname} !");

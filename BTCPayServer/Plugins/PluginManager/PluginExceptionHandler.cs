@@ -3,21 +3,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Plugins
 {
-    public class PluginExceptionHandler(IOptions<DataDirectories> options, IHostApplicationLifetime applicationLifetime, Logs logs)
+    public class PluginExceptionHandler(IHostApplicationLifetime applicationLifetime, Logs logs)
         : IExceptionHandler
     {
-        readonly string _pluginDir = options.Value.PluginDir;
-
         public ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
             if (!GetDisablePluginIfCrash(httpContext) ||
@@ -31,7 +27,7 @@ namespace BTCPayServer.Plugins
                 logs.Configuration.LogWarning("Debugger attached detected, so we didn't disable the plugin and do not restart the server");
                 return ValueTask.FromResult(false);
             }
-            PluginManager.DisablePlugin(_pluginDir, plugin);
+            PluginManager.DisablePlugin(plugin, exception, PluginLifecyclePhase.RuntimeRequest);
             _ = Task.Delay(3000).ContinueWith((t) => applicationLifetime.StopApplication());
             // Returning true here means we will see Error 500 error message.
             // Returning false means that the user will see a stacktrace.

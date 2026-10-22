@@ -735,10 +735,14 @@ namespace BTCPayServer.Tests
                 Id = "invoice/id",
                 Metadata = new InvoiceMetadata { OrderId = "order id" },
                 Status = InvoiceStatus.Settled,
-                RedirectURLTemplate = "https://example.com/{orderid}/{InvoiceId}?status={STATUS}"
+                RedirectURLTemplate = "https://example.com/{unknown}/{orderid}/{InvoiceId}?status={STATUS}",
+                NotificationURLTemplate = "https://example.com/{invalid[}?orderId={OrderId}"
             };
 
-            Assert.Equal("https://example.com/order+id/invoice%2fid?status=Settled", entity.RedirectURL.OriginalString);
+            Assert.Equal("https://example.com/{unknown}/order%20id/invoice%2Fid?status=Settled", entity.RedirectURL.OriginalString);
+
+            entity.Metadata.OrderId = null;
+            Assert.Equal("https://example.com/{invalid[}?orderId=", entity.NotificationURL.OriginalString);
         }
 
         [Fact]

@@ -93,7 +93,12 @@ namespace BTCPayServer.Payments.Lightning
 
             LightningInvoice? lightningInvoice;
 
-            var description = new TextTemplate(storeBlob.LightningDescriptionTemplate).Render(new JObject
+            var template = new TextTemplate(storeBlob.LightningDescriptionTemplate)
+            {
+                NotFoundReplacement = path => $"{{{path}}}",
+                ParsingErrorReplacement = path => $"{{{path}}}"
+            };
+            var description = template.Render(new JObject
             {
                 ["StoreName"] = store.StoreName,
                 ["ItemDescription"] = invoice.Metadata.ItemDesc,

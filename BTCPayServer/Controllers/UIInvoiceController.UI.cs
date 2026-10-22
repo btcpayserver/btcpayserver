@@ -883,13 +883,10 @@ namespace BTCPayServer.Controllers
 
             var orderId = invoice.Metadata.OrderId;
             var supportUrl = !string.IsNullOrEmpty(storeBlob.StoreSupportUrl)
-                ? new TextTemplate(storeBlob.StoreSupportUrl)
-                    {
-                        Encode = value => Uri.EscapeDataString(value.Value)
-                    }
+                ? TextTemplate.CreateUrlTemplate(storeBlob.StoreSupportUrl)
                     .Render(new JObject
                     {
-                        ["OrderId"] = orderId,
+                        ["OrderId"] = orderId ?? string.Empty,
                         ["InvoiceId"] = invoice.Id
                     })
                 : null;

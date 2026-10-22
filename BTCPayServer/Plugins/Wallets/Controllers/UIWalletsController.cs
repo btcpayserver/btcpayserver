@@ -1719,8 +1719,15 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{walletId}/psbt/seed")]
         [Authorize(Policy = WalletPolicies.CanSignWalletTransactions, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        public async Task<IActionResult> SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
+        public IActionResult SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             SigningContextModel signingContext, string? returnUrl, string? backUrl)
+        {
+            signingContext.PendingTransactionId = null;
+            signingContext.OriginalPSBT = null;
+            return ViewSignWithSeed(signingContext, returnUrl, backUrl);
+        }
+
+        private IActionResult ViewSignWithSeed(SigningContextModel signingContext, string? returnUrl, string? backUrl)
         {
             return View(nameof(SignWithSeed), new SignWithSeedViewModel
             {

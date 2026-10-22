@@ -99,7 +99,7 @@ namespace BTCPayServer.Controllers
                 case "vault":
                     return ViewVault(walletId, vm);
                 case "seed":
-                    return await SignWithSeed(walletId, vm.SigningContext, vm.ReturnUrl, vm.BackUrl);
+                    return ViewSignWithSeed(vm.SigningContext, vm.ReturnUrl, vm.BackUrl);
                 case "decode":
                     return await WalletPSBT(walletId, vm, "decode");
             }

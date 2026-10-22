@@ -1,8 +1,11 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Plugins.Emails.Controllers;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Emails.Services;
@@ -40,6 +43,9 @@ public class EmailsTests(ITestOutputHelper helper) : UnitTestBase(helper)
     [InlineData("Invoice.Buyer.MailboxAddress", "first@example.com,second@example.com", 0)]
     [InlineData("Invoice.Metadata.recipients", "first@example.com,second@example.com", 2)]
     [InlineData("Invoice.Metadata.addresses", "first@example.com,second@example.com", 2)]
+    [InlineData("Invoice.Metadata['recipients']", "first@example.com,second@example.com", 2)]
+    [InlineData("Invoice.Metadata['recipient']", "first@example.com,second@example.com", 0)]
+    [InlineData("Invoice.Buyer.MailboxAddress", "", 0)]
     public void TemplateNameControlsRecipientFanout(string placeholder, string value, int expectedCount)
     {
         var model = new JObject
@@ -265,6 +271,60 @@ public class EmailsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await adminClient.UpdateStoreEmailSettings(admin.StoreId, new EmailSettingsData());
         var clearedSettings = await adminClient.GetStoreEmailSettings(admin.StoreId);
         Assert.Equal(JsonConvert.SerializeObject(new EmailSettingsData { PasswordSet = false }), JsonConvert.SerializeObject(clearedSettings));
+    }
+
+    [Fact]
+    [Trait("Integration", "Integration")]
+    public async Task EmptyRecipientPlaceholderDoesNotBlockEmailRules()
+    {
+        using var tester = CreateServerTester();
+        await tester.StartAsync();
+        var acc = tester.NewAccount();
+        await acc.GrantAccessAsync();
+        await acc.RegisterDerivationSchemeAsync("BTC");
+        var client = await acc.CreateClient();
+        await client.UpdateStoreEmailSettings(acc.StoreId, new EmailSettingsData
+        {
+            From = "store@store.com",
+            Login = "store@store.com",
+            Password = "store@store.com",
+            Port = tester.MailPitSettings.SmtpPort,
+            Server = tester.MailPitSettings.Hostname
+        });
+
+        var trigger = EmailRuleData.GetWebhookTriggerName(WebhookEventType.InvoiceCreated);
+        await using (var ctx = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext())
+        {
+            ctx.EmailRules.AddRange(
+                new EmailRuleData { StoreId = acc.StoreId, Trigger = trigger, To = ["primary@shop.com"], CC = ["{Invoice.Buyer.Email}"], Subject = "Rule A", Body = "A" },
+                new EmailRuleData { StoreId = acc.StoreId, Trigger = trigger, To = ["orders@shop.com"], Subject = "Rule B", Body = "B" });
+            await ctx.SaveChangesAsync();
+        }
+
+        var sent = new List<MimeMessage>();
+        using var sub = tester.PayTester.GetService<EventAggregator>().Subscribe<EmailSentEvent>(e =>
+        {
+            lock (sent)
+                sent.Add(e.Message);
+        });
+        // Without a buyer email, {Invoice.Buyer.Email} renders as an empty string
+        await client.CreateInvoice(acc.StoreId, new CreateInvoiceRequest { Amount = 1m, Currency = "USD" });
+
+        // Rule order is not guaranteed, so both emails are required
+        MimeMessage[] messages = [];
+        TestUtils.Eventually(() =>
+        {
+            lock (sent)
+            {
+                Assert.Equal(2, sent.Count);
+                messages = sent.ToArray();
+            }
+        });
+        var ruleA = Assert.Single(messages, m => m.Subject == "Rule A");
+        var ruleB = Assert.Single(messages, m => m.Subject == "Rule B");
+        Assert.Equal("primary@shop.com", Assert.Single(ruleA.To.Mailboxes).Address);
+        Assert.Empty(ruleA.Cc);
+        Assert.Equal("orders@shop.com", Assert.Single(ruleB.To.Mailboxes).Address);
     }
 
     [Fact]

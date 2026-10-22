@@ -1197,7 +1197,7 @@
                     "redirectURL": {
                         "type": "string",
                         "nullable": true,
-                        "description": "When the customer has paid the invoice, the URL where the customer will be redirected when clicking on the `return to store` button. You can use placeholders `{InvoiceId}` or `{OrderId}` in the URL, BTCPay Server will replace those with this invoice `id` or `metadata.orderId` respectively."
+                        "description": "When the customer has paid the invoice, the absolute HTTP or HTTPS URL where the customer will be redirected when clicking on the `return to store` button. You can use placeholders `{InvoiceId}` or `{OrderId}` in the URL, BTCPay Server will replace those with this invoice `id` or `metadata.orderId` respectively."
                     },
                     "redirectAutomatically": {
                         "type": "boolean",

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
@@ -361,7 +362,21 @@ namespace BTCPayServer.Tests
             Assert.IsType<RedirectToActionResult>(crowdfund.UpdateCrowdfund(app.Id, crowdfundViewModel).Result);
 
             var vm2 = await crowdfund.CrowdfundForm(app.Id, (decimal?)0.01).AssertViewModelAsync<FormViewModel>();
-            var res = await crowdfund.CrowdfundFormSubmit(app.Id, (decimal)0.01, "", vm2);
+            vm2.AspController = "UIInvoice";
+            vm2.AspAction = "Checkout";
+            vm2.RouteParameters = new Dictionary<string, string> { { "invoiceId", "attacker-controlled" } };
+            crowdfund.ModelState.AddModelError("item1", "Invalid");
+            var invalidVm = Assert.IsType<FormViewModel>(Assert.IsType<ViewResult>(
+                await crowdfund.CrowdfundFormSubmit(app.Id, 0.01m, "", vm2)).Model);
+            Assert.Equal("UICrowdfund", invalidVm.AspController);
+            Assert.Equal(nameof(UICrowdfundController.CrowdfundFormSubmit), invalidVm.AspAction);
+            Assert.Equal(3, invalidVm.RouteParameters.Count);
+            Assert.Equal(app.Id, invalidVm.RouteParameters["appId"]);
+            Assert.Equal("0.01", invalidVm.RouteParameters["amount"]);
+            Assert.Equal("", invalidVm.RouteParameters["choiceKey"]);
+
+            crowdfund.ModelState.Clear();
+            var res = await crowdfund.CrowdfundFormSubmit(app.Id, (decimal)0.01, "", invalidVm);
             Assert.IsNotType<NotFoundObjectResult>(res);
             Assert.IsNotType<BadRequest>(res);
             var forgedAmountResult = await crowdfund.ContributeToCrowdfund(app.Id,

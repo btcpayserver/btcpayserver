@@ -564,6 +564,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
 
+            viewModel.AspController = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
+            viewModel.AspAction = nameof(POSFormSubmit);
+            viewModel.RouteParameters = new Dictionary<string, string> { { "appId", appId } };
+            if (viewType.HasValue)
+                viewModel.RouteParameters.Add("viewType", viewType.Value.ToString());
             viewModel.FormName = formData.Name;
             viewModel.Form = form;
             viewModel.FormParameters = formParameters;

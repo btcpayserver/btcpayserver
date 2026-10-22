@@ -1,11 +1,14 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Forms;
+using BTCPayServer.Forms.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Services.PaymentRequests;
 using Microsoft.AspNetCore.Mvc;
@@ -268,6 +271,33 @@ namespace BTCPayServer.Tests
 
             Assert.Single((await paymentRequestController.GetPaymentRequests(user.StoreId)).AssertType<ViewResult>().Model
                 .AssertType<ListPaymentRequestsViewModel>().Items);
+
+            var formDataService = tester.PayTester.GetService<FormDataService>();
+            var formData = new FormData
+            {
+                StoreId = user.StoreId,
+                Name = "test",
+                Config = new Form
+                {
+                    Fields = [Field.Create("Name", "name", "", true, null)]
+                }.ToString()
+            };
+            await formDataService.AddOrUpdateForm(formData);
+            request.FormId = formData.Id;
+            (await paymentRequestController.EditPaymentRequest(id, request)).AssertType<RedirectToActionResult>();
+
+            paymentRequestController.ModelState.Clear();
+            var formResult = await paymentRequestController.ViewPaymentRequestForm(id, new FormViewModel
+            {
+                AspController = "UIInvoice",
+                AspAction = "Checkout",
+                RouteParameters = new() { { "invoiceId", "attacker-controlled" } }
+            });
+            var formViewModel = Assert.IsType<FormViewModel>(Assert.IsType<ViewResult>(formResult).Model);
+            Assert.Equal("UIPaymentRequest", formViewModel.AspController);
+            Assert.Equal(nameof(UIPaymentRequestController.ViewPaymentRequestForm), formViewModel.AspAction);
+            Assert.Single(formViewModel.RouteParameters);
+            Assert.Equal(id, formViewModel.RouteParameters["payReqId"]);
         }
 
         [Fact]

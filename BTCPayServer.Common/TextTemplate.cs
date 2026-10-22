@@ -10,10 +10,21 @@ namespace BTCPayServer;
 public class TextTemplate(string template)
 {
     static readonly Regex _interpolationRegex = new Regex(@"\{([^}]+)\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    public static TextTemplate CreateUrlTemplate(string template) =>
+        new TextTemplate(template)
+        {
+            NotFoundReplacement = path => $"{{{path}}}",
+            ParsingErrorReplacement = path => $"{{{path}}}",
+            EncodeFallbackReplacements = false,
+            Encode = value => Uri.EscapeDataString(value.Value)
+        };
+
     public Func<string, string> NotFoundReplacement { get; set; } = path => $"[NotFound({path})]";
     public Func<string, string> ParsingErrorReplacement { get; set; } = path => $"[ParsingError({path})]";
 
     public Func<(string Path, string Value), string> Encode { get; set; } = v => v.Value;
+    public bool EncodeFallbackReplacements { get; set; } = true;
 
     public string Render(JObject model)
     {
@@ -28,13 +39,21 @@ public class TextTemplate(string template)
             try
             {
                 var token = model.SelectToken(path);
-                return Encode((initial, token?.ToString() ?? NotFoundReplacement(initial)));
+                return token is null
+                    ? RenderFallback(initial, NotFoundReplacement)
+                    : Encode((initial, token.ToString()));
             }
             catch
             {
-                return Encode((initial, ParsingErrorReplacement(initial)));
+                return RenderFallback(initial, ParsingErrorReplacement);
             }
         });
+    }
+
+    private string RenderFallback(string path, Func<string, string> replacement)
+    {
+        var value = replacement(path);
+        return EncodeFallbackReplacements ? Encode((path, value)) : value;
     }
 
     public List<string> GetPaths(JObject model)

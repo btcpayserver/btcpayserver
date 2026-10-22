@@ -1240,13 +1240,21 @@ namespace BTCPayServer.Tests
             result = template.Render(model);
             Assert.Equal("Hello mister 2 3 !", result);
 
-            template = new TextTemplate("{0} or {Price}");
+            template = new TextTemplate("{0} or {Price} in {Currency} {Currency[}")
+            {
+                NotFoundReplacement = path => $"{{{path}}}",
+                ParsingErrorReplacement = path => $"{{{path}}}"
+            };
             result = template.Render(new JObject
             {
                 ["0"] = "$10",
                 ["Price"] = "$10"
             });
-            Assert.Equal("$10 or $10", result);
+            Assert.Equal("$10 or $10 in {Currency} {Currency[}", result);
+
+            template = TextTemplate.CreateUrlTemplate("{Known} {Unknown} {Invalid[}");
+            result = template.Render(new JObject { ["Known"] = "hello world" });
+            Assert.Equal("hello%20world {Unknown} {Invalid[}", result);
         }
 
         [Fact]

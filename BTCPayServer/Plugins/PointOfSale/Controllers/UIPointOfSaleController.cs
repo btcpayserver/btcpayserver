@@ -170,7 +170,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             vm.ButtonText = string.IsNullOrEmpty(vm.BuyButtonText)
                 ? vm.PriceType == AppItemPriceType.Topup ? settings.CustomButtonText : settings.ButtonText
                 : vm.BuyButtonText;
-            vm.ButtonText = new TextTemplate(vm.ButtonText).Render(new JObject
+            var buttonTextTemplate = new TextTemplate(vm.ButtonText)
+            {
+                NotFoundReplacement = path => $"{{{path}}}",
+                ParsingErrorReplacement = path => $"{{{path}}}"
+            };
+            vm.ButtonText = buttonTextTemplate.Render(new JObject
             {
                 ["0"] = vm.PriceFormatted,
                 ["Price"] = vm.PriceFormatted

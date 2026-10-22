@@ -495,13 +495,10 @@ namespace BTCPayServer.Services.Invoices
 
         private Uri FillPlaceholdersUri(string v)
         {
-            var template = new TextTemplate(v ?? string.Empty)
-            {
-                Encode = value => System.Web.HttpUtility.UrlEncode(value.Value) ?? string.Empty
-            };
+            var template = TextTemplate.CreateUrlTemplate(v ?? string.Empty);
             var uriStr = template.Render(new JObject
             {
-                ["OrderId"] = Metadata.OrderId,
+                ["OrderId"] = Metadata.OrderId ?? string.Empty,
                 ["InvoiceId"] = Id,
                 // NOTE: Not recommended to depend on the status on client side, rather fetch invoice status via API instead
                 ["Status"] = Status.ToString()

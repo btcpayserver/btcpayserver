@@ -728,6 +728,20 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanRenderInvoiceUriTemplates()
+        {
+            var entity = new InvoiceEntity
+            {
+                Id = "invoice/id",
+                Metadata = new InvoiceMetadata { OrderId = "order id" },
+                Status = InvoiceStatus.Settled,
+                RedirectURLTemplate = "https://example.com/{orderid}/{InvoiceId}?status={STATUS}"
+            };
+
+            Assert.Equal("https://example.com/order+id/invoice%2fid?status=Settled", entity.RedirectURL.OriginalString);
+        }
+
+        [Fact]
         public void CanCalculateDust()
         {
             var entity = new InvoiceEntity() { Currency = "USD" };

@@ -9,6 +9,7 @@ using BTCPayServer.Plugins.GlobalSearch;
 using BTCPayServer.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.Emails;
 
@@ -108,8 +109,11 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
 
     public static string CallToAction(string actionName, string actionLink)
     {
-        var button = $"{BUTTON_HTML}".Replace("{button_description}", actionName, System.StringComparison.InvariantCulture);
-        return button.Replace("{button_link}", actionLink, System.StringComparison.InvariantCulture);
+        return new TextTemplate(BUTTON_HTML).Render(new JObject
+        {
+            ["button_description"] = actionName,
+            ["button_link"] = actionLink
+        });
     }
 
     public static string CreateEmailBody(string body) => $"<html><body style='{BODY_STYLE}'>{HEADER_HTML}{body}</body></html>";

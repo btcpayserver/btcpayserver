@@ -1239,6 +1239,14 @@ namespace BTCPayServer.Tests
             template = new TextTemplate("Hello mister {Name.NameInner.Ogg} {Name.NameInner.Ogg2} !");
             result = template.Render(model);
             Assert.Equal("Hello mister 2 3 !", result);
+
+            template = new TextTemplate("{0} or {Price}");
+            result = template.Render(new JObject
+            {
+                ["0"] = "$10",
+                ["Price"] = "$10"
+            });
+            Assert.Equal("$10 or $10", result);
         }
 
         [Fact]

@@ -696,10 +696,12 @@ namespace BTCPayServer
 
         private void SetLNUrlDescriptionMetadata(Dictionary<string, string> lnUrlMetadata, Data.StoreData store, StoreBlob blob, InvoiceMetadata invoiceMetadata)
         {
-            var invoiceDescription = blob.LightningDescriptionTemplate
-                        .Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
-                        .Replace("{ItemDescription}", invoiceMetadata?.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
-                        .Replace("{OrderId}", invoiceMetadata?.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
+            var invoiceDescription = new TextTemplate(blob.LightningDescriptionTemplate).Render(new JObject
+            {
+                ["StoreName"] = store.StoreName,
+                ["ItemDescription"] = invoiceMetadata?.ItemDesc,
+                ["OrderId"] = invoiceMetadata?.OrderId
+            });
             lnUrlMetadata.Add("text/plain", invoiceDescription);
         }
 

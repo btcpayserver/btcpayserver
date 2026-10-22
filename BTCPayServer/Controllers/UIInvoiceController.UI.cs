@@ -883,9 +883,15 @@ namespace BTCPayServer.Controllers
 
             var orderId = invoice.Metadata.OrderId;
             var supportUrl = !string.IsNullOrEmpty(storeBlob.StoreSupportUrl)
-                ? storeBlob.StoreSupportUrl
-                    .Replace("{OrderId}", string.IsNullOrEmpty(orderId) ? string.Empty : Uri.EscapeDataString(orderId))
-                    .Replace("{InvoiceId}", Uri.EscapeDataString(invoice.Id))
+                ? new TextTemplate(storeBlob.StoreSupportUrl)
+                    {
+                        Encode = value => Uri.EscapeDataString(value.Value)
+                    }
+                    .Render(new JObject
+                    {
+                        ["OrderId"] = orderId,
+                        ["InvoiceId"] = invoice.Id
+                    })
                 : null;
 
             string GetPaymentMethodImage(PaymentMethodId paymentMethodId2)

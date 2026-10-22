@@ -495,10 +495,17 @@ namespace BTCPayServer.Services.Invoices
 
         private Uri FillPlaceholdersUri(string v)
         {
-            var uriStr = (v ?? string.Empty).Replace("{OrderId}", System.Web.HttpUtility.UrlEncode(Metadata.OrderId) ?? "", StringComparison.OrdinalIgnoreCase)
-                                     .Replace("{InvoiceId}", System.Web.HttpUtility.UrlEncode(Id) ?? "", StringComparison.OrdinalIgnoreCase)
-                                     // NOTE: Not recommended to depend on the status on client side, rather fetch invoice status via API instead
-                                     .Replace("{Status}", System.Web.HttpUtility.UrlEncode(Status.ToString()) ?? "", StringComparison.OrdinalIgnoreCase);
+            var template = new TextTemplate(v ?? string.Empty)
+            {
+                Encode = value => System.Web.HttpUtility.UrlEncode(value.Value) ?? string.Empty
+            };
+            var uriStr = template.Render(new JObject
+            {
+                ["OrderId"] = Metadata.OrderId,
+                ["InvoiceId"] = Id,
+                // NOTE: Not recommended to depend on the status on client side, rather fetch invoice status via API instead
+                ["Status"] = Status.ToString()
+            });
             if (Uri.TryCreate(uriStr, UriKind.Absolute, out var uri) && (uri.Scheme == "http" || uri.Scheme == "https"))
                 return uri;
             return null;

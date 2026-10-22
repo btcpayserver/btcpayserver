@@ -93,10 +93,12 @@ namespace BTCPayServer.Payments.Lightning
 
             LightningInvoice? lightningInvoice;
 
-            string description = storeBlob.LightningDescriptionTemplate;
-            description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
-                .Replace("{ItemDescription}", invoice.Metadata.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
-                .Replace("{OrderId}", invoice.Metadata.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
+            var description = new TextTemplate(storeBlob.LightningDescriptionTemplate).Render(new JObject
+            {
+                ["StoreName"] = store.StoreName,
+                ["ItemDescription"] = invoice.Metadata.ItemDesc,
+                ["OrderId"] = invoice.Metadata.OrderId
+            });
             using (var cts = new CancellationTokenSource(LightningTimeout))
             {
                 try

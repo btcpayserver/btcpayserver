@@ -400,6 +400,9 @@ namespace BTCPayServer.Controllers
 
             viewModel.FormName = formData.Name;
             viewModel.Form = form;
+            viewModel.AspController = nameof(UIPaymentRequestController).TrimEnd("Controller", StringComparison.InvariantCulture);
+            viewModel.AspAction = nameof(ViewPaymentRequestForm);
+            viewModel.RouteParameters = new Dictionary<string, string> { { "payReqId", payReqId } };
 
             var storeBlob = result.StoreData.GetStoreBlob();
             viewModel.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);

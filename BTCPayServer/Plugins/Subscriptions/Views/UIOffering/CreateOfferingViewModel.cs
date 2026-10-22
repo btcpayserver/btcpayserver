@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Views.UIStoreMembership;
 
 public class CreateOfferingViewModel
 {
     [Required]
-    [StringLength(50)]
+    [StringLength(AppData.MaxNameLength, MinimumLength = AppData.MinNameLength)]
     public string Name { get; set; } = null!;
 }

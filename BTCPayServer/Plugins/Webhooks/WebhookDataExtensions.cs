@@ -54,6 +54,8 @@ namespace BTCPayServer.Data
     }
     public class WebhookBlob
     {
+        public const int MaxSecretLength = 64;
+
         public string Url { get; set; }
         public bool Active { get; set; } = true;
         public string Secret { get; set; }

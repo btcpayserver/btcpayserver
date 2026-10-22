@@ -33,11 +33,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         AppService appService) : ControllerBase
     {
         private const int MaxMetadataLength = 64 * 1024;
-        private const int MaxAppNameLength = 100;
         private const int MaxFeatures = 100;
-        private const int MaxFeatureIdLength = 50;
-        private const int MaxFeatureDescriptionLength = 500;
-        private const int MaxPlanDescriptionLength = 1_000;
         private const int MaxCreditDescriptionLength = 500;
 
         [HttpGet("~/api/v1/stores/{storeId}/offerings/{offeringId?}")]
@@ -124,14 +120,14 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         {
             if (request?.AppName is null)
                 ModelState.AddModelError(nameof(request.AppName), "AppName is required");
-            else if (request.AppName.Length > MaxAppNameLength)
-                ModelState.AddModelError(nameof(request.AppName), $"AppName must be at most {MaxAppNameLength} characters");
+            else if (request.AppName.Length > AppData.MaxNameLength)
+                ModelState.AddModelError(nameof(request.AppName), $"AppName must be at most {AppData.MaxNameLength} characters");
             if (!string.IsNullOrEmpty(request?.SuccessRedirectUrl) &&
                 !PlanCheckoutData.IsSafeRedirectUrl(request.SuccessRedirectUrl))
             {
                 ModelState.AddModelError(nameof(request.SuccessRedirectUrl), "SuccessRedirectUrl must be an HTTP or HTTPS URL");
             }
-            if (request?.SuccessRedirectUrl?.Length > 500)
+            if (request?.SuccessRedirectUrl?.Length > OfferingData.MaxSuccessRedirectUrlLength)
                 ModelState.AddModelError(nameof(request.SuccessRedirectUrl), "SuccessRedirectUrl is too long");
             ValidateMetadata(nameof(OfferingModel.Metadata), request?.Metadata);
 
@@ -150,10 +146,10 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
 
                 if (string.IsNullOrWhiteSpace(feature.Id))
                     ModelState.AddModelError($"{nameof(request.Features)}[{i}].{nameof(feature.Id)}", "Feature id is required");
-                else if (feature.Id.Length > MaxFeatureIdLength)
-                    ModelState.AddModelError($"{nameof(request.Features)}[{i}].{nameof(feature.Id)}", $"Feature id must be at most {MaxFeatureIdLength} characters");
-                if (feature.Description?.Length > MaxFeatureDescriptionLength)
-                    ModelState.AddModelError($"{nameof(request.Features)}[{i}].{nameof(feature.Description)}", $"Feature description must be at most {MaxFeatureDescriptionLength} characters");
+                else if (feature.Id.Length > FeatureData.MaxCustomIdLength)
+                    ModelState.AddModelError($"{nameof(request.Features)}[{i}].{nameof(feature.Id)}", $"Feature id must be at most {FeatureData.MaxCustomIdLength} characters");
+                if (feature.Description?.Length > FeatureData.MaxDescriptionLength)
+                    ModelState.AddModelError($"{nameof(request.Features)}[{i}].{nameof(feature.Description)}", $"Feature description must be at most {FeatureData.MaxDescriptionLength} characters");
             }
         }
 
@@ -169,9 +165,9 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 ModelState.AddModelError(nameof(request.Price), "Price cannot be negative");
             if (request?.Name is null)
                 ModelState.AddModelError(nameof(request.Name), "Name is required");
-            if (request?.Description?.Length > MaxPlanDescriptionLength)
-                ModelState.AddModelError(nameof(request.Description), $"Description must be at most {MaxPlanDescriptionLength} characters");
-            if (request?.Currency?.Length > 10)
+            if (request?.Description?.Length > PlanData.MaxDescriptionLength)
+                ModelState.AddModelError(nameof(request.Description), $"Description must be at most {PlanData.MaxDescriptionLength} characters");
+            if (request?.Currency?.Length > CurrencyNameTable.MaxCurrencyCodeLength)
                 ModelState.AddModelError(nameof(request.Currency), "Currency is too long");
             ValidateMetadata(nameof(CreatePlanRequest.Metadata), request?.Metadata);
 
@@ -242,9 +238,9 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 return PlanNotFound();
             if (request?.Price < 0m)
                 ModelState.AddModelError(nameof(request.Price), "Price cannot be negative");
-            if (request?.Description?.Length > MaxPlanDescriptionLength)
-                ModelState.AddModelError(nameof(request.Description), $"Description must be at most {MaxPlanDescriptionLength} characters");
-            if (request?.Currency?.Length > 10)
+            if (request?.Description?.Length > PlanData.MaxDescriptionLength)
+                ModelState.AddModelError(nameof(request.Description), $"Description must be at most {PlanData.MaxDescriptionLength} characters");
+            if (request?.Currency?.Length > CurrencyNameTable.MaxCurrencyCodeLength)
                 ModelState.AddModelError(nameof(request.Currency), "Currency is too long");
             ValidateMetadata(nameof(CreatePlanRequest.Metadata), request?.Metadata);
 

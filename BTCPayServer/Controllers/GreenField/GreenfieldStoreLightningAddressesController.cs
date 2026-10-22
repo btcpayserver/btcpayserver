@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,6 @@ namespace BTCPayServer.Controllers.Greenfield
     public class GreenfieldStoreLightningAddressesController : ControllerBase
     {
         private const int MaxInvoiceMetadataLength = 64 * 1024;
-        private const int MaxCurrencyCodeLength = 10;
         private readonly LightningAddressService _lightningAddressService;
 
         public GreenfieldStoreLightningAddressesController(
@@ -92,7 +92,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (data.Min is { } min && data.Max is { } max && min > max)
                 ModelState.AddModelError(nameof(data.Max), "Maximum must be greater than or equal to minimum.");
 
-            if (data.CurrencyCode?.Length > MaxCurrencyCodeLength)
+            if (data.CurrencyCode?.Length > CurrencyNameTable.MaxCurrencyCodeLength)
                 ModelState.AddModelError(nameof(data.CurrencyCode), "Currency code is too long.");
 
             if (data.InvoiceMetadata is not null &&

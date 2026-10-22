@@ -7,6 +7,9 @@ namespace BTCPayServer.Data
 {
     public class AppData
     {
+        public const int MinNameLength = 1;
+        public const int MaxNameLength = 100;
+
         public string Id { get; set; }
         public string Name { get; set; }
         public string StoreDataId { get; set; }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -22,7 +23,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public double PaymentTolerance { get; set; }
 
         [Display(Name = "Default currency")]
-        [MaxLength(10)]
+        [MaxLength(CurrencyNameTable.MaxCurrencyCodeLength)]
         public string DefaultCurrency { get; set; }
 
         [Display(Name = "Minimum acceptable expiration time for BOLT11 for refunds")]

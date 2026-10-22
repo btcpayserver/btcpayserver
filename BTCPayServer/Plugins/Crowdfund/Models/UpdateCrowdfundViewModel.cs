@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Http;
@@ -16,8 +17,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         public string StoreDefaultCurrency { get; set; }
 
         [Required]
-        [MaxLength(50)]
-        [MinLength(1)]
+        [MaxLength(AppData.MaxNameLength)]
+        [MinLength(AppData.MinNameLength)]
         [Display(Name = "App Name")]
         public string AppName { get; set; }
 

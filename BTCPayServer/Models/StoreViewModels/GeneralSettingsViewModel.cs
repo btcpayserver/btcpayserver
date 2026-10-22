@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Http;
 
@@ -53,7 +54,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public double PaymentTolerance { get; set; }
 
         [Display(Name = "Default currency")]
-        [MaxLength(10)]
+        [MaxLength(CurrencyNameTable.MaxCurrencyCodeLength)]
         public string DefaultCurrency { get; set; }
 
         [Display(Name = "Additional rates to track")]

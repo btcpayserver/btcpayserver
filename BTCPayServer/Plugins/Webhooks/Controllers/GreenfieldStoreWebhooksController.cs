@@ -20,7 +20,6 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldStoreWebhooksController : ControllerBase
     {
-        private const int MaxSecretLength = 64;
         private const int MaxSpecificEvents = 100;
         private const int MaxSpecificEventLength = 100;
         private const int MaxSpecificEventCharacters = 10_000;
@@ -72,8 +71,8 @@ namespace BTCPayServer.Plugins.Webhooks.Controllers
         {
             if (!Uri.TryCreate(create?.Url, UriKind.Absolute, out _))
                 ModelState.AddModelError(nameof(Url), "Invalid Url");
-            if (create?.Secret is { Length: > MaxSecretLength })
-                ModelState.AddModelError(nameof(create.Secret), $"The secret should be maximum {MaxSecretLength} characters.");
+            if (create?.Secret is { Length: > WebhookBlob.MaxSecretLength })
+                ModelState.AddModelError(nameof(create.Secret), $"The secret should be maximum {WebhookBlob.MaxSecretLength} characters.");
             if (create?.AuthorizedEvents?.SpecificEvents is { } specificEvents)
             {
                 if (specificEvents.Length > MaxSpecificEvents ||

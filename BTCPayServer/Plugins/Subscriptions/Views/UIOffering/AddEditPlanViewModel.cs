@@ -39,7 +39,7 @@ namespace BTCPayServer.Views.UIStoreMembership
         public int TrialDays { get; set; }
 
         [Display(Name = "Description")]
-        [StringLength(1000)]
+        [StringLength(PlanData.MaxDescriptionLength)]
         public string Description { get; set; }
 
         [Display(Name = "Optimistic activation")]

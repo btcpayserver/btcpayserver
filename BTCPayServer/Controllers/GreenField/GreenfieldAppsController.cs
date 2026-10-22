@@ -593,9 +593,10 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.AppName), "App name is missing");
             }
-            else if (request.AppName.Length is < 1 or > 50)
+            else if (request.AppName.Length is < AppData.MinNameLength or > AppData.MaxNameLength)
             {
-                ModelState.AddModelError(nameof(request.AppName), "App name can only be between 1 and 50 characters");
+                ModelState.AddModelError(nameof(request.AppName),
+                    $"App name can only be between {AppData.MinNameLength} and {AppData.MaxNameLength} characters");
             }
         }
     }

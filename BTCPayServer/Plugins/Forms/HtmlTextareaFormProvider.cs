@@ -6,8 +6,6 @@ namespace BTCPayServer.Forms;
 
 public class HtmlTextareaFormProvider : FormComponentProviderBase
 {
-    private const int MaxValueLength = 10_000;
-
     public override void Register(Dictionary<string, IFormComponentProvider> typeToComponentProvider)
     {
         typeToComponentProvider.Add("textarea", this);

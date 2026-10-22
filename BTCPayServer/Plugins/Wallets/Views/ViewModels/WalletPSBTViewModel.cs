@@ -11,7 +11,7 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
 {
     public class WalletPSBTViewModel : WalletPSBTReadyViewModel
     {
-        private const int MaxPSBTLength = 500 * 1024;
+        public const int MaxPSBTLength = 500 * 1024;
 
         public string CryptoCode { get; set; }
         public string Decoded { get; set; }

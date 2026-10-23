@@ -61,11 +61,21 @@ public class UIPayoutProcessorsController : Controller
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Remove(string storeId, string id)
     {
+        var processor = (await _payoutProcessorService.GetProcessors(new PayoutProcessorService.PayoutProcessorQuery
+        {
+            Ids = new[] { id },
+            Stores = new[] { storeId }
+        })).SingleOrDefault();
+        if (processor is null)
+        {
+            return NotFound();
+        }
+
         var tcs = new TaskCompletionSource();
         _eventAggregator.Publish(new PayoutProcessorUpdated()
         {
             Data = null,
-            Id = id,
+            Id = processor.Id,
             Processed = tcs
         });
         TempData.SetStatusMessageModel(new StatusMessageModel

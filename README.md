@@ -8,6 +8,10 @@ BTCPay Server is a free and open-source, self-hosted Bitcoin payment processor. 
 [![Release](https://img.shields.io/github/v/release/btcpayserver/btcpayserver)](https://github.com/btcpayserver/btcpayserver/releases/)
 [![License](https://img.shields.io/github/license/btcpayserver/btcpayserver)](LICENSE)
 [![Contributions welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://docs.btcpayserver.org/Contribute/)
+<a href="https://repocloud.io/details/BTCPay%20Server/"><img src="https://dnk92k33or340.cloudfront.net/deploy-20px.png" alt="Deploy on RepoCloud" height="20"></a>
+<a href="https://railway.com/deploy/btcpay"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="20"></a>
+<a href="https://marketplace.digitalocean.com/apps/btcpay-server"><img src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy on DigitalOcean" height="20"></a>
+<a href="https://elest.io/open-source/btcpay"><img src="https://elest.io/images/logos/deploy-to-elestio-btn.png" alt="Deploy on Elestio" height="20"></a>
 
 ## Start Here
 

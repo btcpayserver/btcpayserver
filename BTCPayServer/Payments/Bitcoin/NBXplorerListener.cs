@@ -317,8 +317,10 @@ namespace BTCPayServer.Payments.Bitcoin
                         if (paymentEntitiesByPrevOut.TryGetValue(prevout, out var replaced) && !replaced.Accounted)
                         {
                             payment.PaymentMethodFee = replaced.PaymentMethodFee;
-                            if (payjoinInformation is PayjoinInformation pj &&
-                                pj.CoinjoinTransactionHash == tx.TransactionHash)
+                            var replacedPaymentData = handler.ParsePaymentDetails(replaced.Details);
+                            if (replacedPaymentData.PayjoinInformation is PayjoinInformation pj &&
+                                pj.CoinjoinTransactionHash == tx.TransactionHash &&
+                                replacedPaymentData.Outpoint.N == paymentData.Outpoint.N)
                             {
                                 // This payment is a coinjoin, so the value of
                                 // the payment output is different from the real value of the payment

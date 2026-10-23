@@ -146,7 +146,7 @@ namespace BTCPayServer.Controllers
                 .Where(permission => _permissionService.IsValidPolicy(permission.Policy))
                 .ToList();
 
-            if (redirect?.IsAbsoluteUri is false)
+            if (!IsSafeRedirect(redirect))
             {
                 redirect = null;
             }
@@ -178,6 +178,11 @@ namespace BTCPayServer.Controllers
         [HttpPost("~/api-keys/authorize")]
         public async Task<IActionResult> AuthorizeAPIKey([FromForm] AuthorizeApiKeysViewModel viewModel)
         {
+            if (!IsSafeRedirect(viewModel.RedirectUrl))
+            {
+                viewModel.RedirectUrl = null;
+            }
+
             viewModel = await SetViewModelValues(viewModel);
             AdjustVMForAuthorization(viewModel);
 
@@ -304,6 +309,8 @@ namespace BTCPayServer.Controllers
             });
             return RedirectToAction("APIKeys");
         }
+
+        private static bool IsSafeRedirect(Uri redirect) => redirect is { IsAbsoluteUri: true } && redirect.Scheme is "http" or "https";
 
         private async Task<APIKeyData> CheckForMatchingApiKey(IEnumerable<Permission> requestedPermissions, AuthorizeApiKeysViewModel vm)
         {

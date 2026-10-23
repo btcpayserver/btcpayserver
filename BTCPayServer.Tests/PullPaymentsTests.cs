@@ -968,14 +968,26 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var card1Keys = new[] { card.K0, card.K1, card.K2, card.K3, card.K4 };
         Assert.All(card1Keys, Assert.NotNull);
 
-        var card2 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
+        await AssertEx.AssertValidationError(["LNURLW"], () => client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
         {
             UID = uid
+        }));
+        await AssertEx.AssertValidationError(["LNURLW"], () => client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
+        {
+            UID = uid,
+            OnExisting = OnExistingBehavior.UpdateVersion
+        }));
+        var piccData = new byte[] { 0xc7 }.Concat(uid).Concat(new byte[8]).ToArray();
+        var p = AESKey.Parse(card.K1).Encrypt(piccData);
+        var c = AESKey.Parse(card.K2).GetSunMac(uid, 0);
+        var card2 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
+        {
+            LNURLW = card.LNURLW + $"?p={Encoders.Hex.EncodeData(p)}&c={Encoders.Hex.EncodeData(c)}"
         });
         Assert.Equal(0, card2.Version);
         card2 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
         {
-            UID = uid,
+            LNURLW = card.LNURLW + $"?p={Encoders.Hex.EncodeData(p)}&c={Encoders.Hex.EncodeData(c)}",
             OnExisting = OnExistingBehavior.UpdateVersion
         });
         Assert.Equal(1, card2.Version);
@@ -991,17 +1003,20 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
                 Assert.DoesNotContain(card1Keys[i], card2Keys);
         }
 
+        piccData = new byte[] { 0xc7 }.Concat(uid).Concat(new byte[8]).ToArray();
+        p = AESKey.Parse(card2.K1).Encrypt(piccData);
+        c = AESKey.Parse(card2.K2).GetSunMac(uid, 0);
         var card3 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
         {
-            UID = uid,
+            LNURLW = card2.LNURLW + $"?p={Encoders.Hex.EncodeData(p)}&c={Encoders.Hex.EncodeData(c)}",
             OnExisting = OnExistingBehavior.KeepVersion
         });
         Assert.Equal(card2.Version, card3.Version);
-        var p = new byte[] { 0xc7 }.Concat(uid).Concat(new byte[8]).ToArray();
+        p = new byte[] { 0xc7 }.Concat(uid).Concat(new byte[8]).ToArray();
         var card4 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
         {
             OnExisting = OnExistingBehavior.KeepVersion,
-            LNURLW = card2.LNURLW + $"?p={Encoders.Hex.EncodeData(AESKey.Parse(card2.K1).Encrypt(p))}"
+            LNURLW = card2.LNURLW + $"?p={Encoders.Hex.EncodeData(AESKey.Parse(card2.K1).Encrypt(p))}&c={Encoders.Hex.EncodeData(c)}"
         });
         Assert.Equal(card2.Version, card4.Version);
         Assert.Equal(card2.K4, card4.K4);

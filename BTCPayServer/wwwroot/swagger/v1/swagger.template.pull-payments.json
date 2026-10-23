@@ -15,21 +15,23 @@
             "post": {
                 "operationId": "PullPayments_LinkBoltcard",
                 "summary": "Link a boltcard to a pull payment",
-                "description": "Linking a boltcard to a pull payment will allow you to pay via NFC with it, the money will be sent from the pull payment. The boltcard keys are generated using [Deterministic Boltcard Key Generation](https://github.com/boltcard/boltcard/blob/main/docs/DETERMINISTIC.md).",
+                "description": "Linking a boltcard to a pull payment will allow you to pay via NFC with it, the money will be sent from the pull payment. The boltcard keys are generated using [Deterministic Boltcard Key Generation](https://github.com/boltcard/boltcard/blob/main/docs/DETERMINISTIC.md). Pass the UID when linking a card for the first time. An existing card must instead be presented through LNURLW so the server can verify possession before returning or rotating its keys.",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "UID"
-                                ],
                                 "type": "object",
                                 "properties": {
                                     "UID": {
                                         "type": "string",
                                         "example": "46ab87ff36a3b7",
-                                        "description": "The `UID` of the NTag424",
-                                        "nullable": false
+                                        "description": "The `UID` of an NTag424 being linked for the first time",
+                                        "nullable": true
+                                    },
+                                    "LNURLW": {
+                                        "type": "string",
+                                        "description": "The LNURLW read from an existing card, including valid `p` and `c` proof parameters",
+                                        "nullable": true
                                     },
                                     "onExisting": {
                                         "type": "string",
@@ -102,6 +104,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unable to validate the request or verify possession of an existing card",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
                                 }
                             }
                         }

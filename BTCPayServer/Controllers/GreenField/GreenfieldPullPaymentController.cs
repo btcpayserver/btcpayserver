@@ -235,8 +235,36 @@ namespace BTCPayServer.Controllers.Greenfield
 
             BoltcardKeys keys;
             int version;
+            int? authenticatedVersion = null;
 
             var registration = await _dbContextFactory.GetBoltcardRegistration(issuerKey, request.UID);
+            if (registration?.PullPaymentId is { } registeredPullPaymentId)
+            {
+                var c = ExtractC(request.LNURLW);
+                if (picc is null || c is null)
+                {
+                    ModelState.AddModelError(nameof(request.LNURLW), "The LNURLW of the existing card with valid 'p=' and 'c=' parameters is required");
+                    return this.CreateValidationError(ModelState);
+                }
+
+                version = registration.Version;
+                int retryCount = 0;
+retry:
+                keys = issuerKey.CreatePullPaymentCardKey(request.UID, version, registeredPullPaymentId).DeriveBoltcardKeys(issuerKey);
+                if (!keys.AuthenticationKey.CheckSunMac(c, picc))
+                {
+                    retryCount++;
+                    version--;
+                    if (version < 0 || retryCount > 5)
+                    {
+                        ModelState.AddModelError(nameof(request.LNURLW), "Unable to verify this card, it might be caused by a version mismatch");
+                        return this.CreateValidationError(ModelState);
+                    }
+                    goto retry;
+                }
+                authenticatedVersion = version;
+            }
+
             if (request.OnExisting is OnExistingBehavior.UpdateVersion ||
                 (request.OnExisting is null && registration?.PullPaymentId is null))
             {
@@ -256,30 +284,8 @@ namespace BTCPayServer.Controllers.Greenfield
                     return this.CreateValidationError(ModelState);
                 }
                 var ppId = registration.PullPaymentId;
-                version = registration.Version;
-                int retryCount = 0;
-retry:
+                version = authenticatedVersion!.Value;
                 keys = issuerKey.CreatePullPaymentCardKey(request!.UID, version, ppId).DeriveBoltcardKeys(issuerKey);
-
-                // The server version may be higher than the card.
-                // If that is the case, let's try a few versions until we find the right one
-                // by checking c.
-                if (request?.LNURLW is { } lnurlw &&
-                    ExtractC(lnurlw) is string c &&
-                    picc is not null)
-                {
-                    if (!keys.AuthenticationKey.CheckSunMac(c, picc))
-                    {
-                        retryCount++;
-                        version--;
-                        if (version < 0 || retryCount > 5)
-                        {
-                            ModelState.AddModelError(nameof(request.UID), "Unable to get keys of this card, it might be caused by a version mismatch");
-                            return this.CreateValidationError(ModelState);
-                        }
-                        goto retry;
-                    }
-                }
             }
 
             var boltcardUrl = Url.Action(nameof(UIBoltcardController.GetWithdrawRequest), "UIBoltcard");

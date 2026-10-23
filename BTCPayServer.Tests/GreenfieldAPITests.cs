@@ -484,7 +484,7 @@ namespace BTCPayServer.Tests
                     user.StoreId,
                     new PointOfSaleAppRequest
                     {
-                        AppName = "this is a really long app name this is a really long app name this is a really long app name",
+                        AppName = new string('a', AppData.MaxNameLength + 1),
                     }
                 )
             );
@@ -651,7 +651,7 @@ namespace BTCPayServer.Tests
                     user.StoreId,
                     new CrowdfundAppRequest
                     {
-                        AppName = "this is a really long app name this is a really long app name this is a really long app name",
+                        AppName = new string('a', AppData.MaxNameLength + 1),
                     }
                 )
             );

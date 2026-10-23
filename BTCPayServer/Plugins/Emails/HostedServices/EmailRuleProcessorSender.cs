@@ -126,6 +126,8 @@ public class StoreEmailRuleProcessorSender(
             }
         };
         var emails = template.Render(model);
+        if (string.IsNullOrWhiteSpace(emails))
+            return Array.Empty<MailboxAddress>();
         MailAddressCollection mailCollection = new();
         try
         {
@@ -158,7 +160,8 @@ public class StoreEmailRuleProcessorSender(
 
     private static bool IsPluralPlaceholder(string path)
     {
-        var name = path[(path.LastIndexOf('.') + 1)..];
+        // In bracket notation (Metadata['emails']), the name ends before the closing "']".
+        var name = path.EndsWith("']", StringComparison.Ordinal) ? path[..^2] : path[(path.LastIndexOf('.') + 1)..];
         // A trailing "s" denotes a multi-address placeholder, except for singular names such as "Address".
         return name.EndsWith("s", StringComparison.OrdinalIgnoreCase) &&
                !name.EndsWith("ss", StringComparison.OrdinalIgnoreCase);

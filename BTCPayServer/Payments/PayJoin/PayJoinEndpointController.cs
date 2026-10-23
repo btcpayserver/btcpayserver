@@ -318,15 +318,20 @@ namespace BTCPayServer.Payments.PayJoin
                         break;
                     }
 
-                    paymentAddress = BitcoinAddress.Create(paymentMethod.Destination, network.NBitcoinNetwork);
-                    paymentAddressIndex = (paymentDetails.KeyPath, paymentDetails.KeyIndex);
-
-                    if (invoice.GetAllBitcoinPaymentData(handler, false).Any())
+                    var lockedInvoice = ctx.TryLockInvoice(invoice.Id);
+                    if (lockedInvoice)
+                        // Recheck after taking the lock in case another request just completed.
+                        invoice = await _invoiceRepository.GetInvoice(invoice.Id);
+                    if (!lockedInvoice || invoice is null || invoice.GetAllBitcoinPaymentData(handler, false).Any())
                     {
                         ctx.DoNotBroadcast();
                         return UnprocessableEntity(CreatePayjoinError("already-paid",
                             $"The invoice this PSBT is paying has already been partially or completely paid"));
                     }
+                    ctx.Invoice = invoice;
+
+                    paymentAddress = BitcoinAddress.Create(paymentMethod.Destination, network.NBitcoinNetwork);
+                    paymentAddressIndex = (paymentDetails.KeyPath, paymentDetails.KeyIndex);
                 }
                 else if (walletReceiveMatch is not null)
                 {

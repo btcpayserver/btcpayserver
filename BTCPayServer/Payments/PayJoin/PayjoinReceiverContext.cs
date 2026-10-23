@@ -1,6 +1,8 @@
 #nullable enable
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
 using BTCPayServer.Services.Invoices;
@@ -12,6 +14,7 @@ namespace BTCPayServer.Payments.PayJoin
 {
     public class PayjoinReceiverContext
     {
+        private static readonly ConcurrentDictionary<string, byte> InvoiceLocks = new();
         private readonly InvoiceRepository _invoiceRepository;
         private readonly ExplorerClient _explorerClient;
         private readonly UTXOLocker _utxoLocker;
@@ -27,6 +30,16 @@ namespace BTCPayServer.Payments.PayJoin
         public NBitcoin.Transaction? OriginalTransaction { get; set; }
         public InvoiceLogs Logs { get; } = new InvoiceLogs();
         public OutPoint[]? LockedUTXOs { get; set; }
+        private string? _lockedInvoiceId;
+
+        public bool TryLockInvoice(string invoiceId)
+        {
+            if (!InvoiceLocks.TryAdd(invoiceId, 0))
+                return false;
+            _lockedInvoiceId = invoiceId;
+            return true;
+        }
+
         public async Task DisposeAsync()
         {
             List<Task> disposing = new List<Task>();
@@ -49,6 +62,12 @@ namespace BTCPayServer.Payments.PayJoin
             catch (Exception ex)
             {
                 BTCPayLogs.PayServer.LogWarning(ex, "Error while disposing the PayjoinReceiverContext");
+            }
+            finally
+            {
+                var invoiceId = Interlocked.Exchange(ref _lockedInvoiceId, null);
+                if (invoiceId is not null)
+                    InvoiceLocks.TryRemove(invoiceId, out _);
             }
         }
 

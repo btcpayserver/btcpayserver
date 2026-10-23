@@ -4,6 +4,7 @@
 
 - Follow the repository `.editorconfig`; it is the source of truth for
   formatting and C# style.
+- Prefer expression-bodied methods when the implementation fits on one line.
 - Prefer `Newtonsoft.Json` over `System.Text.Json` when adding or changing JSON
   serialization.
 - Do not use `ConfigureAwait(false)`; BTCPay Server does not rely on a

@@ -23,16 +23,26 @@ public class ProcessRunner(ILoggerFactory loggerFactory, IConfiguration conf)
     private readonly ILogger _logger = loggerFactory.CreateLogger("BTCPayServer.ProcessRunner");
 
     #nullable enable
-    public async Task<HostCommandResult> RunHostCommand(string hostCommand, IReadOnlyList<string>? arguments, TimeSpan timeout)
+    public Task<HostCommandResult> RunHostCommand(string hostCommand, IReadOnlyList<string>? arguments, TimeSpan timeout)
     {
-        using var timeoutCts = new CancellationTokenSource(timeout);
-        return await RunHostCommand(hostCommand, arguments, timeoutCts.Token);
+        return RunHostCommand(hostCommand, arguments, timeout, null);
     }
 
-    public async Task<HostCommandResult> RunHostCommand(string hostCommand, IReadOnlyList<string>? arguments, CancellationToken cancellationToken)
+    public async Task<HostCommandResult> RunHostCommand(string hostCommand, IReadOnlyList<string>? arguments, TimeSpan timeout, Action<string>? outputLine)
     {
-        var output = new OutputCapture();
-        var error = new OutputCapture();
+        using var timeoutCts = new CancellationTokenSource(timeout);
+        return await RunHostCommand(hostCommand, arguments, timeoutCts.Token, outputLine);
+    }
+
+    public Task<HostCommandResult> RunHostCommand(string hostCommand, IReadOnlyList<string>? arguments, CancellationToken cancellationToken)
+    {
+        return RunHostCommand(hostCommand, arguments, cancellationToken, null);
+    }
+
+    public async Task<HostCommandResult> RunHostCommand(string hostCommand, IReadOnlyList<string>? arguments, CancellationToken cancellationToken, Action<string>? outputLine)
+    {
+        var output = new OutputCapture(outputLine);
+        var error = new OutputCapture(outputLine);
         var args = arguments?.ToList() ?? new();
         args.Insert(0, hostCommand);
         var exitCode = await RunAsync(new ProcessSpec
@@ -242,7 +252,18 @@ public class ProcessSpec
 public class OutputCapture
 {
     private readonly List<string> _lines = new List<string>();
+    private readonly Action<string> _lineReceived;
+
+    public OutputCapture(Action<string> lineReceived = null)
+    {
+        _lineReceived = lineReceived;
+    }
+
     public IEnumerable<string> Lines => _lines;
-    public void AddLine(string line) => _lines.Add(line);
+    public void AddLine(string line)
+    {
+        _lines.Add(line);
+        _lineReceived?.Invoke(line);
+    }
     public override string ToString() => _lines.Count == 0 ? string.Empty : string.Join('\n', _lines) + '\n';
 }

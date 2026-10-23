@@ -1,0 +1,208 @@
+@model BTCPayServer.Components.AppCrowdfund.AppCrowdfundViewModel
+@{
+    var pct = (int)Math.Round(Model.ProgressPercentage ?? 0m);
+    var barWidth = Math.Min(100, Math.Max(0, pct));
+}
+
+<div id="AppCrowdfund-@Model.Id" class="widget app-crowdfund">
+    @if (Model.InitialRendering)
+    {
+        <div class="loading d-flex justify-content-center p-3">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden" text-translate="true">Loading...</span>
+            </div>
+        </div>
+        <script>
+            (async () => {
+                const url = @Safe.Json(Model.DataUrl);
+                const appId = @Safe.Json(Model.Id);
+                const response = await fetch(url);
+                if (response.ok) {
+                    document.getElementById(`AppCrowdfund-${appId}`).outerHTML = await response.text();
+                }
+            })();
+        </script>
+    }
+    else
+    {
+        <header class="app-crowdfund__header">
+            <div class="app-crowdfund__heading">
+                <h3 class="app-crowdfund__title">@Model.Name</h3>
+                <div class="app-crowdfund__badges">
+                    @if (Model.Recurring)
+                    {
+                        <span class="badge app-crowdfund__badge app-crowdfund__badge--recurring">
+                            <span text-translate="true">Recurring</span>@if (Model.RecurrenceLabel != null) { <span> · @Model.RecurrenceLabel</span> }
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge app-crowdfund__badge app-crowdfund__badge--onetime" text-translate="true">One-time</span>
+                    }
+                    @if (Model.Ended)
+                    {
+                        <span class="badge app-crowdfund__badge app-crowdfund__badge--completed" text-translate="true">Completed</span>
+                    }
+                    else if (!Model.Enabled)
+                    {
+                        <span class="badge app-crowdfund__badge app-crowdfund__badge--disabled" text-translate="true">Disabled</span>
+                    }
+                    else if (!Model.Started)
+                    {
+                        <span class="badge app-crowdfund__badge app-crowdfund__badge--scheduled" text-translate="true">Scheduled</span>
+                    }
+                </div>
+            </div>
+            <div class="app-crowdfund__actions">
+                @if (Model.Ended)
+                {
+                    <a href="@Model.ReportUrl" text-translate="true">Report</a>
+                }
+                else
+                {
+                    <a href="@Model.ManageUrl" text-translate="true">Manage</a>
+                }
+                <a href="@Model.PublicUrl" target="_blank" rel="noreferrer noopener" text-translate="true">View</a>
+            </div>
+        </header>
+
+        @if (Model.Ended)
+        {
+            <div class="app-crowdfund__banner @(Model.GoalReached ? "app-crowdfund__banner--success" : "")">
+                <vc:icon symbol="@(Model.GoalReached ? "checkmark" : "info")" />
+                <span>
+                    @if (Model.GoalReached)
+                    {
+                        @ViewLocalizer["Goal reached, funded {0}%", pct]
+                    }
+                    else
+                    {
+                        @ViewLocalizer["Campaign ended, funded {0}%", pct]
+                    }
+                </span>
+            </div>
+        }
+
+        <div class="app-crowdfund__progress">
+            <div class="app-crowdfund__progress-head">
+                <span class="app-crowdfund__progress-summary">
+                    @if (Model.HasTarget)
+                    {
+                        <strong data-sensitive>@Model.CurrentAmountValue</strong>
+                        <span text-translate="true">of</span>
+                        <strong data-sensitive>@Model.TargetAmountFormatted</strong>
+                        @if (Model.Recurring && Model.PeriodNoun != null)
+                        {
+                            <span>@ViewLocalizer["this {0}", Model.PeriodNoun]</span>
+                        }
+                        <span class="app-crowdfund__progress-pct">
+                            · @pct%
+                            @if (Model.GoalReached)
+                            {
+                                <span text-translate="true">funded</span>
+                            }
+                        </span>
+                    }
+                    else
+                    {
+                        <strong data-sensitive>@Model.CurrentAmountFormatted</strong>
+                        <span text-translate="true">raised</span>
+                    }
+                </span>
+                <span class="app-crowdfund__timing">
+                    @if (Model.Ended && Model.EndDate.HasValue)
+                    {
+                        @ViewLocalizer["Ended {0}", Model.EndDate.Value.ToString("d")]
+                    }
+                    else if (Model.Recurring && Model.RenewsInDays.HasValue)
+                    {
+                        @ViewLocalizer["renews in {0} days", Model.RenewsInDays.Value]
+                    }
+                    else if (!Model.Recurring && Model.DaysLeft.HasValue)
+                    {
+                        @ViewLocalizer["{0} days left", Model.DaysLeft.Value]
+                    }
+                </span>
+            </div>
+            <div class="app-crowdfund__bar" role="progressbar" aria-valuenow="@pct" aria-valuemin="0" aria-valuemax="100" aria-label="@StringLocalizer["Funding progress"]">
+                <div class="app-crowdfund__bar-fill" style="width:@(barWidth)%"></div>
+            </div>
+        </div>
+
+        @if (Model.Contributions == 0)
+        {
+            <p class="app-crowdfund__empty text-secondary" text-translate="true">No contributions yet.</p>
+        }
+        else
+        {
+        <div class="app-crowdfund__stats">
+            <div class="app-crowdfund__stat">
+                <h6 class="app-crowdfund__stat-label" text-translate="true">Contributions</h6>
+                <div class="app-crowdfund__stat-value">@Model.Contributions</div>
+            </div>
+            @if (!Model.Ended && Model.RemainingFormatted != null)
+            {
+                <div class="app-crowdfund__stat">
+                    <h6 class="app-crowdfund__stat-label" text-translate="true">Remaining</h6>
+                    <div class="app-crowdfund__stat-value" data-sensitive>@Model.RemainingFormatted</div>
+                </div>
+            }
+            else
+            {
+                <div class="app-crowdfund__stat">
+                    <h6 class="app-crowdfund__stat-label" text-translate="true">Largest contribution</h6>
+                    <div class="app-crowdfund__stat-value" data-sensitive>@(Model.LargestFormatted ?? "—")</div>
+                </div>
+            }
+            @if (Model.RecentContributions.Count > 0)
+            {
+                var latest = Model.RecentContributions[0];
+                <div class="app-crowdfund__stat">
+                    <h6 class="app-crowdfund__stat-label" text-translate="true">Latest Contribution</h6>
+                    <div class="app-crowdfund__stat-value" data-sensitive>@latest.AmountFormatted</div>
+                    <div class="app-crowdfund__stat-sub"><span data-timeago-unixms="@latest.Date.ToUnixTimeMilliseconds()"></span></div>
+                </div>
+            }
+        </div>
+
+        @if (Model.Perks.Any())
+        {
+            <div class="app-crowdfund__perks">
+                <h6 class="app-crowdfund__section-label">
+                    @if (Model.Ended)
+                    {
+                        <span text-translate="true">Final perk sales</span>
+                    }
+                    else
+                    {
+                        <span text-translate="true">Top Perks</span>
+                    }
+                </h6>
+                @foreach (var perk in Model.Perks)
+                {
+                    <div class="app-crowdfund__perk">
+                        <span class="app-crowdfund__perk-name">
+                            @perk.Title
+                            @if (perk.PriceFormatted != null)
+                            {
+                                <span class="text-secondary">· @perk.PriceFormatted@(Model.Recurring && Model.PeriodNoun != null ? $" / {Model.PeriodNoun}" : "")</span>
+                            }
+                        </span>
+                        <span class="app-crowdfund__perk-count">
+                            @if (Model.Recurring && !Model.Ended)
+                            {
+                                @ViewLocalizer["{0} active", perk.Count]
+                            }
+                            else
+                            {
+                                @ViewLocalizer["{0} sold", perk.Count]
+                            }
+                        </span>
+                    </div>
+                }
+            </div>
+        }
+        }
+
+    }
+</div>

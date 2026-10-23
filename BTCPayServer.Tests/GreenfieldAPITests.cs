@@ -4120,6 +4120,29 @@ namespace BTCPayServer.Tests
             Assert.Contains(allLNPayouts[0].Id, allLNPayouts2.Select(a => a.Id));
         }
 
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CannotRemovePayoutProcessorFromAnotherStoreThroughUI()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+
+            var victim = tester.NewAccount();
+            await victim.GrantAccessAsync();
+            var victimClient = await victim.CreateClient(Policies.Unrestricted);
+            await victimClient.UpdateStoreOnChainAutomatedPayoutProcessors(victim.StoreId, "BTC",
+                new OnChainAutomatedPayoutSettings { IntervalSeconds = TimeSpan.FromHours(1) });
+            var configuredProcessor = Assert.Single(await tester.PayTester.GetService<PayoutProcessorService>()
+                .GetProcessors(new PayoutProcessorService.PayoutProcessorQuery(victim.StoreId, Payouts.PayoutMethodId.Parse("BTC"))));
+
+            var attacker = tester.NewAccount();
+            await attacker.GrantAccessAsync();
+            Assert.IsType<NotFoundResult>(await attacker.GetController<UIPayoutProcessorsController>()
+                .Remove(attacker.StoreId, configuredProcessor.Id));
+
+            Assert.Single(await victimClient.GetStoreOnChainAutomatedPayoutProcessors(victim.StoreId, "BTC"));
+        }
+
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanUsePayoutProcessorsThroughAPI()

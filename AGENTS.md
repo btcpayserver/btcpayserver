@@ -2,6 +2,8 @@
 
 Read the human-facing [maintainer handbook](docs/maintainers/README.md) before changing repository behavior or process. `SECURITY.md` remains the canonical security policy.
 
+When running tests, always set `PLAYWRIGHT_HEADLESS=true` so Playwright cannot open browser windows.
+
 Agent workflow overlays live in project skills:
 
 - `.agents/skills/bem-conventions/SKILL.md`

@@ -119,6 +119,7 @@ function inputChanges(vueApp, event, buttonSize) {
         if (srvModel.serverIpn) html += addInput("serverIpn", srvModel.serverIpn);
         if (srvModel.browserRedirect) html += addInput("browserRedirect", srvModel.browserRedirect);
         if (srvModel.checkoutQueryString) html += addInput("checkoutQueryString", srvModel.checkoutQueryString);
+        if (srvModel.taxRateId) html += addInput("taxRateId", srvModel.taxRateId);
     }
 
     // Fixed amount: Add price and currency as hidden inputs

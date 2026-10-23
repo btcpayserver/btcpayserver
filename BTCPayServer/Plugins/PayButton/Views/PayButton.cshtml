@@ -220,6 +220,13 @@
                     <option  v-for="pm in srvModel.paymentMethods" v-bind:value="pm.value">{{pm.name}}</option>
                 </select>
             </div>
+			<div class="form-group col-md-4" v-if="!srvModel.appIdEndpoint">
+				<label class="form-label" for="tax-rate" text-translate="true">Tax Rate</label>
+				<select v-model="srvModel.taxRateId" v-on:change="inputChanges" class="form-select" id="tax-rate">
+					<option value="" selected text-translate="true">No tax</option>
+					<option v-for="tr in srvModel.taxRates" v-bind:value="tr.id">{{tr.name}} ({{tr.rate}}%)</option>
+				</select>
+			</div>
             <div class="form-group" v-if="!srvModel.appIdEndpoint">
                 <label class="form-label" for="description" text-translate="true">Checkout Description</label>
                 <input name="checkoutDesc" type="text" class="form-control" id="description"

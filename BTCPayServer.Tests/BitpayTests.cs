@@ -335,6 +335,26 @@ public class BitpayTests(ITestOutputHelper log) : UnitTestBase(log)
                         "application/json"),
                 });
             Assert.Equal(200, (int)response.StatusCode);
+
+            TestLogs.LogInformation("Invalid redirect URL = 400");
+            response = await tester.PayTester.HttpClient.SendAsync(
+                new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId={user.StoreId}")
+                {
+                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\", \"redirectURL\": \"javascript:void(0)\"}", Encoding.UTF8,
+                        "application/json"),
+                });
+            Assert.Equal(400, (int)response.StatusCode);
+            Assert.Contains("absolute HTTP or HTTPS", await response.Content.ReadAsStringAsync());
+
+            TestLogs.LogInformation("Relative redirect URL = 400");
+            response = await tester.PayTester.HttpClient.SendAsync(
+                new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId={user.StoreId}")
+                {
+                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\", \"redirectURL\": \"/relative\"}", Encoding.UTF8,
+                        "application/json"),
+                });
+            Assert.Equal(400, (int)response.StatusCode);
+            Assert.Contains("absolute HTTP or HTTPS", await response.Content.ReadAsStringAsync());
         }
 
         [Fact]

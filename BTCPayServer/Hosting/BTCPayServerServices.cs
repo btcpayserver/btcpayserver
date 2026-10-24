@@ -61,12 +61,10 @@ using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.WalletFileParsing;
 using BTCPayServer.Payments.LNURLPay;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Lightning.LNDhub;
 using BTCPayServer.Payouts;
-using BTCPayServer.Plugins.Bitcoin;
 using ExchangeSharp;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -302,47 +300,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IPluginHookService, PluginHookService>(provider => provider.GetService<PluginHookService>());
             services.TryAddTransient<Safe>();
             services.TryAddTransient<DisplayFormatter>();
-            services.TryAddSingleton<Ganss.Xss.HtmlSanitizer>(o =>
-            {
-                var htmlSanitizer = new Ganss.Xss.HtmlSanitizer();
-
-                htmlSanitizer.RemovingAtRule += (sender, args) =>
-                {
-                };
-                htmlSanitizer.RemovingTag += (sender, args) =>
-                {
-                    if (args.Tag.TagName.Equals("img", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        if (!args.Tag.ClassList.Contains("img-fluid"))
-                        {
-                            args.Tag.ClassList.Add("img-fluid");
-                        }
-
-                        args.Cancel = true;
-                    }
-                };
-
-                htmlSanitizer.RemovingAttribute += (sender, args) =>
-                {
-                    if (args.Tag.TagName.Equals("img", StringComparison.InvariantCultureIgnoreCase) &&
-                        args.Attribute.Name.Equals("src", StringComparison.InvariantCultureIgnoreCase) &&
-                        args.Reason == Ganss.Xss.RemoveReason.NotAllowedUrlValue)
-                    {
-                        args.Cancel = true;
-                    }
-                };
-                htmlSanitizer.RemovingStyle += (sender, args) => { args.Cancel = true; };
-                htmlSanitizer.AllowedAttributes.Add("class");
-                htmlSanitizer.AllowedTags.Add("iframe");
-                htmlSanitizer.AllowedTags.Add("style");
-                htmlSanitizer.AllowedTags.Remove("img");
-                htmlSanitizer.AllowedAttributes.Add("webkitallowfullscreen");
-                htmlSanitizer.AllowedAttributes.Add("allowfullscreen");
-                htmlSanitizer.AllowedSchemes.Add("mailto");
-                htmlSanitizer.AllowedSchemes.Add("bitcoin");
-                htmlSanitizer.AllowedSchemes.Add("lightning");
-                return htmlSanitizer;
-            });
+            services.TryAddSingleton<Ganss.Xss.HtmlSanitizer>(_ => HtmlSanitizerFactory.Create());
+            services.TryAddSingleton<RichTextHtmlSanitizer>(_ => new RichTextHtmlSanitizer(HtmlSanitizerFactory.CreateRichText()));
 
             services.AddSingleton<TransactionLinkProviders>();
             services.TryAddSingleton<LightningConfigurationProvider>();

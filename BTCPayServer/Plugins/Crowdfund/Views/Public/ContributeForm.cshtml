@@ -47,7 +47,7 @@
                         }
                     </span>
                 </div>
-                <p class="card-text overflow-hidden">@Safe.Raw(item.Description)</p>
+                <p class="card-text overflow-hidden">@Safe.RawRichText(item.Description)</p>
             </div>
             @if (hasCount || hasValue || item.Inventory.HasValue)
             {

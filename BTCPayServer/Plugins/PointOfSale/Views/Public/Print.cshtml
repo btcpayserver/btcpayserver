@@ -52,7 +52,7 @@ else
     <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.StoreBranding)" />
     @if (!string.IsNullOrEmpty(Model.Description))
     {
-        <div class="lead text-center">@Safe.Raw(Model.Description)</div>
+        <div class="lead text-center">@Safe.RawRichText(Model.Description)</div>
     }
     <main>
         @if (supported is not null)
@@ -114,7 +114,7 @@ else
                             </div>
                             @if (!string.IsNullOrWhiteSpace(item.Description))
                             {
-                                <p class="card-text">@Safe.Raw(item.Description)</p>
+                                <p class="card-text">@Safe.RawRichText(item.Description)</p>
                             }
                         </div>
                         @if (item.Inventory is null or > 0)

@@ -208,7 +208,7 @@
 
         <div class="row mt-4 justify-content-between gap-5">
             <div :class="{ 'col-lg-7 col-sm-12': hasPerks, 'col-12': !hasPerks }" id="crowdfund-body-description-container">
-                <div class="overflow-hidden" id="crowdfund-body-description" v-pre>@Safe.Raw(Model.Description)</div>
+                <div class="overflow-hidden" id="crowdfund-body-description" v-pre>@Safe.RawRichText(Model.Description)</div>
             </div>
             <div class="col-lg-4 col-sm-12" id="crowdfund-body-contribution-container" v-if="hasPerks">
                 <contribute :target-currency="srvModel.targetCurrency"
@@ -224,7 +224,7 @@
         <noscript v-pre>
             <div class="row justify-content-between">
                 <div class="col-md-7  col-sm-12">
-                    <div class="overflow-hidden">@Safe.Raw(Model.Description)</div>
+                    <div class="overflow-hidden">@Safe.RawRichText(Model.Description)</div>
                 </div>
                 <div class="col-md-4 col-sm-12">
                     <partial name="/Plugins/Crowdfund/Views/Public/ContributeForm.cshtml" model="@(new ContributeToCrowdfund { ViewCrowdfundViewModel = Model, RedirectToCheckout = true })" />

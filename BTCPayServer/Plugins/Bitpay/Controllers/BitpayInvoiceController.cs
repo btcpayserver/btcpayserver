@@ -164,6 +164,12 @@ public class BitpayInvoiceController : ControllerBase
         }
 
         entity.StoreSupportUrl = storeBlob.StoreSupportUrl;
+        if (!string.IsNullOrEmpty(invoice.RedirectURL) &&
+            (!Uri.TryCreate(invoice.RedirectURL, UriKind.Absolute, out var redirectUri) ||
+             redirectUri.Scheme is not ("http" or "https")))
+        {
+            throw new BitpayHttpException(400, "The redirect URL must be an absolute HTTP or HTTPS URL.");
+        }
         entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
         entity.RedirectAutomatically =
             invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);

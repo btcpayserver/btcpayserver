@@ -12,6 +12,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Plugins.Translations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -32,6 +33,7 @@ public partial class UIStoresController
             Id = store.Id,
             StoreName = store.StoreName,
             StoreWebsite = store.StoreWebsite,
+            StorefrontLanguage = storeBlob.StorefrontLanguage ?? Translations.DefaultLanguage,
             LogoUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.LogoUrl),
             CssUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.CssUrl),
             BrandColor = storeBlob.BrandColor,
@@ -49,9 +51,15 @@ public partial class UIStoresController
             ShowRecommendedFee = storeBlob.ShowRecommendedFee,
             RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget
         };
-
-        return View(vm);
+        return await GeneralSettingsView(vm);
     }
+
+    private async Task<IActionResult> GeneralSettingsView(GeneralSettingsViewModel model)
+    {
+        model.StorefrontLanguages = await _localizer.GetTranslationsSelectList();
+        return View(nameof(GeneralSettings), model);
+    }
+
 
     [HttpPost("{storeId}/settings")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -93,10 +101,20 @@ public partial class UIStoresController
         if (!string.IsNullOrEmpty(model.BrandColor) && !ColorPalette.IsValid(model.BrandColor))
         {
             ModelState.AddModelError(nameof(model.BrandColor), StringLocalizer["The brand color needs to be a valid hex color code"]);
-            return View(model);
+            return await GeneralSettingsView(model);
         }
         blob.BrandColor = model.BrandColor;
         blob.ApplyBrandColorToBackend = model.ApplyBrandColorToBackend && !string.IsNullOrEmpty(model.BrandColor);
+
+        var storeLanguage = string.IsNullOrEmpty(model.StorefrontLanguage) ? null : model.StorefrontLanguage;
+        if(storeLanguage is not null && !LocalizerService.IsInstalledTranslation(storeLanguage, await _localizer.GetTranslations()))
+        {
+            ModelState.AddModelError(nameof(model.StorefrontLanguage), StringLocalizer["The selected language is not installed on this server."]);
+        }
+        else
+        {
+            blob.StorefrontLanguage = storeLanguage;
+        }
 
         var userId = GetUserId();
         if (userId is null)
@@ -160,7 +178,7 @@ public partial class UIStoresController
             needUpdate = true;
         }
         if (!ModelState.IsValid)
-            return View(model);
+            return await GeneralSettingsView(model);
 
         if (CurrentStore.SetStoreBlob(blob))
         {

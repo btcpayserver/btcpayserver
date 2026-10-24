@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services;
 using BTCPayServer.Views.UIStoreMembership;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +17,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
 
 [AllowAnonymous]
+[UseStoreLanguage]
 [Area(SubscriptionsPlugin.Area)]
 [Route("plan-checkout/{checkoutId}")]
 public class UIPlanCheckoutController(
@@ -23,6 +25,7 @@ public class UIPlanCheckoutController(
     LinkGenerator linkGenerator,
     UriResolver uriResolver,
     IStringLocalizer stringLocalizer,
+    LocalizerService localizer,
     SubscriptionHostedService subsService,
     CallbackGenerator callbackGenerator)
     : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
@@ -65,9 +68,11 @@ public class UIPlanCheckoutController(
         if (checkout is null)
             return NotFound();
 
+        var storeBlob = checkout.Plan.Offering.App.StoreData.GetStoreBlob();
+        await localizer.UseStoreLanguage(storeBlob.StorefrontLanguage);
         return View(new PlanCheckoutDefaultRedirectViewModel(checkout)
         {
-            StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, checkout.Plan.Offering.App.StoreData.GetStoreBlob()),
+            StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, storeBlob),
             StoreName = checkout.Plan.Offering.App.StoreData.StoreName,
         });
     }

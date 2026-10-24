@@ -57,6 +57,7 @@ namespace BTCPayServer.Data
 
     public class UserBlob
     {
+        public string LangTranslation { get; set; }
         public bool ShowInvoiceStatusChangeHint { get; set; }
         public string ImageUrl { get; set; }
         public string Name { get; set; }

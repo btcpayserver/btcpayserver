@@ -10,6 +10,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Models;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services;
 using BTCPayServer.Views.UIStoreMembership;
 using Microsoft.AspNetCore.Authorization;
@@ -23,6 +24,7 @@ using static BTCPayServer.Plugins.Subscriptions.SubscriptionHostedService;
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
 [AllowAnonymous]
+[UseStoreLanguage]
 [Area(SubscriptionsPlugin.Area)]
 [Route("subscriber-portal/{portalSessionId}")]
 public class UISubscriberPortalController(

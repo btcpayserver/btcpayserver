@@ -17,9 +17,10 @@ using BTCPayServer.Forms;
 using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
-using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.PaymentRequest;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Plugins.Wallets;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
@@ -326,6 +327,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}")]
         [AllowAnonymous]
+        [UseStoreLanguage]
         public async Task<IActionResult> ViewPaymentRequest(string payReqId)
         {
             var vm = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());
@@ -352,6 +354,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("{payReqId}/form")]
         [HttpPost("{payReqId}/form")]
         [AllowAnonymous]
+        [UseStoreLanguage]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> ViewPaymentRequestForm(string payReqId, FormViewModel viewModel)
         {
@@ -412,21 +415,21 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}/pay")]
         [AllowAnonymous]
+        [UseStoreLanguage]
         [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> PayPaymentRequest(string payReqId, bool redirectToInvoice = true,
             decimal? amount = null, CancellationToken cancellationToken = default)
         {
-            if (amount.HasValue && amount.Value <= 0)
-            {
-                return BadRequest(StringLocalizer["Please provide an amount greater than 0"]);
-            }
-
             var result = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());
             if (result == null)
             {
                 return NotFound();
             }
-
+            var store = await _storeRepository.FindStore(result.StoreId);
+            if (amount.HasValue && amount.Value <= 0)
+            {
+                return BadRequest(StringLocalizer["Please provide an amount greater than 0"]);
+            }
             if (result.Archived)
             {
                 if (redirectToInvoice)
@@ -480,7 +483,6 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                var store = await _storeRepository.FindStore(result.StoreId);
                 var prData = await _PaymentRequestRepository.FindPaymentRequest(result.Id, null, cancellationToken);
                 var newInvoice = await _InvoiceController.CreatePaymentRequestInvoice(prData, amount, result.AmountDue, store!, Request, cancellationToken);
                 if (redirectToInvoice)
@@ -498,6 +500,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}/cancel")]
         [AllowAnonymous]
+        [UseStoreLanguage]
         public async Task<IActionResult> CancelUnpaidPendingInvoice(string payReqId, bool redirect = true)
         {
             var result = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());

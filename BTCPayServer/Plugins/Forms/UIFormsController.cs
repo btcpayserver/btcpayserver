@@ -13,6 +13,7 @@ using BTCPayServer.Filters;
 using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.Forms;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -137,6 +138,7 @@ public class UIFormsController(
     [AllowAnonymous]
     [HttpGet("~/forms/{formId}")]
     [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
+    [UseStoreLanguage]
     public async Task<IActionResult> ViewPublicForm(string? formId)
     {
         FormData? formData = await formDataService.GetForm(formId);
@@ -174,6 +176,7 @@ public class UIFormsController(
     [HttpPost("~/forms/{formId}")]
     [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
     [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
+    [UseStoreLanguage]
     public async Task<IActionResult> SubmitForm(string formId)
     {
         var formData = await formDataService.GetForm(formId);

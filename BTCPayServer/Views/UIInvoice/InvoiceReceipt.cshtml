@@ -6,7 +6,7 @@
 @inject DisplayFormatter DisplayFormatter
 @{
     Layout = null;
-    ViewData.SetTitle($"Receipt from {Model.StoreName}");
+    ViewData.SetTitle(StringLocalizer["Receipt from {0}", Model.StoreName]);
     ViewData["StoreBranding"] = Model.StoreBranding;
     var isProcessing = Model.Status == InvoiceStatus.Processing;
     var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.InvoiceAmount == 0);
@@ -48,13 +48,13 @@
                 <div id="InvoiceSummary" class="tile d-flex flex-wrap align-items-center justify-content-center">
                     @if (isProcessing)
                     {
-                        <div class="lead text-center p-4 fw-semibold" id="invoice-processing">
+                        <div class="lead text-center p-4 fw-semibold" id="invoice-processing" text-translate="true">
                             The invoice has detected a payment but is still waiting to be settled.
                         </div>
                     }
                     else if (!isSettled)
                     {
-                        <div class="lead text-center p-4 fw-semibold" id="invoice-unsettled">
+                        <div class="lead text-center p-4 fw-semibold" id="invoice-unsettled" text-translate="true">
                             The invoice is not settled.
                         </div>
                     }
@@ -69,18 +69,18 @@
                                 @if (Model.IsOverpaid)
                                 {
                                     <div class="invoice-summary__invoice-amount d-flex flex-column">
-                                        <dd class="text-muted mb-0 fw-semibold">Invoice Amount</dd>
+                                        <dd class="text-muted mb-0 fw-semibold" text-translate="true">Invoice Amount</dd>
                                         <dt class="fs-5 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.InvoiceAmount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>
                                     </div>
                                 }
                                 <div class="invoice-summary__amount-paid d-flex flex-column">
-                                    <dd class="text-muted mb-0 fw-semibold">Amount Paid</dd>
+                                    <dd class="text-muted mb-0 fw-semibold" text-translate="true">Amount Paid</dd>
                                     <dt class="fs-2 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.PaidAmount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>
                                 </div>
                                 @if (Model.TaxIncluded != 0.0m)
                                 {
                                     <div class="d-flex flex-column">
-                                        <dd class="text-muted mb-0 fw-semibold">Total Taxes</dd>
+                                        <dd class="text-muted mb-0 fw-semibold" text-translate="true">Total Taxes</dd>
                                         <dt class="fs-5 mb-0 text-nowrap fw-semibold">@DisplayFormatter.Currency(Model.TaxIncluded, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</dt>
                                     </div>
                                 }
@@ -96,21 +96,21 @@
                                     </div>
                                 }
                             </dl>
-                            <a href="?print=true" class="invoice-receipt__print-link flex-grow-0 align-self-start btn btn-secondary d-print-none fs-4" target="_blank" id="ReceiptLinkPrint">Print</a>
+                            <a href="?print=true" class="invoice-receipt__print-link flex-grow-0 align-self-start btn btn-secondary d-print-none fs-4" target="_blank" id="ReceiptLinkPrint" text-translate="true">Print</a>
                         </div>
                     }
                 </div>
 
                 @if (isProcessing)
                 {
-                    <small class="d-block text-muted text-center px-4">This page will refresh periodically until the invoice is settled.</small>
+                    <small class="d-block text-muted text-center px-4" text-translate="true">This page will refresh periodically until the invoice is settled.</small>
                 }
                 else if (isSettled)
                 {
                     if (Model.AdditionalData?.Any() is true)
                     {
                         <div id="AdditionalData" class="tile">
-                            <h2 class="h4 mb-3">Additional Data</h2>
+                            <h2 class="h4 mb-3" text-translate="true">Additional Data</h2>
                             <div class="table-responsive my-0">
                                 <partial name="PosData" model="(Model.AdditionalData, 1)"/>
                             </div>
@@ -119,7 +119,7 @@
                     if (Model.CartData?.Any() is true)
                     {
                         <div id="CartData" class="tile">
-                            <h2 class="h4 mb-3">Cart</h2>
+                            <h2 class="h4 mb-3" text-translate="true">Cart</h2>
                             <div class="table-responsive my-0">
                                 <partial name="PosData" model="(Model.CartData, 1)" />
                             </div>
@@ -128,16 +128,16 @@
                     if (Model.Payments?.Any() is true)
                     {
                         <div id="PaymentDetails" class="tile">
-                            <h2 class="h4 mb-3">Payment Details</h2>
+                            <h2 class="h4 mb-3" text-translate="true">Payment Details</h2>
                             <div class="table-responsive my-0 d-print-none">
                                 <table class="invoice table table-borderless">
                                     <thead>
 										<tr>
-											<th class="fw-normal text-secondary">Destination</th>
-											<th class="fw-normal text-secondary">Payment</th>
-											<th class="fw-normal text-secondary">Rate</th>
-											<th class="fw-normal text-secondary">Payment Method</th>
-											<th class="fw-normal text-secondary text-nowrap">Date</th>
+											<th class="fw-normal text-secondary" text-translate="true">Destination</th>
+											<th class="fw-normal text-secondary" text-translate="true">Payment</th>
+											<th class="fw-normal text-secondary" text-translate="true">Rate</th>
+											<th class="fw-normal text-secondary" text-translate="true">Payment Method</th>
+											<th class="fw-normal text-secondary text-nowrap" text-translate="true">Date</th>
 										</tr>
                                     </thead>
                                     @foreach (var payment in Model.Payments)
@@ -162,7 +162,7 @@
 											@if (!string.IsNullOrEmpty(payment.PaymentProof))
 											{
 												<tr>
-													<th class="fw-normal text-nowrap text-secondary">
+													<th class="fw-normal text-nowrap text-secondary" text-translate="true">
 														Payment Proof
 													</th>
 													<td class="fw-normal" colspan="4">
@@ -178,10 +178,10 @@
                                 @foreach (var payment in Model.Payments)
                                 {
                                     <div class="mb-4">
-                                        <strong>@payment.PaidFormatted</strong> = @payment.Amount @payment.PaymentMethod, Rate: @payment.RateFormatted
+                                        <strong>@payment.PaidFormatted</strong> = @payment.Amount @payment.PaymentMethod, @StringLocalizer["Rate: {0}", payment.RateFormatted]
                                         @if (!string.IsNullOrEmpty(payment.PaymentProof))
                                         {
-                                            <div>Proof: @payment.PaymentProof</div>
+                                            <div>@StringLocalizer["Proof: {0}", payment.PaymentProof]</div>
                                         }
                                     </div>
                                 }
@@ -191,7 +191,7 @@
                 }
                 @if (!string.IsNullOrEmpty(Model.RedirectUrl))
                 {
-                    <a href="@Model.RedirectUrl" class="btn btn-secondary rounded-pill mx-auto mt-3" rel="noreferrer noopener" target="_blank" id="StoreLink">Return to @(string.IsNullOrEmpty(Model.StoreName) ? "store" : Model.StoreName)</a>
+                    <a href="@Model.RedirectUrl" class="btn btn-secondary rounded-pill mx-auto mt-3" rel="noreferrer noopener" target="_blank" id="StoreLink">@(string.IsNullOrEmpty(Model.StoreName) ? StringLocalizer["Return to store"] : StringLocalizer["Return to {0}", Model.StoreName])</a>
                 }
             </div>
         </main>

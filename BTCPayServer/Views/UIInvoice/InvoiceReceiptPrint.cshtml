@@ -108,7 +108,7 @@
                 <div class="my-2 text-center small">
                     @if (!string.IsNullOrEmpty(Model.OrderId))
                     {
-                        <div>Order ID: @Model.OrderId</div>
+                        <div>@StringLocalizer["Order ID: {0}", Model.OrderId]</div>
                     }
                     @Model.Timestamp.ToBrowserDate()
                 </div>
@@ -153,7 +153,7 @@
                         @if (posData.ItemsTotal != null)
                         {
                             <tr class="sums-data">
-                                <td class="key text-secondary">Items total</td>
+                                <td class="key text-secondary" text-translate="true">Items total</td>
                                 <td class="val text-end">@posData.ItemsTotal</td>
                             </tr>
                         }
@@ -228,7 +228,7 @@
                             @if (Model.Payments.Count > 1)
                             {
                                 <tr>
-                                    <td colspan="2" class="text-nowrap text-secondary">Payment @(i + 1)</td>
+                                    <td colspan="2" class="text-nowrap text-secondary">@StringLocalizer["Payment {0}", i + 1]</td>
                                 </tr>
                                 <tr class="payment-data">
                                     <td class="text-nowrap">Received</td>
@@ -236,7 +236,7 @@
                                 </tr>
                             }
                             <tr class="payment-data">
-                                <td class="text-nowrap text-secondary">@(Model.Payments.Count == 1 ? "Paid" : "")</td>
+                                <td class="text-nowrap text-secondary">@(Model.Payments.Count == 1 ? StringLocalizer["Paid"].Value : "")</td>
                                 <td class="text-end">@payment.AmountFormatted</td>
                             </tr>
                             <tr class="payment-data">

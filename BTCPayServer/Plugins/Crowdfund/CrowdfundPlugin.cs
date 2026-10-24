@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -15,7 +16,6 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
-using Ganss.Xss;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,7 +51,7 @@ namespace BTCPayServer.Plugins.Crowdfund
         private readonly InvoiceRepository _invoiceRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly PrettyNameProvider _prettyNameProvider;
-        private readonly HtmlSanitizer _htmlSanitizer;
+        private readonly RichTextHtmlSanitizer _richTextHtmlSanitizer;
         public const string AppType = "Crowdfund";
 
         public CrowdfundAppType(
@@ -63,7 +63,7 @@ namespace BTCPayServer.Plugins.Crowdfund
             DisplayFormatter displayFormatter,
             IHttpContextAccessor httpContextAccessor,
             CurrencyNameTable currencyNameTable,
-            HtmlSanitizer htmlSanitizer)
+            RichTextHtmlSanitizer richTextHtmlSanitizer)
         {
             Description = Type = AppType;
             _linkGenerator = linkGenerator;
@@ -74,7 +74,7 @@ namespace BTCPayServer.Plugins.Crowdfund
             _currencyNameTable = currencyNameTable;
             _invoiceRepository = invoiceRepository;
             _prettyNameProvider = prettyNameProvider;
-            _htmlSanitizer = htmlSanitizer;
+            _richTextHtmlSanitizer = richTextHtmlSanitizer;
         }
 
         public override Task<string> ConfigureLink(AppData app)
@@ -190,14 +190,14 @@ namespace BTCPayServer.Plugins.Crowdfund
                     new { area = CrowdfundPlugin.Area, appId = appData.Id }, _options.Value.RootPath)
                 : null;
             foreach (var perk in perks)
-                perk.Description = _htmlSanitizer.Sanitize(perk.Description ?? "");
+                perk.Description = _richTextHtmlSanitizer.Sanitize(perk.Description ?? "");
             var vm =  new ViewCrowdfundViewModel
             {
                 Title = settings.Title,
                 Tagline = settings.Tagline,
                 HtmlLang = settings.HtmlLang,
                 HtmlMetaTags= settings.HtmlMetaTags,
-                Description = _htmlSanitizer.Sanitize(settings.Description ?? ""),
+                Description = _richTextHtmlSanitizer.Sanitize(settings.Description ?? ""),
                 StoreName = store.StoreName,
                 StoreId = appData.StoreDataId,
                 AppId = appData.Id,

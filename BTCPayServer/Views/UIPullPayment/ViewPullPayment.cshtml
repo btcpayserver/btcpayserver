@@ -122,7 +122,7 @@
                             }
                             @if (!string.IsNullOrEmpty(Model.Description))
                             {
-                                <div class="mt-4" data-testid="description">@Safe.Raw(Model.Description)</div>
+                                <div class="mt-4" data-testid="description">@Safe.RawRichText(Model.Description)</div>
                             }
                         </div>
                     </div>

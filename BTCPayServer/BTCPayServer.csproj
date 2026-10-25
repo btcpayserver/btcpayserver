@@ -40,11 +40,11 @@
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.6" />
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.7.13" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
-    <PackageReference Include="Fido2" Version="4.2.0" />
-    <PackageReference Include="Fido2.AspNet" Version="4.2.0" />
+    <PackageReference Include="Fido2" Version="4.3.1" />
+    <PackageReference Include="Fido2.AspNet" Version="4.3.1" />
     <PackageReference Include="LNURL" Version="0.0.36" />
-    <PackageReference Include="MailKit" Version="4.18.1" />
-    <PackageReference Include="QRCoder" Version="1.8.0" />
+    <PackageReference Include="MailKit" Version="4.18.2" />
+    <PackageReference Include="QRCoder" Version="1.8.1" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.39" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="2.0.0" />

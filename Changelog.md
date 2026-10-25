@@ -1,5 +1,48 @@
 # Changelog
 
+**Updating to 2.4.6 is recommended because it addresses the Brotli decoder vulnerability and the eMudhra CA key compromise.**
+
+## 2.4.6
+
+This release includes broad security hardening for API permissions, untrusted input, generated links, and browser actions.
+
+### Breaking changes
+
+* **Invoice email notifications**: Remove the legacy per-invoice `notificationEmail` option; use merchant-controlled email rules instead (#7672) @NicolasDorier
+
+### New features
+
+* **Maintenance**: Show live output, progress, and failure details while changing domains, restarting services, cleaning Docker images, or updating BTCPay Server (#7720) @NicolasDorier
+* **Plugins**: Show persistent diagnostics for plugins automatically disabled after startup or runtime failures (#7708) @NicolasDorier
+
+### Improvements
+
+* **Wallet**: Clarify transaction filters, import and export actions, responsive layout, and fee-bump actions (#7470) @dstrukt
+* **QR codes**: Add a white margin to improve scanning in dark mode (#7735) @NicolasDorier
+* **Checkout settings**: Show readable payment method names instead of internal IDs (#7676) @Psycarlo
+* **Invoices**: Load recent invoice lists significantly faster on large servers (#7707) @NicolasDorier
+* **Bitcoin fees**: Prefer fee estimates from the connected Bitcoin Core node (#7682) @NicolasDorier
+* **Generated links**: Consistently use the configured public server URL (#7661 #7662 #7663) @NicolasDorier
+
+### Fixes
+
+* **Runtime security**: Update .NET and the Ubuntu container trust store to fix the [Brotli decoder vulnerability (CVE-2026-111497)](https://github.com/dotnet/announcements/issues/494) and distrust certificates affected by the [eMudhra CA key compromise](https://ubuntu.com/blog/emudhra-ca-compromise-fixes-available) @NicolasDorier
+* **API Keys**: Prevent server errors when API key permission forms are incomplete (#7733) @NicolasDorier
+* **Basic authentication**: Allow Greenfield API access when account passwords contain colons (#7736) @NicolasDorier
+* **Public forms**: Keep Crowdfund, Point of Sale, and Payment Request forms on their original route when validation fails (#7716) @NicolasDorier
+* **Lightning payouts**: Complete LNDHub-on-LNbits payouts correctly, retain pending payment proofs when lookups return no result, and round LNURL payouts down to whole satoshis (#7653 #7679 #7703) @NicolasDorier @shin4141
+* **LNURL**: Preserve URI casing in payment and authentication QR codes, and require settled payments during verification (#7681) @NicolasDorier
+* **Email Rules**: Limit rendered messages to 100 recipients and handle empty recipient placeholders without interrupting other rules (#7690 #7718) @Kukks @comwanga
+* **Subscriptions**: Prevent new subscriptions from taking control of existing accounts, protect administrators from subscriber lockouts, and make concurrent credit updates atomic (#7654 #7660 #7700) @NicolasDorier @Kukks
+* **Templates**: Preserve unsupported placeholders in configured URLs, descriptions, and labels (#7717) @NicolasDorier
+* **Security hardening**: Strengthen store permissions, browser actions, external URLs, Payjoin requests, and untrusted input across APIs, wallets, forms, subscriptions, webhooks, and apps (#7658 #7659 #7664 #7665 #7666 #7667 #7669 #7686 #7687 #7688 #7689 #7692 #7693 #7694 #7695 #7696 #7701 #7713 #7722 #7723) @NicolasDorier @Kukks
+* **HTML customization**: Apply stricter sanitization to custom HTML and CSS, while preserving rich media for merchant-authored public app and payment descriptions (#7726) @NicolasDorier
+* **Authentication**: Require protected POST requests for logout; direct links and bookmarks to `/logout` no longer sign users out (#7704) @NicolasDorier
+* **Redirect URLs**: Accept only absolute HTTP or HTTPS redirect URLs in API key authorization and Greenfield or BitPay-compatible invoice requests (#7714 #7721 #7729) @NicolasDorier @tumutech
+* **API Keys**: Keep restricted API keys within their granted store and user permission scope, including when the key owner is a server administrator (#7684) @Kukks
+
+Thanks to @iaohkut, bitcoinbazar21 and Nikhil Agrawal for responsibly disclosing security issues fixed in this release.
+
 ## 2.4.5
 
 ### Breaking changes

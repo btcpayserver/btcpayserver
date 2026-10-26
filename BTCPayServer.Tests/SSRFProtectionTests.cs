@@ -17,6 +17,7 @@ using Xunit;
 
 namespace BTCPayServer.Tests;
 
+[Trait("Fast", "Fast")]
 public class SSRFProtectionTests
 {
     [Fact]

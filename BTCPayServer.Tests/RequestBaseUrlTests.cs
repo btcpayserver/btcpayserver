@@ -4,6 +4,7 @@ using Xunit;
 
 namespace BTCPayServer.Tests;
 
+[Trait("Fast", "Fast")]
 public class RequestBaseUrlTests
 {
     [Theory]

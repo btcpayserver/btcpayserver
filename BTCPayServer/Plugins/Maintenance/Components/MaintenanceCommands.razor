@@ -66,6 +66,9 @@
                         <button type="button" class="btn-close" aria-label="@StringLocalizer["Close"]" disabled="@_isRunning" @onclick="CloseDialog"></button>
                     </div>
                     <div class="modal-body">
+                        <div class="alert alert-warning" role="alert">
+                            @StringLocalizer["The server might restart while this command is running, interrupting the connection. If that happens, please refresh the page."]
+                        </div>
                         <pre class="maintenance-commands__log bg-dark text-light rounded p-3 mb-3" aria-live="polite" @ref="_logElement"></pre>
                         <div class="alert @(_commandSucceeded ? "alert-success" : _isRunning ? "alert-info" : "alert-danger") mb-0" role="status">
                             @if (_isRunning)

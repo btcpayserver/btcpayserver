@@ -1965,6 +1965,7 @@ namespace BTCPayServer.Plugins.Translations
   "The seed was not found": "",
   "The selected fee rate is too small. The minimum is {0} sat/byte": "",
   "The server is already using this domain.": "",
+  "The server might restart while this command is running, interrupting the connection. If that happens, please refresh the page.": "",
   "The specified amount with the specified currency, at the rate when the refund will be sent.": "",
   "The store <strong>{0}</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.": "",
   "The store has been archived and will no longer appear in the stores list by default.": "",

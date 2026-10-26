@@ -2,6 +2,7 @@ using Xunit;
 
 namespace BTCPayServer.Tests;
 
+[Trait("Fast", "Fast")]
 public class NetworkExtensionsTests
 {
     [Theory]

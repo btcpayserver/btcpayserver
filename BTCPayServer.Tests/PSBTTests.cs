@@ -25,6 +25,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Fast", "Fast")]
         public void AddsWitnessUtxoToSegwitInputs()
         {
             var network = Network.RegTest;

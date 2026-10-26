@@ -100,16 +100,16 @@ namespace BTCPayServer.Tests
             var editUrl = new Uri(s.Page.Url);
             var opening = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("#ViewPaymentRequest");
-            var popOutPage = await opening;
-            await popOutPage.ClickAsync("[data-test='form-button']");
-            await popOutPage.FillAsync("input[name='buyerEmail']", "aa@aa.com");
-            Assert.Contains("Enter your email", await popOutPage.ContentAsync());
-            await popOutPage.ClickAsync("#page-primary");
-            invoiceId = popOutPage.Url.Split('/').Last();
-            await popOutPage.CloseAsync();
-            await s.GoToUrl(editUrl.PathAndQuery);
-
-            await Expect(s.Page.Locator("#Email")).ToHaveValueAsync("aa@aa.com");
+            await using (await s.SwitchPage(opening))
+            {
+                await s.Page.ClickAsync("[data-test='form-button']");
+                await s.Page.FillAsync("input[name='buyerEmail']", "aa@aa.com");
+                Assert.Contains("Enter your email", await s.Page.ContentAsync());
+                await s.Page.ClickAsync("#page-primary");
+                invoiceId = s.Page.Url.Split('/').Last();
+                await s.GoToUrl(editUrl.PathAndQuery);
+                await Expect(s.Page.Locator("#Email")).ToHaveValueAsync("aa@aa.com");
+            }
             var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
             Assert.Equal("aa@aa.com", invoice.Metadata.BuyerEmail);
 

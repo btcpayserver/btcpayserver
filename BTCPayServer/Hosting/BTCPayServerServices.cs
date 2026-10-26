@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
@@ -896,7 +897,7 @@ namespace BTCPayServer.Hosting
                 opt.LoginPath = "/login";
                 opt.AccessDeniedPath = "/errors/403";
                 opt.LogoutPath = "/logout";
-                ConfigureAccessDeniedRedirect(opt);
+                ConfigureCookieRedirects(opt);
             });
             services.AddAuthentication()
                 .AddCookie(AuthenticationSchemes.LimitedLogin, options =>
@@ -909,16 +910,25 @@ namespace BTCPayServer.Hosting
                     options.LoginPath = "/login";
                     options.AccessDeniedPath = "/errors/403";
                     options.LogoutPath = "/logout";
-                    ConfigureAccessDeniedRedirect(options);
+                    ConfigureCookieRedirects(options);
                 })
                 .AddAPIKeyAuthentication();
         }
 
-        private static void ConfigureAccessDeniedRedirect(CookieAuthenticationOptions options)
+        private static void ConfigureCookieRedirects(CookieAuthenticationOptions options)
         {
+            var onRedirectToLogin = options.Events.OnRedirectToLogin;
+            options.Events.OnRedirectToLogin = context => context.Response.HasStarted
+                ? Task.CompletedTask
+                : onRedirectToLogin(context);
+
             var onRedirectToAccessDenied = options.Events.OnRedirectToAccessDenied;
             options.Events.OnRedirectToAccessDenied = context =>
             {
+                if (context.Response.HasStarted)
+                {
+                    return Task.CompletedTask;
+                }
                 if (context.HttpContext.Items.TryGetValue(PermissionAuthorizationHandler.PolicyRequirementKey, out var p) &&
                     p is PolicyRequirement policyRequirement)
                 {

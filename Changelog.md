@@ -1,7 +1,5 @@
 # Changelog
 
-**Updating to 2.4.6 is recommended because it addresses the Brotli decoder vulnerability and the eMudhra CA key compromise.**
-
 ## 2.4.6
 
 This release includes broad security hardening for API permissions, untrusted input, generated links, and browser actions.

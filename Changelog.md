@@ -31,7 +31,6 @@
 * **Generated links**: Use the configured server Base URL for account, password-reset, and store-invitation links, and reject non-HTTP(S) Base URLs (#7590 #7628) @NicolasDorier
 * **Store settings**: Accept only absolute HTTP or HTTPS Store Website URLs in the UI and Greenfield API (#7604) @NicolasDorier, reported by @gn00295120
 * **API Keys**: Show an error instead of a server error when confirming a removed API key (#7568 #7570) @monasco
-* **API Keys**: Prevent server errors when API key permission forms are incomplete (#7733) @NicolasDorier
 * **Access Tokens**: Keep failed token revocations scoped to the authorized store (#7629) @NicolasDorier
 * **Server users**: Return Not Found instead of a server error when sending a verification email to a deleted user (#7571 #7572) @monasco
 * **Plugins**: Run registered plugin database migrations reliably during startup (#7588) @NicolasDorier

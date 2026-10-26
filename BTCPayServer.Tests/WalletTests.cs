@@ -1189,6 +1189,11 @@ public class WalletTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await s.Server.ExplorerNode.GenerateAsync(1);
 
         var client = await s.AsTestAccount().CreateClient();
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            Assert.Contains(await client.GetOnChainWalletUTXOs(s.StoreId, "BTC"),
+                utxo => utxo.Confirmations > 0);
+        });
         var nodeAddress = await s.Server.ExplorerNode.GetNewAddressAsync();
         var outgoingTx = await client.CreateOnChainTransaction(s.StoreId, "BTC", new CreateOnChainTransactionRequest
         {

@@ -1,3 +1,5 @@
+
+
 <div id="scan-qr-modal-app" class="scan-qr-modal">
     <div class="modal" tabindex="-1" role="dialog" :id="modalId">
         <div class="modal-dialog" role="document">
@@ -44,7 +46,7 @@
 </div>
 <style>
     .scan-qr-modal__qr {
-        padding: var(--btcpay-space-s);
+        padding: var(--btcpay-space-m);
         background: var(--btcpay-white);
         border-radius: var(--btcpay-border-radius);
     }
@@ -79,15 +81,15 @@ function initQRShow(data) {
                      }
                  }
              }, data || {});
-             
+
              if (!Object.values(res.modes || {}).length) {
                  res.modes = { default: { title: 'Default', fragments: [res.data] } };
              }
-             
+
              if (!res.mode) {
                 res.mode = Object.keys(res.modes)[0];
              }
-   
+
              return res;
  		},
  		computed: {
@@ -114,7 +116,7 @@ function initQRShow(data) {
  			},
  			playNext() {
                  if (!this.active) return;
-                 
+
                  this.index++;
                  if (this.index > (this.fragments.length - 1)) {
                      this.index = 0;

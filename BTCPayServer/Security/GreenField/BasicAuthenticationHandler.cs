@@ -44,9 +44,12 @@ namespace BTCPayServer.Security.Greenfield
                 var encodedUsernamePassword =
                     authHeader.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
                 var decodedUsernamePassword =
-                    Encoding.UTF8.GetString(Convert.FromBase64String(encodedUsernamePassword)).Split(':');
-                username = decodedUsernamePassword[0];
-                password = decodedUsernamePassword[1];
+                    Encoding.UTF8.GetString(Convert.FromBase64String(encodedUsernamePassword));
+                var separatorIndex = decodedUsernamePassword.IndexOf(':');
+                if (separatorIndex < 0)
+                    throw new FormatException();
+                username = decodedUsernamePassword[..separatorIndex];
+                password = decodedUsernamePassword[(separatorIndex + 1)..];
             }
             catch (Exception)
             {

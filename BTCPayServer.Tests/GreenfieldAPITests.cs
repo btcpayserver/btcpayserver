@@ -1738,6 +1738,7 @@ namespace BTCPayServer.Tests
             tester.PayTester.HostEnvironment = Environments.Production;
             await tester.StartAsync();
             var user = tester.NewAccount();
+            user.Password = "Kitten0@:with:colons";
             await user.GrantAccessAsync();
             await user.MakeAdmin();
             var clientProfile = await user.CreateClient(Policies.CanModifyProfile);

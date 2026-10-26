@@ -452,7 +452,11 @@ namespace BTCPayServer.Controllers
             {
                 return null;
             }
-            var permissionValueItem = viewModel.PermissionValues.Single(item => item.Permission == permission);
+            var permissionValueItem = viewModel.PermissionValues.FirstOrDefault(item => item.Permission == permission);
+            if (permissionValueItem is null)
+            {
+                return BadRequest();
+            }
             var command = parts[1];
             var storeIndex = parts.Length == 3 ? parts[2] : null;
 

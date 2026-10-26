@@ -273,6 +273,29 @@ namespace BTCPayServer.Tests
             Assert.Contains("There are no associated permissions to the API key being requested", emptyPageContent);
         }
 
+        [Fact]
+        [Trait("Playwright", "Playwright-2")]
+        public async Task CannotSubmitCommandForMissingApiKeyPermission()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+
+            var user = s.Server.NewAccount();
+            await user.GrantAccessAsync();
+            await s.GoToLogin();
+            await s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
+            await s.GoToProfile(ManageNavPages.APIKeys);
+            await s.ClickPagePrimary();
+
+            const string permission = Policies.CanModifyStoreSettings;
+            await s.Page.Locator($"input[value='{permission}']").EvaluateAsync("element => element.remove()");
+            var response = await s.Page.RunAndWaitForResponseAsync(
+                () => s.Page.Locator($"button[value='{permission}:change-store-mode']").ClickAsync(),
+                response => response.Request.Method == "POST");
+
+            Assert.Equal(StatusCodes.Status400BadRequest, response.Status);
+        }
+
 
         [Fact]
         [Trait("Playwright", "Playwright-2")]

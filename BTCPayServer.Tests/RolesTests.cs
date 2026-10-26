@@ -504,6 +504,8 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
 
             var response = await responseTask;
             Assert.Equal(302, response.Status);
+            await s.Page.WaitForURLAsync("**/errors/403**");
+            Assert.Contains("/errors/403", s.Page.Url, StringComparison.OrdinalIgnoreCase);
 
             var otherWalletSettings = await GetStoreWalletSettings(otherStoreId);
             Assert.NotEqual("retargeted", otherWalletSettings.Label);

@@ -42,44 +42,67 @@ public class BuiltInPermissionScopeProvider(
             await using var ctx = dbContextFactory.CreateContext();
             var httpContext = providerContext.HttpContext;
             var storeId = providerContext.HttpContext.GetCurrentStoreId();
-            if (storeId is null)
+            var resolvedStoreIds = new HashSet<string>();
+            if (storeId is not null)
+                resolvedStoreIds.Add(storeId);
+
+            // 1. Check in the routeData
             {
-                // 1. Check in the routeData
-                if (routeData.Values.TryGetValue("storeId", out var v))
-                    storeId = v as string;
-
-                if (storeId == null)
+                if (routeData.Values.TryGetValue("storeId", out var v) && v is string o)
                 {
-                    if (httpContext.Request.Query.TryGetValue("storeId", out var sv))
+                    storeId ??= o;
+                    resolvedStoreIds.Add(o);
+                }
+            }
+
+            // 2. Check in the query string
+            {
+                if (httpContext.Request.Query.TryGetValue("storeId", out var sv))
+                {
+                    storeId ??= sv.FirstOrDefault();
+                    foreach (var value in sv)
                     {
-                        storeId = sv.FirstOrDefault();
+                        if (value is not null)
+                            resolvedStoreIds.Add(value);
                     }
                 }
+            }
 
-                // 2. Check in forms
-                if (storeId == null)
+            // 3. Check in forms
+            {
+                if (httpContext.Request.HasFormContentType &&
+                    (await httpContext.Request.ReadFormAsync()).TryGetValue("storeId", out var sv))
                 {
-                    if (httpContext.Request.HasFormContentType &&
-                        (await httpContext.Request.ReadFormAsync()).TryGetValue("storeId", out var sv))
+                    storeId ??= sv.FirstOrDefault();
+                    foreach (var value in sv)
                     {
-                        storeId = sv.FirstOrDefault();
+                        if (value is not null)
+                            resolvedStoreIds.Add(value);
                     }
                 }
+            }
 
-                // 3. Checks in walletId
-                if (storeId == null)
+            // 4. Checks in walletId
+            {
+                if (routeData.Values.TryGetValue("walletId", out var walletId))
                 {
-                    if (routeData.Values.TryGetValue("walletId", out var walletId))
+                    if (WalletId.TryParse(walletId as string ?? "", out var w))
                     {
-                        if (WalletId.TryParse(walletId as string ?? "", out var w))
-                            storeId = w.StoreId;
-                        else
-                        {
-                            authContext.Fail();
-                            return null;
-                        }
+                        storeId ??= w.StoreId;
+                        resolvedStoreIds.Add(w.StoreId);
+                    }
+                    else
+                    {
+                        authContext.Fail();
+                        return null;
                     }
                 }
+            }
+
+            if (resolvedStoreIds.Count > 1)
+            {
+                authContext.Fail();
+                return null;
             }
 
             List<AdditionalScope> additionalScopes = new();

@@ -848,6 +848,15 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
         var result = await client.GetCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "USD");
         Assert.Equal(0m, result.Value);
+        result = await client.UpdateCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "EUR",
+            new()
+            {
+                Description = "Hello",
+                Credit = 25m
+            });
+        Assert.Equal(25m, result.Value);
+        result = await client.GetCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "USD");
+        Assert.Equal(0m, result.Value);
         await AssertEx.AssertValidationError(["Description"], () => client.UpdateCredit(user.StoreId, offering.Id, planCheckout.Subscriber.Customer.Id, "USD",
             new()
             {

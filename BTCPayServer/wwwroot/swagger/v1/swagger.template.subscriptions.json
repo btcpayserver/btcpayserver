@@ -431,7 +431,7 @@
                         "$ref": "#/components/parameters/CustomerSelector"
                     },
                     {
-                        "$ref": "#/components/parameters/Subscriptions/Currency"
+                        "$ref": "#/components/parameters/SubscriptionsCurrency"
                     }
                 ],
                 "responses": {
@@ -471,7 +471,7 @@
                         "$ref": "#/components/parameters/CustomerSelector"
                     },
                     {
-                        "$ref": "#/components/parameters/Subscriptions/Currency"
+                        "$ref": "#/components/parameters/SubscriptionsCurrency"
                     }
                 ],
                 "requestBody": {
@@ -858,7 +858,7 @@
                 "description": "Unique identifier of the plan checkout session.",
                 "schema": { "$ref": "#/components/schemas/PlanCheckoutId" }
             },
-            "Subscriptions/Currency": {
+            "SubscriptionsCurrency": {
                 "name": "currency",
                 "in": "path",
                 "required": true,

@@ -57,7 +57,7 @@ namespace BTCPayServer.HostedServices
             var strResp = await resp.Content.ReadAsStringAsync(cancellation);
             if (resp.IsSuccessStatusCode)
             {
-                var jobj = JObject.Parse(strResp);
+                var jobj = JsonParser.ParseObject(strResp);
                 var tag = jobj["tag_name"].ToString();
 
                 var isReleaseVersionTag = _releaseVersionTag.IsMatch(tag);

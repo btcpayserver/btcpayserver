@@ -502,7 +502,7 @@ namespace BTCPayServer.Plugins
                 var manifestFileName = Path.Join(dirName, plugin + ".json");
                 if (File.Exists(manifestFileName))
                 {
-                    var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
+                    var pluginManifest =  JsonParser.ParseObject(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
                     if (pluginManifest is not null)
                         installed.TryAdd(pluginManifest.Identifier, (pluginManifest.Version, pluginManifest.Dependencies, isDisabled));
                 }
@@ -521,7 +521,7 @@ namespace BTCPayServer.Plugins
             var dirName = Path.Join(pluginsFolder, plugin);
             var manifestFileName = dirName + ".json";
             if (!File.Exists(manifestFileName)) return true;
-            var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
+            var pluginManifest =  JsonParser.ParseObject(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
             if (pluginManifest is not null)
                 return DependenciesMet(pluginManifest.Dependencies, installed);
             return true;
@@ -831,7 +831,7 @@ namespace BTCPayServer.Plugins
                 return null;
             try
             {
-                return JObject.Parse(File.ReadAllText(manifestFileName))
+                return JsonParser.ParseObject(File.ReadAllText(manifestFileName))
                     .ToObject<PluginService.AvailablePlugin>();
             }
             catch

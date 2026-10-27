@@ -34,7 +34,7 @@ namespace BTCPayServer.Plugins.Translations
         {
             text = (text ?? "{}");
             var translations = new List<(string key, string? value)>();
-            foreach (var prop in JObject.Parse(text).Properties())
+            foreach (var prop in JsonParser.ParseObject(text).Properties())
             {
                 var v = prop.Value.Value<string>();
                 if (string.IsNullOrEmpty(v))

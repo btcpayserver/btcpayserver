@@ -181,7 +181,7 @@ public class SubscriptionHostedService(
 
     private async Task CreateInvoiceForCheckout(SubscriptionContext subCtx, PlanCheckoutData checkout)
     {
-        var invoiceMetadata = JObject.Parse(checkout.InvoiceMetadata);
+        var invoiceMetadata = JsonParser.ParseObject(checkout.InvoiceMetadata);
         if (checkout.NewSubscriber)
         {
             invoiceMetadata["planId"] = checkout.PlanId;
@@ -615,7 +615,7 @@ public class SubscriptionHostedService(
         var cust = await ctx.Customers.GetOrUpdate(checkout.Plan.Offering.App.StoreDataId, CustomerSelector.ByEmail(email));
         var (sub, created) =
             await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, plan.Id, optimisticActivation, checkout.TestAccount,
-                JObject.Parse(checkout.NewSubscriberMetadata));
+                JsonParser.ParseObject(checkout.NewSubscriberMetadata));
         if (!created || sub is null)
             return null;
         checkout.Subscriber = sub;

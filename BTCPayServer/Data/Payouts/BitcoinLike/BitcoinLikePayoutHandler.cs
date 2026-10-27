@@ -146,7 +146,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
             return;
         }
 
-        obj = JObject.Parse(proof);
+        obj = JsonParser.ParseObject(proof);
         TryParseProofType(obj, out type);
     }
 

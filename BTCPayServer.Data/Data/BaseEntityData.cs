@@ -43,7 +43,7 @@ public class BaseEntityData
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     public T? GetAdditionalData<T>(string key) where T: class
-        => JObject.Parse(AdditionalData)[key]?.ToObject<T>(Serializer);
+        => JsonParser.ParseObject(AdditionalData)[key]?.ToObject<T>(Serializer);
 
     [Obsolete("Avoid using this method, if another plugin is modifying additional data at the same time, it would overwrite the changes. Only use if you can ensure that no other plugin is modifying the data at the same time.")]
     public void SetAdditionalData<T>(string key, T? obj)
@@ -57,14 +57,14 @@ public class BaseEntityData
             var w = new StringWriter();
             Serializer.Serialize(w, obj);
             w.Flush();
-            var jobj = JObject.Parse(AdditionalData);
-            jobj[key] = JToken.Parse(w.ToString());
+            var jobj = JsonParser.ParseObject(AdditionalData);
+            jobj[key] = JsonParser.ParseToken(w.ToString());
             AdditionalData = jobj.ToString();
         }
     }
     public void RemoveAdditionalData(string key)
     {
-        var jobj = JObject.Parse(AdditionalData);
+        var jobj = JsonParser.ParseObject(AdditionalData);
         jobj.Remove(key);
         AdditionalData = jobj.ToString();
     }

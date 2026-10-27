@@ -181,7 +181,7 @@ namespace BTCPayServer.Controllers
                 // overwrite with parsed JSON if possible
                 try
                 {
-                    additionalData["posData"] = PosDataParser.ParsePosData(JObject.Parse(posData));
+                    additionalData["posData"] = PosDataParser.ParsePosData(JsonParser.ParseObject(posData));
                 }
                 catch (Exception)
                 {
@@ -1219,7 +1219,7 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    metadataObj = JObject.Parse(model.Metadata);
+                    metadataObj = JsonParser.ParseObject(model.Metadata);
                 }
                 catch (Exception)
                 {

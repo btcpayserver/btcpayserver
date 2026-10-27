@@ -31,7 +31,7 @@ namespace BTCPayServer.Data
         public byte[] Request { get; set; }
         public void Prune()
         {
-            var request = JObject.Parse(UTF8Encoding.UTF8.GetString(Request));
+            var request = JsonParser.ParseObject(UTF8Encoding.UTF8.GetString(Request));
             foreach (var prop in request.Properties().ToList())
             {
                 if (prop.Name == "type")

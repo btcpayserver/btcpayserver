@@ -142,7 +142,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
                         {
                             PayoutId = payoutData.Id,
                             State = payoutData.State,
-                            Proof = payoutData.State is PayoutState.Completed ? JObject.Parse(payoutData.Proof) : null
+                            Proof = payoutData.State is PayoutState.Completed ? JsonParser.ParseObject(payoutData.Proof) : null
                         });
                     }
                 }

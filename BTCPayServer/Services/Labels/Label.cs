@@ -60,7 +60,7 @@ namespace BTCPayServer.Services.Labels
             ArgumentNullException.ThrowIfNull(str);
             if (str.StartsWith("{", StringComparison.InvariantCultureIgnoreCase))
             {
-                var jObj = JObject.Parse(str);
+                var jObj = JsonParser.ParseObject(str);
                 string type = null;
                 // Legacy label
                 if (!jObj.ContainsKey("type"))

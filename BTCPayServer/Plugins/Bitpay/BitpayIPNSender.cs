@@ -197,7 +197,7 @@ namespace BTCPayServer.Plugins.Bitpay
             request.Method = HttpMethod.Post;
 
             var notificationString = NBitcoin.JsonConverters.Serializer.ToString(notification);
-            var jobj = JObject.Parse(notificationString);
+            var jobj = JsonParser.ParseObject(notificationString);
 
             if (notification.ExtendedNotification)
             {

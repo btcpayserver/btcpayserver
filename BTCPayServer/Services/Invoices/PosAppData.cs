@@ -12,7 +12,7 @@ public class PosAppData
     {
         try
         {
-            return JObject.Parse(posData).ToObject<PosAppData>();
+            return JsonParser.ParseObject(posData).ToObject<PosAppData>();
         }
         catch
         {

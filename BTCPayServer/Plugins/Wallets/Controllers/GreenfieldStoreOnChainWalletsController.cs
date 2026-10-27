@@ -859,7 +859,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return new OnChainWalletObjectData()
             {
-                Data = string.IsNullOrEmpty(data.Data) ? null : JObject.Parse(data.Data),
+                Data = string.IsNullOrEmpty(data.Data) ? null : JsonParser.ParseObject(data.Data),
                 Type = data.Type,
                 Id = data.Id,
                 Links = data.GetLinks().Select(linkData => ToModel(linkData)).ToArray()

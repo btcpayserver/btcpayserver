@@ -22,7 +22,7 @@ namespace BTCPayServer.Data
             }
             Blob = null;
 #pragma warning restore CS0618 // Type or member is obsolete
-            var jobj = JObject.Parse(Blob2);
+            var jobj = JsonParser.ParseObject(Blob2);
             // Fixup some legacy payment requests
             if (jobj["expiryDate"]?.Type == JTokenType.Date)
             {

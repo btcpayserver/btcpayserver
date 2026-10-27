@@ -152,7 +152,7 @@ public class UITranslationController(
         if (environment.CheatMode && viewModel.Command == "Fake")
         {
             var t = await localizer.GetTranslations(translation);
-            var jobj = JObject.Parse(t.Translations.ToJsonFormat());
+            var jobj = JsonParser.ParseObject(t.Translations.ToJsonFormat());
             foreach (var prop in jobj.Properties())
             {
                 prop.Value = "OK";

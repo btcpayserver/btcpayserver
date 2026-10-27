@@ -258,7 +258,7 @@ namespace BTCPayServer.Services
             var result = new Dictionary<string, WalletTransactionInfo>(wos.Count);
             foreach (var obj in wos.Values)
             {
-                var data = obj.Data is null ? null : JObject.Parse(obj.Data);
+                var data = obj.Data is null ? null : JsonParser.ParseObject(obj.Data);
                 var info = new WalletTransactionInfo(walletId)
                 {
                     Comment = data?["comment"]?.Value<string>(),
@@ -484,7 +484,7 @@ namespace BTCPayServer.Services
             return o.Data is null
                 ? (o.Id, ColorPalette.Default.DeterministicColor(o.Id))
                 : (o.Id,
-                    JObject.Parse(o.Data)["color"]?.Value<string>() ?? ColorPalette.Default.DeterministicColor(o.Id));
+                    JsonParser.ParseObject(o.Data)["color"]?.Value<string>() ?? ColorPalette.Default.DeterministicColor(o.Id));
         }
 
         public async Task<bool> RemoveWalletObjects(WalletObjectId walletObjectId)
@@ -632,7 +632,7 @@ namespace BTCPayServer.Services
                     ctx.WalletObjects.Add(obj);
                 }
 
-                var currentData = obj.Data is null ? new JObject() : JObject.Parse(obj.Data);
+                var currentData = obj.Data is null ? new JObject() : JsonParser.ParseObject(obj.Data);
                 modify(currentData);
                 obj.Data = currentData.ToString();
                 if (obj.Data == "{}")

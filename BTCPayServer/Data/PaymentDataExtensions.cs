@@ -32,12 +32,14 @@ namespace BTCPayServer.Data
         public static PaymentData SetBlob(this PaymentData paymentData, PaymentMethodId paymentMethodId, PaymentBlob blob)
         {
             paymentData.PaymentMethodId = paymentMethodId.ToString();
-            paymentData.Blob2 = JToken.FromObject(blob, InvoiceDataExtensions.DefaultSerializer).ToString(Newtonsoft.Json.Formatting.None);
+            var json = JToken.FromObject(blob, InvoiceDataExtensions.DefaultSerializer).ToString(Newtonsoft.Json.Formatting.None);
+            JsonParser.ParseToken(json);
+            paymentData.Blob2 = json;
             return paymentData;
         }
         public static PaymentEntity GetBlob(this PaymentData paymentData)
         {
-            var entity = JToken.Parse(paymentData.Blob2).ToObject<PaymentEntity>(InvoiceDataExtensions.DefaultSerializer) ?? throw new FormatException($"Invalid {nameof(PaymentEntity)}");
+            var entity = JsonParser.ParseToken(paymentData.Blob2).ToObject<PaymentEntity>(InvoiceDataExtensions.DefaultSerializer) ?? throw new FormatException($"Invalid {nameof(PaymentEntity)}");
             entity.Status = paymentData.Status!.Value;
             entity.Currency = paymentData.Currency;
             entity.PaymentMethodId = PaymentMethodId.Parse(paymentData.PaymentMethodId);

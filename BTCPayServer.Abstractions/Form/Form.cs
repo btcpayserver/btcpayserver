@@ -12,7 +12,7 @@ public class Form
     public static Form Parse(string str)
     {
         ArgumentNullException.ThrowIfNull(str);
-        return JObject.Parse(str).ToObject<Form>(CamelCaseSerializerSettings.Serializer) ?? throw new InvalidOperationException("Impossible to deserialize Form");
+        return JsonParser.ParseObject(str).ToObject<Form>(CamelCaseSerializerSettings.Serializer) ?? throw new InvalidOperationException("Impossible to deserialize Form");
     }
     public override string ToString()
     {

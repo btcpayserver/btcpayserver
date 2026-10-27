@@ -55,7 +55,7 @@ namespace BTCPayServer.Plugins
                 _ => null
             };
             if (manifestFileName is null || !File.Exists(manifestFileName)) return null;
-            return JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<AvailablePlugin>();
+            return JsonParser.ParseObject(File.ReadAllText(manifestFileName)).ToObject<AvailablePlugin>();
         }
 
         internal string GetShortBtcpayVersion() => Env.Version.TrimStart('v').Split('+')[0];

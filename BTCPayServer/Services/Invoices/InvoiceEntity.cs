@@ -173,7 +173,7 @@ namespace BTCPayServer.Services.Invoices
                 if (jt.Type == JTokenType.String)
                     try
                     {
-                        return JObject.Parse(jt.Value<string>());
+                        return JsonParser.ParseObject(jt.Value<string>());
                     }
                     catch
                     {
@@ -207,7 +207,7 @@ namespace BTCPayServer.Services.Invoices
                 {
                     try
                     {
-                        PosData = JObject.Parse(value);
+                        PosData = JsonParser.ParseObject(value);
                         return;
                     }
                     catch

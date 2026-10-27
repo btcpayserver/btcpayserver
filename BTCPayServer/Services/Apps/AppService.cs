@@ -417,13 +417,13 @@ retry:
                 CrowdfundAppType.AppType => "PerksTemplate",
                 _ => "Template"
             };
-            var settings = JObject.Parse(row.settings);
+            var settings = JsonParser.ParseObject(row.settings);
             if (!settings.TryGetValue(templatePath, out var template))
                 return;
 
             var items = template.Type switch
             {
-                JTokenType.String => JArray.Parse(template.Value<string>()!),
+                JTokenType.String => JsonParser.ParseArray(template.Value<string>()!),
                 JTokenType.Array => (JArray)template,
                 _ => null
             };
@@ -482,7 +482,7 @@ retry:
             result = null;
             try
             {
-                result = JObject.Parse(json);
+                result = JsonParser.ParseObject(json);
                 return true;
             }
             catch

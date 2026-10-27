@@ -53,7 +53,7 @@ namespace BTCPayServer.Data
 
         public static JObject GetProofBlobJson(this PayoutData data)
         {
-            return data?.Proof is null ? null : JObject.Parse(data.Proof);
+            return data?.Proof is null ? null : JsonParser.ParseObject(data.Proof);
         }
         public static void SetProofBlob(this PayoutData data, IPayoutProof blob, JsonSerializerSettings settings)
         {
@@ -75,7 +75,7 @@ namespace BTCPayServer.Data
                 return;
             }
             // We only update the property if the bytes actually changed, this prevent from hammering the DB too much
-            if (!JToken.DeepEquals(blob, data.Proof is null ? null : JObject.Parse(data.Proof)))
+            if (!JToken.DeepEquals(blob, data.Proof is null ? null : JsonParser.ParseObject(data.Proof)))
             {
                 data.Proof = blob.ToString(Formatting.None);
             }

@@ -210,7 +210,7 @@ public class UIStoreOnChainWalletsController(
         {
             try
             {
-                strategy = handler.ParsePaymentMethodConfig(JToken.Parse(_dataProtector.UnprotectString(vm.Config)));
+                strategy = handler.ParsePaymentMethodConfig(JsonParser.ParseToken(_dataProtector.UnprotectString(vm.Config)));
             }
             catch
             {

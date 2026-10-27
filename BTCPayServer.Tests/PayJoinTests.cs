@@ -239,7 +239,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Fact(Timeout = TestUtils.TestTimeout)]
         [Trait("Playwright", "Playwright-2")]
         public async Task CanUsePayjoinForTopUp()
         {

@@ -832,8 +832,7 @@ namespace BTCPayServer.Tests
             {
                 // Can log again
                 await s.LogIn(user.Email, "Password@1!");
-                await s.CreateNewStore();
-                await s.Logout();
+                await s.Page.WaitForURLAsync("**/stores/create");
             }
 
             // Manage user details (edit)

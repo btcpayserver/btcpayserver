@@ -348,6 +348,12 @@ namespace BTCPayServer.Controllers
                         break;
                     }
 
+                    if (existing == null)
+                    {
+                        fail = true;
+                        break;
+                    }
+
                     if (IsStorePolicy(requested.Key))
                     {
                         if ((vm.SelectiveStores && !existing.Any(p => p.Scope == vm.StoreId)) ||
@@ -419,10 +425,14 @@ namespace BTCPayServer.Controllers
                         continue;
                     }
 
-                    // Set the value to true and adjust the other fields based on the policy type
-                    permissionValue.Value = true;
+                    // Requested permissions are preselected, but unless strict, the user can reject them when authorizing
+                    var isRejected = !vm.Strict && !permissionValue.Value &&
+                                     "authorize".Equals(vm.Command, StringComparison.OrdinalIgnoreCase);
 
-                    if (vm.SelectiveStores && permissionValue.IsStorePolicy &&
+                    // Set the value and adjust the other fields based on the policy type
+                    permissionValue.Value = !isRejected;
+
+                    if (!isRejected && vm.SelectiveStores && permissionValue.IsStorePolicy &&
                         wanted.Any(permission => !string.IsNullOrEmpty(permission.Scope)))
                     {
                         permissionValue.StoreMode = AddApiKeyViewModel.ApiKeyStoreMode.Specific;

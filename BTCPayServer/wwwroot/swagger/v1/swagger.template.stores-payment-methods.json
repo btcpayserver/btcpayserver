@@ -177,6 +177,16 @@
                             }
                         }
                     },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
                     "401": {
                         "description": "Missing authorization",
                         "content": {

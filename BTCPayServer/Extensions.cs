@@ -307,6 +307,12 @@ namespace BTCPayServer
             return values.TryGetValue("server", out var value) && Uri.TryCreate(value, UriKind.Absolute, out server);
         }
 
+        internal static bool HasLightningConnectionType(string connectionString)
+        {
+            var values = ExtractValues(connectionString);
+            return values.TryGetValue("type", out var type) && !string.IsNullOrWhiteSpace(type);
+        }
+
         [Obsolete("Use IsSafe(this ILightningClient client, string connectionString) instead")]
         public static bool IsSafe(this ILightningClient client) => IsSafe(client, client.ToString()!);
         public static bool IsSafe(this ILightningClient client, string connectionString) => IsSafeLightningConnectionString(connectionString);

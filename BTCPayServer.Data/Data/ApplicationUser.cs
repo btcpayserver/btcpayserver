@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -27,6 +26,7 @@ namespace BTCPayServer.Data
         public bool AuthenticatorEnabled { get; set; }
         public List<NotificationData> Notifications { get; set; }
         public List<UserStore> UserStores { get; set; }
+        public List<UserAccessRestriction> AccessRestrictions { get; set; }
         public List<Fido2Credential> Fido2Credentials { get; set; }
 
         [Obsolete("Use Blob2 instead")]
@@ -34,14 +34,6 @@ namespace BTCPayServer.Data
         public string Blob2 { get; set; }
 
         public List<IdentityUserRole<string>> UserRoles { get; set; }
-
-        [NotMapped]
-        public bool IsDisabled =>
-            this is { LockoutEnabled: true, LockoutEnd: { } lockoutEnd } &&
-            DateTimeOffset.UtcNow < lockoutEnd.UtcDateTime;
-        [NotMapped]
-        public bool IsDisabledTemporarily =>
-            IsDisabled && DateTimeOffset.MaxValue - LockoutEnd!.Value >= TimeSpan.FromSeconds(1);
 
         public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {

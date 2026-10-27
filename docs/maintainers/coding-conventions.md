@@ -23,6 +23,29 @@
   diagnostic purposes unless there is a specific reason to believe they contain
   sensitive data.
 
+## PostgreSQL Schema Naming
+
+Use PostgreSQL-style physical names for new tables while keeping normal .NET
+naming in the entity classes:
+
+- Use lowercase, plural `snake_case` table names, such as `email_rules`.
+- Use lowercase `snake_case` column names, including foreign keys and timestamps,
+  such as `store_id` and `created_at`.
+- Map CLR names explicitly with `[Table]`, `[Column]`, and related attributes
+  whenever possible. Use fluent configuration only for mappings that attributes
+  cannot express. Do not rely on EF's default PascalCase names for new schema
+  objects.
+- Use lowercase PostgreSQL type names such as `text`, `jsonb`, `text[]`, and
+  `timestamptz` when specifying a database type explicitly.
+- Let EF derive primary key, foreign key, and index names from the physical
+  table and column names unless a stable custom name is required.
+- Use unquoted lowercase identifiers in raw SQL for new schema objects. Quote
+  existing mixed-case identifiers when referencing legacy tables or columns.
+
+These rules apply to new schema objects. Do not rename established tables or
+columns solely for consistency; preserve compatibility with existing databases
+and integrations.
+
 ## Pull Requests
 
 Write descriptions for users, merchants, operators, support contributors,

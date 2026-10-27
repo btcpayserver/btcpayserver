@@ -177,9 +177,8 @@ namespace BTCPayServer.Controllers
             if (model.Method == "Password")
             {
                 user = await userManager.FindByEmailAsync(model.Email ?? "");
-                success = user is not null && await userManager.CheckPasswordAsync(user, model.Password ?? "");
-                if (!success && user is not null && !user.IsDisabledTemporarily)
-                    await userManager.AccessFailedAsync(user);
+                success = user is not null &&
+                          (await signInManager.CheckPasswordSignInAsync(user, model.Password ?? "", true)).Succeeded;
             }
 
             if (model.Method == "LoginCode" && model.LoginCode is not null)
@@ -196,7 +195,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            if (user?.IsDisabledTemporarily is true)
+            if (user is not null && await userManager.IsLockedOutAsync(user))
                 return LockoutView(user);
 
             var errorMessage = StringLocalizer["Invalid login attempt."].Value;
@@ -337,7 +336,7 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction("Login");
             }
-            if (user.IsDisabledTemporarily)
+            if (await userManager.IsLockedOutAsync(user))
                 return LockoutView(user);
             var session = LoginSession.Load(HttpContext.Session);
 
@@ -400,7 +399,7 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction("Login");
             }
-            if (user.IsDisabledTemporarily)
+            if (await userManager.IsLockedOutAsync(user))
                 return LockoutView(user);
 
             var session = LoginSession.Load(HttpContext.Session);
@@ -457,7 +456,7 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction("Login");
             }
-            if (user.IsDisabledTemporarily)
+            if (await userManager.IsLockedOutAsync(user))
                 return LockoutView(user);
 
             var session = LoginSession.Load(HttpContext.Session);

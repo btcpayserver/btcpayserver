@@ -56,6 +56,7 @@ namespace BTCPayServer.Controllers
                 .Include(user => user.UserRoles)
                 .Include(user => user.UserStores)
                 .ThenInclude(data => data.StoreData)
+                .Include(user => user.AccessRestrictions)
                 .Skip(model.Skip)
                 .Take(model.Count)
                 .ToListAsync())
@@ -76,7 +77,7 @@ namespace BTCPayServer.Controllers
                         Approved = u.RequiresApproval ? u.Approved : null,
                         Created = u.Created,
                         Roles = u.UserRoles.Select(role => role.RoleId),
-                        Disabled = u.IsDisabled,
+                        Disabled = u.AccessRestrictions.Any(r => r.Type == UserAccessRestrictionConstants.Administrative),
                         Stores = u.UserStores.OrderBy(s => !s.StoreData.Archived).ToList()
                     };
                 })

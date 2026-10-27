@@ -29,9 +29,9 @@ public class MonetizationHostedService(
     SubscriptionHostedService subsService,
     Logs logger) : EventHostedServiceBase(eventAggregator, logger)
 {
-    public class MonetizationLockoutUpdated((string UserId, bool LockoutEnabled)[] updated)
+    public class MonetizationAccessUpdated((string UserId, bool Restricted)[] updated)
     {
-        public (string UserId, bool LockoutEnabled)[] Updated { get; } = updated;
+        public (string UserId, bool Restricted)[] Updated { get; } = updated;
     }
 
     protected override void SubscribeToEvents()
@@ -78,20 +78,20 @@ public class MonetizationHostedService(
 
         if (evt is SubscriptionEvent.SubscriberActivated or SubscriptionEvent.SubscriberDisabled)
         {
-            await UpdateUserLockout((SubscriptionEvent.SubscriberEvent)evt, userManager, evt is SubscriptionEvent.SubscriberActivated);
+            await UpdateUserAccessRestriction((SubscriptionEvent.SubscriberEvent)evt, userManager, evt is SubscriptionEvent.SubscriberActivated);
         }
 
         if (evt is SubscriptionEvent.PlanStarted ps && ps.PreviousPlan.Id != ps.Subscriber.Plan.Id)
         {
             await using var ctx = dbContextFactory.CreateContext();
             var canAccess = await ctx.Plans.HasFeature(ps.Subscriber.PlanId, MonetizationFeatures.CanAccess);
-            await UpdateUserLockout(ps, userManager, canAccess);
+            await UpdateUserAccessRestriction(ps, userManager, canAccess);
         }
 
         if (evt is SubscriptionEvent.PlanUpdated pu)
         {
             await using var ctx = dbContextFactory.CreateContext();
-            await UpdateUserLockoutStatus(ctx, pu.Plan);
+            await UpdateUserAccessRestrictions(ctx, pu.Plan);
         }
 
 
@@ -107,8 +107,8 @@ public class MonetizationHostedService(
                 var userSub = await ctx.Subscribers.GetBySelector(byPassOfferingId, CustomerSelector.ByIdentity(SubscriberDataExtensions.IdentityType, changed.User.Id));
                 if (userSub is not null)
                 {
-                    await userService.SetDisabled(changed.User.Id, false, nameof(MonetizationHostedService));
-                    EventAggregator.Publish(new MonetizationLockoutUpdated([(changed.User.Id, false)]));
+                    await userService.SetAccessRestriction(changed.User.Id, UserAccessRestrictionConstants.Monetization, false);
+                    EventAggregator.Publish(new MonetizationAccessUpdated([(changed.User.Id, false)]));
                 }
             }
             else
@@ -117,13 +117,10 @@ public class MonetizationHostedService(
                 var userSub = await ctx.Subscribers.GetBySelector(byPassOfferingId, CustomerSelector.ByIdentity(SubscriberDataExtensions.IdentityType, changed.User.Id));
                 if (userSub is not null)
                 {
-                    var shouldBeLocked = !userSub.IsActive || userSub.Phase == SubscriberData.PhaseTypes.Expired;
-                    if (shouldBeLocked)
-                    {
-                        await userService.SetDisabled(changed.User.Id, true, nameof(MonetizationHostedService));
-                        securityStampInvalidator.Invalidate(changed.User.Id);
-                        EventAggregator.Publish(new MonetizationLockoutUpdated([(changed.User.Id, true)]));
-                    }
+                    var restricted = (!userSub.IsActive || userSub.Phase == SubscriberData.PhaseTypes.Expired) &&
+                                     !await userService.IsAdminUser(changed.User);
+                    await userService.SetAccessRestriction(changed.User.Id, UserAccessRestrictionConstants.Monetization, restricted);
+                    EventAggregator.Publish(new MonetizationAccessUpdated([(changed.User.Id, restricted)]));
                 }
                 else
                 {
@@ -199,15 +196,17 @@ public class MonetizationHostedService(
         }
     }
 
-    private async Task UpdateUserLockout(SubscriptionEvent.SubscriberEvent evt, UserManager<ApplicationUser> userManager, bool activated)
+    private async Task UpdateUserAccessRestriction(SubscriptionEvent.SubscriberEvent evt, UserManager<ApplicationUser> userManager, bool activated)
     {
         var userId = evt.Subscriber.GetApplicationUserId();
         var user = await userManager.FindByIdAsync(userId ?? "");
-        if (user is not null &&
-            !await userService.IsAdminUser(user) &&
-            await userService.SetDisabled(user.Id, !activated, nameof(MonetizationHostedService)) is not UserService.SetDisabledResult.Error)
+        if (user is null)
+            return;
+
+        var restricted = !activated && !user.BypassMonetization && !await userService.IsAdminUser(user);
+        if (await userService.SetAccessRestriction(user.Id, UserAccessRestrictionConstants.Monetization, restricted) is not UserService.SetDisabledResult.Error)
         {
-            EventAggregator.Publish(new MonetizationLockoutUpdated([(user.Id, !activated)]));
+            EventAggregator.Publish(new MonetizationAccessUpdated([(user.Id, restricted)]));
         }
     }
 
@@ -357,14 +356,14 @@ public class MonetizationHostedService(
         if (userIds.Length != 0)
         {
             await SubscriptionHostedService.UpdatePlanStats(ctx, plan.Id);
-            await UpdateUserLockoutStatus(ctx, plan, userIds.Select(c => c.UserId).ToArray());
+            await UpdateUserAccessRestrictions(ctx, plan, userIds.Select(c => c.UserId).ToArray());
             // We expect the caller to call NewSubscriberEvent.
         }
 
         return userIds;
     }
 
-    private async Task UpdateUserLockoutStatus(ApplicationDbContext ctx, PlanData plan, string[]? userIds = null)
+    private async Task UpdateUserAccessRestrictions(ApplicationDbContext ctx, PlanData plan, string[]? userIds = null)
     {
         if (userIds is null)
             userIds = await GetUserIdsInPlan(ctx, plan);
@@ -372,38 +371,86 @@ public class MonetizationHostedService(
             return;
         var canAccess = await ctx.Plans.HasFeature(plan.Id, MonetizationFeatures.CanAccess);
         var updated = (await ctx.Database.GetDbConnection()
-            .QueryAsync<(string UserId, bool LockoutEnabled)>("""
-                          WITH
-                          subs AS (
-                              SELECT user_id AS user_id,
-                                     NOT (ss.active AND @canAccess) AS lockout_enabled,
-                                     CASE WHEN (ss.active AND @canAccess) THEN NULL ELSE 'infinity'::timestamptz END lockout_end
-                              FROM unnest(@userIds) AS user_id
-                                       JOIN customers_identities ci ON ci.type = @applicationUserId AND ci.value = user_id
-                                       JOIN subs_subscribers ss ON ss.customer_id = ci.customer_id
-                                       JOIN "AspNetUsers" ON "AspNetUsers"."Id" = user_id
+            .QueryAsync<(string UserId, bool Restricted)>("""
+                          WITH exempt_users AS (
+                              SELECT "Id" AS user_id
+                              FROM "AspNetUsers"
+                              WHERE "BypassMonetization"
+                              UNION
+                              SELECT user_role."UserId"
+                              FROM "AspNetUserRoles" user_role
+                              JOIN "AspNetRoles" role ON role."Id" = user_role."RoleId"
+                              WHERE role."Name" = @adminRole
+                          ),
+                          desired AS (
+                              SELECT requested.user_id, NOT (ss.active AND @canAccess) AS restricted
+                              FROM unnest(@userIds) AS requested(user_id)
+                              JOIN customers_identities ci ON ci.type = @applicationUserId AND ci.value = requested.user_id
+                              JOIN subs_subscribers ss ON ss.customer_id = ci.customer_id
+                              JOIN "AspNetUsers" ON "AspNetUsers"."Id" = requested.user_id
+                              LEFT JOIN exempt_users exempt ON exempt.user_id = requested.user_id
                               WHERE ss.plan_id = @planId
+                                AND exempt.user_id IS NULL
+                          ),
+                          deleted AS (
+                              DELETE FROM user_access_restrictions restriction
+                              USING desired
+                              WHERE restriction.user_id = desired.user_id
+                                AND restriction.type = @restrictionType
+                                AND NOT desired.restricted
+                              RETURNING restriction.user_id, false AS restricted
+                          ),
+                          inserted AS (
+                              INSERT INTO user_access_restrictions (user_id, type, created_at)
+                              SELECT user_id, @restrictionType, NOW()
+                              FROM desired
+                              WHERE restricted
+                              ON CONFLICT DO NOTHING
+                              RETURNING user_id, true AS restricted
+                          ),
+                          exempt_deleted AS (
+                              DELETE FROM user_access_restrictions restriction
+                              USING exempt_users exempt
+                              WHERE restriction.user_id = exempt.user_id
+                                AND restriction.type = @restrictionType
+                              RETURNING restriction.user_id, false AS restricted
+                          ),
+                          changed AS (
+                              SELECT * FROM deleted
+                              UNION ALL
+                              SELECT * FROM inserted
+                              UNION ALL
+                              SELECT * FROM exempt_deleted
+                          ),
+                          stamps AS (
+                              UPDATE "AspNetUsers" users
+                              SET "SecurityStamp" = translate(encode(decode(md5(users."Id" || @salt), 'hex'), 'base64'), '/=+-', '')
+                              FROM changed
+                              WHERE users."Id" = changed.user_id AND changed.restricted
+                              RETURNING users."Id"
                           )
-                          UPDATE "AspNetUsers"
-                          SET "LockoutEnabled" = subs.lockout_enabled,
-                              "LockoutEnd" = subs.lockout_end,
-                              "SecurityStamp" = translate(encode(decode(md5("Id" || @salt), 'hex'), 'base64'), '/=+-', '')
-                          FROM subs WHERE "AspNetUsers"."Id" = subs.user_id AND ("AspNetUsers"."LockoutEnabled" IS DISTINCT FROM subs.lockout_enabled OR "AspNetUsers"."LockoutEnd" IS DISTINCT FROM subs.lockout_end)
-                          RETURNING "Id", "LockoutEnabled";
+                          SELECT user_id, restricted
+                          FROM changed
                           """,
-                new{
+                new
+                {
                     userIds,
                     planId = plan.Id,
-                    salt = RandomUtils.GetUInt256().ToString(),
                     applicationUserId = SubscriberDataExtensions.IdentityType,
-                    canAccess
+                    canAccess,
+                    adminRole = Roles.ServerAdmin,
+                    restrictionType = UserAccessRestrictionConstants.Monetization,
+                    salt = RandomUtils.GetUInt256().ToString()
                 })).ToArray();
-        foreach (var update in updated)
-            if (update.LockoutEnabled)
-                securityStampInvalidator.Invalidate(update.UserId);
 
-        await ctx.Users.UpdateStoreNoActiveUserForUsers(updated.Select(u => u.UserId).ToArray());
-        EventAggregator.Publish(new MonetizationLockoutUpdated(updated));
+        foreach (var update in updated.Where(update => update.Restricted))
+            securityStampInvalidator.Invalidate(update.UserId);
+
+        if (updated.Length == 0)
+            return;
+
+        await ctx.Users.UpdateStoreNoActiveUserForUsers(updated.Select(update => update.UserId).ToArray());
+        EventAggregator.Publish(new MonetizationAccessUpdated(updated));
     }
 
     private static async Task<string[]> GetUserIdsInPlan(ApplicationDbContext ctx, PlanData plan)

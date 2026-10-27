@@ -3799,6 +3799,58 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
+        public async Task PasswordLockoutDoesNotDisableApiKeys()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var account = tester.NewAccount();
+            await account.GrantAccessAsync();
+            var apiKeyClient = await account.CreateClient(Policies.CanViewProfile);
+            var basicClient = new BTCPayServerClient(apiKeyClient.Host, account.RegisterDetails.Email,
+                account.RegisterDetails.Password);
+            var wrongPasswordClient = new BTCPayServerClient(apiKeyClient.Host, account.RegisterDetails.Email,
+                "not-the-password");
+
+            using (var scope = tester.PayTester.ServiceProvider.CreateScope())
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                for (var i = 0; i < userManager.Options.Lockout.MaxFailedAccessAttempts; i++)
+                    await AssertAPIError("unauthenticated", () => wrongPasswordClient.GetCurrentUser());
+                var user = await userManager.FindByIdAsync(account.UserId);
+                Assert.True(await userManager.IsLockedOutAsync(user!));
+            }
+
+            Assert.Equal(account.UserId, (await apiKeyClient.GetCurrentUser()).Id);
+            await AssertAPIError("unauthenticated", () => basicClient.GetCurrentUser());
+
+            var userService = tester.PayTester.GetService<UserService>();
+            Assert.Contains(await userService.GetUsersWithRoles(), user =>
+                user.User.Id == account.UserId && !user.Disabled);
+            Assert.IsType<UserService.SetDisabledResult.Success>(await userService.SetDisabled(account.UserId, true));
+            await AssertAPIError("unauthenticated", () => apiKeyClient.GetCurrentUser());
+            var storeRepository = tester.PayTester.GetService<StoreRepository>();
+            Assert.True((await storeRepository.FindStore(account.StoreId))!.GetStoreBlob().NoActiveUser);
+            Assert.IsType<UserService.SetDisabledResult.Success>(await userService.SetDisabled(account.UserId, false));
+
+            Assert.Equal(account.UserId, (await apiKeyClient.GetCurrentUser()).Id);
+            await AssertAPIError("unauthenticated", () => basicClient.GetCurrentUser());
+            Assert.False((await storeRepository.FindStore(account.StoreId))!.GetStoreBlob().NoActiveUser);
+
+            Assert.IsType<UserService.SetDisabledResult.Success>(
+                await userService.SetAccessRestriction(account.UserId, "Custom", true));
+            using (var scope = tester.PayTester.ServiceProvider.CreateScope())
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var user = await userManager.FindByIdAsync(account.UserId);
+                var loginContext = new UserService.CanLoginContext(user);
+                Assert.False(await userService.CanLogin(loginContext));
+                Assert.Contains(loginContext.Failures,
+                    failure => failure.Text.Value == "Your user account is currently restricted.");
+            }
+        }
+
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
         public async Task ApproveUserTests()
         {
             using var tester = CreateServerTester();

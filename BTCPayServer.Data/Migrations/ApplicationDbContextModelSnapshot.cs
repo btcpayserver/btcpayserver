@@ -18,7 +18,7 @@ namespace BTCPayServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.11")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -1795,6 +1795,25 @@ namespace BTCPayServer.Migrations
                     b.ToTable("U2FDevices");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.UserAccessRestriction", b =>
+                {
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at");
+
+                    b.HasKey("ApplicationUserId", "Type");
+
+                    b.ToTable("user_access_restrictions");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.UserStore", b =>
                 {
                     b.Property<string>("ApplicationUserId")
@@ -2588,6 +2607,17 @@ namespace BTCPayServer.Migrations
                     b.Navigation("ApplicationUser");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.UserAccessRestriction", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.ApplicationUser", "ApplicationUser")
+                        .WithMany("AccessRestrictions")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.UserStore", b =>
                 {
                     b.HasOne("BTCPayServer.Data.ApplicationUser", "ApplicationUser")
@@ -2708,6 +2738,8 @@ namespace BTCPayServer.Migrations
             modelBuilder.Entity("BTCPayServer.Data.ApplicationUser", b =>
                 {
                     b.Navigation("APIKeys");
+
+                    b.Navigation("AccessRestrictions");
 
                     b.Navigation("Fido2Credentials");
 

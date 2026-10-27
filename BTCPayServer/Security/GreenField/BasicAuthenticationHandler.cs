@@ -59,6 +59,7 @@ namespace BTCPayServer.Security.Greenfield
 
             var user = await userManager.Users
                 .Include(applicationUser => applicationUser.Fido2Credentials)
+                .Include(applicationUser => applicationUser.AccessRestrictions)
                 .FirstOrDefaultAsync(applicationUser =>
                     applicationUser.NormalizedUserName == userManager.NormalizeName(username));
 

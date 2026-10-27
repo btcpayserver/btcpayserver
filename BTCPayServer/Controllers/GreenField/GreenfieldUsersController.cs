@@ -139,7 +139,7 @@ namespace BTCPayServer.Controllers.Greenfield
             List<ApplicationUserData> users = [];
             foreach (var user in usersWithRoles)
             {
-                users.Add(await UserService.ForAPI<ApplicationUserData>(user.User, user.Roles, _callbackGenerator, _uriResolver, Request, canManageUsers));
+                users.Add(await UserService.ForAPI<ApplicationUserData>(user.User, user.Roles, _callbackGenerator, _uriResolver, Request, canManageUsers, user.Disabled));
             }
             return Ok(users);
         }
@@ -471,7 +471,8 @@ namespace BTCPayServer.Controllers.Greenfield
         private async Task<ApplicationUserData> ForAPI(ApplicationUser data, bool includeInvitationUrl)
         {
             var roles = (await _userManager.GetRolesAsync(data)).ToArray();
-            return await UserService.ForAPI<ApplicationUserData>(data, roles, _callbackGenerator, _uriResolver, Request, includeInvitationUrl);
+            var disabled = await _userService.IsRestricted(data.Id, UserAccessRestrictionConstants.Administrative);
+            return await UserService.ForAPI<ApplicationUserData>(data, roles, _callbackGenerator, _uriResolver, Request, includeInvitationUrl, disabled);
         }
     }
 }

@@ -71,7 +71,7 @@ namespace BTCPayServer.Security.Greenfield
             var id = selector.GetId();
             await using var context = applicationDbContextFactory.CreateContext();
             var result = includeUser ?
-                await context.ApiKeys.Include(data => data.User).SingleOrDefaultAsync(data => data.Id == id) :
+                await context.ApiKeys.Include(data => data.User).ThenInclude(u => u.AccessRestrictions).SingleOrDefaultAsync(data => data.Id == id) :
                 await context.ApiKeys.SingleOrDefaultAsync(data => data.Id == id);
             if (result != null && selector is Selector.ByApiKey apiKey && apiKey.GetHash() != result.Hash)
                 result = null;

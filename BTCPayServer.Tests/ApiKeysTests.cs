@@ -208,6 +208,9 @@ namespace BTCPayServer.Tests
             Assert.Equal(callbackUrl, s.Page.Url);
 
             accessToken = await GetAccessTokenFromCallbackResult(s);
+            // The permission the user rejected isn't granted
+            Assert.Equal(new[] { Permission.Create(Policies.CanModifyStoreSettings, user.StoreId).ToString() },
+                (await apiKeyRepo.GetKey(accessToken)).GetBlob().Permissions);
             await TestApiAgainstAccessToken(accessToken, tester, user,
                 (await apiKeyRepo.GetKey(accessToken)).GetBlob().Permissions);
 
@@ -271,6 +274,55 @@ namespace BTCPayServer.Tests
             await s.Page.Locator("#continue").ClickAsync();
             var emptyPageContent = await s.Page.ContentAsync();
             Assert.Contains("There are no associated permissions to the API key being requested", emptyPageContent);
+        }
+
+        [Fact]
+        [Trait("Playwright", "Playwright-2")]
+        public async Task CanRejectSelectiveStoreApiKeyPermission()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+
+            var user = s.Server.NewAccount();
+            await user.GrantAccessAsync();
+            await user.MakeAdmin(false);
+            await s.GoToLogin();
+            await s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
+
+            const string applicationIdentifier = "selective-permission-test";
+            var callbackUrl = s.ServerUri + "postredirect-callback-test";
+            var requestedPermissions = new[] { Policies.CanModifyStoreSettings, Policies.CanViewProfile };
+            var authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri, requestedPermissions,
+                strict: false, selectiveStores: true,
+                applicationDetails: (applicationIdentifier, new Uri(callbackUrl))).ToString();
+
+            await s.GoToUrl(authUrl);
+            await s.Page.SelectOptionAsync("#StoreId", user.StoreId);
+            await s.Page.Locator("#continue").ClickAsync();
+            await s.Page.SetCheckedAsync("#btcpay\\.store\\.canmodifystoresettings", false);
+            await s.Page.Locator("#consent-yes").ClickAsync();
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+
+            var apiKeyRepo = s.Server.PayTester.GetService<APIKeyRepository>();
+            var accessToken = await GetAccessTokenFromCallbackResult(s);
+            var permissions = (await apiKeyRepo.GetKey(accessToken)).GetBlob().Permissions;
+            Assert.Equal(new[] { Policies.CanViewProfile }, permissions);
+
+            // An existing key without every requested permission is not sufficient. Show consent again so the
+            // user can decide whether to grant the newly requested permission.
+            await s.GoToUrl(authUrl);
+            Assert.Equal(1, await s.Page.Locator("select#StoreId").CountAsync());
+            Assert.DoesNotContain("previously generated the API Key", await s.Page.ContentAsync());
+
+            await s.Page.SelectOptionAsync("#StoreId", user.StoreId);
+            await s.Page.Locator("#continue").ClickAsync();
+            await s.Page.Locator("#consent-yes").ClickAsync();
+            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+
+            accessToken = await GetAccessTokenFromCallbackResult(s);
+            permissions = (await apiKeyRepo.GetKey(accessToken)).GetBlob().Permissions;
+            Assert.Contains(Policies.CanViewProfile, permissions);
+            Assert.Contains(Permission.Create(Policies.CanModifyStoreSettings, user.StoreId).ToString(), permissions);
         }
 
         [Fact]

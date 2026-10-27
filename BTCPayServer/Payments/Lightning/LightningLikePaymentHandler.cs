@@ -276,6 +276,13 @@ namespace BTCPayServer.Payments.Lightning
             var connectionStringChanged = oldConfig?.ConnectionString != config.ConnectionString;
             if (connectionStringChanged && !string.IsNullOrEmpty(config.ConnectionString))
             {
+                if (!BTCPayServer.Extensions.HasLightningConnectionType(config.ConnectionString))
+                {
+                    validationContext.ModelState.AddModelError(nameof(config.ConnectionString),
+                        "The connection string must include the 'type=' parameter.");
+                    return;
+                }
+
                 // Let's check the connection string can be parsed and is safe to use for non-admin.
                 try
                 {

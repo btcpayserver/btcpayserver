@@ -413,6 +413,17 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         }
         var unsafeMethod = await admin2Client.GetStorePaymentMethod(admin2.StoreId, "BTC-LN", includeConfig: true);
         Assert.True(unsafeMethod.Config?["allowUnsafeConnection"]?.Value<bool>());
+        var missingTypeException = await AssertEx.AssertValidationError(["ConnectionString"], () =>
+            admin2Client.UpdateStorePaymentMethod(admin2.StoreId, "BTC-LN", new UpdatePaymentMethodRequest
+            {
+                Config = new JObject
+                {
+                    ["connectionString"] = "tcp://127.0.0.1:1234"
+                },
+                Enabled = true
+            }));
+        var missingTypeError = Assert.Single(missingTypeException.ValidationErrors);
+        Assert.Equal("The connection string must include the 'type=' parameter.", missingTypeError.Message);
         await admin2Client.UpdateStorePaymentMethod(admin2.StoreId, "BTC-LN", new UpdatePaymentMethodRequest
         {
             Config = new JObject
@@ -859,10 +870,12 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         Assert.Equal("type=clightning;server=tcp://127.0.0.1:1234", lightningConfig?.ConnectionString);
         Assert.True(lightningConfig?.AllowUnsafeConnection);
 
-        // Make sure old connection string format does not work
-        Assert.IsType<RedirectToActionResult>(await storeController.SetupLightningNode(user.StoreId,
+        // Make sure old connection string format returns a useful error
+        Assert.IsType<ViewResult>(await storeController.SetupLightningNode(user.StoreId,
             new LightningNodeViewModel { LightningNodeType = LightningNodeType.Custom, ConnectionString = address },
             "save", "BTC"));
+        var connectionStringError = Assert.Single(storeController.ModelState[nameof(LightningNodeViewModel.ConnectionString)]!.Errors);
+        Assert.Equal("The connection string must include the 'type=' parameter.", connectionStringError.ErrorMessage);
 
         storeResponse = storeController.LightningSettings(user.StoreId, "BTC");
         var storeVm =

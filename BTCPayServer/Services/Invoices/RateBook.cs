@@ -18,7 +18,7 @@ public class RateBook
         ArgumentNullException.ThrowIfNull(defaultCurrency);
         if (rates == "")
             return new(defaultCurrency, new());
-        var o = JObject.Parse(rates);
+        var o = JsonParser.ParseObject(rates);
         var ratesDict = new Dictionary<string, decimal>();
         foreach (var property in o.Properties())
         {

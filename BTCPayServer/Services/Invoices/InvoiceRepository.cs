@@ -147,7 +147,7 @@ namespace BTCPayServer.Services.Invoices
             List<InvoiceEntity> invoices = new List<InvoiceEntity>();
             foreach (var row in rows)
             {
-                var jobj = JObject.Parse(row.invoice);
+                var jobj = JsonParser.ParseObject(row.invoice, 128);
                 jobj.Remove("Blob");
                 jobj["Blob2"] = jobj["Blob2"].ToString(Formatting.None);
                 var invoiceData = jobj.ToObject<InvoiceData>();
@@ -156,7 +156,7 @@ namespace BTCPayServer.Services.Invoices
                 invoiceData.Payments = new List<PaymentData>();
                 foreach (var payment in row.payments)
                 {
-                    jobj = JObject.Parse(payment);
+                    jobj = JsonParser.ParseObject(payment, 128);
                     jobj.Remove("Blob");
                     jobj["Blob2"] = jobj["Blob2"].ToString(Formatting.None);
                     var paymentData = jobj.ToObject<PaymentData>();

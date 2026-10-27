@@ -63,7 +63,7 @@ namespace BTCPayServer.Plugins.Translations
                 dict_id = translationName,
             });
             var metadata = await conn.QueryFirstOrDefaultAsync<string?>("SELECT metadata FROM lang_dictionaries WHERE dict_id=@dict_id", new { dict_id = translationName });
-            var rtl = metadata is not null && JObject.Parse(metadata)["rtl"]?.Value<bool>() == true;
+            var rtl = metadata is not null && JsonParser.ParseObject(metadata)["rtl"]?.Value<bool>() == true;
             var defaultDict = Translations.Default;
             var loading = defaultTranslationProviders.Select(d => d.GetDefaultTranslations()).ToArray();
             Dictionary<string, string?> additionalDefault = new();
@@ -160,7 +160,7 @@ namespace BTCPayServer.Plugins.Translations
             await using var ctx = contextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
             var rows = await db.QueryAsync<(string dict_id, string? fallback, string? source, string? metadata)>("SELECT * FROM lang_dictionaries");
-            return rows.Select(r => new Translation(r.dict_id, r.fallback, r.source ?? "", JObject.Parse(r.metadata ?? "{}"))).ToArray();
+            return rows.Select(r => new Translation(r.dict_id, r.fallback, r.source ?? "", JsonParser.ParseObject(r.metadata ?? "{}"))).ToArray();
         }
         public async Task<Translation?> GetTranslation(string name)
         {
@@ -169,7 +169,7 @@ namespace BTCPayServer.Plugins.Translations
             var r = await db.QueryFirstOrDefaultAsync("SELECT * FROM lang_dictionaries WHERE dict_id=@dict_id", new { dict_id = name });
             if (r is null)
                 return null;
-            return new Translation(r.dict_id, r.fallback, r.source ?? "", JObject.Parse(r.metadata ?? "{}"));
+            return new Translation(r.dict_id, r.fallback, r.source ?? "", JsonParser.ParseObject(r.metadata ?? "{}"));
         }
 
         public async Task<Translation> CreateTranslation(string langName, string? fallback, string source)

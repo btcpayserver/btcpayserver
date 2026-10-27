@@ -974,7 +974,7 @@ namespace BTCPayServer
                 {
                     try
                     {
-                        metadata = JObject.Parse(vm.Add.InvoiceMetadata);
+                        metadata = JsonParser.ParseObject(vm.Add.InvoiceMetadata);
                     }
                     catch (Exception)
                     {

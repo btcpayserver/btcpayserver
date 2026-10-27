@@ -256,7 +256,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         {
             try
             {
-                return JObject.Parse(posData);
+                return JsonParser.ParseObject(posData);
             }
             catch
             {

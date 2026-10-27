@@ -44,7 +44,7 @@ namespace BTCPayServer.Services
 
                     using var stream = new StreamReader(file);
                     var json = stream.ReadToEnd();
-                    result.Add(JObject.Parse(json).ToObject<Language>()!);
+                    result.Add(JsonParser.ParseObject(json).ToObject<Language>()!);
                 }
                 catch (Exception e)
                 {

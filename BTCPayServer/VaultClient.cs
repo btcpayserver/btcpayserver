@@ -32,7 +32,7 @@ public class VaultClient(IJSRuntime js, string serviceUri)
             throw new VaultNotConnectedException();
         if (p != 200)
             throw new VaultException($"Unexpected response code from vault {p}");
-        return (resp.Body)?.ToJsonString() is { } str ? JToken.Parse(str) : null;
+        return (resp.Body)?.ToJsonString() is { } str ? JsonParser.ParseToken(str) : null;
     }
 
     public class SendRequestResponse

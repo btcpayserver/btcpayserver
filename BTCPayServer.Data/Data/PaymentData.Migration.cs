@@ -23,7 +23,7 @@ namespace BTCPayServer.Data
                 Blob2 = MigrationExtensions.SanitizeJSON(Blob2);
                 Blob = null;
             }
-            var blob = JObject.Parse(Blob2);
+            var blob = JsonParser.ParseObject(Blob2);
             if (blob["cryptoPaymentDataType"] is null)
                 blob["cryptoPaymentDataType"] = "BTCLike";
             if (blob["cryptoCode"] is null)
@@ -58,7 +58,7 @@ namespace BTCPayServer.Data
             }
             else
             {
-                cryptoData = JObject.Parse(blob["cryptoPaymentData"].Value<string>());
+                cryptoData = JsonParser.ParseObject(blob["cryptoPaymentData"].Value<string>());
                 foreach (var prop in cryptoData.Properties().ToList())
                 {
                     if (prop.Name is "rbf")

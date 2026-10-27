@@ -880,7 +880,7 @@ retry:
                 DefaultPaymentMethodId = store.GetDefaultPaymentId()?.ToString(),
                 Blob = store.GetStoreBlob()
             };
-            policies.DefaultStoreTemplate = JObject.Parse(serializer.ToString(r));
+            policies.DefaultStoreTemplate = JsonParser.ParseObject(serializer.ToString(r));
             await _settingsRepository.UpdateSetting(policies);
         }
 

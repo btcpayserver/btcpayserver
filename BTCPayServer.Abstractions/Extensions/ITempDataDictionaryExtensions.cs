@@ -43,7 +43,7 @@ public static class SetStatusMessageModelExtensions
         }
         if (model is string str)
         {
-            return JObject.Parse(str).ToObject<StatusMessageModel>();
+            return JsonParser.ParseObject(str).ToObject<StatusMessageModel>();
         }
         return null;
     }

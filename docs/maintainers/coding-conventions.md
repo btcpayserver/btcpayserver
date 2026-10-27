@@ -7,6 +7,10 @@
 - Prefer expression-bodied methods when the implementation fits on one line.
 - Prefer `Newtonsoft.Json` over `System.Text.Json` when adding or changing JSON
   serialization.
+- Use `JsonParser` instead of `JObject.Parse`, `JToken.Parse`, or `JArray.Parse`.
+  It preserves date-like strings and enforces an explicit maximum depth. Pass a
+  different depth only when the JSON envelope is intentionally deeper than the
+  default limit.
 - Do not use `ConfigureAwait(false)`; BTCPay Server does not rely on a
   synchronization context.
 

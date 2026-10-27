@@ -47,7 +47,7 @@ namespace BTCPayServer
                 {
                     if (value is string s)
                     {
-                        data = JToken.Parse(s);
+                        data = JsonParser.ParseToken(s);
                     }
                     else
                     {

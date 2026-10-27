@@ -468,7 +468,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         {
             try
             {
-                return JObject.Parse(posData);
+                return JsonParser.ParseObject(posData);
             }
             catch
             {

@@ -254,7 +254,7 @@ namespace BTCPayServer.Hosting
             {
                 if (string.IsNullOrEmpty(store.DerivationStrategies))
                     continue;
-                JObject strategies = JObject.Parse(store.DerivationStrategies);
+                JObject strategies = JsonParser.ParseObject(store.DerivationStrategies);
                 if (strategies is null)
                     continue;
                 foreach (var prop in strategies.Properties())
@@ -279,7 +279,7 @@ namespace BTCPayServer.Hosting
             {
                 if (store.StoreBlob is null)
                     continue;
-                var blob = JObject.Parse(store.StoreBlob);
+                var blob = JsonParser.ParseObject(store.StoreBlob);
                 var array = blob["excludedPaymentMethods"] as JArray;
                 if (array is null || array.Count == 0)
                     continue;
@@ -298,7 +298,7 @@ namespace BTCPayServer.Hosting
             var settings = await ctx.Settings.Where(s => s.Id == "BTCPayServer.Services.PoliciesSettings").FirstOrDefaultAsync();
             if (settings is null)
                 return;
-            var obj = JObject.Parse(settings.Value);
+            var obj = JsonParser.ParseObject(settings.Value);
             var arr = obj["BlockExplorerLinks"] as JArray;
             if (arr is null or { Count: 0 })
                 return;
@@ -322,7 +322,7 @@ namespace BTCPayServer.Hosting
             {
                 if (string.IsNullOrEmpty(store.DerivationStrategies))
                     continue;
-                var strategies = JObject.Parse(store.DerivationStrategies);
+                var strategies = JsonParser.ParseObject(store.DerivationStrategies);
                 foreach (var s in strategies.Properties().ToList())
                 {
                     var ls = s;
@@ -375,7 +375,7 @@ namespace BTCPayServer.Hosting
                     _ => throw new NotSupportedException()
                 };
             }
-            var data = JObject.Parse(setting.Value);
+            var data = JsonParser.ParseObject(setting.Value);
             if (data["RootAppType"]?.Type is JTokenType.Integer)
             {
                 var v = data["RootAppType"].Value<int>();
@@ -401,7 +401,7 @@ namespace BTCPayServer.Hosting
             var o = (await postgresContext.Settings.FromSqlRaw("SELECT \"Id\", \"Value\" FROM \"Settings\" WHERE \"Id\"='MigrationData'").AsNoTracking().FirstOrDefaultAsync())?.Value;
             if (o is null)
                 return null;
-            return JObject.Parse(o)["state"]?.Value<string>();
+            return JsonParser.ParseObject(o)["state"]?.Value<string>();
         }
         static async Task UpdateSequenceInvoiceSearch(ApplicationDbContext postgresContext)
         {
@@ -564,7 +564,7 @@ namespace BTCPayServer.Hosting
                     {
                         try
                         {
-                            labelId = JObject.Parse(label.Key)["value"].Value<string>();
+                            labelId = JsonParser.ParseObject(label.Key)["value"].Value<string>();
                         }
                         catch
                         {
@@ -848,7 +848,7 @@ WHERE cte.""Id""=p.""Id""
                 if (string.IsNullOrEmpty(store.DerivationStrategies))
                     continue;
 
-                var strats = JObject.Parse(store.DerivationStrategies);
+                var strats = JsonParser.ParseObject(store.DerivationStrategies);
                 bool updated = false;
                 foreach (var prop in strats.Properties().Where(p => IsLN(PaymentMethodId.Parse(p.Name))))
                 {

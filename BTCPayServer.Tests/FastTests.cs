@@ -2804,6 +2804,40 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
+        public void CanSafelyRoundTripJsonBlobs()
+        {
+            JObject Nested(int levels) => levels == 1 ? new JObject() : new JObject { ["a"] = Nested(levels - 1) };
+
+            const string date = "/Date(99999999999999999)/";
+            var entity = new InvoiceEntity
+            {
+                Currency = "USD",
+                Metadata = new InvoiceMetadata { OrderId = date, PosData = Nested(62) }
+            };
+            var data = new Data.InvoiceData { Status = "New" };
+
+            data.SetBlob(entity);
+
+            Assert.Equal(date, data.GetBlob().Metadata.OrderId);
+            var row = JsonParser.ParseObject($"{{\"Id\":\"a\",\"Blob2\":{data.Blob2}}}", 128);
+            Assert.Equal(data.Blob2, row["Blob2"]!.ToString(Formatting.None));
+
+            entity.Metadata.PosData = Nested(63);
+            Assert.Throws<JsonReaderException>(() => data.SetBlob(entity));
+
+            var payment = new Data.PaymentData
+            {
+                Id = "a",
+                Status = PaymentStatus.Settled,
+                Currency = "BTC",
+                Amount = 1.0m,
+                Created = DateTimeOffset.UtcNow
+            };
+            payment.SetBlob(PaymentMethodId.Parse("BTC-LN"), new PaymentBlob { Destination = date });
+            Assert.Equal(date, payment.GetBlob().Destination);
+        }
+
+        [Fact]
         public void CanParseInvoiceEntityDerivationStrategies()
         {
             var serializer = BlobSerializer.CreateSerializer(new NBXplorer.NBXplorerNetworkProvider(ChainName.Regtest).GetBTC()).Serializer;

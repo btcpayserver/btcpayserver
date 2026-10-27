@@ -40,7 +40,7 @@ namespace BTCPayServer.Services.Wallets.Import
             JObject obj;
             try
             {
-                obj = JObject.Parse(line);
+                obj = JsonParser.ParseObject(line);
             }
             catch (JsonException)
             {

@@ -60,7 +60,7 @@ public static class Mapper
                 Id = sub.CustomerId,
                 ExternalId = customer.ExternalRef,
                 Identities = customer.CustomerIdentities is {} v ? new JObject(v.Select(i => new JProperty(i.Type, i.Value))) : null,
-                Metadata = JObject.Parse(customer.Metadata)
+                Metadata = JsonParser.ParseObject(customer.Metadata)
             },
             Created = sub.CreatedAt,
             Offering = MapOffering(offering),
@@ -73,7 +73,7 @@ public static class Mapper
             Phase = Map(sub.Phase),
             SuspensionReason = sub.SuspensionReason,
             AutoRenew = sub.AutoRenew,
-            Metadata = JObject.Parse(sub.Metadata),
+            Metadata = JsonParser.ParseObject(sub.Metadata),
             ProcessingInvoiceId = sub.ProcessingInvoiceId,
             NextPlan = MapPlan(sub.NextPlan),
             ScheduledPlan = sub.NewPlanId is not null ? MapPlan(sub.NewPlan!) : null, 
@@ -103,7 +103,7 @@ public static class Mapper
             OptimisticActivation = plan.OptimisticActivation,
             Renewable = plan.Renewable,
             Features = plan.GetFeatureIds(),
-            Metadata = JObject.Parse(plan.Metadata),
+            Metadata = JsonParser.ParseObject(plan.Metadata),
         };
     }
 
@@ -117,7 +117,7 @@ public static class Mapper
         SuccessRedirectUrl = offering.SuccessRedirectUrl,
         Plans = offering?.Plans is {} plans ? plans.Select(MapPlan).ToList() : null,
         Features = offering?.Features is {} features ? features.Select(MapFeature).ToList() : null,
-        Metadata = JObject.Parse(offering.Metadata)
+        Metadata = JsonParser.ParseObject(offering.Metadata)
     };
 
     private static FeatureModel MapFeature(FeatureData arg)
@@ -138,13 +138,13 @@ public static class Mapper
             Expiration = checkout.Expiration,
             RedirectUrl = checkout.GetRedirectUrl(),
             BaseUrl = checkout.BaseUrl.ToString(),
-            InvoiceMetadata = JObject.Parse(checkout.InvoiceMetadata),
-            Metadata = JObject.Parse(checkout.Metadata),
+            InvoiceMetadata = JsonParser.ParseObject(checkout.InvoiceMetadata),
+            Metadata = JsonParser.ParseObject(checkout.Metadata),
             NewSubscriber = checkout.NewSubscriber,
             IsTrial = checkout.IsTrial,
             Created = checkout.CreatedAt,
             PlanStarted = checkout.PlanStarted,
-            NewSubscriberMetadata = JObject.Parse(checkout.NewSubscriberMetadata),
+            NewSubscriberMetadata = JsonParser.ParseObject(checkout.NewSubscriberMetadata),
             RefundAmount = checkout.RefundAmount,
             CreditedByInvoice = checkout.CreditedByInvoice,
             OnPayBehavior = MapOnPay(checkout.OnPay),

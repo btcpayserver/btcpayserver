@@ -43,7 +43,7 @@ services:
     image: nicolasdorier/nbxplorer:2.6.20
     restart: unless-stopped
     ports:
-      - "32838:32838"
+      - "127.0.0.1:32838:32838"
     expose:
       - "32838"
     environment:
@@ -87,8 +87,8 @@ services:
         dnsseed=0
         signetblocktime=30
     ports:
-      - "43782:43782"
-      - "39388:39388"
+      - "127.0.0.1:43782:43782"
+      - "127.0.0.1:39388:39388"
     expose:
       - "43782" # RPC
       - "39388" # P2P
@@ -115,8 +115,8 @@ services:
         dev-fast-gossip
         dev-bitcoind-poll=1
     ports:
-      - "30992:9835" # api port
-      - "30892:9735" # server port
+      - "127.0.0.1:30992:9835" # api port
+      - "127.0.0.1:30892:9735" # server port
     expose:
       - "9735" # server port
       - "9835" # api port
@@ -144,8 +144,8 @@ services:
         dev-fast-gossip
         dev-bitcoind-poll=1
     ports:
-      - "30993:9835" # api port
-      - "30893:9735" # server port
+      - "127.0.0.1:30993:9835" # api port
+      - "127.0.0.1:30893:9735" # server port
     expose:
       - "9735" # server port
       - "9835" # api port
@@ -160,7 +160,7 @@ services:
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - "39372:5432"
+      - "127.0.0.1:39372:5432"
     expose:
       - "5432"
     volumes:
@@ -191,9 +191,9 @@ services:
         trickledelay=1000
         no-rest-tls=1
     ports:
-      - "35531:8080"
-      - "30894:9735"
-      - "53280:10009"
+      - "127.0.0.1:35531:8080"
+      - "127.0.0.1:30894:9735"
+      - "127.0.0.1:53280:10009"
     expose:
       - "8080"
       - "9735"
@@ -229,8 +229,8 @@ services:
         trickledelay=1000
         no-rest-tls=1
     ports:
-      - "35532:8080"
-      - "30895:9735"
+      - "127.0.0.1:35532:8080"
+      - "127.0.0.1:30895:9735"
     expose:
       - "8080"
       - "9735"

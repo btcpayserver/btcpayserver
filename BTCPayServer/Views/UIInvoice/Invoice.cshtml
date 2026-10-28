@@ -602,7 +602,7 @@
             }
             @if ((Model.Refunds?.Count ?? 0) > 0)
             {
-                <section class="mt-4">
+                <section class="mt-4" permission="@Policies.CanViewPullPayments">
                     <h3 class="mb-3" text-translate="true">Refunds</h3>
                     <div class="table-responsive-xl">
                         <table class="table table-hover mb-5">

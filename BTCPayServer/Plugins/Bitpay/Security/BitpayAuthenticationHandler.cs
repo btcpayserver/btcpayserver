@@ -25,6 +25,8 @@ namespace BTCPayServer.Plugins.Bitpay.Security
         : AuthenticationHandler<BitpayAuthenticationOptions>(options, logger, encoder)
     {
         const string BitpayAuthErrorKey = nameof(BitpayAuthErrorKey);
+        // Typed long so EnableBuffering binds the bufferLimit overload, not bufferThreshold(int) which would leave the body unbounded.
+        const long MaxBitIdBodySize = 1_000_000;
         protected override Task HandleChallengeAsync(AuthenticationProperties properties)
         {
             var reason = Context.Items[BitpayAuthErrorKey]?.ToString() ?? "Authentication required";
@@ -69,13 +71,22 @@ namespace BTCPayServer.Plugins.Bitpay.Security
 
         private async Task<string> CheckBitId(HttpContext httpContext, string sig, string id)
         {
-            httpContext.Request.EnableBuffering();
+            if (httpContext.Request.ContentLength > MaxBitIdBodySize)
+                return null;
+            httpContext.Request.EnableBuffering(bufferLimit: MaxBitIdBodySize);
             string body = string.Empty;
             if (httpContext.Request.ContentLength != 0 && httpContext.Request.Body != null)
             {
-                using (StreamReader reader = new StreamReader(httpContext.Request.Body, Encoding.UTF8, true, 1024, true))
+                try
                 {
-                    body = await reader.ReadToEndAsync();
+                    using (StreamReader reader = new StreamReader(httpContext.Request.Body, Encoding.UTF8, true, 1024, true))
+                    {
+                        body = await reader.ReadToEndAsync();
+                    }
+                }
+                catch (IOException)
+                {
+                    return null;
                 }
                 httpContext.Request.Body.Position = 0;
             }

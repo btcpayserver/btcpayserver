@@ -364,7 +364,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             await portal.GoToNextPhase(); // Normal to Grace period
         });
 
-        await s.Page.ReloadAsync();
+        // Moving phases already redirects to the portal; don't race it with a reload.
         await portal.AssertPlan("Pro Plan");
         await portal.AssertNoScheduledChange();
     }
@@ -1224,16 +1224,23 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
 
         public async Task NewSubscriber(string planName, string email, bool hasTrial, bool mine = false, bool? hasInvoice = null)
         {
-            var allowTrial = await s.Page.Locator($"tr[data-plan-name='{planName}']").GetAttributeAsync("data-allow-trial") == "True";
-            await s.Page.ClickAsync($"tr[data-plan-name='{planName}'] .dropdown-toggle");
-            await s.Page.ClickAsync($"tr[data-plan-name='{planName}'] .plan-name-col a");
+            var row = s.Page.Locator($"tr[data-plan-name='{planName}']");
+            var planId = await row.GetAttributeAsync("data-plan-id");
+            var allowTrial = await row.GetAttributeAsync("data-allow-trial") == "True";
+            var modal = s.Page.Locator(".new-subscriber-modal");
+            var plan = modal.Locator(".new-subscriber-modal__plan");
+            // The modal can open before Vue mounts and installs its plan-selection handler.
+            await Expect(plan.Locator($"option[value='{planId}']")).ToHaveTextAsync(planName);
+            await row.Locator(".dropdown-toggle").ClickAsync();
+            await row.Locator(".plan-name-col a").ClickAsync();
+            await Expect(plan).ToHaveValueAsync(planId!);
             Assert.Equal(hasTrial, allowTrial);
             if (allowTrial)
-                await s.Page.CheckAsync("input[name='isTrial']");
+                await modal.Locator("input[name='isTrial']").CheckAsync();
             else
-                Assert.False(await s.Page.Locator("input[name='isTrial']").IsVisibleAsync());
-            await s.Page.Locator("#newSubscriberModal.show button[name='command']").ClickAsync();
-            await s.Page.FillAsync("#emailInput", email);
+                await Expect(modal.Locator("input[name='isTrial']")).ToBeHiddenAsync();
+            await modal.GetByRole(AriaRole.Button, new() { Name = "Create", Exact = true }).ClickAsync();
+            await s.Page.Locator(".plan-checkout__email").FillAsync(email);
             await s.Page.ClickAsync("button[name='command']");
             if (!allowTrial && hasInvoice is not false)
             {
@@ -1527,11 +1534,8 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             return v;
         }
 
-        public async Task AssertPlan(string plan)
-        {
-            var name = await s.Page.GetByTestId("plan-name").InnerTextAsync();
-            Assert.Equal(plan, name);
-        }
+        public Task AssertPlan(string plan)
+            => Expect(s.Page.GetByTestId("plan-name")).ToHaveTextAsync(plan);
 
         public async Task AssertCreditHistory(List<string> creditLines, List<string>? creditAmounts = null)
         {
@@ -1555,10 +1559,8 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
             Assert.Contains(expectedPlanName, subtitle);
         }
 
-        public async Task AssertNoScheduledChange()
-        {
-            Assert.Equal(0, await s.Page.Locator(".scheduled-change-banner").CountAsync());
-        }
+        public Task AssertNoScheduledChange()
+            => Expect(s.Page.Locator(".scheduled-change-banner")).ToHaveCountAsync(0);
 
         public async Task CancelScheduledChange()
         {

@@ -16,6 +16,8 @@ namespace BTCPayServer.Services.Reporting;
 
 public class InvoicesReportProvider : ReportProvider
 {
+    public const int MaxMetadataFields = 500; // Every row is padded to the column count, so unbounded keys make the report quadratic
+
     public DisplayFormatter DisplayFormatter { get; }
 
     class MetadataFields
@@ -37,12 +39,15 @@ public class InvoicesReportProvider : ReportProvider
             var type = columnType ?? GetColumnType(value);
             if (type is null || _baseFields.Contains(fieldName))
                 return;
-            var field = new StoreReportResponse.Field(fieldName, type);
-            if (_dict.TryAdd(fieldName, field))
+            if (!_dict.TryGetValue(fieldName, out var field))
             {
+                if (Fields.Count >= MaxMetadataFields)
+                    return;
+                field = new StoreReportResponse.Field(fieldName, type);
+                _dict.Add(fieldName, field);
                 Fields.Add(field);
             }
-            else if (_dict[fieldName].Type != type)
+            else if (field.Type != type)
                 return;
 
             Values.TryAdd(fieldName, value);

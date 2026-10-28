@@ -219,7 +219,7 @@ public class SubscriberData : BaseEntityData
 
             (PeriodEnd, GracePeriodEnd) = plan.GetPeriodEnd(startDate);
             ReminderDate = PeriodEnd - TimeSpan.FromDays(PaymentReminderDaysOrDefault);
-            PlanStarted = now;
+            PlanStarted = startDate < now ? startDate : now;
             TrialEnd = null;
             PaidAmount = plan.Price;
         }

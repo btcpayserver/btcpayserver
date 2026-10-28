@@ -313,6 +313,8 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             if (subscriber is null)
                 return SubscriberNotFound();
             await subscriber.Plan.EnsureFeatureLoaded(ctx);
+            if (subscriber.NewPlan is not null)
+                await subscriber.NewPlan.EnsureFeatureLoaded(ctx);
             return Ok(Mapper.MapToSubscriberModel(subscriber));
         }
 

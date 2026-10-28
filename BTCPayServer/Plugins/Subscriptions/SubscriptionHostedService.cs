@@ -311,6 +311,8 @@ public class SubscriptionHostedService(
                     var prevPlan = m.Plan;
                     (m.PlanId, m.Plan) = (m.NewPlanId, m.NewPlan);
                     (m.NewPlanId, m.NewPlan) = (null, null);
+                    m.PaidAmount = null;
+                    newPhase = m.GetExpectedPhase(now);
                     subCtx.AddEvent(new SubscriptionEvent.PlanStarted(m, prevPlan)
                     {
                         AutoRenew = false

@@ -351,6 +351,13 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         await s.FindAlertMessage(partialText: "Your plan will change at the end of your current billing period.");
         await portal.AssertScheduledChange("Pro Plan");
 
+        var client = await s.AsTestAccount().CreateClient();
+        var offeringId = Assert.Single(await client.GetOfferings(s.StoreId)).Id;
+        var subscriber = await client.GetSubscriber(s.StoreId, offeringId, "enterprise@example.com");
+        Assert.Equal("Enterprise Plan", subscriber.Plan.Name);
+        Assert.Equal("Pro Plan", subscriber.ScheduledPlan.Name);
+        Assert.Equal("Pro Plan", subscriber.NextPlan.Name);
+        Assert.NotEmpty(subscriber.ScheduledPlan.Features);
 
         await s.Server.WaitForEvent<SubscriptionEvent.PlanStarted>(async () =>
         {

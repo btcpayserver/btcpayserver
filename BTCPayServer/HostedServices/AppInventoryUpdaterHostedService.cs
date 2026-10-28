@@ -44,13 +44,14 @@ namespace BTCPayServer.HostedServices
                         return;
                 }
 
-                if (!string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode) ||
-                    AppService.TryParsePosCartItems(invoiceEvent.Invoice.Metadata.PosData, out cartItems))
+                // A single line cart also sets ItemCode, so the cart must win or only one unit is deducted
+                if (AppService.TryParsePosCartItems(invoiceEvent.Invoice.Metadata.PosData, out cartItems) ||
+                    !string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode))
                 {
                     var appIds = AppService.GetAppInternalTags(invoiceEvent.Invoice);
 
                     var items = cartItems?.ToList() ?? new List<AppCartItem>();
-                    if (!string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode))
+                    if (items.Count == 0 && !string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode))
                     {
                         items.Add(new AppCartItem
                         {

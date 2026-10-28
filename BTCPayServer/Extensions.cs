@@ -763,7 +763,7 @@ namespace BTCPayServer
         {
             if (uri == null || !uri.IsAbsoluteUri)
                 return false;
-            return uri.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
+            return NetworkExtensions.IsOnionHost(uri.DnsSafeHost);
         }
 
         public static UserPrefsCookie GetUserPrefsCookie(this HttpContext ctx)

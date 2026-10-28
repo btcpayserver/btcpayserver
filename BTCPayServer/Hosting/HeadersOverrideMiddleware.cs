@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -21,7 +22,7 @@ namespace BTCPayServer.Hosting
         {
             if (!string.IsNullOrEmpty(overrideXForwardedProto))
             {
-                if (!httpContext.Request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase))
+                if (!httpContext.Request.IsOnion())
                 {
                     httpContext.Request.Headers["X-Forwarded-Proto"] = overrideXForwardedProto;
                 }

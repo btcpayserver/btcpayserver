@@ -656,7 +656,7 @@
         "/api/v1/plan-checkout/{checkoutId}": {
             "get": {
                 "summary": "Get a plan checkout",
-                "description": "Retrieves the details of a plan checkout session. Authentication is optional. Before the plan starts, callers without the `btcpay.store.canmanagesubscribers` permission for the checkout's store receive `null` for `successRedirectUrl`, `redirectUrl`, and `subscriber.offering.successRedirectUrl`. After the plan starts, these values are returned to all callers.",
+                "description": "Retrieves the details of a plan checkout session. Authentication is optional. Before the plan starts, callers without the `btcpay.store.canmanagesubscribers` permission for the checkout's store receive `null` for `successRedirectUrl`, `redirectUrl`, and `subscriber.offering.successRedirectUrl`. After the plan starts, these values are returned to all callers. Regardless of whether the plan has started, callers without this permission receive `null` for every `metadata` field (including `invoiceMetadata` and `newSubscriberMetadata`), `0` for every `memberCount`, and only the checkout's plan and the subscriber's current and next plans, with their features, in `subscriber.offering`.",
                 "operationId": "GetPlanCheckout",
                 "tags": ["Subscriptions"],
                 "security": [
@@ -689,7 +689,7 @@
             },
             "post": {
                 "summary": "Proceed with a plan checkout",
-                "description": "Continues a plan checkout session.\n\n**Behavior:**\n- If payment is required, the checkout assigns a BTCPay Server invoice and `invoiceId` will be set.\n- If no payment is required (for example, the subscriber already has enough credit or no credit purchase is needed), the plan will start immediately and `planStarted` will be `true`.\n- Before the plan starts, callers without the `btcpay.store.canmanagesubscribers` permission for the checkout's store receive `null` for `successRedirectUrl`, `redirectUrl`, and `subscriber.offering.successRedirectUrl`.",
+                "description": "Continues a plan checkout session.\n\n**Behavior:**\n- If payment is required, the checkout assigns a BTCPay Server invoice and `invoiceId` will be set.\n- If no payment is required (for example, the subscriber already has enough credit or no credit purchase is needed), the plan will start immediately and `planStarted` will be `true`.\n- Before the plan starts, callers without the `btcpay.store.canmanagesubscribers` permission for the checkout's store receive `null` for `successRedirectUrl`, `redirectUrl`, and `subscriber.offering.successRedirectUrl`.\n- Regardless of whether the plan has started, callers without this permission receive `null` for every `metadata` field (including `invoiceMetadata` and `newSubscriberMetadata`), `0` for every `memberCount`, and only the checkout's plan and the subscriber's current and next plans, with their features, in `subscriber.offering`.",
                 "operationId": "ProceedPlanCheckout",
                 "tags": ["Subscriptions"],
                 "security": [
@@ -818,9 +818,18 @@
         "/api/v1/subscriber-portal/{portalSessionId}": {
             "get": {
                 "summary": "Get a subscriber portal session",
-                "description": "Retrieves the details of an existing subscriber portal session.",
+                "description": "Retrieves the details of an existing subscriber portal session. Authentication is optional. Callers without the `btcpay.store.canmanagesubscribers` permission for the subscriber's store receive `null` for every `metadata` field, `0` for every `memberCount`, and only the subscriber's current and next plans and the plans they can change to, with their features, in `subscriber.offering`.",
                 "operationId": "GetPortalSession",
                 "tags": ["Subscriptions"],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagesubscribers"
+                        ],
+                        "Basic": []
+                    },
+                    {}
+                ],
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/PortalSessionId"
@@ -961,12 +970,14 @@
                     },
                     "invoiceMetadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Custom metadata that will be attached to the invoice when it is created.",
                         "additionalProperties": true,
                         "example": { "segment": "gold" }
                     },
                     "metadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Custom metadata for the checkout.",
                         "additionalProperties": true,
                         "example": { "flow": "upgrade" }
@@ -994,6 +1005,7 @@
                     },
                     "newSubscriberMetadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Metadata for creating a new subscriber.",
                         "additionalProperties": true,
                         "example": { "welcomeTier": "starter" }
@@ -1169,6 +1181,7 @@
                     },
                     "metadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Custom metadata for the offering.",
                         "additionalProperties": true,
                         "example": {
@@ -1217,6 +1230,7 @@
                     },
                     "metadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Custom metadata associated with the customer.",
                         "additionalProperties": true,
                         "example": {
@@ -1292,6 +1306,7 @@
                     },
                     "metadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Custom metadata for the subscription.",
                         "additionalProperties": true,
                         "example": {
@@ -1633,7 +1648,7 @@
                     },
                     "memberCount": {
                         "type": "integer",
-                        "description": "Maximum number of members allowed under this plan.",
+                        "description": "Number of active subscribers of this plan. Returned as 0 in public checkout and portal responses for callers without permission to manage subscribers for the store.",
                         "example": 10
                     },
                     "optimisticActivation": {
@@ -1656,6 +1671,7 @@
                     },
                     "metadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Custom metadata for the plan.",
                         "additionalProperties": true,
                         "example": {

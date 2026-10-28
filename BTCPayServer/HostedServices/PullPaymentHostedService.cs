@@ -599,6 +599,14 @@ namespace BTCPayServer.HostedServices
                     return;
                 }
 
+                if (req.Request.ExpectedState is { } expectedState &&
+                    (payout.State != expectedState ||
+                     !JToken.DeepEquals(payout.GetProofBlobJson(), req.Request.ExpectedProof)))
+                {
+                    req.Completion.SetResult(MarkPayoutRequest.PayoutPaidResult.InvalidState);
+                    return;
+                }
+
                 if (payout.State is PayoutState.Completed or PayoutState.Cancelled)
                 {
                     req.Completion.SetResult(MarkPayoutRequest.PayoutPaidResult.InvalidState);
@@ -980,6 +988,8 @@ namespace BTCPayServer.HostedServices
         public JObject Proof { get; set; }
         public PayoutState State { get; set; } = PayoutState.Completed;
         public PayoutBlob UpdateBlob { get; internal set; }
+        public PayoutState? ExpectedState { get; internal set; }
+        public JObject ExpectedProof { get; internal set; }
 
         public static string GetErrorMessage(PayoutPaidResult result)
         {

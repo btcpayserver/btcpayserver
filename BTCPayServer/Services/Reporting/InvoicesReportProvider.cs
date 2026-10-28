@@ -284,7 +284,7 @@ public class InvoicesReportProvider : ReportProvider
                         if (fieldName == "price")
                             v = context.DisplayFormatter.ToFormattedAmount(Convert.ToDecimal(v, CultureInfo.InvariantCulture), context.Invoice.Currency);
                     }
-                    catch (InvalidCastException) { }
+                    catch (Exception ex) when (ex is InvalidCastException or FormatException or OverflowException) { }
                     fieldName = $"{itemId2}-{fieldName}";
                 }
                 result.TryAdd(fieldName, v);

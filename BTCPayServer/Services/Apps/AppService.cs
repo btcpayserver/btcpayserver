@@ -152,7 +152,7 @@ namespace BTCPayServer.Services.Apps
             return (res, e) =>
             {
                 // flatten single items from POS data
-                var data = e.Metadata.PosData?.ToObject<PosAppData>();
+                var data = e.Metadata.PosData is { } posData ? PosAppData.TryParse(posData) : null;
                 var hasCart = data is { Cart.Length: > 0 };
                 var hasAmounts = data is { Amounts.Length: > 0 };
                 var date = e.InvoiceTime.Date;
@@ -522,7 +522,7 @@ retry:
                 }
                 return true;
             }
-            catch (Exception ex) when (ex is FormatException or OverflowException)
+            catch (Exception ex) when (ex is InvalidCastException or FormatException or OverflowException)
             {
                 return false;
             }

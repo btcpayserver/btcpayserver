@@ -447,6 +447,7 @@ namespace BTCPayServer.Services.Stores
             ctx.UserStore.Add(userStore);
             ctx.Entry(userStore).State = EntityState.Deleted;
             await ctx.SaveChangesAsync();
+            await ctx.Users.UpdateStoreNoActiveUserForStores([storeId]);
             _eventAggregator.Publish(new StoreUserEvent.Removed(storeId, userId));
             return true;
         }

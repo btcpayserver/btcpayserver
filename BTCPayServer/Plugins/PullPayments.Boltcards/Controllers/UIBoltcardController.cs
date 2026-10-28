@@ -43,11 +43,13 @@ public class UIBoltcardController(
         if (piccData is null)
             return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Invalid PICCData" });
 
-        var registration = await contextFactory.GetBoltcardRegistration(issuerKey, piccData, updateCounter: pr is not null);
+        var registration = await contextFactory.GetBoltcardRegistration(issuerKey, piccData, updateCounter: false);
         if (registration?.PullPaymentId is null)
             return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Replayed or expired query" });
         var cardKey = issuerKey.CreatePullPaymentCardKey(piccData.Uid, registration.Version, registration.PullPaymentId);
         if (!cardKey.CheckSunMac(c, piccData))
+            return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Replayed or expired query" });
+        if (pr is not null && !await contextFactory.TryUpdateBoltcardCounter(registration, piccData.Counter))
             return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Replayed or expired query" });
         lnUrlController.ControllerContext.HttpContext = HttpContext;
         return await lnUrlController.GetLNURLForPullPayment("BTC", registration.PullPaymentId, pr, $"{p}-{c}", true, cancellationToken);

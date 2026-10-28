@@ -23,12 +23,14 @@ public class HtmlSelectFormProvider : FormComponentProviderBase
             ValidateField<RequiredAttribute>(field);
         }
 
-        if (field.ValidationErrors.Count != 0 || string.IsNullOrEmpty(field.Value))
+        if (field.ValidationErrors.Count != 0)
             return;
 
+        var value = field.Value ?? string.Empty;
         var selectField = field as SelectField ?? JObject.FromObject(field).ToObject<SelectField>();
         if (selectField?.Options != null &&
-            !selectField.Options.Any(o => string.Equals(o.Value, field.Value, System.StringComparison.Ordinal)))
+            (selectField.Options.Count != 0 || value.Length != 0) &&
+            !selectField.Options.Any(o => !o.Disabled && string.Equals(o.Value, value, System.StringComparison.Ordinal)))
         {
             field.ValidationErrors.Add($"{field.Label} contains an invalid option");
         }

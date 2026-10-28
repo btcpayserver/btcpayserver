@@ -379,7 +379,11 @@ namespace BTCPayServer.Controllers
 
         private void AdjustVMForAuthorization(AuthorizeApiKeysViewModel vm)
         {
-            var permissions = vm.Permissions?.Split(';') ?? Array.Empty<string>();
+            // The store is selected by the user, so any scope requested by the application is ignored
+            var permissions = Permission.ToPermissions(vm.Permissions?.Split(';') ?? Array.Empty<string>())
+                .Select(permission => permission.Policy)
+                .Distinct()
+                .ToArray();
             var permissionsWithStoreIDs = new List<string>();
 
             vm.NeedsStorePermission = vm.SelectiveStores && (permissions.Any(IsStorePolicy) || !vm.Strict);

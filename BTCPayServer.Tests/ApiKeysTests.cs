@@ -20,6 +20,7 @@ using Microsoft.Playwright;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
+using static Microsoft.Playwright.Assertions;
 
 namespace BTCPayServer.Tests
 {
@@ -184,6 +185,26 @@ namespace BTCPayServer.Tests
             var apiKeyRepo = s.Server.PayTester.GetService<APIKeyRepository>();
             var accessToken = await GetAccessTokenFromCallbackResult(s);
             await TestApiAgainstAccessToken(accessToken, tester, user,
+                (await apiKeyRepo.GetKey(accessToken)).GetBlob().Permissions);
+
+            // An application-provided store scope must not bypass the user's store selection
+            authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
+                new[] { $"{Policies.CanModifyStoreSettings}:otherstore" }, selectiveStores: true,
+                applicationDetails: (null, new Uri(callbackUrl))).ToString();
+            await s.GoToUrl(authUrl);
+            await Expect(s.Page.Locator("select#StoreId")).ToHaveCountAsync(1);
+
+            authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,
+                new[] { Policies.CanModifyStoreSettings, $"{Policies.CanModifyStoreSettings}:otherstore" }, selectiveStores: true,
+                applicationDetails: (null, new Uri(callbackUrl))).ToString();
+            await s.GoToUrl(authUrl);
+            await s.Page.SelectOptionAsync("#StoreId", user.StoreId);
+            await s.Page.Locator("#continue").ClickAsync();
+            await s.Page.Locator("#consent-yes").ClickAsync();
+            await Expect(s.Page).ToHaveURLAsync(callbackUrl);
+
+            accessToken = await GetAccessTokenFromCallbackResult(s);
+            Assert.Equal(new[] { Permission.Create(Policies.CanModifyStoreSettings, user.StoreId).ToString() },
                 (await apiKeyRepo.GetKey(accessToken)).GetBlob().Permissions);
 
             authUrl = BTCPayServerClient.GenerateAuthorizeUri(s.ServerUri,

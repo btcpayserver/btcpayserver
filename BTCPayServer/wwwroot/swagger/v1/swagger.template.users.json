@@ -63,7 +63,7 @@
                                     },
                                     "currentPassword": {
                                         "type": "string",
-                                        "description": "The current password of the user. Required when changing the email or the password.",
+                                        "description": "The current password of the user. Required when changing the email or the password. Incorrect attempts count toward account lockout.",
                                         "nullable": true
                                     },
                                     "newPassword": {

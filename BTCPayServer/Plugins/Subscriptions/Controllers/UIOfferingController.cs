@@ -14,6 +14,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Security;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -148,12 +149,20 @@ public partial class UIOfferingController(
             await ctx.SaveChangesAsync();
             TempData.SetStatusSuccess(StringLocalizer["Subscriber {0} deleted", subName]);
         }
+        else if (command is "credit" or "charge" && amount is > GreenfieldConstants.MaxAmount)
+        {
+            TempData.SetStatusMessageModel(new()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                Html = StringLocalizer["The amount must be at most {0}", GreenfieldConstants.MaxAmount]
+            });
+        }
         else if (command is "credit" or "charge" && amount is > 0)
         {
             var message = command is "credit"
                 ? StringLocalizer["Subscriber {0} has been credited", subName]
                 : StringLocalizer["Subscriber {0} has been charged", subName];
-            await SubsService.UpdateCredit(
+            var balance = await SubsService.UpdateCredit(
                 new SubscriptionHostedService.UpdateCreditParameters()
                 {
                     SubscriberId = sub.Id,
@@ -162,7 +171,18 @@ public partial class UIOfferingController(
                     Charge = command is "charge" ? amount.Value : 0.0m,
                     AllowOverdraft = true
                 });
-            TempData.SetStatusSuccess(message);
+            if (balance is null)
+            {
+                TempData.SetStatusMessageModel(new()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Html = StringLocalizer["Unable to update credit balance."]
+                });
+            }
+            else
+            {
+                TempData.SetStatusSuccess(message);
+            }
         }
         else if (command is "refund" && amount is > 0)
         {

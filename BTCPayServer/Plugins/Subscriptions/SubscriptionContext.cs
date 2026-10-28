@@ -8,6 +8,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using Dapper;
@@ -50,13 +51,17 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
                                            up AS (
                                                INSERT INTO subs_subscriber_credits AS c (subscriber_id, currency, amount)
                                                SELECT @id, @currency, @diff
-                                               WHERE @force OR EXISTS (
+                                               WHERE @diff BETWEEN @minBalance AND @maxBalance
+                                                 AND @credit <= @maxBalance
+                                                 AND (@force OR EXISTS (
                                                    SELECT FROM subs_subscriber_credits
                                                    WHERE subscriber_id = @id AND currency = @currency
-                                               )
+                                               ))
                                                ON CONFLICT (subscriber_id, currency)
                                                DO UPDATE SET amount = c.amount + EXCLUDED.amount
-                                               WHERE @force OR c.amount + EXCLUDED.amount >= 0
+                                               WHERE (@force OR c.amount + EXCLUDED.amount >= 0)
+                                                 AND c.amount + EXCLUDED.amount BETWEEN @minBalance AND @maxBalance
+                                                 AND c.amount + @credit <= @maxBalance
                                                RETURNING c.subscriber_id, c.currency, @diff AS diff, c.amount AS balance
                                            ),
                                            hist AS (
@@ -71,7 +76,11 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
                                                FROM up
                                            )
                                            SELECT balance from up;
-                                           """, new { id = tx.SubscriberId, currency = tx.Currency, diff, force, desc = tx.Description });
+                                           """, new
+            {
+                id = tx.SubscriberId, currency = tx.Currency, diff, force, desc = tx.Description,
+                credit = tx.Credit, minBalance = -GreenfieldConstants.MaxAmount, maxBalance = GreenfieldConstants.MaxAmount
+            });
         return amount;
     }
 

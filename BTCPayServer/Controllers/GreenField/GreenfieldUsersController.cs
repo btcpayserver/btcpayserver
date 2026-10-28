@@ -174,8 +174,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var email = user.Email;
             var setNewEmail = !string.IsNullOrEmpty(request.Email) && request.Email != email && ModelState.IsValid;
             var currentPasswordValid = (setNewPassword || setNewEmail)
-                                       && !string.IsNullOrEmpty(request.CurrentPassword)
-                                       && await _userManager.CheckPasswordAsync(user, request.CurrentPassword);
+                                       && await _userManager.CheckPasswordWithLockoutAsync(user, request.CurrentPassword);
             if ((setNewPassword || setNewEmail) && !currentPasswordValid)
             {
                 ModelState.AddModelError(nameof(request.CurrentPassword), "The current password is not correct.");

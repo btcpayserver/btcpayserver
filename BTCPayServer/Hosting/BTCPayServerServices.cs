@@ -357,9 +357,11 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<Dictionary<PaymentMethodId, ICheckoutModelExtension>>(o =>
                 o.GetRequiredService<IEnumerable<ICheckoutModelExtension>>().ToDictionary(o => o.PaymentMethodId, o => o));
 
-            services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient)
+            services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient,
+                    httpClient => httpClient.MaxResponseContentBufferSize = LightningLikePayoutHandler.MaxLNURLResponseSize)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
-            services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient)
+            services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient,
+                    httpClient => httpClient.MaxResponseContentBufferSize = LightningLikePayoutHandler.MaxLNURLResponseSize)
                 .UseSSRFProtection();
             services.AddSingleton<HostedServices.PullPaymentHostedService>();
             services.AddSingleton<IHostedService, HostedServices.PullPaymentHostedService>(o => o.GetRequiredService<PullPaymentHostedService>());

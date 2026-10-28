@@ -121,7 +121,7 @@
                     {
                         <div class="d-flex align-items-center gap-3">
                             <input asp-for="CssFile" type="file" class="form-control flex-grow">
-                            @if (!string.IsNullOrEmpty(Model.CssUrl))
+                            @if (Uri.TryCreate(Model.CssUrl, UriKind.Absolute, out var cssUri) && cssUri.Scheme is ("http" or "https"))
                             {
                                 <a href="@Model.CssUrl" target="_blank" rel="noreferrer noopener" class="text-nowrap" text-translate="true">Custom CSS</a>
                             }

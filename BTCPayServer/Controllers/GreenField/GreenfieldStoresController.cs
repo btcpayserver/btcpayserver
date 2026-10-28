@@ -352,7 +352,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             if (!string.IsNullOrEmpty(request.CssUrl) &&
                 ((request.CssUrl != existing.CssUrl && request.CssUrl.Length > 500) ||
-                 !Uri.TryCreate(request.CssUrl, UriKind.Absolute, out _)))
+                 !Uri.TryCreate(request.CssUrl, UriKind.Absolute, out var cssUri) || cssUri.Scheme is not ("http" or "https" or "fileid")))
             {
                 ModelState.AddModelError(nameof(request.CssUrl), "CSS is not a valid url");
             }

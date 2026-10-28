@@ -192,6 +192,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             return item.PriceType == AppItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
         }
 
+        private const int MaxOrderLines = 500;
+
         [HttpPost("/")]
         [HttpPost("/apps/{appId}/pos/{viewType?}")]
         [IgnoreAntiforgeryToken]
@@ -276,6 +278,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
 
             jposData.Cart ??= [];
+            if (jposData.Cart.Length + (jposData.Amounts?.Length ?? 0) > MaxOrderLines)
+                return Error(StringLocalizer["An order can't have more than {0} lines", MaxOrderLines]);
             if (jposData.Amounts is not null)
                 jposData.Amounts = jposData.Amounts.Select(a => Math.Max(0, a)).ToArray();
             foreach (var cartItem in jposData.Cart)

@@ -129,7 +129,13 @@ public class BitpayInvoiceController : ControllerBase
     {
         var storeBlob = store.GetStoreBlob();
         var entity = _InvoiceRepository.CreateNewInvoice(store.Id);
-        entity.ExpirationTime = invoice.ExpirationTime is { } v ? v : entity.InvoiceTime + storeBlob.InvoiceExpiration;
+
+        var storeExpiry = entity.InvoiceTime + storeBlob.InvoiceExpiration;
+        var expiry = invoice.ExpirationTime ?? storeExpiry;
+        if (User.Identity?.AuthenticationType == Security.BitpayAuthenticationTypes.Anonymous && expiry > storeExpiry)
+            expiry = storeExpiry;
+        entity.ExpirationTime = expiry;
+
         entity.MonitoringExpiration = entity.ExpirationTime + storeBlob.MonitoringExpiration;
         if (entity.ExpirationTime - TimeSpan.FromSeconds(30.0) < entity.InvoiceTime)
         {

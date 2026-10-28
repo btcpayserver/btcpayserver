@@ -250,7 +250,7 @@ public class FormDataService
                 node = child;
             }
 
-            node[f.Field.Name] = GetValue(form, f.FullName);
+            node[f.Field.Name] = GetValue(form, f.Field);
         }
         return r;
     }

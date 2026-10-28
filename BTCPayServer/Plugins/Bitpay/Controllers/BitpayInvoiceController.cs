@@ -68,6 +68,9 @@ public class BitpayInvoiceController : ControllerBase
     [Route("invoices/{id}")]
     public async Task<DataWrapper<InvoiceResponse>> GetInvoice(string id)
     {
+        // AnyoneCanInvoice grants CanCreateInvoice to anonymous callers, it does not grant reading the merchant's view of an invoice
+        if (User.Identity?.AuthenticationType == Security.BitpayAuthenticationTypes.Anonymous)
+            throw new BitpayHttpException(403, "Forbidden");
         var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
         {
             InvoiceId = new[] { id },

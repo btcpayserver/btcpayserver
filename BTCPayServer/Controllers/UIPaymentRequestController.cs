@@ -534,7 +534,7 @@ namespace BTCPayServer.Controllers
             return Ok(StringLocalizer["Payment cancelled"]);
         }
 
-        [HttpGet("{payReqId}/archive")]
+        [HttpPost("{payReqId}/archive")]
         [Authorize(Policy = Policies.CanModifyPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> TogglePaymentRequestArchival(string payReqId)
         {

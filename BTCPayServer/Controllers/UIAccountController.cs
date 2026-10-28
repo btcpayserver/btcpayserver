@@ -539,6 +539,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("/register")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
+        [RateLimitsFilter(ZoneLimits.Register, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
         {
             if (!CanLoginOrRegister())

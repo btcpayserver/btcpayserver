@@ -242,7 +242,9 @@ app = new Vue({
                 msg = JSON.stringify(error);
             }
 
-            Vue.toasted.show("Error creating invoice: " + msg, {
+            var message = document.createElement("span");
+            message.textContent = "Error creating invoice: " + msg;
+            Vue.toasted.show(message, {
                 iconPack: "fontawesome",
                 icon: "exclamation-triangle",
                 fullWidth: false,

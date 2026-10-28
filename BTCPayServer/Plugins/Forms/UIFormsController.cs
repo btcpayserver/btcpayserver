@@ -188,6 +188,12 @@ public class UIFormsController(
             return NotFound();
         }
 
+        if (!formData.Public &&
+            !(await authorizationService.AuthorizeAsync(User, formData.StoreId, Policies.CanCreateInvoice)).Succeeded)
+        {
+            return Forbid();
+        }
+
         if (!Request.HasFormContentType)
             return await GetFormView(formData);
 

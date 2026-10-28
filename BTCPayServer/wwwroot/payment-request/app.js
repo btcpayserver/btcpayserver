@@ -157,7 +157,9 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 } else {
                     msg = JSON.stringify(error);
                 }
-                Vue.toasted.error("Error creating invoice: " + msg, Object.assign({}, toastOptions), {
+                var message = document.createElement("span");
+                message.textContent = "Error creating invoice: " + msg;
+                Vue.toasted.error(message, Object.assign({}, toastOptions), {
                     icon: "exclamation-triangle"
                 });
             });

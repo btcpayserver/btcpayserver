@@ -45,7 +45,7 @@ namespace BTCPayServer.Services
             ArgumentNullException.ThrowIfNull(network);
 
             var isOnion = BTCPayServer.Extensions.TryGetLightningServer(lightningConnectionString, out var server) &&
-                          server.DnsSafeHost.TrimEnd('.').EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
+                          server.IsOnion();
             var httpClient = (isOnion, allowUnsafe) switch
             {
                 (true, _) => OnionNamedClient,

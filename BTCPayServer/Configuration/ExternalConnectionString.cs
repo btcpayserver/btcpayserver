@@ -38,7 +38,7 @@ namespace BTCPayServer.Configuration
             var serviceUri = connectionString.Server.IsAbsoluteUri ? connectionString.Server : ToRelative(absoluteUrlBase, connectionString.Server.ToString());
             var isSecure = network != ChainName.Mainnet ||
                        serviceUri.Scheme == "https" ||
-                       serviceUri.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase) ||
+                       serviceUri.IsOnion() ||
                        Extensions.IsLocalNetwork(serviceUri.DnsSafeHost);
             if (!isSecure)
             {

@@ -6,11 +6,7 @@ namespace BTCPayServer.Abstractions.Extensions;
 public static class HttpRequestExtensions
 {
     public static bool IsOnion(this HttpRequest request)
-    {
-        if (request?.Host.Host == null)
-            return false;
-        return request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
-    }
+        => NetworkExtensions.IsOnionHost(request?.Host.Host);
 
     public static RequestBaseUrl GetRequestBaseUrl(this HttpRequest request) => new (request);
 

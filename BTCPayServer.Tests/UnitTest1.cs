@@ -1258,6 +1258,20 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Fast", "Fast")]
+        public void UrlTemplateOutputIsBounded()
+        {
+            var template = TextTemplate.CreateUrlTemplate("{Value}");
+            Assert.Equal(TextTemplate.MaxUrlLength, template.MaxOutputLength);
+            Assert.Equal(new string('a', TextTemplate.MaxUrlLength),
+                template.Render(new JObject { ["Value"] = new string('a', TextTemplate.MaxUrlLength) }));
+            Assert.Empty(template.Render(new JObject { ["Value"] = new string('a', TextTemplate.MaxUrlLength + 1) }));
+
+            template = TextTemplate.CreateUrlTemplate(string.Concat(Enumerable.Repeat("{Value}", 100_000)));
+            Assert.Empty(template.Render(new JObject { ["Value"] = new string('%', 500) }));
+        }
+
+        [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanUseDefaultCurrency()
         {

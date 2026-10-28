@@ -7,16 +7,41 @@ namespace BTCPayServer.Tests;
 public class HtmlSanitizerTests
 {
     [Fact]
+    public void SanitizersRemoveFormElements()
+    {
+        const string html = "<form><fieldset><legend>Legend</legend><label>Label</label>" +
+                            "<input><textarea>Text</textarea><button>Button</button>" +
+                            "<select><optgroup><option>Option</option></optgroup></select>" +
+                            "<datalist><option>Option</option></datalist><output>Output</output>" +
+                            "<keygen></fieldset></form>";
+        var formTags = new[]
+        {
+            "button", "datalist", "fieldset", "form", "input", "keygen", "label", "legend",
+            "optgroup", "option", "output", "select", "textarea"
+        };
+
+        foreach (var sanitizer in new[] { HtmlSanitizerFactory.Create(), HtmlSanitizerFactory.CreateRichText() })
+        {
+            var sanitized = sanitizer.Sanitize(html);
+            foreach (var tag in formTags)
+            {
+                Assert.DoesNotContain($"<{tag}", sanitized, System.StringComparison.OrdinalIgnoreCase);
+            }
+        }
+    }
+
+    [Fact]
     public void RestrictsCssProperties()
     {
         var sanitizer = HtmlSanitizerFactory.CreateRichText();
 
         var sanitized = sanitizer.Sanitize(
             "<style>p { color: red; background-image: url(https://example.com/pixel); position: fixed; }</style>" +
-            "<p style=\"font-weight: bold; background-image: url(https://example.com/pixel); position: fixed\">Test</p>");
+            "<p style=\"color: red; font-weight: bold; background-image: url(https://example.com/pixel); position: fixed\">Test</p>");
 
         Assert.Contains("color:", sanitized);
         Assert.Contains("font-weight: bold", sanitized);
+        Assert.DoesNotContain("<style", sanitized);
         Assert.DoesNotContain("background-image", sanitized);
         Assert.DoesNotContain("position", sanitized);
     }
@@ -83,7 +108,22 @@ public class HtmlSanitizerTests
     [InlineData("https://rumble.com/embed/v123456")]
     [InlineData("https://twitter.com/embed")]
     [InlineData("https://syndication.twitter.com/embed")]
-    public void AllowsSameOriginForSummernoteIframeHosts(string source)
+    [InlineData("https://www.tiktok.com/player/v1/video")]
+    [InlineData("https://www.linkedin.com/embed/feed/update/id")]
+    [InlineData("https://embed.reddit.com/r/example/comments/id/post")]
+    [InlineData("https://www.redditmedia.com/r/example/comments/id/post")]
+    [InlineData("https://player.twitch.tv/?channel=example")]
+    [InlineData("https://clips.twitch.tv/embed?clip=example")]
+    [InlineData("https://open.spotify.com/embed/episode/id")]
+    [InlineData("https://w.soundcloud.com/player/?url=example")]
+    [InlineData("https://embed.bsky.app/embed/post/id")]
+    [InlineData("https://www.threads.net/@example/post/id/embed")]
+    [InlineData("https://www.threads.com/@example/post/id/embed")]
+    [InlineData("https://www.pinterest.com/pin/id/embed")]
+    [InlineData("https://assets.pinterest.com/ext/embed.html?id=1")]
+    [InlineData("https://discord.com/widget?id=1")]
+    [InlineData("https://www.snapchat.com/embed/id")]
+    public void AllowsSameOriginForTrustedIframeHosts(string source)
     {
         var sanitizer = HtmlSanitizerFactory.CreateRichText();
 

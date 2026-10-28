@@ -114,7 +114,7 @@
         <div class="col-xxl-constrain">
             <div class="form-group">
                 <label asp-for="Description" class="form-label" data-required></label>
-                <textarea asp-for="Description" rows="20" cols="40" class="form-control richtext"></textarea>
+                <textarea asp-for="Description" rich-text rows="20" cols="40" class="form-control"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
         </div>
@@ -360,4 +360,3 @@ Please insert valid HTML here. Only meta tags accepted.'>
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete app"], StringLocalizer["This app will be removed from this store."], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
-

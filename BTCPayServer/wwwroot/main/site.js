@@ -410,16 +410,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     // rich text editor
     if ($.summernote) {
-        $('.richtext').summernote({
+        $('textarea.rich-text-editor').summernote({
             minHeight: 300,
             tableClassName: 'table table-sm',
             insertTableMaxSize: {
                 col: 5,
                 row: 10
             },
-            codeviewFilter: true,
-            codeviewFilterRegex: new RegExp($.summernote.options.codeviewFilterRegex.source + '|<.*?( on\\w+?=.*?)>', 'gi'),
-            codeviewIframeWhitelistSrc: ['twitter.com', 'syndication.twitter.com']
+            codeviewFilter: false
         });
     }
 

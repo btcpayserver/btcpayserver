@@ -145,6 +145,11 @@ public class BitpayInvoiceController : ControllerBase
             throw new BitpayHttpException(400, "The expirationTime is set too soon");
         }
 
+        if (invoice.PosData is { Length: > InvoiceMetadata.MaxPosDataLength })
+        {
+            throw new BitpayHttpException(400, "The posData is too long");
+        }
+
         entity.Metadata.OrderId = invoice.OrderId;
         entity.Metadata.PosDataLegacy = invoice.PosData;
         entity.ServerUrl = serverUrl;

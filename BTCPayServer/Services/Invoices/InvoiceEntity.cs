@@ -34,6 +34,8 @@ namespace BTCPayServer.Services.Invoices
     }
     public class InvoiceMetadata : IHasAdditionalData
     {
+        public const int MaxPosDataLength = 10_000;
+
         public static readonly JsonSerializer MetadataSerializer;
         static InvoiceMetadata()
         {

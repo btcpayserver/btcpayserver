@@ -87,6 +87,11 @@ public class FormDataService
         await using var context = _applicationDbContextFactory.CreateContext();
         return await context.Forms.Where(data => data.Id == id && data.StoreId == storeId).FirstOrDefaultAsync();
     }
+    // A form attached to a payment request or an app is either hardcoded (those have no store) or owned by that object's store.
+    public Task<FormData?> GetCheckoutForm(string storeId, string? id)
+    {
+        return id is not null && _hardcodedOptions.ContainsKey(id) ? GetForm(id) : GetForm(storeId, id);
+    }
     public async Task<FormData?> GetForm(string? id)
     {
         if (id is null)

@@ -338,7 +338,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var posFormId = settings.FormId;
 
             // skip forms feature for JSON requests (from the app)
-            var formData = wantsJson ? null : await FormDataService.GetForm(posFormId);
+            var formData = wantsJson ? null : await FormDataService.GetCheckoutForm(app.StoreDataId, posFormId);
             JObject formResponseJObject = null;
             switch (formData)
             {
@@ -490,7 +490,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return NotFound();
 
             var settings = app.GetSettings<PointOfSaleSettings>();
-            var formData = await FormDataService.GetForm(settings.FormId);
+            var formData = await FormDataService.GetCheckoutForm(app.StoreDataId, settings.FormId);
             if (formData is null)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
@@ -535,7 +535,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return NotFound();
 
             var settings = app.GetSettings<PointOfSaleSettings>();
-            var formData = await FormDataService.GetForm(settings.FormId);
+            var formData = await FormDataService.GetCheckoutForm(app.StoreDataId, settings.FormId);
             if (formData is null)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });

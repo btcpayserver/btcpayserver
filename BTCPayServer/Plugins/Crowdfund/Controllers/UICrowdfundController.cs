@@ -162,7 +162,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             if (settings.FormId is not null)
             {
-                var formData = await FormDataService.GetForm(settings.FormId);
+                var formData = await FormDataService.GetCheckoutForm(app.StoreDataId, settings.FormId);
                 if (formData is not null)
                 {
                     formResponseJObject = TryParseJObject(formResponse) ?? new JObject();
@@ -274,7 +274,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return NotFound();
 
             var settings = app.GetSettings<CrowdfundSettings>();
-            var formData = await FormDataService.GetForm(settings.FormId);
+            var formData = await FormDataService.GetCheckoutForm(app.StoreDataId, settings.FormId);
             if (formData is null)
             {
                 return RedirectToAction(nameof(ViewCrowdfund), new { appId });
@@ -313,7 +313,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return NotFound();
 
             var settings = app.GetSettings<CrowdfundSettings>();
-            var formData = await FormDataService.GetForm(settings.FormId);
+            var formData = await FormDataService.GetCheckoutForm(app.StoreDataId, settings.FormId);
             if (formData is null)
             {
                 return RedirectToAction(nameof(ViewCrowdfund));

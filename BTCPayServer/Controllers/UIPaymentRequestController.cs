@@ -363,7 +363,7 @@ namespace BTCPayServer.Controllers
             }
 
             var prFormId = prBlob.FormId;
-            var formData = await FormDataService.GetForm(prFormId);
+            var formData = await FormDataService.GetCheckoutForm(result.StoreDataId, prFormId);
             if (formData is null)
             {
                 return RedirectToAction("PayPaymentRequest", new { payReqId });
@@ -439,7 +439,7 @@ namespace BTCPayServer.Controllers
 
             if (!result.FormSubmitted && !string.IsNullOrEmpty(result.FormId))
             {
-                var formData = await FormDataService.GetForm(result.FormId);
+                var formData = await FormDataService.GetCheckoutForm(result.StoreId, result.FormId);
                 if (formData is not null)
                 {
                     return RedirectToAction("ViewPaymentRequestForm", new { payReqId });

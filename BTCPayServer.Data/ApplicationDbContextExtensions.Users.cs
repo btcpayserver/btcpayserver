@@ -62,7 +62,7 @@ public static partial class ApplicationDbContextExtensions
              )
              -- Update only the stores not having expected values.
              UPDATE "Stores" s
-             SET "StoreBlob" = jsonb_set("StoreBlob", '{noActiveUser}', to_jsonb(ed.expected_value))
+             SET "StoreBlob" = jsonb_set(COALESCE("StoreBlob", '{}'::jsonb), '{noActiveUser}', to_jsonb(ed.expected_value))
              FROM expected_disabled ed
              WHERE s."Id" = ed."Id" AND ed.expected_value <> ed.current_value;
              """;

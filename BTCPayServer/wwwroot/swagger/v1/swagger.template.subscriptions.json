@@ -1026,7 +1026,7 @@
                     },
                     "creditedByInvoice": {
                         "type": "string",
-                        "description": "Amount credited due to invoice settlement.",
+                        "description": "Amount credited from invoice payments.",
                         "example": "12.00"
                     },
                     "onPayBehavior": {

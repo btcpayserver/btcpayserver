@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -240,7 +241,7 @@ namespace BTCPayServer.HostedServices
             {
                 if (InvoiceEventNotification.HandlesEvent(b.Name))
                 {
-                    await _notificationSender.SendNotification(new StoreScope(b.Invoice.StoreId),
+                    await _notificationSender.SendNotification(new StoreScope(b.Invoice.StoreId) { Policy = Policies.CanViewInvoices },
                         new InvoiceEventNotification(b.Invoice.Id, b.Name, b.Invoice.StoreId));
                 }
                 if (b.Name == InvoiceEvent.Created)

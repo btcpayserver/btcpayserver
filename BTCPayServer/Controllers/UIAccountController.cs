@@ -344,8 +344,8 @@ namespace BTCPayServer.Controllers
             try
             {
                 var k1 = Encoders.Hex.DecodeData(viewModel.LNURLEndpoint.ParseQueryString().Get("k1"));
-                if (lnurlAuthService.FinalLoginStore.TryRemove(user.Id, out var storedk1) &&
-                    storedk1.SequenceEqual(k1))
+                if (lnurlAuthService.FinalLoginStore.TryRemove(user.Id, out var challenge) &&
+                    challenge.IsValid(user) && challenge.K1.SequenceEqual(k1))
                 {
                     lnurlAuthService.FinalLoginStore.TryRemove(user.Id, out _);
                     return await RedirectLoginSuccess(user, session);

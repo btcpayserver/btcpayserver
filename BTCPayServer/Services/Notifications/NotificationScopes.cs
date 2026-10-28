@@ -15,6 +15,7 @@ public class StoreScope : INotificationScope
     }
     public string StoreId { get; }
     public IEnumerable<StoreRoleId> Roles { get; set; }
+    public string Policy { get; set; }
 }
 
 public class UserScope : INotificationScope

@@ -194,7 +194,7 @@ public class SubscriptionHostedService(
 
         var plan = checkout.Plan;
         var existingCredit = checkout.Subscriber?.GetCredit() ?? 0m;
-        var amount = checkout.CreditPurchase ?? (plan.Price - existingCredit);
+        var amount = checkout.CreditPurchase ?? (subCtx.RoundAmount(plan.Price, plan.Currency) - existingCredit);
         if (checkout.OnPay == PlanCheckoutData.OnPayBehavior.HardMigration &&
             checkout.Subscriber?.GetUnusedPeriodAmount(subCtx.Now) is decimal unusedAmount)
             amount -= subCtx.RoundAmount(unusedAmount, plan.Currency);
@@ -697,6 +697,11 @@ public class SubscriptionHostedService(
         var ctx = subCtx.Context;
         var portal = await ctx.PortalSessions.GetActiveById(portalSessionId);
         if (portal is null)
+            return null;
+
+        if (value is not null)
+            value = subCtx.RoundAmount(value.Value, portal.Subscriber.Plan.Currency);
+        if (value is <= 0.0m)
             return null;
 
         var checkout = new PlanCheckoutData(portal.Subscriber)

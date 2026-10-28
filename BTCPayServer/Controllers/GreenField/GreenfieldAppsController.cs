@@ -161,9 +161,10 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetAllApps()
         {
+            var storeIds = HttpContext.GetStoresData().Select(s => s.Id).ToHashSet();
             var apps = await _appService.GetAllApps(User.GetId(), includeArchived: true);
 
-            return Ok(apps.Select(ToModel).ToArray());
+            return Ok(apps.Where(a => storeIds.Contains(a.StoreId)).Select(ToModel).ToArray());
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/apps")]

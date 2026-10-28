@@ -2863,7 +2863,7 @@ namespace BTCPayServer.Tests
             await user.GrantAccessAsync(true);
             await user2.GrantAccessAsync(false);
 
-            var client = await user.CreateClient(Policies.CanModifyStoreSettings);
+            var client = await user.CreateClient(Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings);
             var client2 = await user2.CreateClient(Policies.CanModifyStoreSettings);
             var viewOnlyClient = await user.CreateClient(Policies.CanViewStoreSettings);
             var walletViewerClient = await user.CreateClient(WalletPolicies.CanViewWallet);

@@ -257,6 +257,7 @@ namespace BTCPayServer
             var payoutEvent = _eventAggregator.WaitNext<PayoutEvent>(o => o.Payout.Id == payoutId, cts.Token);
             await Task.WhenAny(delay, payoutEvent);
             cts.Cancel();
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         private BTCPayNetwork GetNetwork(string cryptoCode)

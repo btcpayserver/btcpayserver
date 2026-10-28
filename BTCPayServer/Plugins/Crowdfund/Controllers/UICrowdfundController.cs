@@ -421,6 +421,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return NotFound();
 
             vm.AppId = app.Id;
+            vm.StoreId = app.StoreDataId;
             vm.TargetCurrency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, vm.TargetCurrency);
             if (currencies.GetCurrencyData(vm.TargetCurrency, false) == null)
                 ModelState.AddModelError(nameof(vm.TargetCurrency), "Invalid currency");

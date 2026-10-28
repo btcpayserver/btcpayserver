@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using BTCPayServer.Services.Invoices;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
     public class InvoicesModel : BasePagingViewModel
     {
+        [BindNever]
         public List<InvoiceModel> Invoices { get; set; } = new ();
         public override int CurrentPageCount => Invoices.Count;
         public List<InvoiceAppModel> Apps { get; set; }

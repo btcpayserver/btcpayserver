@@ -5,6 +5,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
 {
@@ -28,7 +29,9 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
             public string InvoiceId { get; set; }
             public TransactionHistoryLine HistoryLine { get; set; }
         }
+        [BindNever]
         public HashSet<LabelSelectorItemViewModel> Labels { get; set; } = new();
+        [BindNever]
         public List<TransactionViewModel> Transactions { get; set; } = new();
         public override int CurrentPageCount => Transactions.Count;
         public string CryptoCode { get; set; }

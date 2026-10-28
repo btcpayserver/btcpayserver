@@ -384,26 +384,8 @@ namespace BTCPayServer.Controllers
                 vm.FeeRate = feeRate.ToString();
             }
 
-            if (!psbtObject.IsAllFinalized())
-            {
-                var sanityErrors = new List<PSBTError>();
-                foreach (var input in psbtObject.Inputs)
-                {
-                    if (input.IsFinalized())
-                        continue;
-
-                    if (input.GetSignableCoin(out var missingCoin) is null)
-                    {
-                        sanityErrors.Add(new PSBTError(input.Index, missingCoin));
-                    }
-                    else if (!input.TryFinalizeInput(out var err))
-                    {
-                        sanityErrors.Add(err[0]);
-                    }
-                }
-                if (sanityErrors.Count > 0)
-                    vm.SetErrors(sanityErrors);
-            }
+            if (!psbtObject.IsAllFinalized() && !psbtObject.TryFinalize(out var sanityErrors))
+                vm.SetErrors(sanityErrors);
 
             var combinedTypeIds = inputToObjects.Values.SelectMany(ids => ids).Concat(outputToObjects.Values)
                 .DistinctBy(id => $"{id.Type}:{id.Id}").ToArray();
@@ -456,8 +438,10 @@ namespace BTCPayServer.Controllers
             {
                 "decode" or "analyze-psbt" => WalletPolicies.CanSignWalletTransactions,
                 "broadcast" or "payjoin" => WalletPolicies.CanBroadcastWalletTransactions,
-                _ => WalletPolicies.CanViewWallet
+                _ => null
             };
+            if (requiredPolicy is null)
+                return BadRequest();
             if (!(await authorizationService.AuthorizeAsync(User, walletId.StoreId, requiredPolicy)).Succeeded)
                 return Forbid();
             if (command == "payjoin" &&

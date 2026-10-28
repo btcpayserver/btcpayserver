@@ -203,7 +203,7 @@ public partial class UIStoresController
                     if (!vm.SkipPortTest && hasPublicAddress)
                     {
                         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-                        await handler.TestConnection(info.First(), cts.Token);
+                        await handler.TestConnection(info.First(), paymentMethod.IsUnsafeConnectionAllowed(), cts.Token);
                     }
                     TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Connection to the Lightning node successful."].Value + " " +
                         (hasPublicAddress

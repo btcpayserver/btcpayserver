@@ -36,24 +36,12 @@ public static class SSRFProtectionExtensions
         ILogger? logger,
         CancellationToken cancellationToken)
     {
-        var addresses = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host,
-            AddressFamily.Unspecified, cancellationToken);
-        var hostnameException = exceptions.FirstOrDefault(exception =>
-            exception.MatchesHostname(context.DnsEndPoint.Host, context.DnsEndPoint.Port));
+        var addresses = await GetAllowedAddresses(context.DnsEndPoint.Host, context.DnsEndPoint.Port,
+            exceptions, logger, cancellationToken);
 
         Exception? lastException = null;
         foreach (var address in addresses)
         {
-            var isLocal = Extensions.IsLocalNetwork(address.ToString());
-            var addressException = exceptions.FirstOrDefault(exception =>
-                exception.MatchesAddress(address, context.DnsEndPoint.Port));
-            if (isLocal && hostnameException is null && addressException is null)
-                continue;
-            if (isLocal)
-            {
-                logger?.LogDebug("SSRF exception permitted connection to {Host}:{Port} at {Address}",
-                    context.DnsEndPoint.Host, context.DnsEndPoint.Port, address);
-            }
             var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             try
             {
@@ -76,5 +64,30 @@ public static class SSRFProtectionExtensions
             throw new HttpRequestException("The endpoint does not resolve to an allowed network address");
         else
             throw new HttpRequestException("Could not connect to the endpoint", lastException);
+    }
+
+    internal static async Task<List<IPAddress>> GetAllowedAddresses(string host, int port,
+        IReadOnlyList<SSRFAllowedDestination> exceptions,
+        ILogger? logger,
+        CancellationToken cancellationToken)
+    {
+        var addresses = await Dns.GetHostAddressesAsync(host, AddressFamily.Unspecified, cancellationToken);
+        var hostnameException = exceptions.FirstOrDefault(exception => exception.MatchesHostname(host, port));
+
+        var allowed = new List<IPAddress>();
+        foreach (var address in addresses)
+        {
+            var isLocal = Extensions.IsLocalNetwork(address.ToString());
+            var addressException = exceptions.FirstOrDefault(exception => exception.MatchesAddress(address, port));
+            if (isLocal && hostnameException is null && addressException is null)
+                continue;
+            if (isLocal)
+            {
+                logger?.LogDebug("SSRF exception permitted connection to {Host}:{Port} at {Address}",
+                    host, port, address);
+            }
+            allowed.Add(address);
+        }
+        return allowed;
     }
 }

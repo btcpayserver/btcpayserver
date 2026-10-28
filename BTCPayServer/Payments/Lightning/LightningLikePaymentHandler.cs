@@ -217,14 +217,17 @@ namespace BTCPayServer.Payments.Lightning
             return supportedPaymentMethod.CreateLightningClient(_Network, Options.Value, _lightningClientFactory);
         }
 
-        public async Task TestConnection(NodeInfo nodeInfo, CancellationToken cancellation)
+        public Task TestConnection(NodeInfo nodeInfo, CancellationToken cancellation)
+            => TestConnection(nodeInfo, true, cancellation);
+
+        public async Task TestConnection(NodeInfo nodeInfo, bool allowUnsafe, CancellationToken cancellation)
         {
             try
             {
                 if (!Utils.TryParseEndpoint(nodeInfo.Host, nodeInfo.Port, out var endpoint))
                     throw new PaymentMethodUnavailableException($"Could not parse the endpoint {nodeInfo.Host}");
 
-                using var tcp = await _socketFactory.ConnectAsync(endpoint, cancellation);
+                using var tcp = await _socketFactory.ConnectAsync(endpoint, allowUnsafe, cancellation);
             }
             catch (Exception ex)
             {

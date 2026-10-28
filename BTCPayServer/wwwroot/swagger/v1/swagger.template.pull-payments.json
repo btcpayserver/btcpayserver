@@ -786,7 +786,7 @@
             "post": {
                 "summary": "Mark Payout as Paid",
                 "operationId": "PullPayments_MarkPayoutPaid",
-                "description": "Mark a payout as paid",
+                "description": "Mark a payout as paid. Completed or cancelled payouts cannot be marked paid and return `400 invalid-state`.",
                 "responses": {
                     "200": {
                         "description": "The payout has been marked paid, transitioning to `Completed` state."
@@ -843,7 +843,7 @@
             "post": {
                 "summary": "Mark Payout",
                 "operationId": "PullPayments_MarkPayout",
-                "description": "Mark a payout with a state",
+                "description": "Mark a payout with a state. Completed and cancelled payouts are final and cannot transition to another state; attempts return `400 invalid-state`.",
                 "requestBody": {
                     "content": {
                         "application/json": {

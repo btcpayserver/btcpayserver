@@ -396,7 +396,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             var summary = order.Calculate();
             var isTopup = currentView == PosViewType.Static &&
-                          selectedChoices.Any(c => c.PriceType == AppItemPriceType.Topup);
+                          selectedChoices is [{ PriceType: AppItemPriceType.Topup }];
 
             var receiptData = PosReceiptData.Create(isTopup, selectedChoices, jposData, order, summary, settings.Currency, _displayFormatter);
             if (!isTopup && summary.PriceTaxIncludedWithTips <= 0m && settings.DisableZeroAmountInvoice is true)

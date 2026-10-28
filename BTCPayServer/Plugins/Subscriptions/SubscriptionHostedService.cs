@@ -86,6 +86,8 @@ public class SubscriptionHostedService(
             var checkout = await ctx.PlanCheckouts.GetCheckout(subscribeRequest.CheckoutId);
             if (checkout?.IsExpired is not false)
                 throw new InvalidOperationException("Checkout not found or expired");
+            if (checkout.Invoice is { Status: not (Data.InvoiceData.Expired or Data.InvoiceData.Invalid) })
+                return;
             if (checkout.SuccessRedirectUrl is null)
             {
                 var redirectLink = checkout.Plan.Offering.SuccessRedirectUrl ??

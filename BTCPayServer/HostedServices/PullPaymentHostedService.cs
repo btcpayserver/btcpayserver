@@ -598,7 +598,7 @@ namespace BTCPayServer.HostedServices
                     return;
                 }
 
-                if (payout.State == PayoutState.Completed)
+                if (payout.State is PayoutState.Completed or PayoutState.Cancelled)
                 {
                     req.Completion.SetResult(MarkPayoutRequest.PayoutPaidResult.InvalidState);
                     return;

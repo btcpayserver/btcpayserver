@@ -544,6 +544,8 @@ namespace BTCPayServer.Rating
 
             public List<RateRulesErrors> Errors = new List<RateRulesErrors>();
             const int MaxNestedCount = 8;
+            const int MaxFlattenedLength = 20_000;
+            int flattenedLength;
             public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
             {
                 if (
@@ -560,13 +562,15 @@ namespace BTCPayServer.Rating
                     else // eg. replace BTC_X to BTC_USD, then replace by the expression for BTC_USD
                     {
                         var bestCandidate = parent.FindBestCandidate(replacedPair);
-                        if (nested > MaxNestedCount)
+                        flattenedLength += bestCandidate.FullSpan.Length;
+                        if (nested > MaxNestedCount || flattenedLength > MaxFlattenedLength || Errors.Contains(RateRulesErrors.TooMuchNestedCalls))
                         {
                             Errors.Add(RateRulesErrors.TooMuchNestedCalls);
                             return RateRules.CreateExpression($"ERR_TOO_MUCH_NESTED_CALLS({replacedPair})");
                         }
                         var innerFlatten = CreateNewContext(replacedPair);
                         var replaced = innerFlatten.Visit(bestCandidate);
+                        flattenedLength = innerFlatten.flattenedLength;
                         if (replaced is ExpressionSyntax expression)
                         {
                             var hasBinaryOps = new HasBinaryOperations();
@@ -592,6 +596,7 @@ namespace BTCPayServer.Rating
                 {
                     Errors = Errors,
                     nested = nested + 1,
+                    flattenedLength = flattenedLength,
                     ExchangeRates = ExchangeRates,
                 };
             }

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -425,7 +426,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
             }
             else
             {
-                await _notificationSender.SendNotification(new StoreScope(payout.StoreDataId),
+                await _notificationSender.SendNotification(new StoreScope(payout.StoreDataId) { Policy = Policies.CanViewPayouts },
                     new ExternalPayoutTransactionNotification()
                     {
                         PaymentMethod = payout.PayoutMethodId,

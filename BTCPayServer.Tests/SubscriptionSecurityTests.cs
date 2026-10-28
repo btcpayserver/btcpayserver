@@ -1,5 +1,11 @@
 using System;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
+using BTCPayServer.Plugins.Subscriptions;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace BTCPayServer.Tests;
@@ -22,5 +28,34 @@ public class SubscriptionSecurityTests
 
         Assert.NotNull(unused);
         Assert.InRange(unused.Value, 0m, subscriber.PaidAmount!.Value);
+    }
+
+    [Theory]
+    [InlineData(0.0051, 0.0)]
+    [InlineData(0.01, 0.01)]
+    [InlineData(0.0151, 0.01)]
+    [InlineData(10.00000002, 10.0)]
+    public void InvoiceCreditCannotExceedPaidAmount(decimal paid, decimal expectedCredit)
+    {
+        var subCtx = new SubscriptionContext(null!, null!, new CurrencyNameTable([], NullLogger<CurrencyNameTable>.Instance), default);
+        foreach (var status in new[] { InvoiceStatus.Processing, InvoiceStatus.Settled })
+        {
+            var invoice = new InvoiceEntity { Currency = "USD", Price = paid, Status = status };
+            invoice.AddRate(new("BTC", "USD"), 100_000m);
+#pragma warning disable CS0618
+            invoice.Payments = [new PaymentEntity
+            {
+                Currency = "BTC",
+                Value = paid / 100_000m,
+                Status = status == InvoiceStatus.Processing ? PaymentStatus.Processing : PaymentStatus.Settled
+            }];
+#pragma warning restore CS0618
+            invoice.UpdateTotals();
+
+            var credit = subCtx.GetAmountToCredit(invoice);
+            Assert.Equal(paid, invoice.PaidAmount.Net);
+            Assert.Equal(expectedCredit, credit);
+            Assert.True(credit <= paid);
+        }
     }
 }

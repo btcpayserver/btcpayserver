@@ -26,12 +26,15 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
     public IReadOnlyList<object> Events => _evts;
 
     public decimal RoundAmount(decimal amount, string currency)
-        => Math.Round(amount, currencyNameTable.GetNumberFormatInfo(currency)?.CurrencyDecimalDigits ?? 2);
+        => RoundAmount(amount, currency, MidpointRounding.ToEven);
+
+    public decimal RoundAmount(decimal amount, string currency, MidpointRounding mode)
+        => Math.Round(amount, currencyNameTable.GetNumberFormatInfo(currency)?.CurrencyDecimalDigits ?? 2, mode);
 
 
     public decimal GetAmountToCredit(InvoiceEntity invoice)
         // If the subscriber settled more than expected, we credit the subscriber with the difference.
-        => RoundAmount(invoice.Status is InvoiceStatus.Processing ? invoice.PaidAmount.Net : invoice.NetSettled, invoice.Currency);
+        => RoundAmount(invoice.Status is InvoiceStatus.Processing ? invoice.PaidAmount.Net : invoice.NetSettled, invoice.Currency, MidpointRounding.ToZero);
 
     public async Task<decimal> CreditSubscriber(SubscriberData sub, string description, decimal credit)
     => (await TryCreditDebitSubscriber(sub, description, credit, 0m, true))!.Value;

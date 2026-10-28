@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Payouts.LightningLike;
@@ -782,7 +783,7 @@ namespace BTCPayServer.HostedServices
                     }
 
                     req.Completion.TrySetResult(response);
-                    await _notificationSender.SendNotification(new StoreScope(payout.StoreDataId),
+                    await _notificationSender.SendNotification(new StoreScope(payout.StoreDataId) { Policy = Policies.CanViewPayouts },
                         new PayoutNotification()
                         {
                             StoreId = payout.StoreDataId,

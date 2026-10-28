@@ -173,7 +173,7 @@ namespace BTCPayServer.Controllers
             if ((clonedPayReqId, payReqId) is (not null, null))
             {
                 paymentRequest = await _PaymentRequestRepository.FindPaymentRequest(clonedPayReqId, User.GetId());
-                if (paymentRequest is null)
+                if (paymentRequest is null || paymentRequest.StoreDataId != store.Id)
                     return NotFound();
             }
             else if ((clonedPayReqId, payReqId) is (null, not null))

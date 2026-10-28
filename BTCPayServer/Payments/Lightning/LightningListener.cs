@@ -591,7 +591,7 @@ namespace BTCPayServer.Payments.Lightning
                 _ListenedInvoices.TryRemove(notification.Id, out _);
             return state is RecordedState.RecordedNow;
         }
-        enum RecordedState { RecordedNow, AlreadyRecorded, RetryLater, Expired }
+        enum RecordedState { RecordedNow, AlreadyRecorded, RetryLater, Expired, Conflict }
         async Task<RecordedState> AddPaymentCore(LightningInvoice notification, string invoiceId, PaymentMethodId paymentMethodId)
         {
             if (notification.Status is LightningInvoiceStatus.Expired)
@@ -613,6 +613,10 @@ namespace BTCPayServer.Payments.Lightning
 
             var handler = _handlers[paymentMethodId];
             var paymentHash = notification.GetPaymentHash(_network.NBitcoinNetwork);
+            if (paymentHash is not null &&
+                await _invoiceRepository.GetInvoiceFromAddress(paymentMethodId, paymentHash.ToString()) is { } issuedFor &&
+                issuedFor.Id != invoiceId)
+                return RecordedState.Conflict;
 
             var preimage = GetValidPreimage(notification, paymentHash);
             var paymentData = new PaymentData()

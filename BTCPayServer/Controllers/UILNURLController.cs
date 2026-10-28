@@ -665,10 +665,7 @@ namespace BTCPayServer
 
             lnurlRequest.Tag = "payRequest";
             lnurlRequest.CommentAllowed = lnUrlMethod.LUD12Enabled ? 2000 : 0;
-            lnurlRequest.Callback = new Uri(_linkGenerator.GetUriByAction(
-                        action: nameof(GetLNURLForInvoice),
-                        controller: "UILNURL",
-                        values: new { cryptoCode, invoiceId = i.Id }, Request.GetRequestBaseUrl()));
+            lnurlRequest.Callback = GetLNURLForInvoiceCallback(cryptoCode, i.Id);
             lnurlRequest.Metadata = JsonConvert.SerializeObject(lnUrlMetadata.Select(kv => new[] { kv.Key, kv.Value }));
             if (i.Type != InvoiceType.TopUp)
             {
@@ -694,6 +691,12 @@ namespace BTCPayServer
             }
             return lnurlRequest;
         }
+
+        private Uri GetLNURLForInvoiceCallback(string cryptoCode, string invoiceId)
+        => new Uri(_linkGenerator.GetUriByAction(
+                        action: nameof(GetLNURLForInvoice),
+                        controller: "UILNURL",
+                        values: new { cryptoCode, invoiceId }, Request.GetRequestBaseUrl()));
 
         private void SetLNUrlDescriptionMetadata(Dictionary<string, string> lnUrlMetadata, Data.StoreData store, StoreBlob blob, InvoiceMetadata invoiceMetadata)
         {
@@ -787,6 +790,10 @@ namespace BTCPayServer
                     if (lnurlPayRequest is null)
                         return NotFound();
                 }
+                else
+                {
+                    lnurlPayRequest.Callback = GetLNURLForInvoiceCallback(cryptoCode, i.Id);
+                }
 
                 if (amount is null)
                     return Ok(lnurlPayRequest);
@@ -858,7 +865,7 @@ namespace BTCPayServer
                     }
 
                     lightningPaymentMethod.Destination = invoice.BOLT11;
-                    promptDetails.PaymentHash = string.IsNullOrEmpty(invoice.PaymentHash) ? null : uint256.Parse(invoice.PaymentHash);
+                    promptDetails.PaymentHash = invoice.GetPaymentHash(network.NBitcoinNetwork);
                     promptDetails.Preimage = string.IsNullOrEmpty(invoice.Preimage) ? null : uint256.Parse(invoice.Preimage);
                     promptDetails.InvoiceId = invoice.Id;
                     promptDetails.GeneratedBoltAmount = amt;
@@ -868,9 +875,7 @@ namespace BTCPayServer
 
                 if (updatePaymentMethod)
                 {
-                    // Index payment hash for LUD-21 verify lookup via AddressInvoices,
-                    // flushed atomically with the prompt update.
-                    var trackedDestinations = lnurlSupportedPaymentMethod.LUD21Enabled && promptDetails.PaymentHash is not null
+                    var trackedDestinations = promptDetails.PaymentHash is not null
                         ? new[] { promptDetails.PaymentHash.ToString().ToLowerInvariant() }
                         : null;
                     await _invoiceRepository.UpdatePrompt(invoiceId, lightningPaymentMethod, trackedDestinations);

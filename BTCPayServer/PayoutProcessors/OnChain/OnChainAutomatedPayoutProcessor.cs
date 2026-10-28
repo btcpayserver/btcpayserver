@@ -166,6 +166,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 try
                 {
                     var txHash = workingTx.GetHash();
+                    var previousProofs = transfersProcessing.ToDictionary(p => p.Id, p => p.Proof);
                     foreach (var payoutData in transfersProcessing)
                     {
                         payoutData.State = PayoutState.InProgress;
@@ -177,7 +178,6 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                                 Candidates = new HashSet<uint256>() { txHash }
                             });
                     }
-                    TaskCompletionSource<bool> tcs = new();
                     var cts = new CancellationTokenSource();
                     cts.CancelAfter(TimeSpan.FromSeconds(20));
                     var task = _eventAggregator.WaitNext<NewOnChainTransactionEvent>(
@@ -186,7 +186,15 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     var broadcastResult = await explorerClient.BroadcastAsync(workingTx, cts.Token);
                     if (!broadcastResult.Success)
                     {
-                        tcs.SetResult(false);
+                        // The node refused the transaction, so nothing has been paid: leave those payouts for the next run
+                        Logs.PayServer.LogWarning(
+                            $"Could not broadcast the transaction of {transfersProcessing.Count} payouts: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}");
+                        foreach (var payoutData in transfersProcessing)
+                        {
+                            payoutData.State = PayoutState.AwaitingPayment;
+                            payoutData.Proof = previousProofs[payoutData.Id];
+                        }
+                        return;
                     }
                     var walletId = new WalletId(PayoutProcessorSettings.StoreId, Network.CryptoCode);
                     foreach (var payoutData in transfersProcessing)
@@ -195,7 +203,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                             txHash,
                             Attachment.Payout(payoutData.PullPaymentDataId, payoutData.Id));
                     }
-                    await Task.WhenAny(tcs.Task, task);
+                    await task;
                 }
                 catch (OperationCanceledException)
                 {

@@ -32,6 +32,7 @@ public class PermissionAuthorizationHandler(
         if (!requirement.RequireUnscoped)
         {
             scope = context.Resource as string;
+            scope ??= (context.Resource as Data.StoreData)?.Id;
             explicitScope = scope is not null;
             if (!explicitScope)
                 scope = await GetImplicitScope(userId, context, requirement, httpContext.HttpContext);

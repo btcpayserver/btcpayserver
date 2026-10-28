@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -816,8 +815,7 @@ public class UIStoreOnChainWalletsController(
     public static DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, BTCPayNetwork network)
     {
         var parser = new DerivationSchemeParser(network);
-        var isOD = Regex.Match(derivationScheme, @"\(.*?\)");
-        if (isOD.Success)
+        if (DerivationSchemeParser.MaybeOD(derivationScheme))
         {
             return parser.ParseOD(derivationScheme);
         }

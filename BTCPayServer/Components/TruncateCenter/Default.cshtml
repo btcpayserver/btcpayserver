@@ -23,10 +23,20 @@
     }
     else
     {
-        <span class="truncate-center-truncated" @(Model.IsTruncated ? $"data-bs-toggle=tooltip title={Model.Text}" : "")>
-            <span class="truncate-center-start">@Model.Start</span>
-            <span class="truncate-center-end">@Model.End</span>
-        </span>
+        @if (Model.IsTruncated)
+        {
+            <span class="truncate-center-truncated" data-bs-toggle="tooltip" title="@Model.Text">
+                <span class="truncate-center-start">@Model.Start</span>
+                <span class="truncate-center-end">@Model.End</span>
+            </span>
+        }
+        else
+        {
+            <span class="truncate-center-truncated">
+                <span class="truncate-center-start">@Model.Start</span>
+                <span class="truncate-center-end">@Model.End</span>
+            </span>
+        }
         <span class="truncate-center-text">@Model.Text</span>
     }
     @if (Model.Copy)

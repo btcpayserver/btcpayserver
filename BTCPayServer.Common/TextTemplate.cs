@@ -10,7 +10,7 @@ namespace BTCPayServer;
 public class TextTemplate(string template)
 {
     public const int MaxUrlLength = 8192;
-    static readonly Regex _interpolationRegex = new Regex(@"\{([^}]+)\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    static readonly Regex _interpolationRegex = new Regex(@"\{([^{}]+)\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public static TextTemplate CreateUrlTemplate(string template) =>
         new TextTemplate(template)

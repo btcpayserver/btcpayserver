@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.InvoicingModels
@@ -17,7 +18,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-        [Required]
+        [BindNever]
         [DisplayName("Store Id")]
         public string StoreId
         {

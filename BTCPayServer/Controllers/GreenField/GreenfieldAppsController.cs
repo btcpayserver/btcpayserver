@@ -560,6 +560,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 }
             }
 
+            if (request.ResetEvery.HasValue && !Enum.IsDefined(request.ResetEvery.Value))
+            {
+                ModelState.AddModelError(nameof(request.ResetEvery), "Invalid reset period");
+            }
+
             if (request.ResetEvery.HasValue && request.ResetEvery != CrowdfundResetEvery.Never)
             {
                 if (request.StartDate == null)
@@ -569,6 +574,12 @@ namespace BTCPayServer.Controllers.Greenfield
                 if (request.ResetEveryAmount <= 0)
                 {
                     ModelState.AddModelError(nameof(request.ResetEveryAmount), "You must reset the goal at a minimum of 1");
+                }
+                else if (Enum.IsDefined(request.ResetEvery.Value) && request.StartDate is { } startDate &&
+                         !CrowdfundSettings.TryGetNextResetDate(startDate.UtcDateTime,
+                             (Services.Apps.CrowdfundResetEvery)request.ResetEvery.Value, request.ResetEveryAmount ?? 1, out _))
+                {
+                    ModelState.AddModelError(nameof(request.ResetEveryAmount), "The reset interval exceeds the supported date range");
                 }
             }
 

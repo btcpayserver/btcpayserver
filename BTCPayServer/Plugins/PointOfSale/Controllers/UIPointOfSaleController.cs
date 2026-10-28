@@ -22,6 +22,7 @@ using BTCPayServer.Forms.Models;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.PointOfSale.Models;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -292,7 +293,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             foreach (var cartItem in jposData.Cart)
             {
                 cartItem.Count = Math.Max(1, cartItem.Count);
-                cartItem.Price = Math.Max(0, cartItem.Price);
+                cartItem.Price = Math.Clamp(cartItem.Price, 0, GreenfieldConstants.MaxAmount);
             }
             if (jposData.Cart.Any(cartItem => string.IsNullOrEmpty(cartItem.Id)))
                 return NotFound();

@@ -190,6 +190,7 @@ namespace BTCPayServer.Plugins.Translations
   "An invitation email has not been sent, because the server does not have an email server configured.<br/> You need to share this link with them: <a class='alert-link' href='{0}'>{0}</a>": "",
   "An invitation email has not been sent.<br/>You need to share this link with them: <a class='alert-link' href='{0}'>{0}</a>": "",
   "An invoice must be paid within a defined time interval at a fixed exchange rate to protect the issuer from price fluctuations.": "",
+  "An order can't have more than {0} lines": "",
   "An unexpected error happened: {0}": "",
   "An unexpected error occurred while registering the security device.": "",
   "Animation": "",

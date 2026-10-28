@@ -839,6 +839,7 @@ retry:
                 return data;
             var serializer = new NBXplorer.Serializer(null);
             serializer.Settings.DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate;
+            serializer.Settings.MetadataPropertyHandling = MetadataPropertyHandling.Ignore;
             var r = serializer.ToObject<RestrictedStoreData>(policies.DefaultStoreTemplate);
             if (!string.IsNullOrWhiteSpace(r.StoreName))
                 data.StoreName = r.StoreName;

@@ -36,6 +36,7 @@ namespace BTCPayServer.Data
                 Formatting = Formatting.None,
                 NullValueHandling = NullValueHandling.Ignore,
                 DefaultValueHandling = DefaultValueHandling.Ignore,
+                MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
             };
             return settings;
         }

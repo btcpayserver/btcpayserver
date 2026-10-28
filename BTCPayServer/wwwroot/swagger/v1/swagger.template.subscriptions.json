@@ -493,12 +493,20 @@
                         }
                     },
                     "400": {
-                        "description": "Error code: `overdraft`. The subscriber's balance would be overdrawn. Use `allowOverdraft` to allow this.",
+                        "description": "Error codes: `overdraft`, `balance-limit`. The balance update would exceed the permitted overdraft or balance limits.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ProblemDetails"
                                 }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid credit, charge, or description.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/ValidationProblemDetails" }
                             }
                         }
                     }

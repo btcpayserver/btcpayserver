@@ -40,6 +40,7 @@ namespace BTCPayServer.Services.Invoices
             var seria = new JsonSerializer();
             seria.DefaultValueHandling = DefaultValueHandling.Ignore;
             seria.FloatParseHandling = FloatParseHandling.Decimal;
+            seria.MetadataPropertyHandling = MetadataPropertyHandling.Ignore;
             seria.ContractResolver = new CamelCasePropertyNamesContractResolver();
             MetadataSerializer = seria;
         }

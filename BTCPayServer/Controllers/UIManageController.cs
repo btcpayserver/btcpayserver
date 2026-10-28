@@ -145,8 +145,7 @@ namespace BTCPayServer.Controllers
             bool needUpdate = false;
             var email = user.Email;
             var setNewEmail = model.Email != email && ModelState.IsValid;
-            if (setNewEmail && (string.IsNullOrEmpty(model.CurrentPassword) ||
-                                !await _userManager.CheckPasswordAsync(user, model.CurrentPassword)))
+            if (setNewEmail && !await _userManager.CheckPasswordWithLockoutAsync(user, model.CurrentPassword))
             {
                 ModelState.AddModelError(nameof(model.CurrentPassword), StringLocalizer["The current password is not correct."].Value);
                 return View(await GetIndexViewModel(user, model));
@@ -277,6 +276,12 @@ namespace BTCPayServer.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return NotFound();
+
+            if (!await _userManager.CheckPasswordWithLockoutAsync(user, model.OldPassword))
+            {
+                ModelState.AddModelError(nameof(model.OldPassword), StringLocalizer["The current password is not correct."].Value);
+                return View(model);
+            }
 
             var changePasswordResult = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
             if (!changePasswordResult.Succeeded)

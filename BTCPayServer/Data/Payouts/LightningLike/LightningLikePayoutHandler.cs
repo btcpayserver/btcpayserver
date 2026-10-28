@@ -37,6 +37,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
         public const string LightningLikePayoutHandlerClearnetNamedClient =
             nameof(LightningLikePayoutHandlerClearnetNamedClient);
+        public const int MaxLNURLResponseSize = 256 * 1024;
         private readonly IHttpClientFactory _httpClientFactory;
 
         public LightningLikePayoutHandler(

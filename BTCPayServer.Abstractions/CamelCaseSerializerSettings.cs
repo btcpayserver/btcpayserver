@@ -8,7 +8,8 @@ namespace BTCPayServer.Abstractions
         {
             Settings = new JsonSerializerSettings()
             {
-                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                MetadataPropertyHandling = MetadataPropertyHandling.Ignore
             };
             Serializer = JsonSerializer.Create(Settings);
         }

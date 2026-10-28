@@ -10,6 +10,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Security;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Views.UIStoreMembership;
@@ -357,6 +358,10 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             var update = request ?? new UpdateCreditRequest();
             if (update.Description?.Length > MaxCreditDescriptionLength)
                 ModelState.AddModelError(nameof(update.Description), $"Description must be at most {MaxCreditDescriptionLength} characters");
+            if (update.Credit is < 0m or > GreenfieldConstants.MaxAmount)
+                ModelState.AddModelError(nameof(update.Credit), $"Credit must be between 0 and {GreenfieldConstants.MaxAmount}");
+            if (update.Charge is < 0m or > GreenfieldConstants.MaxAmount)
+                ModelState.AddModelError(nameof(update.Charge), $"Charge must be between 0 and {GreenfieldConstants.MaxAmount}");
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
             var subscriber = await ctx.Subscribers.GetBySelector(offeringId, customerSelector, storeId);
@@ -373,7 +378,8 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 AllowOverdraft = update.AllowOverdraft
             });
             if (newTotal is null)
-                return this.CreateAPIError(400, "overdraft", "The subscriber's balance would be overdrawn. Use allowOverdraft to allow this.");
+                return this.CreateAPIError(400, update.AllowOverdraft ? "balance-limit" : "overdraft",
+                    "The subscriber's balance would exceed the permitted overdraft or balance limits.");
             ctx.ChangeTracker.Clear();
             return await GetCredit(storeId, offeringId, customerSelector, currency);
         }

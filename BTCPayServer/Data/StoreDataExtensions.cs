@@ -6,6 +6,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
 using NBXplorer;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
@@ -43,7 +44,9 @@ namespace BTCPayServer.Data
         public static StoreBlob GetStoreBlob(this StoreData storeData)
         {
             ArgumentNullException.ThrowIfNull(storeData);
-            var result = storeData.StoreBlob == null ? new StoreBlob() : new Serializer(null).ToObject<StoreBlob>(storeData.StoreBlob);
+            var serializer = new Serializer(null);
+            serializer.Settings.MetadataPropertyHandling = MetadataPropertyHandling.Ignore;
+            var result = storeData.StoreBlob == null ? new StoreBlob() : serializer.ToObject<StoreBlob>(storeData.StoreBlob);
             if (result.PaymentMethodCriteria is null)
                 result.PaymentMethodCriteria = new List<PaymentMethodCriteria>();
             result.PaymentMethodCriteria.RemoveAll(criteria => criteria?.PaymentMethod is null);

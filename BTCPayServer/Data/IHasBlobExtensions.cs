@@ -15,7 +15,8 @@ namespace BTCPayServer.Data
             DefaultSerializerSettings = new JsonSerializerSettings()
             {
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
-                Formatting = Formatting.None
+                Formatting = Formatting.None,
+                MetadataPropertyHandling = MetadataPropertyHandling.Ignore
             };
             NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(DefaultSerializerSettings);
             DefaultSerializer = JsonSerializer.CreateDefault(DefaultSerializerSettings);

@@ -6,8 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error deserializing form config:', err)
         }
     }
-    const $config = document.getElementById('FormConfig')
-    let config = parseConfig($config.value) || {}
+    let config = parseConfig(initialConfig) || {}
     
     const specialFieldTypeOptions = ['fieldset', 'textarea', 'select', 'mirror']
     const inputFieldTypeOptions = ['text', 'number', 'password', 'email', 'url', 'tel', 'date', 'datetime-local', 'color', 'checkbox', 'hidden']

@@ -193,6 +193,9 @@
     <script src="~/vendor/vue-sanitize-directive/vue-sanitize-directive.umd.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-sortable/sortable.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-sortable/vue-sortable.js" asp-append-version="true"></script>
+    <script>
+        var initialConfig = @Safe.Json(Model.FormConfig);
+    </script>
     <script src="~/js/form-editor.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
 }
@@ -275,8 +278,8 @@
             </div>
             <div class="tab-pane fade" id="CodeTabPane" role="tabpanel" aria-labelledby="CodeTabButton" tabindex="0">
                 <label asp-for="FormConfig" class="form-label" data-required text-translate="true">Form JSON</label>
-                <textarea asp-for="FormConfig" class="form-control font-monospace" style="font-size:.85rem" rows="21" cols="21" v-model="configJSON" v-on:change="updateFromJSON"></textarea>
-                <span asp-validation-for="FormConfig" class="text-danger"></span>
+                <textarea id="FormConfig" name="FormConfig" class="form-control font-monospace" style="font-size:.85rem" rows="21" cols="21" v-model="configJSON" v-on:change="updateFromJSON"></textarea>
+                <span asp-validation-for="FormConfig" class="text-danger" v-pre></span>
             </div>
         </div>
     </div>

@@ -462,7 +462,7 @@ retry:
             }
             else
             {
-                ctx.Apps.Update(app);
+                ctx.Entry(app).State = EntityState.Modified;
                 ctx.Entry(app).Property(data => data.Created).IsModified = false;
                 ctx.Entry(app).Property(data => data.Id).IsModified = false;
                 ctx.Entry(app).Property(data => data.AppType).IsModified = false;

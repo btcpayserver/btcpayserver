@@ -697,6 +697,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return NotFound();
 
             vm.Id = app.Id;
+            vm.StoreId = app.StoreDataId;
             if (!ModelState.IsValid)
                 return View("/Plugins/PointOfSale/Views/UpdatePointOfSale.cshtml", vm);
 

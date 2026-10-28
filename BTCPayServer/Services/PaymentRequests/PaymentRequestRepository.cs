@@ -48,7 +48,7 @@ namespace BTCPayServer.Services.PaymentRequests
             }
             else
             {
-                context.PaymentRequests.Update(entity);
+                context.Entry(entity).State = EntityState.Modified;
             }
 
             await context.SaveChangesAsync();

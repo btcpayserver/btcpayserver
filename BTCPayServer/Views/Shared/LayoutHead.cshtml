@@ -10,7 +10,9 @@
     var isBackend = store != null && storeBranding == null;
     if (isBackend && storeBlob.ApplyBrandColorToBackend)
     {
-        storeBranding = await StoreBrandingViewModel.CreateAsync(Context.Request, UriResolver, storeBlob);
+        var backendBranding = await StoreBrandingViewModel.CreateAsync(Context.Request, UriResolver, storeBlob);
+        backendBranding.CssUrl = null;
+        storeBranding = backendBranding;
     }
 }
 <meta charset="utf-8" />

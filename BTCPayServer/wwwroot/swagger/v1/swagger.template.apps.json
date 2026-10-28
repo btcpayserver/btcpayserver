@@ -617,8 +617,8 @@
                     "Apps"
                 ],
                 "operationId": "Apps_GetAllApps",
-                "summary": "Get basic app data for all apps for all stores for a user",
-                "description": "Returns basic app data for all apps for all stores",
+                "summary": "Get basic app data for all authorized stores",
+                "description": "Returns basic app data for apps in stores where the caller has the `btcpay.store.canmodifystoresettings` permission. Store-scoped API keys only return apps from their authorized stores.",
                 "responses": {
                     "200": {
                         "description": "Array of basic app data object",

@@ -54,6 +54,7 @@ namespace BTCPayServer.Controllers
         private readonly UriResolver _uriResolver;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly StoreLabelRepository _storeLabelRepository;
+        private readonly IRateLimitService _rateLimitService;
 
 
         public FormDataService FormDataService { get; }
@@ -75,7 +76,8 @@ namespace BTCPayServer.Controllers
             ViewLocalizer viewLocalizer,
             ApplicationDbContextFactory dbContextFactory,
             BTCPayNetworkProvider networkProvider,
-            StoreLabelRepository storeLabelRepository)
+            StoreLabelRepository storeLabelRepository,
+            IRateLimitService rateLimitService)
         {
             _InvoiceController = invoiceController;
             _handlers = handlers;
@@ -92,6 +94,7 @@ namespace BTCPayServer.Controllers
             ViewLocalizer = viewLocalizer;
             _networkProvider = networkProvider;
             _storeLabelRepository = storeLabelRepository;
+            _rateLimitService = rateLimitService;
         }
 
         [HttpGet("/stores/{storeId}/payment-requests")]
@@ -412,10 +415,13 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}/pay")]
         [AllowAnonymous]
-        [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> PayPaymentRequest(string payReqId, bool redirectToInvoice = true,
             decimal? amount = null, CancellationToken cancellationToken = default)
         {
+            // Throttled here rather than with a filter, as PaymentRequestHub.Pay calls this action directly
+            if (await Throttle(cancellationToken))
+                return new TooManyRequestsResult(ZoneLimits.PublicInvoices);
+
             if (amount.HasValue && amount.Value <= 0)
             {
                 return BadRequest(StringLocalizer["Please provide an amount greater than 0"]);
@@ -648,6 +654,10 @@ namespace BTCPayServer.Controllers
         }
 
         private string GetUserId() => User.GetIdOrNull();
+
+        private async Task<bool> Throttle(CancellationToken cancellationToken) =>
+            HttpContext.Connection is { RemoteIpAddress: { } addr } &&
+            !await _rateLimitService.Throttle(ZoneLimits.PublicInvoices, addr.ToString(), cancellationToken);
 
         private PaymentRequestData GetCurrentPaymentRequest(string payReqId = null) =>
             HttpContext.GetPaymentRequestDataOrNull() is {} res

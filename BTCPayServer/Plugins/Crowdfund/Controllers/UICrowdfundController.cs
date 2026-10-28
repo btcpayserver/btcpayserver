@@ -50,7 +50,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         FormDataService formDataService,
         IStringLocalizer stringLocalizer,
         CrowdfundAppType appType,
-        Safe safe)
+        Safe safe,
+        IRateLimitService rateLimitService)
         : Controller
     {
         public FormDataService FormDataService { get; } = formDataService;
@@ -94,9 +95,12 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraint(CrowdfundAppType.AppType)]
-        [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, string formResponse = null, CancellationToken cancellationToken = default)
         {
+            // Throttled here rather than with a filter, as AppHub.CreateInvoice and CrowdfundFormSubmit call this action directly
+            if (await Throttle(cancellationToken))
+                return new TooManyRequestsResult(ZoneLimits.PublicInvoices);
+
             var app = await appService.GetApp(appId, CrowdfundAppType.AppType, true);
 
             if (app == null)
@@ -582,6 +586,10 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         private AppData GetCurrentApp() => HttpContext.GetAppDataOrNull();
 
         private string GetUserId() => User.GetIdOrNull();
+
+        private async Task<bool> Throttle(CancellationToken cancellationToken) =>
+            HttpContext.Connection is { RemoteIpAddress: { } addr } &&
+            !await rateLimitService.Throttle(ZoneLimits.PublicInvoices, addr.ToString(), cancellationToken);
 
         private async Task<ViewCrowdfundViewModel> GetAppInfo(string appId)
         {

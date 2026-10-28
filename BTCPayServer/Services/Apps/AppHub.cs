@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.SignalR;
+using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Services.Apps
 {
@@ -52,6 +53,9 @@ namespace BTCPayServer.Services.Apps
                         break;
                     case ObjectResult objectResult:
                         await Clients.Caller.SendCoreAsync(InvoiceError, new[] { objectResult.Value });
+                        break;
+                    case TooManyRequestsResult:
+                        await Clients.Caller.SendCoreAsync(InvoiceError, new object[] { "Too many requests" });
                         break;
                     default:
                         await Clients.Caller.SendCoreAsync(InvoiceError, Array.Empty<object>());

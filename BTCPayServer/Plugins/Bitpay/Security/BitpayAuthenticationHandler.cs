@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitpayClient.Extensions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 
 namespace BTCPayServer.Plugins.Bitpay.Security
@@ -44,14 +46,14 @@ namespace BTCPayServer.Plugins.Bitpay.Security
             Context.Request.HttpContext.TryGetBitpayAuth(out var bitpayAuth);
             if (!string.IsNullOrEmpty(bitpayAuth.Signature) && !string.IsNullOrEmpty(bitpayAuth.Id))
             {
-                var sin = await CheckBitId(Context.Request.HttpContext, bitpayAuth.Signature, bitpayAuth.Id);
-                if (sin == null)
+                var claims = await CheckBitId(Context.Request.HttpContext, bitpayAuth.Signature, bitpayAuth.Id);
+                if (claims == null)
                     return Fail("BitId authentication failed");
-                return Success(BitpayClaims.SIN, sin, BitpayAuthenticationTypes.SinAuthentication);
+                return Success(claims, BitpayAuthenticationTypes.SinAuthentication);
             }
             else
             {
-                return Success(null, null, BitpayAuthenticationTypes.Anonymous);
+                return Success(new List<Claim>(), BitpayAuthenticationTypes.Anonymous);
             }
         }
 
@@ -61,15 +63,12 @@ namespace BTCPayServer.Plugins.Bitpay.Security
             return AuthenticateResult.Fail(reason);
         }
 
-        private AuthenticateResult Success(string claimType, string claimValue, string authenticationType)
+        private AuthenticateResult Success(List<Claim> claims, string authenticationType)
         {
-            List<Claim> claims = new List<Claim>();
-            if (claimType != null)
-                claims.Add(new Claim(claimType, claimValue));
             return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(claims, authenticationType)), authenticationType));
         }
 
-        private async Task<string> CheckBitId(HttpContext httpContext, string sig, string id)
+        private async Task<List<Claim>> CheckBitId(HttpContext httpContext, string sig, string id)
         {
             if (httpContext.Request.ContentLength > MaxBitIdBodySize)
                 return null;
@@ -97,11 +96,29 @@ namespace BTCPayServer.Plugins.Bitpay.Security
                 var key = new PubKey(id);
                 if (BitIdExtensions.CheckBitIDSignature(key, sig, url, body))
                 {
-                    return key.GetBitIDSIN();
+                    List<Claim> claims = new List<Claim>();
+                    claims.Add(new Claim(BitpayClaims.SIN, key.GetBitIDSIN()));
+                    if (GetToken(httpContext.Request, body) is { } token)
+                        claims.Add(new Claim(BitpayClaims.Token, token));
+                    return claims;
                 }
             }
             catch { }
             return null;
+        }
+
+        private static string GetToken(HttpRequest request, string body)
+        {
+            var token = request.Query["token"].FirstOrDefault();
+            if (string.IsNullOrEmpty(token) && HttpMethods.IsPost(request.Method) && !string.IsNullOrEmpty(body))
+            {
+                try
+                {
+                    token = JObject.Parse(body).GetValue("token", StringComparison.OrdinalIgnoreCase)?.Value<string>();
+                }
+                catch { }
+            }
+            return string.IsNullOrEmpty(token) ? null : token;
         }
     }
 }

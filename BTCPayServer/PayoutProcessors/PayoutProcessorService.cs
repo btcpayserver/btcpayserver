@@ -108,6 +108,10 @@ public class PayoutProcessorService : EventHostedServiceBase
     {
 
         await using var context = _applicationDbContextFactory.CreateContext();
+        data.Id = await context.PayoutProcessors
+            .Where(p => p.StoreId == data.StoreId && p.Processor == data.Processor && p.PayoutMethodId == data.PayoutMethodId)
+            .Select(p => p.Id)
+            .FirstOrDefaultAsync();
         if (string.IsNullOrEmpty(data.Id))
         {
             await context.AddAsync(data);

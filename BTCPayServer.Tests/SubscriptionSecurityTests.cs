@@ -30,6 +30,42 @@ public class SubscriptionSecurityTests
         Assert.InRange(unused.Value, 0m, subscriber.PaidAmount!.Value);
     }
 
+    [Fact]
+    public void RenewalPaidDuringGracePeriodDoesNotRefundGraceDays()
+    {
+        var now = new DateTimeOffset(2026, 10, 22, 0, 0, 0, TimeSpan.Zero);
+        var periodEnd = now.AddDays(-14);
+        var plan = new PlanData
+        {
+            Price = 31m,
+            Currency = "USD",
+            RecurringType = PlanData.RecurringInterval.Monthly,
+            GracePeriodDays = 15,
+            Offering = new OfferingData { DefaultPaymentRemindersDays = 3 }
+        };
+        var subscriber = new SubscriberData
+        {
+            Plan = plan,
+            PlanStarted = periodEnd.AddMonths(-1),
+            PeriodEnd = periodEnd,
+            GracePeriodEnd = periodEnd.AddDays(plan.GracePeriodDays),
+            PaidAmount = plan.Price
+        };
+        Assert.Equal(SubscriberData.PhaseTypes.Grace, subscriber.GetExpectedPhase(now));
+
+        subscriber.StartNextPlan(now);
+
+        Assert.Equal(periodEnd, subscriber.PlanStarted);
+        Assert.Equal(periodEnd.AddMonths(1), subscriber.PeriodEnd);
+        Assert.Equal(17m, subscriber.GetUnusedPeriodAmount(now)!.Value, 2);
+
+        now = subscriber.GracePeriodEnd!.Value;
+        Assert.Equal(SubscriberData.PhaseTypes.Expired, subscriber.GetExpectedPhase(now));
+        subscriber.StartNextPlan(now);
+        Assert.Equal(now, subscriber.PlanStarted);
+        Assert.Equal(plan.Price, subscriber.GetUnusedPeriodAmount(now));
+    }
+
     [Theory]
     [InlineData(0.0051, 0.0)]
     [InlineData(0.01, 0.01)]

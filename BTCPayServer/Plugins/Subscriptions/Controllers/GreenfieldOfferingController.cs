@@ -478,13 +478,21 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             if (checkout is null)
                 return CheckoutNotFound();
             var model = Mapper.MapPlanCheckout(checkout);
-            if (!checkout.PlanStarted &&
-                !(await CanManageSubscribers(checkout.Plan.Offering.App.StoreDataId)))
+            if (!(await CanManageSubscribers(checkout.Plan.Offering.App.StoreDataId)))
             {
-                model.SuccessRedirectUrl = null;
-                model.RedirectUrl = null;
+                if (!checkout.PlanStarted)
+                {
+                    model.SuccessRedirectUrl = null;
+                    model.RedirectUrl = null;
+                    if (model.Subscriber is not null)
+                        model.Subscriber.Offering.SuccessRedirectUrl = null;
+                }
+                model.Metadata = null;
+                model.InvoiceMetadata = null;
+                model.NewSubscriberMetadata = null;
+                HideMerchantData(model.Plan);
                 if (model.Subscriber is not null)
-                    model.Subscriber.Offering.SuccessRedirectUrl = null;
+                    HideMerchantData(model.Subscriber, [model.Plan.Id]);
             }
             return Ok(model);
         }
@@ -559,6 +567,30 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         private async Task<bool> CanManageSubscribers(string? storeId)
             => (await authorizationService.AuthorizeAsync(User, storeId ?? "???", new PolicyRequirement(SubscriptionsPolicies.CanManageSubscribers))).Succeeded;
 
+        private static void HideMerchantData(SubscriberModel subscriber, IEnumerable<string> otherVisiblePlanIds)
+        {
+            subscriber.Metadata = null;
+            subscriber.Customer.Metadata = null;
+            HideMerchantData(subscriber.Plan);
+            HideMerchantData(subscriber.NextPlan);
+            HideMerchantData(subscriber.ScheduledPlan);
+
+            var visiblePlanIds = otherVisiblePlanIds.Append(subscriber.Plan.Id).Append(subscriber.NextPlan.Id).ToHashSet();
+            var offering = subscriber.Offering;
+            offering.Metadata = null;
+            offering.Plans = offering.Plans?.Where(p => visiblePlanIds.Contains(p.Id)).ToList();
+            offering.Plans?.ForEach(HideMerchantData);
+            offering.Features = offering.Features?.Where(f => offering.Plans?.Any(p => p.Features.Contains(f.Id)) is true).ToList();
+        }
+
+        private static void HideMerchantData(OfferingPlanModel? plan)
+        {
+            if (plan is null)
+                return;
+            plan.MemberCount = 0;
+            plan.Metadata = null;
+        }
+
         [AllowAnonymous]
         [HttpGet("~/api/v1/subscriber-portal/{portalSessionId}")]
         public async Task<IActionResult> GetPortalSession(string portalSessionId)
@@ -567,7 +599,10 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
             var session = await ctx.PortalSessions.GetById(portalSessionId);
             if (session is null)
                 return PortalSessionNotFound();
-            return Ok(Mapper.MapPortalSession(session));
+            var model = Mapper.MapPortalSession(session);
+            if (!(await CanManageSubscribers(session.GetStoreData().Id)))
+                HideMerchantData(model.Subscriber, session.Subscriber.Plan.PlanChanges.Select(p => p.PlanChangeId));
+            return Ok(model);
         }
 
         [AllowAnonymous]

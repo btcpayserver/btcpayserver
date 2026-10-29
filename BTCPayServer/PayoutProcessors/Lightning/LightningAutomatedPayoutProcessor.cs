@@ -73,7 +73,8 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
 		{
 			State = PayoutState.InProgress,
 			PayoutId = payoutData.Id,
-			Proof = null
+			Proof = null,
+            ExpectedState = PayoutState.AwaitingPayment
 		});
 		if (res != MarkPayoutRequest.PayoutPaidResult.Ok)
             return InvalidState(payoutData.Id);

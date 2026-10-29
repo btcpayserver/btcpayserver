@@ -29,6 +29,9 @@ public class EmailSettings
 
     // Conversion functions for mapping to and from the client EmailSettingsData model
 #nullable enable
+    public string? GetPasswordFor(string? server)
+        => string.Equals(Server, server, System.StringComparison.OrdinalIgnoreCase) ? Password : null;
+
     public static EmailSettings FromData(EmailSettingsData data, string? existingPassword)
         => new()
         {

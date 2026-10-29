@@ -67,7 +67,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             var store = HttpContext.GetStoreData();
             var blob = store.GetStoreBlob();
-            var settings = EmailSettings.FromData(request, blob.EmailSettings?.Password);
+            var settings = EmailSettings.FromData(request, blob.EmailSettings?.GetPasswordFor(request.Server));
             blob.EmailSettings = settings;
             if (store.SetStoreBlob(blob))
                 await _storeRepository.UpdateStore(store);

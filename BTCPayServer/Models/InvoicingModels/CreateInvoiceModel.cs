@@ -25,6 +25,7 @@ namespace BTCPayServer.Models.InvoicingModels
         }
 
         [DisplayName("Order Id")]
+        [MaxLength(LengthLimits.MaxOrderIdLength)]
         public string OrderId
         {
             get; set;
@@ -48,6 +49,7 @@ namespace BTCPayServer.Models.InvoicingModels
         }
 
         [MailboxAddress]
+        [MaxLength(LengthLimits.MaxEmailLength)]
         [DisplayName("Buyer Email")]
         public string BuyerEmail
         {

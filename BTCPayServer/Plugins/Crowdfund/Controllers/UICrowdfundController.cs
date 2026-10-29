@@ -114,6 +114,11 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return NotFound("Crowdfund is not currently active");
             }
 
+            if (request.Email?.Length > LengthLimits.MaxEmailLength)
+                return NotFound("Email is too long");
+            if (request.RedirectUrl?.Length > LengthLimits.MaxUrlLength)
+                return NotFound("Redirect URL is too long");
+
             var info = await GetAppInfo(appId);
             if (!isAdmin &&
                 ((settings.StartDate.HasValue && DateTime.UtcNow < settings.StartDate) ||

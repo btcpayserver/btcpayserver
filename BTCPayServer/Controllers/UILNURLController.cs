@@ -328,8 +328,8 @@ namespace BTCPayServer
                 order.AddLine(new(item.Id ?? "", 1, item.Price ?? 0m, item.TaxRate ?? posS?.DefaultTaxRate ?? 0m));
             }
 
-            var summary = order.Calculate();
             var isTopup = item is null or { PriceType: AppItemPriceType.Topup } or { Price: null };
+            var summary = isTopup ? new PoSOrder.OrderSummary() : order.Calculate();
             var receiptData = PosReceiptData.Create(isTopup, item is {} ? new[]{ item } : [], posAppData, order, summary, currencyCode, _displayFormatter);
             var createInvoice = new CreateInvoiceRequest
             {

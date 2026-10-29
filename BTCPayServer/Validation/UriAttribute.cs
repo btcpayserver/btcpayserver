@@ -20,6 +20,7 @@ namespace BTCPayServer.Validation
         {
             var str = value == null ? null : Convert.ToString(value, CultureInfo.InvariantCulture);
             bool valid = string.IsNullOrEmpty(str) ||
+                         str.Length <= LengthLimits.MaxUrlLength &&
                          Uri.TryCreate(str, UriKind.Absolute, out var uri) &&
                           Array.Exists(_allowedSchemes,
                               scheme => scheme.Equals(uri.Scheme, StringComparison.OrdinalIgnoreCase));

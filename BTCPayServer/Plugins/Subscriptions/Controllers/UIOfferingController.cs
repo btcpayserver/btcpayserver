@@ -157,6 +157,14 @@ public partial class UIOfferingController(
                 Html = StringLocalizer["The amount must be at most {0}", GreenfieldConstants.MaxAmount]
             });
         }
+        else if (command is "credit" or "charge" && description?.Length > GreenfieldOfferingController.MaxCreditDescriptionLength)
+        {
+            TempData.SetStatusMessageModel(new()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Error,
+                Html = StringLocalizer["The description must be at most {0} characters", GreenfieldOfferingController.MaxCreditDescriptionLength]
+            });
+        }
         else if (command is "credit" or "charge" && amount is > 0)
         {
             var message = command is "credit"

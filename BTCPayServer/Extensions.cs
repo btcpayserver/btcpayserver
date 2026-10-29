@@ -244,7 +244,7 @@ namespace BTCPayServer
         }
         public static bool IsValidEmail(this string email)
         {
-            if (string.IsNullOrEmpty(email))
+            if (string.IsNullOrEmpty(email) || email.Length > LengthLimits.MaxEmailLength)
             {
                 return false;
             }

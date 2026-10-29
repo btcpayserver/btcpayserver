@@ -976,7 +976,7 @@ namespace BTCPayServer.Services.Invoices
             if (i.MinimumNetDue > 0.0m)
             {
                 accounting.TxRequired++;
-                grossDue += rate * PaymentMethodFee;
+                grossDue += ToInvoiceCurrency(PaymentMethodFee, rate);
             }
             accounting.TotalDue = Coins(grossDue, rate, divisibility);
             accounting.TotalDueSettled = Coins(i.Price + i.GrossSettled - i.NetSettled, rate, divisibility);
@@ -1038,6 +1038,14 @@ namespace BTCPayServer.Services.Invoices
                 v = MaxCoinValue;
             return v;
         }
+
+        internal static decimal ToInvoiceCurrency(decimal value, decimal rate)
+        {
+            var absoluteRate = Math.Abs(rate);
+            if (absoluteRate > 1m && Math.Abs(value) > MaxCoinValue / absoluteRate)
+                return (value < 0m) != (rate < 0m) ? -MaxCoinValue : MaxCoinValue;
+            return Math.Clamp(value * rate, -MaxCoinValue, MaxCoinValue);
+        }
     }
 
     public class PaymentEntity : PaymentBlob
@@ -1093,8 +1101,8 @@ namespace BTCPayServer.Services.Invoices
             InvoicePaidAmount = new Amounts()
             {
                 Currency = InvoiceCurrency,
-                Gross = PaidAmount.Gross * Rate,
-                Net = PaidAmount.Net * Rate
+                Gross = PaymentPrompt.ToInvoiceCurrency(PaidAmount.Gross, Rate),
+                Net = PaymentPrompt.ToInvoiceCurrency(PaidAmount.Net, Rate)
             };
         }
     }

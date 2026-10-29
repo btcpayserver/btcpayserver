@@ -31,10 +31,12 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Logo")]
         public IFormFile LogoFile { get; set; }
+        [MaxLength(LengthLimits.MaxUrlLength)]
         public string LogoUrl { get; set; }
 
         [Display(Name = "Custom CSS")]
         public IFormFile CssFile { get; set; }
+        [MaxLength(LengthLimits.MaxUrlLength)]
         public string CssUrl { get; set; }
 
         public bool Archived { get; set; }

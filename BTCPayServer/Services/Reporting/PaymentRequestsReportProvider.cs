@@ -184,7 +184,7 @@ public class PaymentRequestsReportProvider(
 
                     if (invoice.TryGetRate(payment.Currency, out var rate))
                     {
-                        row.Add(displayFormatter.ToFormattedAmount(rate * payment.Value, invoice.Currency));
+                        row.Add(displayFormatter.ToFormattedAmount(payment.InvoicePaidAmount.Gross, invoice.Currency));
                         row.Add(displayFormatter.ToFormattedAmount(rate, invoice.Currency));
                     }
                     else

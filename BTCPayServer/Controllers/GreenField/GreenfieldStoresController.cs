@@ -345,7 +345,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Website), "Website is not a valid url");
             }
             if (!string.IsNullOrEmpty(request.LogoUrl) &&
-                ((request.LogoUrl != existing.LogoUrl && request.LogoUrl.Length > 2048) ||
+                ((request.LogoUrl != existing.LogoUrl && request.LogoUrl.Length > LengthLimits.MaxUrlLength) ||
                  !Uri.TryCreate(request.LogoUrl, UriKind.Absolute, out _)))
             {
                 ModelState.AddModelError(nameof(request.LogoUrl), "Logo is not a valid url");

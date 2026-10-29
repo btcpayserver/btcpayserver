@@ -37,7 +37,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
     {
         private const int MaxMetadataLength = 64 * 1024;
         private const int MaxFeatures = 100;
-        private const int MaxCreditDescriptionLength = 500;
+        internal const int MaxCreditDescriptionLength = 500;
 
         [HttpGet("~/api/v1/stores/{storeId}/offerings/{offeringId?}")]
         public async Task<IActionResult> GetOffering(string storeId, string? offeringId = null)
@@ -527,8 +527,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 ModelState.AddModelError(nameof(model.PlanId), "PlanId is required");
             if (model.NewSubscriberEmail is not null && model.CustomerSelector is not null)
                 ModelState.AddModelError(nameof(model.NewSubscriberEmail), "If customerSelector is specified, newSubscriberEmail cannot be specified");
-            if (model.NewSubscriberEmail is not null &&
-                (model.NewSubscriberEmail.Length > 254 || !model.NewSubscriberEmail.IsValidEmail()))
+            if (model.NewSubscriberEmail is not null && !model.NewSubscriberEmail.IsValidEmail())
                 ModelState.AddModelError(nameof(model.NewSubscriberEmail), "Invalid email");
             ValidateMetadata(nameof(model.NewSubscriberMetadata), model.NewSubscriberMetadata);
             ValidateMetadata(nameof(model.InvoiceMetadata), model.InvoiceMetadata);

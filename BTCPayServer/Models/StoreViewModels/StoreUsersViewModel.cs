@@ -33,6 +33,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Required]
         [EmailAddress]
+        [MaxLength(LengthLimits.MaxEmailLength)]
         [Display(Name = "Email address")]
         public string Email { get; set; }
         public string StoreId { get; set; }

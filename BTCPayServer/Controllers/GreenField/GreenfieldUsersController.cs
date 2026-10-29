@@ -166,7 +166,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             if (request.Name?.Length > 50)
                 ModelState.AddModelError(nameof(request.Name), "Name is too long");
-            if (request.ImageUrl?.Length > 2048)
+            if (request.ImageUrl?.Length > LengthLimits.MaxUrlLength)
                 ModelState.AddModelError(nameof(request.ImageUrl), "ImageUrl is too long");
 
             bool needUpdate = false;
@@ -328,11 +328,11 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             if (request.Email is null)
                 ModelState.AddModelError(nameof(request.Email), "Email is missing");
-            if (!MailboxAddressValidator.IsMailboxAddress(request.Email))
+            if (request.Email?.Length > LengthLimits.MaxEmailLength || !MailboxAddressValidator.IsMailboxAddress(request.Email))
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
             if (request.Name?.Length > 50)
                 ModelState.AddModelError(nameof(request.Name), "Name is too long");
-            if (request.ImageUrl?.Length > 2048)
+            if (request.ImageUrl?.Length > LengthLimits.MaxUrlLength)
                 ModelState.AddModelError(nameof(request.ImageUrl), "ImageUrl is too long");
 
             if (!ModelState.IsValid)

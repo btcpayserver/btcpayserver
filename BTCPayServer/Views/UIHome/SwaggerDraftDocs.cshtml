@@ -28,6 +28,7 @@
     @*Ignore this, this is for making the test ClickOnAllSideMenus happy*@
     <div class="navbar-brand" style="visibility:collapse;"></div>
     <redoc spec-url="@Url.ActionLink("SwaggerDraft")"></redoc>
-    <script src="https://cdn.jsdelivr.net/npm/redoc@2.0.0-rc.54/bundles/redoc.standalone.js" integrity="sha384-pxWFJkxrlfignEDb+sJ8XrdnJQ+V2bsiRqgPnfmOk1i3KKSubbydbolVZJeKisNY" crossorigin="anonymous"></script>
+    @* Stay on 2.x while Redoc 3.x probes search workers using eval, which violates our CSP. *@
+    <script src="https://cdn.jsdelivr.net/npm/redoc@2.5.4/bundles/redoc.standalone.js" integrity="sha384-w447zOpYfw/1Tv/5AK9NfHTlQIqE3RVR6KY62jCyy9zNDgO64cMwGGP1Fj0zJVf5" crossorigin="anonymous"></script>
 </body>
 </html>

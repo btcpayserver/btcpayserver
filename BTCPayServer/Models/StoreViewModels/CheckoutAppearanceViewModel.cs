@@ -23,7 +23,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public SelectList Languages { get; set; }
 
-        [Display(Name = "Unify on-chain and lightning payment URL/QR code")]
+        [Display(Name = "Unify payment methods into one payment URL/QR code")]
         public bool OnChainWithLnInvoiceFallback { get; set; }
 
         [Display(Name = "Show \"Pay in wallet\" button")]

@@ -187,8 +187,6 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     if (!broadcastResult.Success)
                     {
                         // The node refused the transaction, so nothing has been paid: leave those payouts for the next run
-                        Logs.PayServer.LogWarning(
-                            $"Could not broadcast the transaction of {transfersProcessing.Count} payouts: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}");
                         foreach (var payoutData in transfersProcessing)
                         {
                             payoutData.State = PayoutState.AwaitingPayment;

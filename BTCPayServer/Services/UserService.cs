@@ -292,7 +292,6 @@ namespace BTCPayServer.Services
             }
             catch (DbUpdateException ex)
             {
-                _logger.LogError(ex, "Failed to update {RestrictionType} access restriction for user {Email}", type, user.Email);
                 return new SetDisabledResult.Error([new IdentityError { Description = ex.Message }]);
             }
         }

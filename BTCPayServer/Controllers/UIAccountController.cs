@@ -464,12 +464,15 @@ namespace BTCPayServer.Controllers
             var authenticatorCode = (model?.TwoFactorCode ?? "") .Replace(" ", string.Empty, StringComparison.InvariantCulture)
                 .Replace("-", string.Empty, StringComparison.InvariantCulture);
             var success = await userManager.VerifyTwoFactorTokenAsync(user, signInManager.Options.Tokens.AuthenticatorTokenProvider, authenticatorCode);
+            // A successful guess must also win the concurrency check, or parallel guesses bypass lockout.
+            var attemptResult = success ? await userManager.UpdateAsync(user) : await userManager.AccessFailedAsync(user);
+            if (!attemptResult.Succeeded)
+                return new TooManyRequestsResult(ZoneLimits.Login);
             if (success)
             {
                 return await RedirectLoginSuccess(user, session);
             }
 
-            await userManager.AccessFailedAsync(user);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,

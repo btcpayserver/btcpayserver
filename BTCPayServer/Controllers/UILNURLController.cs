@@ -292,6 +292,8 @@ namespace BTCPayServer
                     break;
                 case PointOfSaleAppType.AppType:
                     posS = app.GetSettings<PointOfSaleSettings>();
+                    if (!string.IsNullOrEmpty(posS.FormId))
+                        return NotFound();
                     currencyCode = posS.Currency;
                     items = AppService.Parse(posS.Template, false);
                     break;

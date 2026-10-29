@@ -36,7 +36,8 @@ namespace BTCPayServer.Data
             var ppBlob = data.PullPaymentData?.GetBlob();
             var payoutBlob = data.GetBlob(jsonSerializerSettings);
             return payoutBlob.Metadata?.TryGetValue("source", StringComparison.InvariantCultureIgnoreCase, out var source) is true
-                ? source.Value<string>()
+                   && source is JValue { Type: JTokenType.String, Value: string sourceValue }
+                ? sourceValue
                 : ppBlob?.Name ?? data.PullPaymentDataId;
         }
 

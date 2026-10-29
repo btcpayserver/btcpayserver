@@ -592,25 +592,20 @@ namespace BTCPayServer.Controllers
 
             foreach (var item in payouts)
             {
-                var ppBlob = item.PullPayment?.GetBlob();
                 var payoutBlob = item.Payout.GetBlob(_jsonSerializerSettings);
                 item.Payout.PullPaymentData = item.PullPayment;
                 string payoutSource = item.Payout.GetPayoutSource(_jsonSerializerSettings);
-                if (payoutBlob.Metadata?.TryGetValue("source", StringComparison.InvariantCultureIgnoreCase,
-                        out var source) is true)
-                {
-                    payoutSource = source.Value<string>();
-                }
-                else
-                {
-                    payoutSource = ppBlob?.Name ?? item.PullPayment?.Id;
-                }
 
                 string payoutSourceLink = null;
                 if (payoutBlob.Metadata?.TryGetValue("sourceLink", StringComparison.InvariantCultureIgnoreCase,
                         out var sourceLink) is true)
                 {
-                    payoutSourceLink = sourceLink.Value<string>();
+                    if (sourceLink is JValue { Type: JTokenType.String, Value: string sourceLinkValue } &&
+                        Uri.TryCreate(sourceLinkValue, UriKind.Absolute, out var sourceLinkUri) &&
+                        sourceLinkUri.Scheme is "http" or "https")
+                    {
+                        payoutSourceLink = sourceLinkUri.AbsoluteUri;
+                    }
                 }
                 else if(item.PullPayment?.Id is not null)
                 {

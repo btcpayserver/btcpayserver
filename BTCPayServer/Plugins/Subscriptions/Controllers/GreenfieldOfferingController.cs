@@ -9,6 +9,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.ModelBinders;
+using BTCPayServer.Plugins.Monetization;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services.Apps;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NicolasDorier.RateLimits;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.Subscriptions.Controllers
@@ -437,7 +439,10 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
 
         [AllowAnonymous]
         [HttpPost("~/api/v1/plan-checkout/{checkoutId}")]
-        public async Task<IActionResult> ProceedPlanCheckout(string checkoutId, [FromQuery] string? email = null)
+        public async Task<IActionResult> ProceedPlanCheckout(string checkoutId,
+            [FromServices] MonetizationSettings monetizationSettings,
+            [FromServices] IRateLimitService rateLimitService,
+            [FromQuery] string? email = null)
         {
             var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
             if (checkout is null)
@@ -454,6 +459,10 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
 
             if (checkout is { NewSubscriber: true, NewSubscriberEmail: null } && email is {})
             {
+                if (checkout.Plan.OfferingId == monetizationSettings.OfferingId &&
+                    !await rateLimitService.Throttle(ZoneLimits.Register, HttpContext.Connection.RemoteIpAddress, HttpContext.RequestAborted))
+                    return new TooManyRequestsResult(ZoneLimits.Register);
+
                 checkout.NewSubscriberEmail = email;
                 await ctx.SaveChangesAsync();
             }

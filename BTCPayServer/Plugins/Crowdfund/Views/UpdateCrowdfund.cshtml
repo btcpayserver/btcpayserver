@@ -139,8 +139,8 @@
                 <div class="form-group mb-0 w-250px">
                     <label asp-for="StartDate" class="form-label"></label>
                     <div class="input-group flex-nowrap">
-                        <input type="datetime-local" asp-for="StartDate"
-                               value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
+                        <input type="text" asp-for="StartDate"
+                               value="@(Model.StartDate?.ToString("o", CultureInfo.InvariantCulture))"
                                class="form-control flatdtpicker"
                                placeholder="@StringLocalizer["No start date has been set"]" />
                         <button class="btn btn-secondary input-group-clear px-3" type="button" title="Clear">
@@ -151,8 +151,8 @@
                 <div class="form-group mb-0 w-250px">
                     <label asp-for="EndDate" class="form-label"></label>
                     <div class="input-group flex-nowrap">
-                        <input type="datetime-local" asp-for="EndDate"
-                               value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
+                        <input type="text" asp-for="EndDate"
+                               value="@(Model.EndDate?.ToString("o", CultureInfo.InvariantCulture))"
                                class="form-control flatdtpicker"
                                placeholder="@StringLocalizer["No end date has been set"]" />
                         <button class="btn btn-secondary input-group-clear px-3" type="button" title="Clear" id="clear_end">

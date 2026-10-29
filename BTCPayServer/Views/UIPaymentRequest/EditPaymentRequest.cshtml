@@ -118,8 +118,8 @@
             <div class="form-group">
                 <label asp-for="ExpiryDate" class="form-label"></label>
                 <div class="input-group ">
-                    <input asp-for="ExpiryDate"
-                           value="@(Model.ExpiryDate?.ToString("u", CultureInfo.InvariantCulture))"
+                    <input type="text" asp-for="ExpiryDate"
+                           value="@(Model.ExpiryDate?.ToString("o", CultureInfo.InvariantCulture))"
                            class="form-control flatdtpicker" min="today" placeholder="@StringLocalizer["No expiry date has been set for this payment request"]" />
                     <button id="ClearExpiryDate" class="btn btn-secondary input-group-clear" type="button" title="@StringLocalizer["Clear"]">
                         <vc:icon symbol="close" />

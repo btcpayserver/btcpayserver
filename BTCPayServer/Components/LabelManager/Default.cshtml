@@ -22,6 +22,11 @@
             excludeTypes = Safe.Json(Model.ExcludeTypes),
             linkedType = Model.LinkedType
         })
+        : Model.LinkedType == WalletObjectData.Types.PaymentRequest
+        ? Url.Action("PaymentRequestLabelsJson", "UIPaymentRequest", new {
+            storeId = Model.StoreId,
+            excludeTypes = Model.ExcludeTypes
+        })
         : Url.Action("StoreLabelsJson", "UIStores", new {
             storeId = Model.StoreId,
             excludeTypes = Safe.Json(Model.ExcludeTypes),

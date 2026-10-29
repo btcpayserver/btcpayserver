@@ -97,7 +97,7 @@ namespace BTCPayServer
                 return Task.FromResult<IActionResult>(Ok());
             }
 
-            return Task.FromResult<IActionResult>(NotFound());
+            return Task.FromResult<IActionResult>(NoContent());
         }
 
         [HttpGet("register-callback")]
@@ -135,7 +135,7 @@ namespace BTCPayServer
         public async Task<IActionResult> LoginCheck()
         {
             var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
-            return _lnurlAuthService.LoginStore.ContainsKey(user?.Id ?? "") ? Ok() : NotFound();
+            return _lnurlAuthService.LoginStore.ContainsKey(user?.Id ?? "") ? Ok() : NoContent();
         }
 
         [HttpGet("login-callback")]

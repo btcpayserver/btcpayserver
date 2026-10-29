@@ -576,6 +576,20 @@ namespace BTCPayServer.Controllers
             return RedirectToAction("GetPaymentRequests", new { storeId = HttpContext.GetStoreData().Id });
         }
 
+        [HttpGet("/stores/{storeId}/payment-requests/labels.json")]
+        public async Task<IActionResult> PaymentRequestLabelsJson(string storeId, bool excludeTypes = true)
+        {
+            var labels = await _storeLabelRepository.GetStoreLabels(storeId, WalletObjectData.Types.PaymentRequest);
+            return Ok(labels
+                .Where(l => !excludeTypes || !WalletObjectData.Types.AllTypes.Contains(l.Label))
+                .Select(l => new WalletLabelModel
+                {
+                    Label = l.Label,
+                    Color = l.Color,
+                    TextColor = ColorPalette.Default.TextColor(l.Color)
+                }));
+        }
+
         [HttpGet("/stores/{storeId}/payment-requests/labels")]
         [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> PaymentRequestLabels(string storeId)

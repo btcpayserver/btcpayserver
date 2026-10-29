@@ -51,7 +51,7 @@
             request.onload  = function() {
               if (request.readyState === 4 && request.status === 200) {
                 setTimeout(check, 1000);
-              } else if (request.readyState === 4 ){
+              } else if (request.readyState === 4 && request.status === 204) {
                   window.location.href = @Safe.Json(Url.Action("CreateComplete"));
               }
             }

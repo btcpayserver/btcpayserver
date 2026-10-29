@@ -898,6 +898,7 @@ public class RolesTests(ITestOutputHelper testOutputHelper) : UnitTestBase(testO
         await s.AssertPageAccess(true, GetStorePath("invoices/create"));
         await s.AssertPageAccess(true, GetStorePath("payment-requests"));
         await s.AssertPageAccess(true, GetStorePath("payment-requests/new"));
+        await Expect(s.Page.Locator("input.label-manager.tomselected")).ToHaveCountAsync(1);
         await s.AssertPageAccess(true, GetStorePath("pull-payments"));
         await s.AssertPageAccess(true, GetStorePath("payouts"));
         await s.AssertPageAccess(false, GetStorePath("onchain/BTC"));

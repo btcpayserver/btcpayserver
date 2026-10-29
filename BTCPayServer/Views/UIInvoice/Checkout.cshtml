@@ -23,15 +23,15 @@
     <link href="~/checkout/checkout.css" asp-append-version="true" rel="stylesheet" />
     @if (!string.IsNullOrEmpty(Model.PaymentSoundUrl))
     {
-        <link rel="preload" href="@Model.PaymentSoundUrl" as="audio" />
+        <link rel="preload" href="@Model.PaymentSoundUrl" as="fetch" crossorigin="anonymous" />
     }
     @if (!string.IsNullOrEmpty(Model.NfcReadSoundUrl))
     {
-        <link rel="preload" href="@Model.NfcReadSoundUrl" as="audio" />
+        <link rel="preload" href="@Model.NfcReadSoundUrl" as="fetch" crossorigin="anonymous" />
     }
     @if (!string.IsNullOrEmpty(Model.ErrorSoundUrl))
     {
-        <link rel="preload" href="@Model.ErrorSoundUrl" as="audio" />
+        <link rel="preload" href="@Model.ErrorSoundUrl" as="fetch" crossorigin="anonymous" />
     }
 </head>
 <body class="min-vh-100">

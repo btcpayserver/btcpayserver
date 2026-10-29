@@ -251,6 +251,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (customAmount < 0)
                 customAmount = 0;
 
+            if (email?.Length > LengthLimits.MaxEmailLength ||
+                orderId?.Length > LengthLimits.MaxOrderIdLength ||
+                redirectUrl?.Length > LengthLimits.MaxUrlLength)
+                return Error(StringLocalizer["The order details are too long"]);
+
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
 
@@ -397,9 +402,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     break;
             }
 
-            var summary = order.Calculate();
             var isTopup = currentView == PosViewType.Static &&
-                          selectedChoices is [{ PriceType: AppItemPriceType.Topup }];
+                          selectedChoices is [{ PriceType: AppItemPriceType.Topup }] &&
+                          order.ItemLines is [{ Count: 1 }];
+            var summary = isTopup ? new PoSOrder.OrderSummary() : order.Calculate();
 
             var receiptData = PosReceiptData.Create(isTopup, selectedChoices, jposData, order, summary, settings.Currency, _displayFormatter);
             if (!isTopup && summary.PriceTaxIncludedWithTips <= 0m && settings.DisableZeroAmountInvoice is true)

@@ -153,7 +153,7 @@ public class UISubscriberPortalController(
         return View(vm);
     }
 
-    private static readonly Regex _invoiceIdRegex = new(@"\(Inv: ([^\)]*)\)", RegexOptions.Compiled);
+    private static readonly Regex _invoiceIdRegex = new(@"\(Inv: ([^\)]*)\)", RegexOptions.NonBacktracking);
 
     private string AddInvoiceLink(string desc)
     {

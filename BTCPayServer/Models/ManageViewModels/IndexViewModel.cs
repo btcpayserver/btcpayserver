@@ -20,6 +20,7 @@ namespace BTCPayServer.Models.ManageViewModels
 
         [Display(Name = "Profile Picture")]
         public IFormFile ImageFile { get; set; }
+        [MaxLength(LengthLimits.MaxUrlLength)]
         public string ImageUrl { get; set; }
 
         [Display(Name = "Allow Basic authentication for Greenfield API")]

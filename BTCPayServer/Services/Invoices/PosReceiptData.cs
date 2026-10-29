@@ -107,6 +107,17 @@ public class PosReceiptData
             jposData.UpdateFrom(summary);
             receiptData.UpdateTotals(jposData, order, summary, currency, displayFormatter);
         }
+        else
+        {
+            jposData.UpdateFrom(new PoSOrder.OrderSummary());
+            jposData.Amounts = null;
+            jposData.CustomAmount = jposData.DiscountPercentage = jposData.TipPercentage = 0m;
+            foreach (var cartItem in jposData.Cart ?? [])
+            {
+                cartItem.Price = 0m;
+                cartItem.Count = 1;
+            }
+        }
         receiptData.UpdateFromCart(choices, jposData, currency, displayFormatter);
         return receiptData;
     }

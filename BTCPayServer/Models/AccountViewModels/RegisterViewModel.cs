@@ -6,6 +6,7 @@ namespace BTCPayServer.Models.AccountViewModels
     {
         [Required]
         [EmailAddress]
+        [MaxLength(LengthLimits.MaxEmailLength)]
         [Display(Name = "Email")]
         public string Email { get; set; }
 

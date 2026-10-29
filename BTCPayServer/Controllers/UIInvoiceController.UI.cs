@@ -1164,34 +1164,24 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("/stores/{storeId}/invoices/create")]
-        [HttpGet("invoices/create")]
         [Authorize(Policy = Policies.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        public async Task<IActionResult> CreateInvoice(string? storeId = null)
+        public Task<IActionResult> CreateInvoice()
         {
-            if (string.IsNullOrEmpty(storeId))
-            {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["You need to select a store before creating an invoice."].Value;
-                return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
-            }
-
-            var store = await _StoreRepository.FindStore(storeId);
-            if (store == null)
-                return NotFound();
-
+            var store = HttpContext.GetStoreData();
             if (!store.AnyPaymentMethodAvailable(_handlers))
             {
-                return NoPaymentMethodResult(store.Id);
+                return Task.FromResult(NoPaymentMethodResult(store.Id));
             }
 
             var storeBlob = store.GetStoreBlob();
             var vm = new CreateInvoiceModel
             {
-                StoreId = storeId,
+                StoreId = store.Id,
                 Currency = storeBlob.DefaultCurrency,
                 AvailablePaymentMethods = GetPaymentMethodsSelectList(store)
             };
 
-            return View(vm);
+            return Task.FromResult<IActionResult>(View(vm));
         }
 
         private static string? GetSafeHttpUrl(string? value)
@@ -1202,11 +1192,11 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("/stores/{storeId}/invoices/create")]
-        [HttpPost("invoices/create")]
         [Authorize(Policy = Policies.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> CreateInvoice(CreateInvoiceModel model, CancellationToken cancellationToken)
         {
             var store = HttpContext.GetStoreData();
+            model.StoreId = store.Id;
             if (!store.AnyPaymentMethodAvailable(_handlers))
             {
                 return NoPaymentMethodResult(store.Id);

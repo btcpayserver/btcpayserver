@@ -453,14 +453,26 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 vm.ResetEvery = nameof(CrowdfundResetEvery.Never);
             }
 
-            if (Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery) != CrowdfundResetEvery.Never && !vm.StartDate.HasValue)
+            if (!Enum.TryParse<CrowdfundResetEvery>(vm.ResetEvery, out var resetEvery) || !Enum.IsDefined(resetEvery))
+            {
+                ModelState.AddModelError(nameof(vm.ResetEvery), "Invalid reset period");
+                resetEvery = CrowdfundResetEvery.Never;
+            }
+
+            if (resetEvery != CrowdfundResetEvery.Never && !vm.StartDate.HasValue)
             {
                 ModelState.AddModelError(nameof(vm.StartDate), "A start date is needed when the goal resets every X amount of time");
             }
 
-            if (Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery) != CrowdfundResetEvery.Never && vm.ResetEveryAmount <= 0)
+            if (resetEvery != CrowdfundResetEvery.Never && vm.ResetEveryAmount <= 0)
             {
                 ModelState.AddModelError(nameof(vm.ResetEveryAmount), "You must reset the goal at a minimum of 1");
+            }
+
+            if (resetEvery != CrowdfundResetEvery.Never && vm.StartDate is { } startDate && vm.ResetEveryAmount > 0 &&
+                !CrowdfundSettings.TryGetNextResetDate(startDate, resetEvery, vm.ResetEveryAmount, out _))
+            {
+                ModelState.AddModelError(nameof(vm.ResetEveryAmount), "The reset interval exceeds the supported date range");
             }
 
             if (vm.StartDate != null && vm.EndDate != null && DateTime.Compare((DateTime)vm.StartDate, (DateTime)vm.EndDate) > 0)
@@ -531,7 +543,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 SoundsEnabled = vm.SoundsEnabled,
                 AnimationsEnabled = vm.AnimationsEnabled,
                 ResetEveryAmount = vm.ResetEveryAmount,
-                ResetEvery = Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery),
+                ResetEvery = resetEvery,
                 DisplayPerksValue = vm.DisplayPerksValue,
                 DisplayPerksRanking = vm.DisplayPerksRanking,
                 SortPerksByPopularity = vm.SortPerksByPopularity,

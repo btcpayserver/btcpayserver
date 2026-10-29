@@ -1019,6 +1019,7 @@
                             "resetEvery": {
                                 "type": "string",
                                 "description": "Contribution goal reset frequency",
+                                "enum": ["Never", "Hour", "Day", "Month", "Year", null],
                                 "example": "Day",
                                 "nullable": true
                             },

@@ -122,6 +122,9 @@ namespace BTCPayServer.Plugins.Crowdfund
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
             var resetEvery = settings.StartDate.HasValue ? settings.ResetEvery : Services.Apps.CrowdfundResetEvery.Never;
+            if (settings.StartDate is not { } startDate ||
+                !CrowdfundSettings.TryGetNextResetDate(startDate, resetEvery, settings.ResetEveryAmount, out _))
+                resetEvery = Services.Apps.CrowdfundResetEvery.Never;
             DateTime? lastResetDate = null;
             DateTime? nextResetDate = null;
             if (resetEvery != Services.Apps.CrowdfundResetEvery.Never && settings.StartDate is not null)
@@ -132,21 +135,14 @@ namespace BTCPayServer.Plugins.Crowdfund
                 while (DateTime.UtcNow >= nextResetDate)
                 {
                     lastResetDate = nextResetDate;
-                    switch (resetEvery)
+                    if (!CrowdfundSettings.TryGetNextResetDate(lastResetDate.Value, resetEvery, settings.ResetEveryAmount, out var nextDate))
                     {
-                        case Services.Apps.CrowdfundResetEvery.Hour:
-                            nextResetDate = lastResetDate.Value.AddHours(settings.ResetEveryAmount);
-                            break;
-                        case Services.Apps.CrowdfundResetEvery.Day:
-                            nextResetDate = lastResetDate.Value.AddDays(settings.ResetEveryAmount);
-                            break;
-                        case Services.Apps.CrowdfundResetEvery.Month:
-                            nextResetDate = lastResetDate.Value.AddMonths(settings.ResetEveryAmount);
-                            break;
-                        case Services.Apps.CrowdfundResetEvery.Year:
-                            nextResetDate = lastResetDate.Value.AddYears(settings.ResetEveryAmount);
-                            break;
+                        resetEvery = Services.Apps.CrowdfundResetEvery.Never;
+                        lastResetDate = null;
+                        nextResetDate = null;
+                        break;
                     }
+                    nextResetDate = nextDate;
                 }
             }
 
@@ -211,11 +207,11 @@ namespace BTCPayServer.Plugins.Crowdfund
                 SoundsEnabled = settings.SoundsEnabled,
                 AnimationsEnabled = settings.AnimationsEnabled,
                 ResetEveryAmount = settings.ResetEveryAmount,
-                ResetEvery = Enum.GetName(typeof(Services.Apps.CrowdfundResetEvery), settings.ResetEvery),
+                ResetEvery = Enum.GetName(typeof(Services.Apps.CrowdfundResetEvery), resetEvery),
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 PerkCount = perkCount,
                 PerkValue = perkValue,
-                NeverReset = settings.ResetEvery == Services.Apps.CrowdfundResetEvery.Never,
+                NeverReset = resetEvery == Services.Apps.CrowdfundResetEvery.Never,
                 FormUrl = formUrl,
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,

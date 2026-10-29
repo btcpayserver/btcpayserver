@@ -518,6 +518,7 @@ retry:
                     };
                     if (!int.TryParse(countStr, out var count) || count <= 0 || price < 0)
                         return false;
+                    _ = price * count;
                     cartItems.Add(new AppCartItem { Id = id, Title = title, Count = count, Price = price });
                 }
                 return true;

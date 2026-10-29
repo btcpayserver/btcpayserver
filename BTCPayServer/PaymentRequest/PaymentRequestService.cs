@@ -60,7 +60,7 @@ namespace BTCPayServer.PaymentRequest
 
             if (newStatus is not (PaymentRequestStatus.Expired or PaymentRequestStatus.Completed))
             {
-                var invoices = await _paymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
+                var invoices = await _paymentRequestRepository.GetInvoicesForPaymentRequest(pr);
                 var contributions = _invoiceRepository.GetContributionsByPaymentMethodId(pr.Currency, invoices, true);
 
                 newStatus =
@@ -91,7 +91,7 @@ namespace BTCPayServer.PaymentRequest
         public async Task<ViewPaymentRequestViewModel> AsViewModel(PaymentRequestData pr)
         {
             var blob = pr.GetBlob();
-            var invoices = await _paymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
+            var invoices = await _paymentRequestRepository.GetInvoicesForPaymentRequest(pr);
             var paymentStats = _invoiceRepository.GetContributionsByPaymentMethodId(pr.Currency, invoices, true);
             var amountDue = pr.Amount - paymentStats.Total;
             var pendingInvoice = invoices.OrderByDescending(entity => entity.InvoiceTime)

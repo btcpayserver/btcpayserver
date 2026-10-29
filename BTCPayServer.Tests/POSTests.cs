@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -803,6 +804,12 @@ goodies:
                 await AssertInvoiceAmount(s, "1.50000000 BTC");
             }
 
+            using (var response = await s.Server.PayTester.HttpClient.GetAsync($"BTC/lnurl/pay/app/{appId}/black-tea"))
+                Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            using (var response = await s.Server.PayTester.HttpClient.GetAsync($"apps/{appId}/pos/print"))
+                Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+            await s.Page.GetByLabel("Request customer data on checkout").SelectOptionAsync("");
             await s.Page.FillAsync("#DefaultTaxRate", "10");
             await s.ClickPagePrimary();
 

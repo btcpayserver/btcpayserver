@@ -104,6 +104,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                    _appService.Currencies.GetNumberFormatInfo("USD");
             double step = Math.Pow(10, -numberFormatInfo.CurrencyDecimalDigits);
             viewType ??= settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
+            if (viewType is PosViewType.Print && !string.IsNullOrEmpty(settings.FormId))
+                return NotFound();
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
             var storeBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
@@ -337,15 +339,14 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var storeBlob = store.GetStoreBlob();
             var posFormId = settings.FormId;
 
-            // skip forms feature for JSON requests (from the app)
-            var formData = wantsJson ? null : await FormDataService.GetCheckoutForm(app.StoreDataId, posFormId);
+            var formData = await FormDataService.GetCheckoutForm(app.StoreDataId, posFormId);
             JObject formResponseJObject = null;
             switch (formData)
             {
                 case null:
                     break;
                 case not null:
-                    if (formResponse is null)
+                    if (formResponse is null && !wantsJson)
                     {
                         var vm = new PostRedirectViewModel
                         {
@@ -380,7 +381,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     if (!FormDataService.Validate(form, ModelState))
                     {
                         //someone tried to bypass validation
-                        return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
+                        return wantsJson
+                            ? Error(StringLocalizer["The form data is missing or invalid"].Value)
+                            : RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
                     }
                     formResponseJObject = FormDataService.GetValues(form);
 

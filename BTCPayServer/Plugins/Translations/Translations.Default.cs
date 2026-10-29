@@ -1914,6 +1914,7 @@ namespace BTCPayServer.Plugins.Translations
   "The file needs to be an image": "",
   "The file size should be less than 0.5MB": "",
   "The following methods assume that you already have an existing wallet created and backed up.": "",
+  "The form data is missing or invalid": "",
   "The full node is not synched": "",
   "The full node is synched": "",
   "The hardware wallet requires previous transactions in the PSBT. Please go to your wallet settings and enable \"Include non-witness UTXO in PSBTs": "",

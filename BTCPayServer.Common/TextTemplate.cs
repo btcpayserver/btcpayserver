@@ -10,7 +10,9 @@ namespace BTCPayServer;
 public class TextTemplate(string template)
 {
     public const int MaxUrlLength = 8192;
+    const int MaxPathLength = 256;
     static readonly Regex _interpolationRegex = new Regex(@"\{([^{}]+)\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    static readonly Regex _pathRegex = new Regex("""^\$(?:\.[^\s.*()\[\]'"]+|\[[0-9]+\]|\['(?:[^'\\]|\\.)*'\]|\["(?:[^"\\]|\\.)*"\])*\s*\z""", RegexOptions.NonBacktracking | RegexOptions.CultureInvariant);
 
     public static TextTemplate CreateUrlTemplate(string template) =>
         new TextTemplate(template)
@@ -61,9 +63,13 @@ public class TextTemplate(string template)
     {
         var path = match.Groups[1].Value;
         var initial = path;
+        if (path.Length > MaxPathLength)
+            return RenderFallback(initial, ParsingErrorReplacement);
         if (!path.StartsWith("$."))
             path = $"$.{path}";
         path = path.ToLowerInvariant();
+        if (!_pathRegex.IsMatch(path))
+            return RenderFallback(initial, ParsingErrorReplacement);
         try
         {
             var token = model.SelectToken(path);

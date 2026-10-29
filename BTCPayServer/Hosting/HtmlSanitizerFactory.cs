@@ -7,6 +7,23 @@ namespace BTCPayServer.Hosting;
 
 internal static class HtmlSanitizerFactory
 {
+    private static readonly string[] FormTags =
+    [
+        "button",
+        "datalist",
+        "fieldset",
+        "form",
+        "input",
+        "keygen",
+        "label",
+        "legend",
+        "optgroup",
+        "option",
+        "output",
+        "select",
+        "textarea"
+    ];
+
     private static readonly HashSet<string> AllowedIframePermissions = new(StringComparer.OrdinalIgnoreCase)
     {
         "accelerometer",
@@ -31,12 +48,28 @@ internal static class HtmlSanitizerFactory
         "v.qq.com",
         "rumble.com",
         "twitter.com",
-        "syndication.twitter.com"
+        "syndication.twitter.com",
+        "www.tiktok.com",
+        "www.linkedin.com",
+        "embed.reddit.com",
+        "www.redditmedia.com",
+        "player.twitch.tv",
+        "clips.twitch.tv",
+        "open.spotify.com",
+        "w.soundcloud.com",
+        "embed.bsky.app",
+        "www.threads.net",
+        "www.threads.com",
+        "www.pinterest.com",
+        "assets.pinterest.com",
+        "discord.com",
+        "www.snapchat.com"
     };
 
     internal static HtmlSanitizer Create()
     {
         var htmlSanitizer = new HtmlSanitizer();
+        RemoveFormTags(htmlSanitizer);
         htmlSanitizer.AllowedTags.Remove("img");
         htmlSanitizer.AllowedTags.Remove("iframe");
         htmlSanitizer.AllowedTags.Remove("style");
@@ -52,6 +85,7 @@ internal static class HtmlSanitizerFactory
     internal static HtmlSanitizer CreateRichText()
     {
         var htmlSanitizer = new HtmlSanitizer();
+        RemoveFormTags(htmlSanitizer);
 
         htmlSanitizer.AllowedCssProperties.Clear();
         foreach (var property in new[]
@@ -124,7 +158,6 @@ internal static class HtmlSanitizerFactory
 
         htmlSanitizer.AllowedAttributes.Add("class");
         htmlSanitizer.AllowedTags.Add("iframe");
-        htmlSanitizer.AllowedTags.Add("style");
         htmlSanitizer.AllowedTags.Add("video");
         htmlSanitizer.AllowedAttributes.Add("allow");
         htmlSanitizer.AllowedAttributes.Add("controls");
@@ -136,6 +169,14 @@ internal static class HtmlSanitizerFactory
         htmlSanitizer.AllowedSchemes.Add("bitcoin");
         htmlSanitizer.AllowedSchemes.Add("lightning");
         return htmlSanitizer;
+    }
+
+    private static void RemoveFormTags(HtmlSanitizer sanitizer)
+    {
+        foreach (var tag in FormTags)
+        {
+            sanitizer.AllowedTags.Remove(tag);
+        }
     }
 
     private static bool IsTrustedIframeSource(string source) =>

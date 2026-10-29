@@ -212,9 +212,10 @@ namespace BTCPayServer.Tests
 
                 return locator.First;
             }
-            catch (TimeoutException)
+            catch (TimeoutException ex)
             {
-                throw new TimeoutException($"Unable to find {className}");
+                var messages = await Page.Locator(".alert, .validation-summary-errors").AllTextContentsAsync();
+                throw new TimeoutException($"Unable to find {className} at {Page.Url}\nPage messages: {string.Join("\n", messages)}", ex);
             }
         }
 

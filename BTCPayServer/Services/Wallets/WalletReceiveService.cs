@@ -62,20 +62,22 @@ namespace BTCPayServer.Services.Wallets
 
         public async Task<KeyPathInformation> GetOrGenerate(WalletId walletId, bool forceGenerate = false)
         {
-            var existing = Get(walletId);
-            if (existing != null && !forceGenerate)
-            {
-                return existing;
-            }
-
             var wallet = _btcPayWalletProvider.GetWallet(walletId.CryptoCode);
             var store = await _storeRepository.FindStore(walletId.StoreId);
             var derivationScheme = store?.GetDerivationSchemeSettings(_handlers, walletId.CryptoCode);
             if (wallet is null || derivationScheme is null)
             {
+                Remove(walletId);
                 return null;
             }
 
+            var existing = Get(walletId);
+            if (existing != null && !forceGenerate && existing.DerivationStrategy == derivationScheme.AccountDerivation)
+            {
+                return existing;
+            }
+
+            Remove(walletId);
             var reserve = (await wallet.ReserveAddressAsync(walletId.StoreId, derivationScheme.AccountDerivation, "receive"));
             Set(walletId, reserve);
             return reserve;
@@ -88,12 +90,7 @@ namespace BTCPayServer.Services.Wallets
 
         public KeyPathInformation Get(WalletId walletId)
         {
-            if (_walletReceiveState.ContainsKey(walletId))
-            {
-                return _walletReceiveState[walletId];
-            }
-
-            return null;
+            return _walletReceiveState.TryGetValue(walletId, out var existing) ? existing : null;
         }
 
         private void Set(WalletId walletId, KeyPathInformation information)

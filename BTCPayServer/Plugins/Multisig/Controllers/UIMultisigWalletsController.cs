@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Payments;
 using BTCPayServer.Plugins.Multisig.Models;
 using BTCPayServer.Plugins.Multisig.Services;
@@ -36,6 +37,7 @@ public class UIMultisigWalletsController(
     MultisigNotificationService multisigNotificationService,
     CallbackGenerator callbackGenerator,
     PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
+    EventAggregator eventAggregator,
     IStringLocalizer stringLocalizer) : Controller
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
@@ -212,6 +214,7 @@ public class UIMultisigWalletsController(
         storeBlob.SetExcluded(paymentMethodId, false);
         store.SetStoreBlob(storeBlob);
         await storeRepository.UpdateStore(store);
+        eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(store.Id, network.CryptoCode) });
 
         var finalizedPendingSetting = await multisigService.GetPendingMultisigSetupContext(vm.StoreId, vm.MultisigRequestId);
         if (finalizedPendingSetting is not null)

@@ -47,7 +47,7 @@ public abstract class UIEmailControllerBase(IStringLocalizer stringLocalizer) : 
                 if (model.PasswordSet)
                 {
                     var settings = await GetEmailSettings(ctx);
-                    model.Settings.Password = settings.Password;
+                    model.Settings.Password = settings.GetPasswordFor(model.Settings.Server);
                 }
 
                 model.Settings.Validate("Settings.", ModelState);
@@ -113,8 +113,8 @@ public abstract class UIEmailControllerBase(IStringLocalizer stringLocalizer) : 
             }
 
             var oldSettings = await GetEmailSettings(ctx);
-            if (!string.IsNullOrEmpty(oldSettings.Password))
-                model.Settings.Password = oldSettings.Password;
+            if (oldSettings.GetPasswordFor(model.Settings.Server) is { Length: > 0 } password)
+                model.Settings.Password = password;
 
             await SaveEmailSettings(ctx, model.Settings, model);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings saved"].Value;

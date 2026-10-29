@@ -604,7 +604,7 @@ public class UIStoreOnChainWalletsController(
                 var successMessage = "Wallet settings successfully updated.";
                 if (enabledChanged)
                 {
-                    eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
+                    eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, network.CryptoCode) });
                     successMessage += $" {vm.CryptoCode} on-chain payments are now {(vm.Enabled ? "enabled" : "disabled")} for this store.";
                 }
 
@@ -739,7 +739,7 @@ public class UIStoreOnChainWalletsController(
         store.SetPaymentMethodConfig(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), null);
 
         await storeRepo.UpdateStore(store);
-        eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(storeId, cryptoCode) });
+        eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(store.Id, network.CryptoCode) });
 
         TempData[WellKnownTempData.SuccessMessage] =
             $"On-Chain payment for {network.CryptoCode} has been removed.";

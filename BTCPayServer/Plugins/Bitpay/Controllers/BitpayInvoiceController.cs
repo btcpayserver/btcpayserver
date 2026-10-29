@@ -187,7 +187,9 @@ public class BitpayInvoiceController : ControllerBase
         entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
         entity.RedirectAutomatically =
             invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
-        entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
+        entity.SpeedPolicy = User.Identity?.AuthenticationType == Security.BitpayAuthenticationTypes.Anonymous
+            ? store.SpeedPolicy
+            : ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
         IPaymentFilter excludeFilter = null;
         if (invoice.PaymentCurrencies?.Any() is true)

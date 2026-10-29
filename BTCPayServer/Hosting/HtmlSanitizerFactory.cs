@@ -69,6 +69,7 @@ internal static class HtmlSanitizerFactory
     internal static HtmlSanitizer Create()
     {
         var htmlSanitizer = new HtmlSanitizer();
+        htmlSanitizer.AllowDataAttributes = false;
         RemoveFormTags(htmlSanitizer);
         htmlSanitizer.AllowedTags.Remove("img");
         htmlSanitizer.AllowedTags.Remove("iframe");
@@ -85,6 +86,7 @@ internal static class HtmlSanitizerFactory
     internal static HtmlSanitizer CreateRichText()
     {
         var htmlSanitizer = new HtmlSanitizer();
+        htmlSanitizer.AllowDataAttributes = false;
         RemoveFormTags(htmlSanitizer);
 
         htmlSanitizer.AllowedCssProperties.Clear();

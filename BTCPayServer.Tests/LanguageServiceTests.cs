@@ -802,8 +802,9 @@ namespace BTCPayServer.Tests
 
             await tester.GoToProfile();
             await Expect(tester.Page.Locator("body")).ToContainTextAsync("Update your account");
-            await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English");
-            await Expect(tester.Page.Locator("#LangTranslation option[value='']")).ToHaveCountAsync(0);
+            // CHANGED: a user with no saved choice now starts on "Server default"
+            await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("");
+            await Expect(tester.Page.Locator("#LangTranslation option[value='']")).ToHaveCountAsync(1);
 
             await tester.Page.Locator("#LangTranslation").SelectOptionAsync("English (Custom)");
             await tester.ClickPagePrimary();
@@ -838,6 +839,21 @@ namespace BTCPayServer.Tests
             await tester.GoToProfile();
             await Expect(tester.Page.Locator("body")).ToContainTextAsync("Update your account");
             await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English");
+
+            await tester.Page.Locator("#LangTranslation").SelectOptionAsync(new SelectOptionValue { Value = "" });
+            await tester.ClickPagePrimary();
+            await Expect(tester.Page.Locator("body")).ToContainTextAsync("Tweak your profile");
+            await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("");
+
+            await tester.Page.Locator("#LangTranslation").SelectOptionAsync("English (Custom)");
+            await tester.ClickPagePrimary();
+            await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English (Custom)");
+
+            await tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            await tester.Page.Locator("#Select-English").ClickAsync();
+            await tester.GoToProfile();
+            await Expect(tester.Page.Locator("body")).ToContainTextAsync("Tweak your profile");
+            await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English (Custom)");
         }
     }
 }

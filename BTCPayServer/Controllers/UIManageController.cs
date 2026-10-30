@@ -193,8 +193,6 @@ namespace BTCPayServer.Controllers
                 blob.Name = model.Name;
                 needUpdate = true;
             }
-            if (blob.LangTranslation is null && langTranslation == _localizer.ServerLanguage)
-                langTranslation = null;
 
             if (blob.LangTranslation != langTranslation)
             {
@@ -251,14 +249,14 @@ namespace BTCPayServer.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendVerificationEmail(IndexViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(nameof(Index), model);
-            }
-
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return NotFound();
+
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(Index), await GetIndexViewModel(user, model));
+            }
 
             var callbackUrl = await _callbackGenerator.ForEmailConfirmation(user);
             _eventAggregator.Publish(new UserEvent.ConfirmationEmailRequested(user, callbackUrl));
@@ -387,9 +385,13 @@ namespace BTCPayServer.Controllers
                 AllowGreenfieldBasicAuth = blob.AllowGreenfieldBasicAuth,
                 LangTranslation = blob.LangTranslation
             };
-            model.LangTranslations = await _localizer.GetTranslationsSelectList();
-            if (!model.LangTranslations.Any(l => l.Value == model.LangTranslation))
-                model.LangTranslation = _localizer.ServerLanguage;
+
+            var translations = (await _localizer.GetTranslationsSelectList()).ToList();
+            translations.Insert(0, new SelectListItem(
+                StringLocalizer["Server default ({0})", _localizer.ServerLanguage].Value, ""));
+            model.LangTranslations = translations;
+            if (string.IsNullOrEmpty(model.LangTranslation) || !translations.Any(l => l.Value == model.LangTranslation))
+                model.LangTranslation = "";
 
             model.ImageUrl = string.IsNullOrEmpty(blob.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl));
             model.EmailConfirmed = user.EmailConfirmed;

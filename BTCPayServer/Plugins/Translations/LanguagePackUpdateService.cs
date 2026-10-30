@@ -70,9 +70,6 @@ namespace BTCPayServer.Plugins.Translations
         private sealed record ManifestSnapshot(LanguageManifestEntry[] Entries, Uri ManifestUri);
 
         private const string ManifestCacheKey = "translations.manifest";
-        private const string ManifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
-        private const string TrustedHost = "raw.githubusercontent.com";
-        private const string TrustedOrgPath = "/btcpayserver/";
         public const string HttpClientName = "BTCPayServer.Plugins.Translations";
         private static readonly TimeSpan CacheLifetime = TimeSpan.FromHours(1);
 
@@ -81,7 +78,7 @@ namespace BTCPayServer.Plugins.Translations
             if (memoryCache.TryGetValue(ManifestCacheKey, out ManifestSnapshot? cached) && cached is not null)
                 return cached;
 
-            var manifestUri = new Uri(ManifestUrl);
+            var manifestUri = new Uri("https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json");
             var root = ParseManifest(await GetTrusted(manifestUri));
             if (!string.IsNullOrEmpty(root.Redirect))
             {
@@ -108,7 +105,9 @@ namespace BTCPayServer.Plugins.Translations
 
         private async Task<byte[]> GetTrusted(Uri uri)
         {
-            if (!IsTrustedUri(uri))
+            if (uri.Scheme != Uri.UriSchemeHttps
+                || !string.Equals(uri.Host, "raw.githubusercontent.com", StringComparison.OrdinalIgnoreCase)
+                || !uri.AbsolutePath.StartsWith("/btcpayserver/", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException($"'{uri}' is outside the trusted repository.");
 
             using var client = httpClientFactory.CreateClient(HttpClientName);
@@ -117,10 +116,6 @@ namespace BTCPayServer.Plugins.Translations
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsByteArrayAsync();
         }
-
-        private static bool IsTrustedUri(Uri uri) => uri.Scheme == Uri.UriSchemeHttps
-            && string.Equals(uri.Host, TrustedHost, StringComparison.OrdinalIgnoreCase)
-            && uri.AbsolutePath.StartsWith(TrustedOrgPath, StringComparison.OrdinalIgnoreCase);
 
         public async Task<LanguageManifestEntry[]> GetManifestLanguages() => (await GetSnapshot()).Entries;
 

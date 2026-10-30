@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -23,7 +24,7 @@ namespace BTCPayServer.Plugins.Translations
             string File,
             string Sha,
             bool Rtl,
-            string? Code, 
+            string? Code,
             string? Bcp47)
         {
             internal static LanguageManifestEntry FromDto(ManifestLanguageDto dto)
@@ -66,7 +67,7 @@ namespace BTCPayServer.Plugins.Translations
             string? Bcp47);
 
         internal record ManifestRootDto(ManifestLanguageDto[]? Languages, string? Redirect);
-        private sealed record ManifestSnapshot(LanguageManifestEntry[] Entries, string BaseUrl);
+        private sealed record ManifestSnapshot(LanguageManifestEntry[] Entries, Uri ManifestUri);
 
         private const string ManifestCacheKey = "translations.manifest";
         private const string ManifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
@@ -84,22 +85,26 @@ namespace BTCPayServer.Plugins.Translations
             var root = ParseManifest(await GetTrusted(manifestUri));
             if (!string.IsNullOrEmpty(root.Redirect))
             {
-                if (!IsTrustedRedirect(root.Redirect, out manifestUri))
-                    throw new InvalidOperationException($"Manifest redirect '{root.Redirect}' is outside the trusted repository.");
+                if (!Uri.TryCreate(root.Redirect, UriKind.Absolute, out manifestUri))
+                    throw new InvalidOperationException($"Manifest redirect '{root.Redirect}' is not an absolute URI.");
 
                 root = ParseManifest(await GetTrusted(manifestUri));
             }
             var entries = root.Languages!.Select(LanguageManifestEntry.FromDto)
                 .Where(e => !string.IsNullOrEmpty(e.Name)).ToArray();
 
-            var snapshot = new ManifestSnapshot(entries, DeriveBaseUrl(manifestUri.AbsoluteUri));
+            var snapshot = new ManifestSnapshot(entries, manifestUri);
             memoryCache.Set(ManifestCacheKey, snapshot, CacheLifetime);
             return snapshot;
         }
 
-        private static ManifestRootDto ParseManifest(byte[] body) =>
-            JsonConvert.DeserializeObject<ManifestRootDto>(Encoding.UTF8.GetString(body)) is { Languages: not null } root
-            ? root : throw new InvalidOperationException("Manifest is missing the 'Languages' array.");
+        private static ManifestRootDto ParseManifest(byte[] body)
+        {
+            using var stream = new MemoryStream(body);
+            using var reader = new StreamReader(stream);
+            return JsonConvert.DeserializeObject<ManifestRootDto>(reader.ReadToEnd()) is { Languages: not null } root
+                ? root : throw new InvalidOperationException("Manifest is missing the 'Languages' array.");
+        }
 
         private async Task<byte[]> GetTrusted(Uri uri)
         {
@@ -113,18 +118,9 @@ namespace BTCPayServer.Plugins.Translations
             return await response.Content.ReadAsByteArrayAsync();
         }
 
-        internal static bool IsTrustedRedirect(string value, out Uri redirect) =>
-            Uri.TryCreate(value, UriKind.Absolute, out redirect!) && IsTrustedUri(redirect);
-
-        internal static bool IsTrustedUri(Uri uri) => uri.Scheme == Uri.UriSchemeHttps
+        private static bool IsTrustedUri(Uri uri) => uri.Scheme == Uri.UriSchemeHttps
             && string.Equals(uri.Host, TrustedHost, StringComparison.OrdinalIgnoreCase)
             && uri.AbsolutePath.StartsWith(TrustedOrgPath, StringComparison.OrdinalIgnoreCase);
-
-        private static string DeriveBaseUrl(string manifestUrl)
-        {
-            var lastSlash = manifestUrl.LastIndexOf('/');
-            return lastSlash < 0 ? manifestUrl : manifestUrl[..(lastSlash + 1)];
-        }
 
         public async Task<LanguageManifestEntry[]> GetManifestLanguages() => (await GetSnapshot()).Entries;
 
@@ -140,7 +136,7 @@ namespace BTCPayServer.Plugins.Translations
             if (string.IsNullOrEmpty(entry.Sha))
                 throw new InvalidOperationException("Manifest entry is missing the 'Sha' field.");
 
-            var translationsBytes = await GetTrusted(new Uri(snapshot.BaseUrl + entry.File, UriKind.Absolute));
+            var translationsBytes = await GetTrusted(new Uri(snapshot.ManifestUri, entry.File));
             var actualSha = Convert.ToHexString(SHA256.HashData(translationsBytes));
             if (!string.Equals(actualSha, entry.Sha, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException(

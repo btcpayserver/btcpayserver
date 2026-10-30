@@ -802,7 +802,6 @@ namespace BTCPayServer.Tests
 
             await tester.GoToProfile();
             await Expect(tester.Page.Locator("body")).ToContainTextAsync("Update your account");
-            // CHANGED: a user with no saved choice now starts on "Server default"
             await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("");
             await Expect(tester.Page.Locator("#LangTranslation option[value='']")).ToHaveCountAsync(1);
 

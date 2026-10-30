@@ -46,6 +46,7 @@
     <PackageReference Include="Newtonsoft.Json.Schema" Version="4.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="10.0.14" />
     <PackageReference Include="xunit.v3" Version="4.0.2" />
+    <PackageReference Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
   <ItemGroup>
     <None Update=".dockerignore">

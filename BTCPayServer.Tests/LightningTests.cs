@@ -971,7 +971,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
 
     [Trait("Integration", "Integration")]
     [Fact]
-    public async Task CanDoLightningInternalNodeMigration()
+    public async Task CanMigratePaymentMethodConfigs()
     {
         using var tester = CreateServerTester(newDb: true);
         tester.ActivateLightning(LightningTestImplementation.CoreLightning);
@@ -980,34 +980,15 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         await acc.GrantAccessAsync(true);
         await acc.CreateStoreAsync();
 
-        // Test if legacy DerivationStrategy column is converted to DerivationStrategies
-        var store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
-        var xpub = "tpubDDmH1briYfZcTDMEc7uMEA5hinzjUTzR9yMC1drxTMeiWyw1VyCqTuzBke6df2sqbfw9QG6wbgTLF5yLjcXsZNaXvJMZLwNEwyvmiFWcLav";
-        var derivation = $"{xpub}-[legacy]";
-        Assert.NotNull(store);
-#pragma warning disable CS0618 // Type or member is obsolete
-        store.DerivationStrategy = derivation;
-
-        await tester.PayTester.StoreRepository.UpdateStore(store);
-        await tester.RestartMigration();
-        store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
-        Assert.NotNull(store);
-        Assert.True(string.IsNullOrEmpty(store.DerivationStrategy));
         var handlers = tester.PayTester.GetService<PaymentMethodHandlerDictionary>();
-        var pmi = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
-        var v = store.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, handlers);
-        Assert.NotNull(v);
-        Assert.Equal(derivation, v.AccountDerivation.ToString());
-        Assert.Equal(derivation, v.AccountOriginal);
-        Assert.Equal(xpub, v.GetFirstAccountKeySettings().AccountKey.ToString());
-
         await acc.RegisterLightningNodeAsync("BTC", LightningTestImplementation.CoreLightning);
-        store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
+        var store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
 
-        pmi = PaymentTypes.LN.GetPaymentMethodId("BTC");
+        var pmi = PaymentTypes.LN.GetPaymentMethodId("BTC");
         Assert.NotNull(store);
         var lnMethod = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, handlers);
-        Assert.NotNull(lnMethod?.GetExternalLightningUrl());
+        var originalConnectionString = lnMethod?.GetExternalLightningUrl();
+        Assert.NotNull(originalConnectionString);
         var conf = store.GetPaymentMethodConfig(pmi);
         Assert.NotNull(conf);
         conf["LightningConnectionString"] = conf["connectionString"]!.Value<string>();
@@ -1020,29 +1001,13 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
         Assert.NotNull(store);
         lnMethod = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, handlers);
-        Assert.Null(lnMethod?.GetExternalLightningUrl());
-        Assert.True(lnMethod?.IsInternalNode);
+        Assert.Equal(originalConnectionString, lnMethod?.GetExternalLightningUrl());
+        Assert.False(lnMethod?.IsInternalNode);
         conf = store.GetPaymentMethodConfig(pmi);
         Assert.NotNull(conf);
         Assert.Null(conf["CryptoCode"]); // Osolete
-        Assert.Null(conf["connectionString"]); // Null, so should be stripped
+        Assert.Equal(originalConnectionString, conf["connectionString"]?.Value<string>());
         Assert.Null(conf["DisableBOLT11PaymentOption"]); // Old garbage cleaned
-
-        // Test if lightning connection strings get migrated to internal
-        store.DerivationStrategies = new JObject()
-        {
-            new JProperty("BTC_LightningLike", new JObject()
-            {
-                new JProperty("CryptoCode", "BTC"),
-                new JProperty("LightningConnectionString", tester.PayTester.IntegratedLightning),
-            })
-        }.ToString();
-        await tester.PayTester.StoreRepository.UpdateStore(store);
-        await tester.RestartMigration();
-        store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
-        Assert.NotNull(store);
-        lnMethod = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, handlers);
-        Assert.True(lnMethod?.IsInternalNode);
 
         store.SetPaymentMethodConfig(PaymentMethodId.Parse("BTC-LNURL"),
             new JObject()
@@ -1060,7 +1025,20 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         Assert.Null(conf["CryptoCode"]);
         Assert.True(conf["lud12Enabled"]?.Value<bool>());
         Assert.Null(conf["useBech32Scheme"]); // default stripped
-#pragma warning restore CS0618 // Type or member is obsolete
+
+        // String-valued derivation schemes still need the newer store-config migration.
+        var xpub = "tpubDDmH1briYfZcTDMEc7uMEA5hinzjUTzR9yMC1drxTMeiWyw1VyCqTuzBke6df2sqbfw9QG6wbgTLF5yLjcXsZNaXvJMZLwNEwyvmiFWcLav";
+        var derivation = $"{xpub}-[legacy]";
+        pmi = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
+        store.DerivationStrategies = new JObject { [pmi.ToString()] = derivation }.ToString();
+        await tester.PayTester.StoreRepository.UpdateStore(store);
+        await tester.RestartMigration();
+        store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
+        var scheme = store.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, handlers);
+        Assert.NotNull(scheme);
+        Assert.Equal(derivation, scheme.AccountDerivation.ToString());
+        Assert.Null(scheme.AccountOriginal); // The parser omits the original for legacy derivations.
+        Assert.Equal(xpub, scheme.GetFirstAccountKeySettings().AccountKey.ToString());
     }
 
     [Fact(Timeout = 60 * 20 * 1000)]

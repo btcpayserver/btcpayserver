@@ -612,7 +612,7 @@ donation:
   price: 1.02
   custom: true
 ";
-                vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
+                vmpos.Template = AppService.SerializeTemplate(TestUtils.ParsePOSYML(vmpos.Template));
                 Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
                 vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                 Assert.Equal("hello", vmpos.Title);
@@ -684,7 +684,7 @@ donation:
   price: 1.02
   custom: true
 ";
-                    vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
+                    vmpos.Template = AppService.SerializeTemplate(TestUtils.ParsePOSYML(vmpos.Template));
                     Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
                     publicApps = user.GetController<UIPointOfSaleController>();
                     vmview = await publicApps.ViewPointOfSale(app.Id, PosViewType.Cart).AssertViewModelAsync<ViewPointOfSaleViewModel>();
@@ -713,7 +713,7 @@ inventoryitem:
 noninventoryitem:
   price: 10.0";
 
-                vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
+                vmpos.Template = AppService.SerializeTemplate(TestUtils.ParsePOSYML(vmpos.Template));
                 Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
 
                 async Task AssertCanBuy(string choiceKey, bool expected)
@@ -779,7 +779,7 @@ g:
   custom: topup
 ";
 
-                vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
+                vmpos.Template = AppService.SerializeTemplate(TestUtils.ParsePOSYML(vmpos.Template));
                 Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
                 vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                 Assert.DoesNotContain("custom", vmpos.Template);

@@ -2198,35 +2198,6 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task CanFixMappedDomainAppType()
-        {
-            using var tester = CreateServerTester(newDb: true);
-            await tester.StartAsync();
-            var f = tester.PayTester.GetService<ApplicationDbContextFactory>();
-            const string id = "BTCPayServer.Services.PoliciesSettings";
-            using (var ctx = f.CreateContext())
-            {
-                // remove existing policies setting
-                var setting = await ctx.Settings.FirstOrDefaultAsync(c => c.Id == id);
-                if (setting != null) ctx.Settings.Remove(setting);
-                // create legacy policies setting that needs migration
-                setting = new SettingData { Id = id, Value = JObject.Parse("{\"RootAppId\": null, \"RootAppType\": 1, \"Experimental\": false, \"PluginSource\": null, \"LockSubscription\": false, \"DisableSSHService\": false, \"PluginPreReleases\": false, \"BlockExplorerLinks\": [],\"DomainToAppMapping\": [{\"AppId\": \"87kj5yKay8mB4UUZcJhZH5TqDKMD3CznjwLjiu1oYZXe\", \"Domain\": \"donate.nicolas-dorier.com\", \"AppType\": 0}], \"CheckForNewVersions\": false, \"AllowHotWalletForAll\": false, \"RequiresConfirmedEmail\": false, \"DiscourageSearchEngines\": false, \"DisableNonAdminCreateUserApi\": false, \"AllowHotWalletRPCImportForAll\": false, \"AllowLightningInternalNodeForAll\": false, \"DisableStoresToUseServerEmailSettings\": false}").ToString() };
-                ctx.Settings.Add(setting);
-                await ctx.SaveChangesAsync();
-            }
-            await tester.RestartMigration();
-            using (var ctx = f.CreateContext())
-            {
-                var setting = await ctx.Settings.FirstOrDefaultAsync(c => c.Id == id);
-                var o = JObject.Parse(setting.Value);
-                Assert.Equal("Crowdfund", o["RootAppType"].Value<string>());
-                o = (JObject)((JArray)o["DomainToAppMapping"])[0];
-                Assert.Equal("PointOfSale", o["AppType"].Value<string>());
-            }
-        }
-
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
         public async Task CanMigrateFileIds()
         {
             using var tester = CreateServerTester(newDb: true);
@@ -2323,9 +2294,17 @@ namespace BTCPayServer.Tests
             {
                 for (int i = 0; i < walletCount; i++)
                 {
-                    var walletData = new WalletData() { Id = $"S-{wallet}{i}-BTC" };
-                    walletData.Blob = ZipUtils.Zip("{\"LabelColors\": { \"label1\" : \"black\", \"payout\":\"green\" }}");
-                    db.Wallets.Add(walletData);
+                    db.Wallets.Add(new WalletData { Id = $"S-{wallet}{i}-BTC" });
+                    foreach (var (label, color) in new[] { ("label1", "black"), ("payout", "green") })
+                    {
+                        db.WalletObjects.Add(new WalletObjectData
+                        {
+                            WalletId = $"S-{wallet}{i}-BTC",
+                            Type = WalletObjectData.Types.Label,
+                            Id = label,
+                            Data = new JObject { ["color"] = color }.ToString()
+                        });
+                    }
                 }
                 await db.SaveChangesAsync();
             }
@@ -2380,28 +2359,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(2, payoutLabel.PullPaymentPayouts.Count);
             Assert.Equal(2, payoutLabel.PullPaymentPayouts["pp1"].Count);
             Assert.Single(payoutLabel.PullPaymentPayouts["pp2"]);
-        }
-
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanDoRateSourceMigration()
-        {
-            using var tester = CreateServerTester(newDb: true);
-            await tester.StartAsync();
-            var acc = tester.NewAccount();
-            await acc.CreateStoreAsync();
-            var db = tester.PayTester.GetService<ApplicationDbContextFactory>();
-            using var ctx = db.CreateContext();
-            var store = (await ctx.Stores.AsNoTracking().ToListAsync())[0];
-            var b = store.GetStoreBlob();
-            b.GetOrCreateRateSettings(false).PreferredExchange = "coinaverage";
-            store.SetStoreBlob(b);
-            await ctx.SaveChangesAsync();
-            await ctx.Database.ExecuteSqlRawAsync("DELETE FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\"='20230123062447_migrateoldratesource'");
-            await ctx.Database.MigrateAsync();
-            store = (await ctx.Stores.AsNoTracking().ToListAsync())[0];
-            b = store.GetStoreBlob();
-            Assert.Equal("coingecko", b.GetOrCreateRateSettings(false).PreferredExchange);
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
@@ -2770,46 +2727,6 @@ namespace BTCPayServer.Tests
             await acc.GrantAccessAsync(true);
             await acc.CreateStoreAsync();
             await acc.RegisterDerivationSchemeAsync("BTC");
-            var store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
-
-            var blob = store.GetStoreBlob();
-            var serializer = new Serializer(null);
-
-            blob.AdditionalData = new Dictionary<string, JToken>();
-            blob.AdditionalData.Add("rateRules", JToken.Parse(
-                serializer.ToString(new List<MigrationStartupTask.RateRule_Obsolete>()
-                {
-                        new MigrationStartupTask.RateRule_Obsolete()
-                        {
-                            Multiplier = 2
-                        }
-                })));
-
-            blob.AdditionalData.Add("onChainMinValue", JToken.Parse(
-                serializer.ToString(new CurrencyValue()
-                {
-                    Currency = "USD",
-                    Value = 5m
-                }.ToString())));
-            blob.AdditionalData.Add("lightningMaxValue", JToken.Parse(
-                serializer.ToString(new CurrencyValue()
-                {
-                    Currency = "USD",
-                    Value = 5m
-                }.ToString())));
-
-            store.SetStoreBlob(blob);
-            await tester.PayTester.StoreRepository.UpdateStore(store);
-            await tester.RestartMigration();
-
-            store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
-
-            blob = store.GetStoreBlob();
-            Assert.Empty(blob.AdditionalData);
-            Assert.Single(blob.PaymentMethodCriteria);
-            Assert.Contains(blob.PaymentMethodCriteria,
-                criteria => criteria.PaymentMethod == PaymentTypes.CHAIN.GetPaymentMethodId("BTC") &&
-                            criteria.Above && criteria.Value.Value == 5m && criteria.Value.Currency == "USD");
             var handlers = tester.PayTester.GetService<PaymentMethodHandlerDictionary>();
 
             await acc.ImportOldInvoices();
@@ -2838,6 +2755,31 @@ namespace BTCPayServer.Tests
 #pragma warning restore CS0618 // Type or member is obsolete
             var details = p.GetDetails<BitcoinLikePaymentData>(handlers.GetBitcoinHandler("BTC"));
             Assert.Equal("6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d", details.AssetId.ToString());
+        }
+
+        [Fact(Timeout = TestUtils.TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanInitializeStorageOnFirstRun()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var settings = tester.PayTester.GetService<SettingsRepository>();
+            var storage = await settings.GetSettingAsync<StorageSettings>();
+            Assert.NotNull(storage);
+            Assert.Equal(StorageProvider.FileSystem, storage.Provider);
+            Assert.Equal(JObject.FromObject(new FileSystemStorageConfiguration()), storage.Configuration);
+
+            storage = new StorageSettings
+            {
+                Provider = StorageProvider.AmazonS3,
+                Configuration = new JObject { ["BucketName"] = "existing-bucket" }
+            };
+            await settings.UpdateSetting(storage);
+            await settings.UpdateSetting<MigrationSettings>(null, SettingsRepository.KeyNameByType(typeof(MigrationSettings)));
+            await tester.PayTester.RestartStartupTask<MigrationStartupTask>();
+            var existingStorage = await settings.GetSettingAsync<StorageSettings>();
+            Assert.Equal(StorageProvider.AmazonS3, existingStorage.Provider);
+            Assert.Equal(storage.Configuration, existingStorage.Configuration);
         }
 
         [Fact(Timeout = TestUtils.TestTimeout)]

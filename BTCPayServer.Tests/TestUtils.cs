@@ -7,15 +7,116 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Sdk;
+using YamlDotNet.RepresentationModel;
 
 namespace BTCPayServer.Tests
 {
     public static class TestUtils
     {
+        // Convert legacy YAML fixtures; production apps already store JSON templates.
+        public static AppItem[] ParsePOSYML(string yaml)
+        {
+            var items = new List<AppItem>();
+            var stream = new YamlStream();
+            if (string.IsNullOrEmpty(yaml))
+                return items.ToArray();
+
+            stream.Load(new StringReader(yaml));
+
+            if (stream.Documents.FirstOrDefault()?.RootNode is not YamlMappingNode root)
+                return items.ToArray();
+            foreach (var posItem in root.Children)
+            {
+                var trimmedKey = ((YamlScalarNode)posItem.Key).Value?.Trim();
+                if (string.IsNullOrEmpty(trimmedKey))
+                {
+                    continue;
+                }
+
+                var currentItem = new AppItem
+                {
+                    Id = trimmedKey,
+                    Title = trimmedKey,
+                    PriceType = AppItemPriceType.Fixed
+                };
+                var itemSpecs = (YamlMappingNode)posItem.Value;
+                foreach (var spec in itemSpecs)
+                {
+                    if (spec.Key is not YamlScalarNode { Value: string keyString } || string.IsNullOrEmpty(keyString))
+                        continue;
+                    var scalarValue = spec.Value as YamlScalarNode;
+                    switch (keyString)
+                    {
+                        case "title":
+                            currentItem.Title = scalarValue?.Value ?? trimmedKey;
+                            break;
+                        case "inventory":
+                            if (int.TryParse(scalarValue?.Value, out var inv))
+                            {
+                                currentItem.Inventory = inv;
+                            }
+                            break;
+                        case "description":
+                            currentItem.Description = scalarValue?.Value;
+                            break;
+                        case "image":
+                            currentItem.Image = scalarValue?.Value;
+                            break;
+                        case "price_type":
+                        case "custom":
+                            if (bool.TryParse(scalarValue?.Value, out var customBoolValue))
+                            {
+                                if (customBoolValue)
+                                {
+                                    currentItem.PriceType = currentItem.Price is null or 0
+                                        ? AppItemPriceType.Topup
+                                        : AppItemPriceType.Minimum;
+                                }
+                                else
+                                {
+                                    currentItem.PriceType = AppItemPriceType.Fixed;
+                                }
+                            }
+                            else if (Enum.TryParse<AppItemPriceType>(scalarValue?.Value, true,
+                                         out var customPriceType))
+                            {
+                                currentItem.PriceType = customPriceType;
+                            }
+
+                            break;
+                        case "price":
+                            if (decimal.TryParse(scalarValue?.Value, out var price))
+                            {
+                                currentItem.Price = price;
+                            }
+
+                            break;
+
+                        case "buybuttontext":
+                            currentItem.BuyButtonText = scalarValue?.Value;
+                            break;
+
+                        case "disabled":
+                            if (bool.TryParse(scalarValue?.Value, out var disabled))
+                            {
+                                currentItem.Disabled = disabled;
+                            }
+
+                            break;
+                    }
+                }
+
+                items.Add(currentItem);
+            }
+
+            return items.ToArray();
+        }
+
         public const int LongRunningTestTimeout = 60_000; // 60s
 #if DEBUG && !SHORT_TIMEOUT
         public const int TestTimeout = 600_000;

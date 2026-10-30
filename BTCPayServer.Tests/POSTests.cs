@@ -86,7 +86,7 @@ fruit tea:
   inventory: 5
   custom: true
 ";
-        var parsedDefault =     MigrationStartupTask.ParsePOSYML(testOriginalDefaultYmlTemplate);
+        var parsedDefault =     TestUtils.ParsePOSYML(testOriginalDefaultYmlTemplate);
         Assert.Equal(6, parsedDefault.Length);
         Assert.Equal( "Green Tea" ,parsedDefault[0].Title);
         Assert.Equal( "green tea" ,parsedDefault[0].Id);
@@ -335,7 +335,7 @@ goodies:
   price: 0
 ";
             vmpos.Currency = "EUR";
-            vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
+            vmpos.Template = AppService.SerializeTemplate(TestUtils.ParsePOSYML(vmpos.Template));
             Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
             await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
             var publicApps = user.GetController<UIPointOfSaleController>();

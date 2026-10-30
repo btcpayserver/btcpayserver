@@ -7,6 +7,8 @@
 @{
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.CheckoutAppearance), StringLocalizer["Checkout Experience"]).SetCategory(WellKnownCategories.Store));
     var canUpload = await FileService.IsAvailable();
+    var unifiedQrApplies = Model.PaymentMethods.Any(o => o.Value == PaymentTypes.CHAIN.GetPaymentMethodId("BTC").ToString()) &&
+                           Model.PaymentMethods.Any(o => o.Value == PaymentTypes.LN.GetPaymentMethodId("BTC").ToString() || o.Value == PaymentTypes.LNURL.GetPaymentMethodId("BTC").ToString());
 }
 @functions {
     private string CriteriaTypeDisplayName(PaymentMethodCriteriaViewModel.CriteriaType type)
@@ -84,6 +86,12 @@
                     <div class="form-group">
                         <label asp-for="DefaultPaymentMethod" class="form-label"></label>
                         <select asp-for="DefaultPaymentMethod" asp-items="Model.PaymentMethods" class="form-select w-auto"></select>
+                        @if (unifiedQrApplies)
+                        {
+                            <div class="collapse unified-qr-note @(Model.OnChainWithLnInvoiceFallback ? "show" : "")">
+                                <div class="form-text" text-translate="true">With a unified payment URL/QR code, a Lightning default only applies when on-chain isn't available for the invoice.</div>
+                            </div>
+                        }
                     </div>
                     <div class="form-group mb-0">
                         <div class="form-label mb-1" text-translate="true">Enable payment methods only when amount is …</div>
@@ -109,6 +117,12 @@
                             }
                         </table>
                         </div>
+                        @if (unifiedQrApplies)
+                        {
+                            <div class="collapse unified-qr-note @(Model.OnChainWithLnInvoiceFallback ? "show" : "")">
+                                <div class="form-text mt-0" text-translate="true">With a unified payment URL/QR code, the Lightning limits decide whether the on-chain QR code includes the Lightning invoice. An invoice outside the on-chain limits shows Lightning on its own.</div>
+                            </div>
+                        }
                     </div>
                 </div>
             }
@@ -203,11 +217,14 @@
                     <label asp-for="ShowPayInWalletButton" class="form-check-label"></label>
                 </div>
                 <div class="d-flex my-3">
-                    <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="btcpay-toggle me-3" />
-                    <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
-                    <a href="https://bitcoinqr.dev/" target="_blank" rel="noreferrer noopener">
-                        <vc:icon symbol="info" />
-                    </a>
+                    <input asp-for="OnChainWithLnInvoiceFallback" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target=".unified-qr-note" aria-expanded="@Model.OnChainWithLnInvoiceFallback" />
+                    <div>
+                        <label asp-for="OnChainWithLnInvoiceFallback" class="form-check-label"></label>
+                        <a href="https://bitcoinqr.dev/" target="_blank" rel="noreferrer noopener">
+                            <vc:icon symbol="info" />
+                        </a>
+                        <div class="form-text" text-translate="true">Checkout shows one QR code for the on-chain address with the Lightning invoice included, and hides the Lightning tab while on-chain is available. Payment methods from plugins can join the same QR code.</div>
+                    </div>
                 </div>
                 <div class="d-flex my-3">
                     <input asp-for="LightningAmountInSatoshi" type="checkbox" class="btcpay-toggle me-3" />

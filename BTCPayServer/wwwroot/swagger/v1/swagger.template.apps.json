@@ -135,7 +135,15 @@
                     "404": {
                         "description": "POS app with specified ID was not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
             }
         },
         "/api/v1/apps/crowdfund/{appId}": {
@@ -220,7 +228,15 @@
                     "404": {
                         "description": "Crowdfund app with specified ID was not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
             }
         },
         "/api/v1/stores/{storeId}/apps/crowdfund": {
@@ -601,8 +617,8 @@
                     "Apps"
                 ],
                 "operationId": "Apps_GetAllApps",
-                "summary": "Get basic app data for all apps for all stores for a user",
-                "description": "Returns basic app data for all apps for all stores",
+                "summary": "Get basic app data for all authorized stores",
+                "description": "Returns basic app data for apps in stores where the caller has the `btcpay.store.canmodifystoresettings` permission. Store-scoped API keys only return apps from their authorized stores.",
                 "responses": {
                     "200": {
                         "description": "Array of basic app data object",
@@ -802,7 +818,8 @@
                             },
                             "notificationUrl": {
                                 "type": "string",
-                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
+                                "description": "Deprecated. Use webhooks instead. Callback notification URL to POST to once when an invoice is paid and once when there are enough blockchain confirmations.",
+                                "deprecated": true,
                                 "nullable": true
                             },
                             "redirectUrl": {
@@ -971,7 +988,8 @@
                             },
                             "notificationUrl": {
                                 "type": "string",
-                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
+                                "description": "Deprecated. Use webhooks instead. Callback notification URL to POST to once when an invoice is paid and once when there are enough blockchain confirmations.",
+                                "deprecated": true,
                                 "nullable": true
                             },
                             "tagline": {
@@ -1001,6 +1019,7 @@
                             "resetEvery": {
                                 "type": "string",
                                 "description": "Contribution goal reset frequency",
+                                "enum": ["Never", "Hour", "Day", "Month", "Year", null],
                                 "example": "Day",
                                 "nullable": true
                             },

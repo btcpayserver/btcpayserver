@@ -9,6 +9,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Wallets;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
@@ -257,7 +258,7 @@ namespace BTCPayServer.Services
             var result = new Dictionary<string, WalletTransactionInfo>(wos.Count);
             foreach (var obj in wos.Values)
             {
-                var data = obj.Data is null ? null : JObject.Parse(obj.Data);
+                var data = obj.Data is null ? null : JsonParser.ParseObject(obj.Data);
                 var info = new WalletTransactionInfo(walletId)
                 {
                     Comment = data?["comment"]?.Value<string>(),
@@ -483,7 +484,7 @@ namespace BTCPayServer.Services
             return o.Data is null
                 ? (o.Id, ColorPalette.Default.DeterministicColor(o.Id))
                 : (o.Id,
-                    JObject.Parse(o.Data)["color"]?.Value<string>() ?? ColorPalette.Default.DeterministicColor(o.Id));
+                    JsonParser.ParseObject(o.Data)["color"]?.Value<string>() ?? ColorPalette.Default.DeterministicColor(o.Id));
         }
 
         public async Task<bool> RemoveWalletObjects(WalletObjectId walletObjectId)
@@ -631,7 +632,7 @@ namespace BTCPayServer.Services
                     ctx.WalletObjects.Add(obj);
                 }
 
-                var currentData = obj.Data is null ? new JObject() : JObject.Parse(obj.Data);
+                var currentData = obj.Data is null ? new JObject() : JsonParser.ParseObject(obj.Data);
                 modify(currentData);
                 obj.Data = currentData.ToString();
                 if (obj.Data == "{}")
@@ -653,7 +654,6 @@ namespace BTCPayServer.Services
             }
         }
 
-        const int MaxLabelSize = 50;
         public async Task AddWalletObjectLabels(WalletObjectId id, params string[] labels)
         {
             ArgumentNullException.ThrowIfNull(id);
@@ -667,7 +667,7 @@ namespace BTCPayServer.Services
             foreach (var (id, labels) in reqs)
             {
                 objs.TryAdd(id, NewWalletObjectData(id));
-                foreach (var l in labels.Select(l => l.Trim().Truncate(MaxLabelSize)).Distinct())
+                foreach (var l in labels.Select(l => l.Trim().Truncate(StoreLabelRepository.MaxLabelSize)).Distinct())
                 {
                     var label = CreateLabel(id.WalletId, l);
                     objs.TryAdd(label.Id, label.ObjectData);
@@ -768,7 +768,7 @@ namespace BTCPayServer.Services
         {
             ArgumentNullException.ThrowIfNull(id);
             oldLabel = oldLabel.Trim();
-            newLabel = newLabel.Trim().Truncate(MaxLabelSize);
+            newLabel = newLabel.Trim().Truncate(StoreLabelRepository.MaxLabelSize);
 
             if (oldLabel == newLabel)
                 return true;

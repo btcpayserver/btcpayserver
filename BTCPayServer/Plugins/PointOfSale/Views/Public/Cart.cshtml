@@ -49,7 +49,7 @@
                 <partial name="_StatusMessage" />
                 @if (!string.IsNullOrEmpty(Model.Description))
                 {
-                    <div class="lead" v-pre>@Safe.Raw(Model.Description)</div>
+                    <div class="lead" v-pre>@Safe.RawRichText(Model.Description)</div>
                 }
                 @foreach (var item in Model.Items.Where(i => i.HasImage))
                 {

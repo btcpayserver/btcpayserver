@@ -99,7 +99,7 @@ namespace BTCPayServer.Controllers
                 case "vault":
                     return ViewVault(walletId, vm);
                 case "seed":
-                    return await SignWithSeed(walletId, vm.SigningContext, vm.ReturnUrl, vm.BackUrl);
+                    return ViewSignWithSeed(vm.SigningContext, vm.ReturnUrl, vm.BackUrl);
                 case "decode":
                     return await WalletPSBT(walletId, vm, "decode");
             }
@@ -182,7 +182,7 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "createpending":
-                    await pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
+                    await pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, callbackGenerator.GetRequestBaseUrl());
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     return await WalletSign(walletId, vm);
@@ -384,26 +384,8 @@ namespace BTCPayServer.Controllers
                 vm.FeeRate = feeRate.ToString();
             }
 
-            if (!psbtObject.IsAllFinalized())
-            {
-                var sanityErrors = new List<PSBTError>();
-                foreach (var input in psbtObject.Inputs)
-                {
-                    if (input.IsFinalized())
-                        continue;
-
-                    if (input.GetSignableCoin(out var missingCoin) is null)
-                    {
-                        sanityErrors.Add(new PSBTError(input.Index, missingCoin));
-                    }
-                    else if (!input.TryFinalizeInput(out var err))
-                    {
-                        sanityErrors.Add(err[0]);
-                    }
-                }
-                if (sanityErrors.Count > 0)
-                    vm.SetErrors(sanityErrors);
-            }
+            if (!psbtObject.IsAllFinalized() && !psbtObject.TryFinalize(out var sanityErrors))
+                vm.SetErrors(sanityErrors);
 
             var combinedTypeIds = inputToObjects.Values.SelectMany(ids => ids).Concat(outputToObjects.Values)
                 .DistinctBy(id => $"{id.Type}:{id.Id}").ToArray();
@@ -456,8 +438,10 @@ namespace BTCPayServer.Controllers
             {
                 "decode" or "analyze-psbt" => WalletPolicies.CanSignWalletTransactions,
                 "broadcast" or "payjoin" => WalletPolicies.CanBroadcastWalletTransactions,
-                _ => WalletPolicies.CanViewWallet
+                _ => null
             };
+            if (requiredPolicy is null)
+                return BadRequest();
             if (!(await authorizationService.AuthorizeAsync(User, walletId.StoreId, requiredPolicy)).Succeeded)
                 return Forbid();
             if (command == "payjoin" &&
@@ -526,9 +510,9 @@ namespace BTCPayServer.Controllers
                             return ViewVault(walletId, vm);
                         }
                     }
-                    catch (PayjoinReceiverException ex)
+                    catch (PayjoinReceiverException)
                     {
-                        error = StringLocalizer["The payjoin receiver could not complete the payjoin: {0}", ex.Message];
+                        error = StringLocalizer["The payjoin receiver could not complete the payjoin request."];
                     }
                     catch (PayjoinSenderException ex)
                     {

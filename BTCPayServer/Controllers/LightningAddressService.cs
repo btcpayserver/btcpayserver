@@ -46,11 +46,14 @@ public class LightningAddressService
 
     public async Task<LightningAddressData?> ResolveByAddress(string username)
     {
-        return await _memoryCache.GetOrCreateAsync(GetKey(username), async entry =>
-        {
-            var result = await Get(new LightningAddressQuery { Usernames = new[] { NormalizeUsername(username) } });
-            return result.FirstOrDefault();
-        });
+        var key = GetKey(username);
+        if (_memoryCache.TryGetValue(key, out LightningAddressData? cached))
+            return cached;
+        var result = (await Get(new LightningAddressQuery { Usernames = new[] { NormalizeUsername(username) } }))
+            .FirstOrDefault();
+        if (result is not null)
+            _memoryCache.Set(key, result);
+        return result;
     }
 
     public async Task<bool> Set(LightningAddressData data)

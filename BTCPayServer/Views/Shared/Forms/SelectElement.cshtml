@@ -16,7 +16,7 @@
     </label>
     <select id="@selectField.Name" asp-items="selectField.Options" class="form-select @(errors is null ? "" : "is-invalid")"
             name="@selectField.Name" data-val="true" aria-describedby="HelpText-@selectField.Name" required="@selectField.Required"
-            data-val-required="@selectField.Label is required.">
+            data-val-required="@Safe.RawEncode(selectField.Label) is required.">
     </select>
     <span class="text-danger" data-valmsg-for="@selectField.Name" data-valmsg-replace="true">@(isInvalid && errors.Any() ? errors.First().ErrorMessage : string.Empty)</span>
     @if (!string.IsNullOrEmpty(selectField.HelpText))

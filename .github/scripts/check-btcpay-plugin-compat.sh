@@ -14,6 +14,7 @@ MONERO_REPO="https://github.com/btcpay-monero/btcpayserver-monero-plugin.git"
 BLINK_REPO="https://github.com/Kukks/BTCPayServerPlugins.git"
 CASHU_REPO="https://github.com/cashubtc/BTCNutServer.git"
 TETHER_REPO="https://github.com/btcpayserver-tether/BTCPayServer.Plugins.USDt.git"
+USDC_REPO="https://github.com/rockstardev/BTCPayServer.Plugins.USDC.git"
 
 BTCPAY_SPLICE_ABS=""
 
@@ -68,6 +69,7 @@ git clone "$MONERO_REPO" monero-plugin
 git clone "$BLINK_REPO" blink
 git clone "$CASHU_REPO" cashu-plugin
 git clone "$TETHER_REPO" tether-plugin
+git clone "$USDC_REPO" usdc-plugin
 
 printf '\n==> Initializing non-BTCPay plugin submodules\n'
 GIT_LFS_SKIP_SMUDGE=1 git -C blink submodule update --init --depth 1 --recommend-shallow --filter=blob:none submodules/walletwasabi
@@ -94,6 +96,7 @@ splice_all() {
   replace_btcpay_copy blink/submodules/btcpayserver
   replace_btcpay_copy cashu-plugin/submodules/btcpayserver
   replace_btcpay_copy tether-plugin/submodules/btcpayserver
+  replace_btcpay_copy usdc-plugin/submodules/btcpayserver
   replace_btcpay_copy samrock-protocol/submodules/boltz/btcpayserver
 }
 
@@ -155,6 +158,12 @@ build_all() {
     run_build "tether-plugin" "BTCPayServer.Plugins.USDt/BTCPayServer.Plugins.USDt.csproj"
   )
   _res["tether-plugin"]=$?
+
+  (
+    cd usdc-plugin
+    run_build "usdc-plugin" "Plugins/BTCPayServer.Plugins.USDC/BTCPayServer.Plugins.USDC.csproj"
+  )
+  _res["usdc-plugin"]=$?
 
   for project in blink/Plugins/*/*.csproj; do
     plugin_name="$(basename "$(dirname "$project")")"

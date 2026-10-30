@@ -5,7 +5,7 @@
     var formats = new Dictionary<string, string>
     {
         { "Bech32", LNURL.EncodeUri(Model, "login", true).ToString().ToUpperInvariant() },
-        { "URI", LNURL.EncodeUri(Model, "login", false).ToString().ToUpperInvariant() }
+        { "URI", LNURL.EncodeUri(Model, "login", false).ToString() }
     };
 }
 
@@ -51,7 +51,7 @@
             request.onload  = function() {
               if (request.readyState === 4 && request.status === 200) {
                 setTimeout(check, 1000);
-              } else if (request.readyState === 4 ){
+              } else if (request.readyState === 4 && request.status === 204) {
                   window.location.href = @Safe.Json(Url.Action("CreateComplete"));
               }
             }

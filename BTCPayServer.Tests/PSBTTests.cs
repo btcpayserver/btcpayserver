@@ -1,5 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBitcoin;
 using Xunit;
 
@@ -8,6 +10,22 @@ namespace BTCPayServer.Tests
     public class PSBTTests(ITestOutputHelper helper) : UnitTestBase(helper)
     {
         [Fact]
+        [Trait("Fast", "Fast")]
+        public async Task RejectsOversizedTextualPSBTBeforeParsing()
+        {
+            var modelState = new ModelStateDictionary();
+            var vm = new WalletPSBTViewModel
+            {
+                PSBT = new string('A', 500 * 1024 + 1)
+            };
+
+            Assert.Null(await vm.GetPSBT(Network.RegTest, modelState));
+            Assert.False(modelState.IsValid);
+            Assert.Contains(modelState["PSBT"].Errors, error => error.ErrorMessage == "The PSBT is too large.");
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
         public void AddsWitnessUtxoToSegwitInputs()
         {
             var network = Network.RegTest;

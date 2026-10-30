@@ -8,18 +8,18 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260928000000_AddCredentialManagementToManagerRole")]
-    public partial class AddCredentialManagementToManagerRole : Migration
+    [Migration("20260928000000_AddLegacyAccessTokenManagementToManagerRole")]
+    public partial class AddLegacyAccessTokenManagementToManagerRole : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql("""
                 UPDATE "StoreRoles"
-                SET "Permissions" = COALESCE("Permissions", ARRAY[]::TEXT[]) || ARRAY['btcpay.store.canmanagestorecredentials']::TEXT[]
+                SET "Permissions" = COALESCE("Permissions", ARRAY[]::TEXT[]) || ARRAY['btcpay.store.canmanagelegacyaccesstokens']::TEXT[]
                 WHERE "Id" = 'Manager'
                   AND "StoreDataId" IS NULL
-                  AND NOT (COALESCE("Permissions", ARRAY[]::TEXT[]) @> ARRAY['btcpay.store.canmanagestorecredentials']::TEXT[]);
+                  AND NOT (COALESCE("Permissions", ARRAY[]::TEXT[]) @> ARRAY['btcpay.store.canmanagelegacyaccesstokens']::TEXT[]);
                 """);
         }
     }

@@ -121,7 +121,9 @@
                     <div class="d-inline-flex align-items-center gap-3">
                         @if (role.IsServerRole && Model.DefaultRole != role.Id)
                         {
-                            <a permission="@Policies.CanModifyServerSettings" asp-action="SetDefaultRole" asp-route-role="@role.Role" asp-controller="UIServer" id="SetDefault" text-translate="true">Set as default</a>
+                            <form method="post" permission="@Policies.CanModifyServerSettings" asp-action="SetDefaultRole" asp-route-role="@role.Role" asp-controller="UIServer" class="d-inline">
+                                <button type="submit" class="role-list__set-default btn btn-link p-0 align-baseline" text-translate="true">Set as default</button>
+                            </form>
                         }
                         <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="CreateOrEditRole" asp-route-storeId="@(role.IsServerRole ? null : storeId)" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")" text-translate="true">Edit</a>
                         <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="DeleteRole" asp-route-storeId="@(role.IsServerRole ? null : storeId)" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")" text-translate="true">Remove</a>

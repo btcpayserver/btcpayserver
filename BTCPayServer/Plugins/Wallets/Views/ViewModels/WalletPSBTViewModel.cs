@@ -11,6 +11,8 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
 {
     public class WalletPSBTViewModel : WalletPSBTReadyViewModel
     {
+        public const int MaxPSBTLength = 500 * 1024;
+
         public string CryptoCode { get; set; }
         public string Decoded { get; set; }
         string _FileName;
@@ -58,8 +60,12 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
         {
             if (UploadedPSBTFile != null)
             {
-                if (UploadedPSBTFile.Length > 500 * 1024)
+                if (UploadedPSBTFile.Length > MaxPSBTLength)
+                {
+                    modelState.AddModelError(nameof(PSBT), "The PSBT is too large.");
+                    InvalidPSBT = true;
                     return null;
+                }
 
                 try
                 {
@@ -86,6 +92,12 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
                 PSBT = SigningContext.PSBT;
                 modelState.Remove(nameof(PSBT));
                 InvalidPSBT = false;
+            }
+            if (PSBT?.Length > MaxPSBTLength)
+            {
+                modelState.AddModelError(nameof(PSBT), "The PSBT is too large.");
+                InvalidPSBT = true;
+                return null;
             }
             if (!string.IsNullOrEmpty(PSBT))
             {

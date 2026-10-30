@@ -1,14 +1,7 @@
 ﻿@model ApplicationUser
 @{
-    ViewData.SetTitle("Account disabled");
+    ViewData.SetTitle("Account locked");
     Layout = "_LayoutSignedOut";
 }
 
-@if (Model.IsDisabledTemporarily)
-{
-    <p class="mb-0"><span text-translate="true">This account has been locked out. Please try again</span> @Model.LockoutEnd!.Value.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative).</p>
-}
-else
-{
-    <p class="mb-0" text-translate="true">Your account has been disabled. Please contact server administrator.</p>
-}
+<p class="mb-0"><span text-translate="true">This account has been locked out. Please try again</span> @Model.LockoutEnd!.Value.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative).</p>

@@ -68,6 +68,9 @@ public class BitpayInvoiceController : ControllerBase
     [Route("invoices/{id}")]
     public async Task<DataWrapper<InvoiceResponse>> GetInvoice(string id)
     {
+        // AnyoneCanInvoice grants CanCreateInvoice to anonymous callers, it does not grant reading the merchant's view of an invoice
+        if (User.Identity?.AuthenticationType == Security.BitpayAuthenticationTypes.Anonymous)
+            throw new BitpayHttpException(403, "Forbidden");
         var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
         {
             InvoiceId = new[] { id },
@@ -129,11 +132,22 @@ public class BitpayInvoiceController : ControllerBase
     {
         var storeBlob = store.GetStoreBlob();
         var entity = _InvoiceRepository.CreateNewInvoice(store.Id);
-        entity.ExpirationTime = invoice.ExpirationTime is { } v ? v : entity.InvoiceTime + storeBlob.InvoiceExpiration;
+
+        var storeExpiry = entity.InvoiceTime + storeBlob.InvoiceExpiration;
+        var expiry = invoice.ExpirationTime ?? storeExpiry;
+        if (User.Identity?.AuthenticationType == Security.BitpayAuthenticationTypes.Anonymous && expiry > storeExpiry)
+            expiry = storeExpiry;
+        entity.ExpirationTime = expiry;
+
         entity.MonitoringExpiration = entity.ExpirationTime + storeBlob.MonitoringExpiration;
         if (entity.ExpirationTime - TimeSpan.FromSeconds(30.0) < entity.InvoiceTime)
         {
             throw new BitpayHttpException(400, "The expirationTime is set too soon");
+        }
+
+        if (invoice.PosData is { Length: > InvoiceMetadata.MaxPosDataLength })
+        {
+            throw new BitpayHttpException(400, "The posData is too long");
         }
 
         entity.Metadata.OrderId = invoice.OrderId;
@@ -142,7 +156,6 @@ public class BitpayInvoiceController : ControllerBase
         entity.FullNotifications = invoice.FullNotifications || invoice.ExtendedNotifications;
         entity.ExtendedNotifications = invoice.ExtendedNotifications;
         entity.NotificationURLTemplate = invoice.NotificationURL;
-        entity.NotificationEmail = invoice.NotificationEmail;
         if (additionalTags != null)
             entity.InternalTags.AddRange(additionalTags);
         FillBuyerInfo(invoice, entity);
@@ -165,10 +178,18 @@ public class BitpayInvoiceController : ControllerBase
         }
 
         entity.StoreSupportUrl = storeBlob.StoreSupportUrl;
+        if (!string.IsNullOrEmpty(invoice.RedirectURL) &&
+            (!Uri.TryCreate(invoice.RedirectURL, UriKind.Absolute, out var redirectUri) ||
+             redirectUri.Scheme is not ("http" or "https")))
+        {
+            throw new BitpayHttpException(400, "The redirect URL must be an absolute HTTP or HTTPS URL.");
+        }
         entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
         entity.RedirectAutomatically =
             invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
-        entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
+        entity.SpeedPolicy = User.Identity?.AuthenticationType == Security.BitpayAuthenticationTypes.Anonymous
+            ? store.SpeedPolicy
+            : ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
         IPaymentFilter excludeFilter = null;
         if (invoice.PaymentCurrencies?.Any() is true)

@@ -71,6 +71,40 @@ If Entity Framework cannot generate the required operation, add a timestamp-pref
 
 Test both a fresh database and an upgrade from the previous schema when the change has meaningful data or compatibility risk.
 
+### Consolidated Migrations
+
+`DBScripts/000.Init.sql` contains the schema and seed data through
+`20231020135844_AddBoltcardsTable` (BTCPay Server 1.12.0). The migration keeps its
+original ID so existing databases skip the initialization script. Older instances
+must upgrade to a release containing that migration before upgrading to this code.
+Startup data migrations already present in 1.12.0 are also removed; first-run
+defaults remain part of initialization rather than migration flags.
+
+`MigrationStartupTask` diagnoses unsupported upgrades only after PostgreSQL
+reports a duplicate-table error. It then checks the applied migration history: if
+an older migration exists but the consolidated baseline is missing, startup stops
+with a `ConfigException` explaining that an intermediate upgrade to 1.12.x or
+1.13.x is required. This avoids the normal migration retry loop for unsupported
+databases without adding a query to successful startup. Other migration failures
+retain the existing retry behavior.
+
+To regenerate the baseline, create a temporary database test that migrates to the
+desired cutoff. Run it with `PLAYWRIGHT_HEADLESS=true` and detailed test output to
+obtain the database name logged by `DatabaseTester`. Use `pg_dump` in the test
+PostgreSQL container with `--schema-only --no-owner --no-privileges`, excluding
+`__EFMigrationsHistory`. Also export the `StoreRoles` seed rows with
+`--data-only --column-inserts`. Remove dump comments, session settings, psql
+meta-commands, and `public.` qualifiers before updating `000.Init.sql`.
+
+When moving the baseline forward, generate the dump before deleting the old
+migrations. `MigrateUntil` excludes the named migration, so select the first
+migration after the desired cutoff. Verify that both the baseline and final
+schemas match those produced by the original migration chain.
+Also update the baseline ID and intermediate-release guidance in
+`MigrationStartupTask`'s failure-path check. Verify fresh installations, upgrades
+with the baseline already applied, rejection of older databases, and retries for
+unrelated duplicate-table errors.
+
 ## Release Cycles
 
 BTCPay Server uses three release types.
@@ -131,3 +165,15 @@ When creating a release:
 8. After CI builds the Docker images, copy the new version's changelog section into the GitHub release.
 
 Before publishing, confirm that the release type and timing follow the [release cycle policy](#release-cycles).
+
+### Post-release
+
+After the release tag and Docker images are available:
+
+1. Bump the BTCPay Server version in
+   [`btcpayserver-docker`](https://github.com/btcpayserver/btcpayserver-docker).
+2. Publish the release on GitHub.
+3. In
+   [`btcpayserver-plugin-template`](https://github.com/btcpayserver/btcpayserver-plugin-template),
+   bump the BTCPay Server version in `Plugin.cs` and update the BTCPay Server
+   submodule to the release.

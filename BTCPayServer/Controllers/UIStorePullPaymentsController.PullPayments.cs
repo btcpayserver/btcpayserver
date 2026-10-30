@@ -313,6 +313,14 @@ namespace BTCPayServer.Controllers
                 .TryGet(payoutMethodId);
             var commandState = Enum.Parse<PayoutState>(vm.Command.Split("-").First());
             var payoutIds = vm.GetSelectedPayouts(commandState);
+            if (payoutIds.Length != 0)
+            {
+                await using var ctx = this._dbContextFactory.CreateContext();
+                ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+                payoutIds = (await GetPayoutsForPaymentMethod(payoutMethodId, ctx, payoutIds, storeId, cancellationToken))
+                    .Select(payout => payout.Id)
+                    .ToArray();
+            }
             if (payoutIds.Length == 0)
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
@@ -584,25 +592,20 @@ namespace BTCPayServer.Controllers
 
             foreach (var item in payouts)
             {
-                var ppBlob = item.PullPayment?.GetBlob();
                 var payoutBlob = item.Payout.GetBlob(_jsonSerializerSettings);
                 item.Payout.PullPaymentData = item.PullPayment;
                 string payoutSource = item.Payout.GetPayoutSource(_jsonSerializerSettings);
-                if (payoutBlob.Metadata?.TryGetValue("source", StringComparison.InvariantCultureIgnoreCase,
-                        out var source) is true)
-                {
-                    payoutSource = source.Value<string>();
-                }
-                else
-                {
-                    payoutSource = ppBlob?.Name ?? item.PullPayment?.Id;
-                }
 
                 string payoutSourceLink = null;
                 if (payoutBlob.Metadata?.TryGetValue("sourceLink", StringComparison.InvariantCultureIgnoreCase,
                         out var sourceLink) is true)
                 {
-                    payoutSourceLink = sourceLink.Value<string>();
+                    if (sourceLink is JValue { Type: JTokenType.String, Value: string sourceLinkValue } &&
+                        Uri.TryCreate(sourceLinkValue, UriKind.Absolute, out var sourceLinkUri) &&
+                        sourceLinkUri.Scheme is "http" or "https")
+                    {
+                        payoutSourceLink = sourceLinkUri.AbsoluteUri;
+                    }
                 }
                 else if(item.PullPayment?.Id is not null)
                 {

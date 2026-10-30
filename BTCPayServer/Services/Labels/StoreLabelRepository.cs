@@ -13,6 +13,8 @@ namespace BTCPayServer.Services.Labels;
 
 public class StoreLabelRepository
 {
+    public const int MaxLabelSize = 50;
+
     private readonly ApplicationDbContextFactory _contextFactory;
 
     public StoreLabelRepository(ApplicationDbContextFactory contextFactory)
@@ -356,8 +358,6 @@ public class StoreLabelRepository
     {
         return !string.IsNullOrEmpty(color) ? (text, color) : (text, ColorPalette.Default.DeterministicColor(text));
     }
-
-    private const int MaxLabelSize = 50;
 
     private static string NormalizeLabel(string label)
     {

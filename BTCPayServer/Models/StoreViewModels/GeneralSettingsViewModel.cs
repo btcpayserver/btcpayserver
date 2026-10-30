@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Http;
 
@@ -30,10 +31,12 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Logo")]
         public IFormFile LogoFile { get; set; }
+        [MaxLength(LengthLimits.MaxUrlLength)]
         public string LogoUrl { get; set; }
 
         [Display(Name = "Custom CSS")]
         public IFormFile CssFile { get; set; }
+        [MaxLength(LengthLimits.MaxUrlLength)]
         public string CssUrl { get; set; }
 
         public bool Archived { get; set; }
@@ -53,7 +56,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public double PaymentTolerance { get; set; }
 
         [Display(Name = "Default currency")]
-        [MaxLength(10)]
+        [MaxLength(CurrencyNameTable.MaxCurrencyCodeLength)]
         public string DefaultCurrency { get; set; }
 
         [Display(Name = "Additional rates to track")]

@@ -177,6 +177,7 @@ public partial class UIStoresController
             ModelState.AddModelError(nameof(vm.ConnectionString), StringLocalizer["You do not have the permissions to change this settings"]);
         if (!ModelState.IsValid)
             return View(vm);
+        paymentMethod = handler.ParsePaymentMethodConfig(ctx.Config);
 
         switch (command)
         {
@@ -202,7 +203,7 @@ public partial class UIStoresController
                     if (!vm.SkipPortTest && hasPublicAddress)
                     {
                         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-                        await handler.TestConnection(info.First(), cts.Token);
+                        await handler.TestConnection(info.First(), paymentMethod.IsUnsafeConnectionAllowed(), cts.Token);
                     }
                     TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Connection to the Lightning node successful."].Value + " " +
                         (hasPublicAddress
@@ -368,7 +369,8 @@ public partial class UIStoresController
 
         if (existing.GetExternalLightningUrl() is { } connectionString)
         {
-            return _lightningClientFactory.Create(connectionString, network);
+            return _lightningClientFactory.Create(connectionString, network,
+                existing.IsUnsafeConnectionAllowed());
         }
         if (existing.IsInternalNode && _lightningNetworkOptions.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var internalLightningNode))
         {

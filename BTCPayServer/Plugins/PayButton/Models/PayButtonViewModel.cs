@@ -17,6 +17,7 @@ namespace BTCPayServer.Plugins.PayButton.Models
         public string DefaultPaymentMethod { get; set; }
         public PaymentMethodOptionViewModel.Format[] PaymentMethods { get; set; }
         public string CheckoutDesc { get; set; }
+        [MaxLength(LengthLimits.MaxOrderIdLength)]
         public string OrderId { get; set; }
         public int ButtonSize { get; set; }
         public int ButtonType { get; set; }
@@ -31,12 +32,11 @@ namespace BTCPayServer.Plugins.PayButton.Models
         public bool FitButtonInline { get; set; }
 
         [Url]
+        [MaxLength(LengthLimits.MaxUrlLength)]
         public string ServerIpn { get; set; }
         [Url]
+        [MaxLength(LengthLimits.MaxUrlLength)]
         public string BrowserRedirect { get; set; }
-        [MailboxAddress]
-        public string NotifyEmail { get; set; }
-
         public string StoreId { get; set; }
         public string CheckoutQueryString { get; set; }
 

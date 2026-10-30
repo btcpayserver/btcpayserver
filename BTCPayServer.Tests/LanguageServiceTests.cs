@@ -13,6 +13,7 @@ using BTCPayServer.Services;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 using Newtonsoft.Json.Linq;
 using static Microsoft.Playwright.Assertions;
@@ -33,7 +34,11 @@ namespace BTCPayServer.Tests
 
         private sealed class TestHttpClientFactory(HttpMessageHandler handler) : IHttpClientFactory
         {
-            public HttpClient CreateClient(string name) => new(handler, false);
+            public HttpClient CreateClient(string name)
+            {
+                Assert.Equal(LanguagePackUpdateService.HttpClientName, name);
+                return new HttpClient(handler, false);
+            }
         }
 
         public LanguageServiceTests(ITestOutputHelper helper) : base(helper)
@@ -44,7 +49,7 @@ namespace BTCPayServer.Tests
             new(new TestHttpClientFactory(handler), new MemoryCache(new MemoryCacheOptions()));
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_ParsesManifestEntries()
         {
             var handler = new TestHttpMessageHandler();
@@ -54,6 +59,7 @@ namespace BTCPayServer.Tests
                   "Languages": [
                     {
                       "Name": "French",
+                      "Bcp47": "fr-FR",
                       "Native": "Francais",
                       "File": "translations/french.json",
                       "Sha": "sha-fr",
@@ -78,6 +84,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(2, languages.Length);
 
             var french = languages.Single(l => l.Name == "French");
+            Assert.Equal("fr-FR", french.Bcp47);
             Assert.Equal("Francais", french.Native);
             Assert.Equal("alice", french.MaintainerHandle);
             Assert.Equal("https://github.com/alice", french.MaintainerUrl);
@@ -90,6 +97,158 @@ namespace BTCPayServer.Tests
             Assert.Null(german.MaintainerHandle);
             Assert.Null(german.MaintainerUrl);
             Assert.Null(german.Updated);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Fast", "Fast")]
+        public async Task LanguagePackUpdateService_ParsesManifestWithUtf8Bom()
+        {
+            var handler = new TestHttpMessageHandler();
+            handler.Register(ManifestUrl, () => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent(Encoding.UTF8.GetPreamble()
+                    .Concat(Encoding.UTF8.GetBytes("{\"Languages\":[]}")).ToArray())
+            });
+
+            var service = CreateLanguageService(handler);
+            Assert.Empty(await service.GetManifestLanguages());
+        }
+
+        [Theory(Timeout = TestTimeout)]
+        [Trait("Fast", "Fast")]
+        [InlineData("../../../evil-org/repo/main/pack.json")]
+        [InlineData("%2e%2e/%2e%2e/%2e%2e/evil-org/repo/main/pack.json")]
+        [InlineData("https://evil.example/pack.json")]
+        [InlineData("//evil.example/pack.json")]
+        public async Task LanguagePackUpdateService_RejectsPackOutsideTrustedOrg(string file)
+        {
+            var requests = 0;
+            var handler = new TestHttpMessageHandler(request =>
+            {
+                requests++;
+                Assert.Equal(ManifestUrl, request.RequestUri!.AbsoluteUri);
+                return TestHttpMessageHandler.JsonResponse(
+                    $$"""{ "Languages": [{ "Name": "French", "File": "{{file}}", "Sha": "unused" }] }""");
+            });
+
+            var service = CreateLanguageService(handler);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.FetchLanguagePackFromRepository("French"));
+            Assert.Equal(1, requests);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Fast", "Fast")]
+        public void LanguagePackUpdateService_ClientDisablesAutomaticRedirects()
+        {
+            var services = new ServiceCollection();
+            services.AddLogging();
+            new TranslationsPlugin().Execute(services);
+            using var provider = services.BuildServiceProvider();
+            var handler = provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler(LanguagePackUpdateService.HttpClientName);
+            while (handler is DelegatingHandler delegatingHandler)
+                handler = delegatingHandler.InnerHandler!;
+
+            Assert.False(Assert.IsType<HttpClientHandler>(handler).AllowAutoRedirect);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Fast", "Fast")]
+        public async Task LanguagePackUpdateService_ParsesBcp47()
+        {
+            var handler = new TestHttpMessageHandler();
+            handler.Register(ManifestUrl, () => TestHttpMessageHandler.JsonResponse(
+                """
+                {
+                  "Languages": [
+                    {
+                      "Name": "French",
+                      "Bcp47": "fr-FR",
+                      "File": "translations/french.json",
+                      "Sha": "sha-fr"
+                    }
+                  ]
+                }
+                """));
+            var service = CreateLanguageService(handler);
+            var languages = await service.GetManifestLanguages();
+            var french = Assert.Single(languages);
+            Assert.Equal("fr-FR", french.Bcp47);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Fast", "Fast")]
+        public async Task LanguagePackUpdateService_FollowsTrustedRedirect()
+        {
+            const string body = "{\"Hello\":\"Bonjour\"}";
+            var expectedSha = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(body)));
+            const string redirectManifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translations/main/manifest.json";
+            const string redirectBase = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translations/main/";
+            var handler = new TestHttpMessageHandler();
+            handler.Register(ManifestUrl, () => TestHttpMessageHandler.JsonResponse(
+                $$"""{ "Languages": [], "Redirect": "{{redirectManifestUrl}}" }"""));
+            handler.Register(redirectManifestUrl, () => TestHttpMessageHandler.JsonResponse(
+                $$"""
+                {
+                  "Languages": [
+                    {
+                      "Name": "French",
+                      "Code": "fr",
+                      "Bcp47": "fr-FR",
+                      "File": "translations/french.json",
+                      "Sha": "{{expectedSha}}"
+                    }
+                  ]
+                }
+                """));
+            handler.Register(redirectBase + "translations/french.json", () => TestHttpMessageHandler.JsonResponse(body));
+
+            var service = CreateLanguageService(handler);
+            var languages = await service.GetManifestLanguages();
+            var french = Assert.Single(languages);
+            Assert.Equal("fr-FR", french.Bcp47);
+            var (translationsJson, version, rtl) = await service.FetchLanguagePackFromRepository("French");
+            Assert.Equal(expectedSha, version, ignoreCase: true);
+            Assert.False(rtl);
+            Assert.Equal("Bonjour", JObject.Parse(translationsJson)["Hello"]?.ToString());
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Fast", "Fast")]
+        public async Task LanguagePackUpdateService_ThrowsOnRedirectOutsideTrustedOrg()
+        {
+            var handler = new TestHttpMessageHandler();
+            handler.Register(ManifestUrl, () => TestHttpMessageHandler.JsonResponse(
+                """
+                {
+                  "Languages": [],
+                  "Redirect": "https://raw.githubusercontent.com/evil-org/btcpayserver-translator/main/manifest.json"
+                }
+                """));
+            var service = CreateLanguageService(handler);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetManifestLanguages());
+        }
+
+        [Theory(Timeout = TestTimeout)]
+        [Trait("Fast", "Fast")]
+        [InlineData("https://raw.githubusercontent.com/btcpayserver/../evil-org/repo/main/manifest.json")]
+        [InlineData("https://raw.githubusercontent.com/btcpayserver/%2e%2e/evil-org/repo/main/manifest.json")]
+        [InlineData("http://raw.githubusercontent.com/btcpayserver/translations/main/manifest.json")]
+        [InlineData("https://raw.githubusercontent.com.evil.example/btcpayserver/translations/main/manifest.json")]
+        public async Task LanguagePackUpdateService_RejectsRedirectThatEscapesTrustedOrg(string redirect)
+        {
+            var handler = new TestHttpMessageHandler();
+            var fetchedElsewhere = false;
+            handler.Register(ManifestUrl, () => TestHttpMessageHandler.JsonResponse(
+                $$"""{ "Languages": [], "Redirect": "{{redirect}}" }"""));
+            // Where the dot-segment variants would resolve to if they were followed.
+            handler.Register("https://raw.githubusercontent.com/evil-org/repo/main/manifest.json", () =>
+            {
+                fetchedElsewhere = true;
+                return TestHttpMessageHandler.JsonResponse("""{ "Languages": [] }""");
+            });
+            var service = CreateLanguageService(handler);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetManifestLanguages());
+            Assert.False(fetchedElsewhere);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -118,7 +277,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_PropagatesExceptionOnMalformedManifest()
         {
             var handler = new TestHttpMessageHandler();
@@ -130,7 +289,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_ThrowsOnMissingLanguagesKey()
         {
             var handler = new TestHttpMessageHandler();
@@ -142,7 +301,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_ThrowsArgumentExceptionForUnknownLanguage()
         {
             var handler = new TestHttpMessageHandler();
@@ -155,7 +314,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_ThrowsWhenManifestFails()
         {
             var handler = new TestHttpMessageHandler();
@@ -169,7 +328,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_FetchesLanguagePackFromManifest()
         {
             const string body = "{\"Hello\":\"Bonjour\"}";
@@ -201,7 +360,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_RejectsLanguagePackOnShaMismatch()
         {
             const string body = "{\"Hello\":\"Bonjour\"}";
@@ -230,7 +389,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Unit", "Unit")]
+        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_UsesUpdateCacheUntilInvalidated()
         {
             var handler = new TestHttpMessageHandler();

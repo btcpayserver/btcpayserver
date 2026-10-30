@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +16,7 @@ namespace BTCPayServer.Services.Notifications
     {
         public string UserId { get; set; }
     }
-    public class NotificationSender(ApplicationDbContextFactory contextFactory, IServiceScopeFactory scopeFactory, NotificationManager notificationManager)
+    public class NotificationSender(ApplicationDbContextFactory contextFactory, IServiceScopeFactory scopeFactory, NotificationManager notificationManager, StoreRepository storeRepository, PermissionService permissionService)
     {
 
         public async Task SendNotification(INotificationScope scope, BaseNotification notification)
@@ -68,6 +70,15 @@ namespace BTCPayServer.Services.Notifications
                     }
                 case StoreScope s:
                     var roles = s.Roles?.Select(role => role.Id);
+                    if (s.Policy is not null)
+                    {
+                        var permission = Permission.Create(s.Policy, s.StoreId);
+                        var allowedRoles = (await storeRepository.GetStoreRoles(s.StoreId))
+                            .Where(role => role.ToPermissionSet(s.StoreId).HasPermission(permission, permissionService))
+                            .Select(role => role.Id)
+                            .ToArray();
+                        roles = roles is null ? allowedRoles : roles.Intersect(allowedRoles).ToArray();
+                    }
                     query = ctx.UserStore
                         .Include(store => store.ApplicationUser)
                         .Where(u => u.StoreDataId == s.StoreId && (roles == null || roles.Contains(u.StoreRoleId)))

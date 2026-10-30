@@ -36,7 +36,8 @@ namespace BTCPayServer.Data
             var ppBlob = data.PullPaymentData?.GetBlob();
             var payoutBlob = data.GetBlob(jsonSerializerSettings);
             return payoutBlob.Metadata?.TryGetValue("source", StringComparison.InvariantCultureIgnoreCase, out var source) is true
-                ? source.Value<string>()
+                   && source is JValue { Type: JTokenType.String, Value: string sourceValue }
+                ? sourceValue
                 : ppBlob?.Name ?? data.PullPaymentDataId;
         }
 
@@ -53,7 +54,7 @@ namespace BTCPayServer.Data
 
         public static JObject GetProofBlobJson(this PayoutData data)
         {
-            return data?.Proof is null ? null : JObject.Parse(data.Proof);
+            return data?.Proof is null ? null : JsonParser.ParseObject(data.Proof);
         }
         public static void SetProofBlob(this PayoutData data, IPayoutProof blob, JsonSerializerSettings settings)
         {
@@ -75,7 +76,7 @@ namespace BTCPayServer.Data
                 return;
             }
             // We only update the property if the bytes actually changed, this prevent from hammering the DB too much
-            if (!JToken.DeepEquals(blob, data.Proof is null ? null : JObject.Parse(data.Proof)))
+            if (!JToken.DeepEquals(blob, data.Proof is null ? null : JsonParser.ParseObject(data.Proof)))
             {
                 data.Proof = blob.ToString(Formatting.None);
             }

@@ -8,6 +8,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using Dapper;
@@ -25,12 +26,15 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
     public IReadOnlyList<object> Events => _evts;
 
     public decimal RoundAmount(decimal amount, string currency)
-        => Math.Round(amount, currencyNameTable.GetNumberFormatInfo(currency)?.CurrencyDecimalDigits ?? 2);
+        => RoundAmount(amount, currency, MidpointRounding.ToEven);
+
+    public decimal RoundAmount(decimal amount, string currency, MidpointRounding mode)
+        => Math.Round(amount, currencyNameTable.GetNumberFormatInfo(currency)?.CurrencyDecimalDigits ?? 2, mode);
 
 
     public decimal GetAmountToCredit(InvoiceEntity invoice)
         // If the subscriber settled more than expected, we credit the subscriber with the difference.
-        => RoundAmount(invoice.Status is InvoiceStatus.Processing ? invoice.PaidAmount.Net : invoice.NetSettled, invoice.Currency);
+        => RoundAmount(invoice.Status is InvoiceStatus.Processing ? invoice.PaidAmount.Net : invoice.NetSettled, invoice.Currency, MidpointRounding.ToZero);
 
     public async Task<decimal> CreditSubscriber(SubscriberData sub, string description, decimal credit)
     => (await TryCreditDebitSubscriber(sub, description, credit, 0m, true))!.Value;
@@ -43,22 +47,24 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
         var diff = tx.Diff;
         if (diff >= 0)
             force = true;
-        var amountCondition = force ? "1=1" : "new_amount >= 0";
 
         var amount = await ctx.Database.GetDbConnection()
             .ExecuteScalarAsync<decimal?>($"""
                                            WITH
-                                           change AS (
-                                                SELECT o.id, o.currency,  COALESCE(c.amount, 0) + o.diff AS new_amount
-                                                FROM (SELECT @id id, @currency currency, @diff diff) AS o
-                                                LEFT JOIN subs_subscriber_credits c ON c.subscriber_id = o.id AND c.currency = o.currency
-                                           ),
                                            up AS (
                                                INSERT INTO subs_subscriber_credits AS c (subscriber_id, currency, amount)
-                                               SELECT id, currency, new_amount FROM change
-                                               WHERE {amountCondition}
+                                               SELECT @id, @currency, @diff
+                                               WHERE @diff BETWEEN @minBalance AND @maxBalance
+                                                 AND @credit <= @maxBalance
+                                                 AND (@force OR EXISTS (
+                                                   SELECT FROM subs_subscriber_credits
+                                                   WHERE subscriber_id = @id AND currency = @currency
+                                               ))
                                                ON CONFLICT (subscriber_id, currency)
-                                               DO UPDATE SET amount = EXCLUDED.amount
+                                               DO UPDATE SET amount = c.amount + EXCLUDED.amount
+                                               WHERE (@force OR c.amount + EXCLUDED.amount >= 0)
+                                                 AND c.amount + EXCLUDED.amount BETWEEN @minBalance AND @maxBalance
+                                                 AND c.amount + @credit <= @maxBalance
                                                RETURNING c.subscriber_id, c.currency, @diff AS diff, c.amount AS balance
                                            ),
                                            hist AS (
@@ -73,7 +79,11 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
                                                FROM up
                                            )
                                            SELECT balance from up;
-                                           """, new { id = tx.SubscriberId, currency = tx.Currency, diff, desc = tx.Description });
+                                           """, new
+            {
+                id = tx.SubscriberId, currency = tx.Currency, diff, force, desc = tx.Description,
+                credit = tx.Credit, minBalance = -GreenfieldConstants.MaxAmount, maxBalance = GreenfieldConstants.MaxAmount
+            });
         return amount;
     }
 

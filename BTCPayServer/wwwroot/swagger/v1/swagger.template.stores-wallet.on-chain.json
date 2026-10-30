@@ -630,7 +630,7 @@
                         "$ref": "#/components/parameters/PaymentMethodId"
                     }
                 ],
-                "description": "Generate a wallet and update the specified store's payment method to it",
+                "description": "Generate a wallet and update the specified store's payment method to it. Unless the server policies allow non-admins to create hot wallets (`savePrivateKeys` is `true`) or cold wallets (`savePrivateKeys` is `false`), this requires the `btcpay.server.canmodifyserversettings` permission.",
                 "requestBody": {
                     "x-name": "request",
                     "content": {

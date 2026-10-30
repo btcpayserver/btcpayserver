@@ -12,7 +12,7 @@ public class Form
     public static Form Parse(string str)
     {
         ArgumentNullException.ThrowIfNull(str);
-        return JObject.Parse(str).ToObject<Form>(CamelCaseSerializerSettings.Serializer) ?? throw new InvalidOperationException("Impossible to deserialize Form");
+        return JsonParser.ParseObject(str).ToObject<Form>(CamelCaseSerializerSettings.Serializer) ?? throw new InvalidOperationException("Impossible to deserialize Form");
     }
     public override string ToString()
     {
@@ -95,7 +95,7 @@ public class Form
         var values = form.GroupBy(f => f.Key, f => f.Value).ToDictionary(g => g.Key, g => g.First());
         foreach (var f in GetAllFields())
         {
-            if (f.Field.Constant || !values.TryGetValue(f.FullName, out var val))
+            if (f.Field.Constant || f.Field.Type == "mirror" || !values.TryGetValue(f.FullName, out var val))
                 continue;
 
             f.Field.Value = val;

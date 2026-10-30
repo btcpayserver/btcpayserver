@@ -139,7 +139,7 @@ namespace BTCPayServer.Controllers.Greenfield
             List<ApplicationUserData> users = [];
             foreach (var user in usersWithRoles)
             {
-                users.Add(await UserService.ForAPI<ApplicationUserData>(user.User, user.Roles, _callbackGenerator, _uriResolver, Request, canManageUsers));
+                users.Add(await UserService.ForAPI<ApplicationUserData>(user.User, user.Roles, _callbackGenerator, _uriResolver, Request, canManageUsers, user.Disabled));
             }
             return Ok(users);
         }
@@ -164,20 +164,23 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
             }
+            if (request.Name?.Length > 50)
+                ModelState.AddModelError(nameof(request.Name), "Name is too long");
+            if (request.ImageUrl?.Length > LengthLimits.MaxUrlLength)
+                ModelState.AddModelError(nameof(request.ImageUrl), "ImageUrl is too long");
 
             bool needUpdate = false;
             var setNewPassword = !string.IsNullOrEmpty(request.NewPassword);
             var email = user.Email;
             var setNewEmail = !string.IsNullOrEmpty(request.Email) && request.Email != email && ModelState.IsValid;
             var currentPasswordValid = (setNewPassword || setNewEmail)
-                                       && !string.IsNullOrEmpty(request.CurrentPassword)
-                                       && await _userManager.CheckPasswordAsync(user, request.CurrentPassword);
+                                       && await _userManager.CheckPasswordWithLockoutAsync(user, request.CurrentPassword);
             if ((setNewPassword || setNewEmail) && !currentPasswordValid)
             {
                 ModelState.AddModelError(nameof(request.CurrentPassword), "The current password is not correct.");
             }
 
-            if (setNewPassword && currentPasswordValid)
+            if (setNewPassword && currentPasswordValid && ModelState.IsValid)
             {
                 var passwordValidation = await _passwordValidator.ValidateAsync(_userManager, user, request.NewPassword);
                 if (passwordValidation.Succeeded)
@@ -325,8 +328,12 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             if (request.Email is null)
                 ModelState.AddModelError(nameof(request.Email), "Email is missing");
-            if (!MailboxAddressValidator.IsMailboxAddress(request.Email))
+            if (request.Email?.Length > LengthLimits.MaxEmailLength || !MailboxAddressValidator.IsMailboxAddress(request.Email))
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
+            if (request.Name?.Length > 50)
+                ModelState.AddModelError(nameof(request.Name), "Name is too long");
+            if (request.ImageUrl?.Length > LengthLimits.MaxUrlLength)
+                ModelState.AddModelError(nameof(request.ImageUrl), "ImageUrl is too long");
 
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
@@ -463,7 +470,8 @@ namespace BTCPayServer.Controllers.Greenfield
         private async Task<ApplicationUserData> ForAPI(ApplicationUser data, bool includeInvitationUrl)
         {
             var roles = (await _userManager.GetRolesAsync(data)).ToArray();
-            return await UserService.ForAPI<ApplicationUserData>(data, roles, _callbackGenerator, _uriResolver, Request, includeInvitationUrl);
+            var disabled = await _userService.IsRestricted(data.Id, UserAccessRestrictionConstants.Administrative);
+            return await UserService.ForAPI<ApplicationUserData>(data, roles, _callbackGenerator, _uriResolver, Request, includeInvitationUrl, disabled);
         }
     }
 }

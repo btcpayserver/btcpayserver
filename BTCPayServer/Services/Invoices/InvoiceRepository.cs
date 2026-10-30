@@ -147,7 +147,7 @@ namespace BTCPayServer.Services.Invoices
             List<InvoiceEntity> invoices = new List<InvoiceEntity>();
             foreach (var row in rows)
             {
-                var jobj = JObject.Parse(row.invoice);
+                var jobj = JsonParser.ParseObject(row.invoice, 128);
                 jobj.Remove("Blob");
                 jobj["Blob2"] = jobj["Blob2"].ToString(Formatting.None);
                 var invoiceData = jobj.ToObject<InvoiceData>();
@@ -156,7 +156,7 @@ namespace BTCPayServer.Services.Invoices
                 invoiceData.Payments = new List<PaymentData>();
                 foreach (var payment in row.payments)
                 {
-                    jobj = JObject.Parse(payment);
+                    jobj = JsonParser.ParseObject(payment, 128);
                     jobj.Remove("Blob");
                     jobj["Blob2"] = jobj["Blob2"].ToString(Formatting.None);
                     var paymentData = jobj.ToObject<PaymentData>();
@@ -701,7 +701,8 @@ retry:
             IQueryable<InvoiceData> query =
                     dbContext
                     .Invoices
-                    .Include(o => o.Payments);
+                    .Include(o => o.Payments)
+                    .AsSplitQuery();
             if (includeAddressData)
                 query = query.Include(o => o.AddressInvoices);
             query = query.Where(i => i.Id == id);
@@ -845,10 +846,9 @@ retry:
                 query = query.Where(i => unusual == (i.Status == "Invalid" || !string.IsNullOrEmpty(i.ExceptionStatus)));
             }
 
-            if (queryObject.OrderByDesc)
-                query = query.OrderByDescending(q => q.Created);
-            else
-                query = query.OrderBy(q => q.Created);
+            query = queryObject.OrderByDesc
+                ? query.OrderByDescending(q => q.Created).ThenByDescending(q => q.Id)
+                : query.OrderBy(q => q.Created).ThenBy(q => q.Id);
 
             if (queryObject.Skip != null)
                 query = query.Skip(queryObject.Skip.Value);
@@ -866,7 +866,7 @@ retry:
         {
             await using var context = _applicationDbContextFactory.CreateContext();
             var query = GetInvoiceQuery(context, queryObject);
-            query = query.Include(o => o.Payments);
+            query = query.Include(o => o.Payments).AsSplitQuery();
             if (queryObject.IncludeAddresses)
                 query = query.Include(o => o.AddressInvoices);
             if (queryObject.IncludeRefunds)

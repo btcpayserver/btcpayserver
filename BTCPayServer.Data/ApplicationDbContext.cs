@@ -47,6 +47,7 @@ namespace BTCPayServer.Data
         public DbSet<U2FDevice> U2FDevices { get; set; }
         public DbSet<Fido2Credential> Fido2Credentials { get; set; }
         public DbSet<UserStore> UserStore { get; set; }
+        public DbSet<UserAccessRestriction> UserAccessRestrictions { get; set; }
         public DbSet<StoreLabelData> StoreLabels { get; set; }
         public DbSet<StoreLabelLinkData> StoreLabelLinks { get; set; }
         public DbSet<StoreRole> StoreRoles { get; set; }
@@ -104,6 +105,7 @@ namespace BTCPayServer.Data
             U2FDevice.OnModelCreating(builder);
             Fido2Credential.OnModelCreating(builder, Database);
             BTCPayServer.Data.UserStore.OnModelCreating(builder);
+            UserAccessRestriction.OnModelCreating(builder);
             //WalletData.OnModelCreating(builder);
             WalletObjectData.OnModelCreating(builder, Database);
             WalletObjectLinkData.OnModelCreating(builder, Database);

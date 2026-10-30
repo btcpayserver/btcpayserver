@@ -7,6 +7,7 @@ using BTCPayServer.Plugins.Bitpay.Models;
 using BTCPayServer.Plugins.Bitpay.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Plugins.Bitpay.Controllers;
 
@@ -27,6 +28,7 @@ public class BitpayAccessTokenController(TokenRepository tokenRepository) : Cont
     [HttpPost]
     [Route("tokens")]
     [AllowAnonymous]
+    [RateLimitsFilter(BitpayPlugin.RateLimitZone, Scope = RateLimitsScope.RemoteAddress)]
     public async Task<DataWrapper<List<PairingCodeResponse>>> Tokens([FromBody] TokenRequest request)
     {
         if (request == null)

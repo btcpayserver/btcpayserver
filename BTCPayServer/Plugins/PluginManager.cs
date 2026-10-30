@@ -22,6 +22,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins
@@ -33,16 +34,18 @@ namespace BTCPayServer.Plugins
         /// In case of tests, this is shared the plugins that are already their assembly loaded.
         /// This avoid loading the same plugin twice.
         /// </summary>
-        private static PreloadedPlugins _preloadedPlugins = new();
+        private static PluginLoadingContexts _pluginLoadingContexts = new();
+        private static readonly object FailureDiagnosticsLock = new();
+        private const string FailureDiagnosticsFileName = "plugin-failures.json";
 
-        public static bool IsExceptionByPlugin(Exception exception, [MaybeNullWhen(false)] out PreloadedPlugin preloadedPlugin)
+        public static bool IsExceptionByPlugin(Exception exception, [MaybeNullWhen(false)] out PluginLoadingContext preloadedPlugin)
         {
             if (ExtractPluginFromStackTrace(exception, out preloadedPlugin)) return true;
 
             var fromAssembly = exception is TypeLoadException
                 ? Regex.Match(exception.Message, "from assembly '(.*?),").Groups[1].Value
                 : null;
-            foreach (var plugin in _preloadedPlugins)
+            foreach (var plugin in _pluginLoadingContexts)
             {
                 var assembly = plugin.Assembly;
                 var assemblyName = assembly.GetName().Name;
@@ -72,11 +75,11 @@ namespace BTCPayServer.Plugins
             return false;
         }
 
-        private static bool ExtractPluginFromStackTrace(Exception exception, [MaybeNullWhen(false)] out PreloadedPlugin preloadedPlugin)
+        private static bool ExtractPluginFromStackTrace(Exception exception, [MaybeNullWhen(false)] out PluginLoadingContext preloadedPlugin)
         {
-            Dictionary<string, PreloadedPlugin> pluginsByName = new();
+            Dictionary<string, PluginLoadingContext> pluginsByName = new();
 
-            foreach (var preloaded in _preloadedPlugins.Where(p => p.Loader is not null && !string.IsNullOrEmpty(p.Assembly.FullName)))
+            foreach (var preloaded in _pluginLoadingContexts.Where(p => p.Loader is not null && !string.IsNullOrEmpty(p.Assembly.FullName)))
             {
                 pluginsByName.TryAdd(preloaded.Assembly.FullName!, preloaded);
                 foreach (var assembly in preloaded.Loader!.LoadContext.Assemblies)
@@ -87,8 +90,8 @@ namespace BTCPayServer.Plugins
             return ExtractPluginFromStackTrace(exception, out preloadedPlugin, pluginsByName);
         }
 
-        private static bool ExtractPluginFromStackTrace(Exception exception, out PreloadedPlugin? preloadedPlugin,
-            Dictionary<string, PreloadedPlugin> pluginsByName)
+        private static bool ExtractPluginFromStackTrace(Exception exception, out PluginLoadingContext? preloadedPlugin,
+            Dictionary<string, PluginLoadingContext> pluginsByName)
         {
             var trace = new StackTrace(exception, true);
             foreach (var frame in trace.GetFrames().Reverse())
@@ -121,37 +124,58 @@ namespace BTCPayServer.Plugins
 
         public record PreloadedPlugin(IBTCPayServerPlugin Instance, PluginLoader? Loader, Assembly Assembly);
 
-        class PreloadedPlugins : IEnumerable<PreloadedPlugin>
+        public sealed class PluginLoadingContext
         {
-            List<PreloadedPlugin> _plugins = new();
-            readonly Dictionary<string, PreloadedPlugin> _preloadedPluginsByIdentifier = new(StringComparer.OrdinalIgnoreCase);
+            public required string PluginDir { get; init; }
+            public required string Identifier { get; init; }
+            public required string AssemblyPath { get; init; }
+            public Version? ManifestVersion { get; init; }
+            public PluginLifecyclePhase Phase { get; set; }
+            public PreloadedPlugin? PreloadedPlugin { get; private set; }
 
-            public bool Contains(string identifier) => _preloadedPluginsByIdentifier.ContainsKey(identifier);
-            public void Add(PreloadedPlugin  plugin)
+            public IBTCPayServerPlugin Instance => PreloadedPlugin!.Instance;
+            public PluginLoader? Loader => PreloadedPlugin!.Loader;
+            public Assembly Assembly => PreloadedPlugin!.Assembly;
+
+            public void SetPreloadedPlugin(PreloadedPlugin plugin)
             {
-                if (!_preloadedPluginsByIdentifier.TryAdd(plugin.Instance.Identifier, plugin))
+                if (PreloadedPlugin is not null)
+                    throw new InvalidOperationException("The plugin has already been preloaded.");
+                PreloadedPlugin = plugin;
+            }
+        }
+
+        class PluginLoadingContexts : IEnumerable<PluginLoadingContext>
+        {
+            List<PluginLoadingContext> _plugins = new();
+            readonly Dictionary<string, PluginLoadingContext> _contextsByIdentifier = new(StringComparer.OrdinalIgnoreCase);
+
+            public bool Contains(string identifier) => _contextsByIdentifier.ContainsKey(identifier);
+            public void Add(PluginLoadingContext plugin)
+            {
+                if (!_contextsByIdentifier.TryAdd(plugin.Instance.Identifier, plugin))
                     return;
                 _plugins.Add(plugin);
             }
 
-            public IEnumerator<PreloadedPlugin> GetEnumerator() => _plugins.GetEnumerator();
+            public IEnumerator<PluginLoadingContext> GetEnumerator() => _plugins.GetEnumerator();
             IEnumerator IEnumerable.GetEnumerator() => _plugins.GetEnumerator();
 
             public void Clear()
             {
                 _plugins.Clear();
-                _preloadedPluginsByIdentifier.Clear();
+                _contextsByIdentifier.Clear();
             }
 
             public void TopologicalSort()
             {
                 // We want to run all the system plugins first.
                 // Then the rest topologically sorted.
-                var ordered = new List<PreloadedPlugin>(_plugins.Count);
+                var ordered = new List<PluginLoadingContext>(_plugins.Count);
                 var topological = _plugins.TopologicalSort(
                     p => p.Instance.Dependencies.Select(d => d.Identifier),
                     p => p.Instance.Identifier,
-                    p=> p, Comparer<PreloadedPlugin>.Create((a, b) => string.Compare(a.Instance.Identifier, b.Instance.Identifier, StringComparison.Ordinal))).ToList();
+                    p=> p, Comparer<PluginLoadingContext>.Create((a, b) => string.Compare(a.Instance.Identifier, b.Instance.Identifier, StringComparison.Ordinal))).ToList();
                 foreach (var p in topological.Where(t => t.Instance.SystemPlugin))
                     ordered.Add(p);
                 foreach (var p in topological.Where(t => !t.Instance.SystemPlugin))
@@ -159,9 +183,9 @@ namespace BTCPayServer.Plugins
                 _plugins = ordered;
             }
 
-            public PreloadedPlugin? TryGet(string identifier)
+            public PluginLoadingContext? TryGet(string identifier)
             {
-                _preloadedPluginsByIdentifier.TryGetValue(identifier, out var p);
+                _contextsByIdentifier.TryGetValue(identifier, out var p);
                 return p;
             }
         }
@@ -169,7 +193,7 @@ namespace BTCPayServer.Plugins
         public static IMvcBuilder AddPlugins(this IMvcBuilder mvcBuilder, IServiceCollection serviceCollection,
             IConfiguration config, ILoggerFactory loggerFactory, ServiceProvider bootstrapServiceProvider)
         {
-            var preloadedPlugins = new PreloadedPlugins();
+            var pluginLoadingContexts = new PluginLoadingContexts();
             var logger = loggerFactory.CreateLogger(typeof(PluginManager));
             var pluginsFolder = new DataDirectories().Configure(config).PluginDir;
 
@@ -185,11 +209,20 @@ namespace BTCPayServer.Plugins
             var systemAssembly = typeof(Program).Assembly;
             foreach (var plugin in GetPluginInstancesFromAssembly(systemAssembly, true))
             {
-                preloadedPlugins.Add(new PreloadedPlugin(plugin, null, systemAssembly));
                 plugin.SystemPlugin = true;
+                var context = new PluginLoadingContext
+                {
+                    PluginDir = pluginsFolder,
+                    Identifier = plugin.Identifier,
+                    AssemblyPath = systemAssembly.Location,
+                    ManifestVersion = plugin.Version,
+                    Phase = PluginLifecyclePhase.PluginExecution
+                };
+                context.SetPreloadedPlugin(new PreloadedPlugin(plugin, null, systemAssembly));
+                pluginLoadingContexts.Add(context);
             }
 
-            var pluginsToPreload = new List<(string PluginIdentifier, string PluginFilePath)>();
+            var pluginsToPreload = new List<PluginLoadingContext>();
 
 #if DEBUG
             // Load from DEBUG_PLUGINS, in an optional appsettings.dev.json
@@ -204,13 +237,15 @@ namespace BTCPayServer.Plugins
                 {
                     filePath = plugin[(idx + 1)..];
                     filePath = Path.GetFullPath(Path.Combine(contentRoot, filePath));
-                    pluginsToPreload.Add((plugin[0..idx], filePath));
+                    var identifier = plugin[0..idx];
+                    pluginsToPreload.Add(CreateLoadingContext(pluginsFolder, identifier, filePath));
                 }
                 else
                 {
                     filePath = Path.GetFullPath(Path.Combine(contentRoot, filePath));
 
-                    pluginsToPreload.Add((Path.GetFileNameWithoutExtension(plugin), filePath));
+                    var identifier = Path.GetFileNameWithoutExtension(plugin);
+                    pluginsToPreload.Add(CreateLoadingContext(pluginsFolder, identifier, filePath));
                 }
             }
 #endif
@@ -234,20 +269,21 @@ namespace BTCPayServer.Plugins
                     continue;
                 }
 
-                pluginsToPreload.Add((pluginIdentifier, pluginFilePath));
+                pluginsToPreload.Add(CreateLoadingContext(pluginsFolder, pluginIdentifier, pluginFilePath));
             }
 
-            var toDisable = new List<string>();
+            var toDisable = new List<PluginLoadingContext>();
 
-            foreach (var toLoad in pluginsToPreload)
+            foreach (var context in pluginsToPreload)
             {
-                if (preloadedPlugins.Contains(toLoad.PluginIdentifier))
+                if (pluginLoadingContexts.Contains(context.Identifier))
                     continue;
 
+                context.Phase = PluginLifecyclePhase.AssemblyLoad;
                 try
                 {
                     var loader = PluginLoader.CreateFromAssemblyFile(
-                        toLoad.PluginFilePath, // create a plugin from for the .dll file
+                        context.AssemblyPath, // create a plugin from for the .dll file
                         c =>
                         {
 
@@ -258,37 +294,57 @@ namespace BTCPayServer.Plugins
                         });
                     var pluginAssembly = loader.LoadDefaultAssembly();
 
-                    var p = GetPluginInstanceFromAssembly(toLoad.PluginIdentifier, pluginAssembly, silentlyFails: true);
+                    context.Phase = PluginLifecyclePhase.PluginActivation;
+                    var instances = GetPluginInstancesFromAssembly(pluginAssembly, silentlyFails: true).ToArray();
+                    var p = instances.FirstOrDefault(plugin => plugin.Identifier == context.Identifier);
                     if (p == null)
                     {
-                        logger.LogError($"The plugin assembly doesn't contain the plugin {toLoad.PluginIdentifier}");
-						toDisable.Add(toLoad.PluginIdentifier);
+                        context.Phase = PluginLifecyclePhase.PluginDiscovery;
+                        var actualIdentifiers = string.Join(", ", instances.Select(plugin => plugin.Identifier));
+                        var details = instances.Length == 0
+                            ? $"The plugin assembly doesn't contain a plugin with identifier {context.Identifier}."
+                            : $"The plugin identifier does not match. Expected {context.Identifier}, but found: {actualIdentifiers}.";
+                        logger.LogError(details);
+                        RecordPluginFailure(context, details);
+                        toDisable.Add(context);
 					}
                     else
                     {
+                        context.Phase = PluginLifecyclePhase.PluginValidation;
+                        if (context.ManifestVersion is not null && p.Version != context.ManifestVersion)
+                        {
+                            var details = $"The plugin version does not match its manifest. Expected {context.ManifestVersion}, but loaded {p.Version}.";
+                            logger.LogError(details);
+                            RecordPluginFailure(context, details);
+                            toDisable.Add(context);
+                            continue;
+                        }
                         p.SystemPlugin = false;
-                        preloadedPlugins.Add(new(p, loader, pluginAssembly));
+                        context.SetPreloadedPlugin(new PreloadedPlugin(p, loader, pluginAssembly));
+                        pluginLoadingContexts.Add(context);
                     }
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e, $"Error when loading plugin {toLoad.PluginIdentifier}.");
-					toDisable.Add(toLoad.PluginIdentifier);
+                    logger.LogError(e, $"Error when loading plugin {context.Identifier}.");
+                    RecordPluginFailure(context, e);
+                    toDisable.Add(context);
 				}
             }
 
-            preloadedPlugins.TopologicalSort();
-            var loadedPlugins = new List<PreloadedPlugin>();
-            foreach (var preloadedPlugin in preloadedPlugins)
+            pluginLoadingContexts.TopologicalSort();
+            var loadedPlugins = new List<PluginLoadingContext>();
+            foreach (var preloadedPlugin in pluginLoadingContexts)
             {
                 var plugin = preloadedPlugin.Instance;
+                preloadedPlugin.Phase = PluginLifecyclePhase.PluginExecution;
                 try
                 {
                     AssertDependencies(plugin, loadedPlugins);
                     if (preloadedPlugin.Loader is { } loader)
                         loader.AddAssemblyLoadContexts(
                             plugin.Dependencies
-                            .Select(d => preloadedPlugins.TryGet(d.Identifier)?.Loader)
+                            .Select(d => pluginLoadingContexts.TryGet(d.Identifier)?.Loader)
                             .Where(d => d is not null)
                             .ToArray()!);
 
@@ -318,15 +374,18 @@ namespace BTCPayServer.Plugins
                 {
                     logger.LogError(e, $"Error when executing plugin {plugin.Identifier} - {plugin.Version}.");
                     if (!plugin.SystemPlugin)
-                        toDisable.Add(plugin.Identifier);
+                    {
+                        RecordPluginFailure(preloadedPlugin, e);
+                        toDisable.Add(preloadedPlugin);
+                    }
                 }
             }
-            _preloadedPlugins = preloadedPlugins;
+            _pluginLoadingContexts = pluginLoadingContexts;
 			if (toDisable.Count > 0)
 			{
-				foreach (var plugin in toDisable)
-					DisablePlugin(pluginsFolder, plugin);
-				var crashedPluginsStr = string.Join(", ", toDisable);
+				foreach (var plugin in toDisable.DistinctBy(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase))
+					DisablePlugin(plugin);
+				var crashedPluginsStr = string.Join(", ", toDisable.Select(plugin => plugin.Identifier));
 				throw new ConfigException($"The following plugin(s) crashed at startup, they will be disabled and the server will restart: {crashedPluginsStr}");
 			}
 			return mvcBuilder;
@@ -334,7 +393,7 @@ namespace BTCPayServer.Plugins
 
         class MissingDependenciesException(string message) : Exception(message);
 
-        private static void AssertDependencies(IBTCPayServerPlugin plugin, List<PreloadedPlugin> loaded)
+        private static void AssertDependencies(IBTCPayServerPlugin plugin, List<PluginLoadingContext> loaded)
         {
             var missing = new List<IBTCPayServerPlugin.PluginDependency>();
             var installed = loaded.ToDictionary(l => l.Instance.Identifier, l => l.Instance.Version);
@@ -395,6 +454,21 @@ namespace BTCPayServer.Plugins
             return GetPluginInstancesFromAssembly(assembly, silentlyFails).FirstOrDefault(plugin => plugin.Identifier == pluginIdentifier);
         }
 
+        private static PluginLoadingContext CreateLoadingContext(
+            string pluginDir,
+            string identifier,
+            string assemblyPath)
+        {
+            return new PluginLoadingContext
+            {
+                PluginDir = pluginDir,
+                Identifier = identifier,
+                AssemblyPath = assemblyPath,
+                ManifestVersion = TryReadPluginVersion(Path.GetDirectoryName(assemblyPath)!, identifier),
+                Phase = PluginLifecyclePhase.AssemblyLoad
+            };
+        }
+
         private static bool ExecuteCommands(string pluginsFolder)
         {
             var pendingCommands = GetPendingCommands(pluginsFolder);
@@ -428,7 +502,7 @@ namespace BTCPayServer.Plugins
                 var manifestFileName = Path.Join(dirName, plugin + ".json");
                 if (File.Exists(manifestFileName))
                 {
-                    var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
+                    var pluginManifest =  JsonParser.ParseObject(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
                     if (pluginManifest is not null)
                         installed.TryAdd(pluginManifest.Identifier, (pluginManifest.Version, pluginManifest.Dependencies, isDisabled));
                 }
@@ -447,7 +521,7 @@ namespace BTCPayServer.Plugins
             var dirName = Path.Join(pluginsFolder, plugin);
             var manifestFileName = dirName + ".json";
             if (!File.Exists(manifestFileName)) return true;
-            var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
+            var pluginManifest =  JsonParser.ParseObject(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
             if (pluginManifest is not null)
                 return DependenciesMet(pluginManifest.Dependencies, installed);
             return true;
@@ -465,6 +539,7 @@ namespace BTCPayServer.Plugins
                         File.Delete(dirName);
                     if (Directory.Exists(dirName))
                         Directory.Delete(dirName, true);
+                    ClearPluginFailure(pluginsFolder, command.extension);
                     break;
 
                 case "install":
@@ -574,16 +649,33 @@ namespace BTCPayServer.Plugins
 
         public static void DisablePlugins(string pluginDir)
         {
-            foreach (var plugin in _preloadedPlugins)
-                DisablePlugin(pluginDir, plugin);
+            foreach (var plugin in _pluginLoadingContexts.Where(plugin => !plugin.Instance.SystemPlugin))
+                DisablePlugin(pluginDir, plugin.Identifier);
         }
 
-        public static void DisablePlugin(string pluginDir, PreloadedPlugin plugin)
+        public static void DisablePlugins(Exception exception)
         {
-            if (plugin.Instance.SystemPlugin) return;
-            var name = plugin.Assembly.GetName()?.Name;
-            if (name is null) return;
-            DisablePlugin(pluginDir, name);
+            foreach (var plugin in _pluginLoadingContexts.Where(plugin => !plugin.Instance.SystemPlugin))
+            {
+                plugin.Phase = PluginLifecyclePhase.Startup;
+                RecordPluginFailure(plugin, exception, PluginFailureAttribution.PossiblyInvolvedCulpritUnknown);
+                DisablePlugin(plugin);
+            }
+        }
+
+        public static void DisablePlugin(PluginLoadingContext plugin)
+        {
+            if (plugin.PreloadedPlugin?.Instance.SystemPlugin is true) return;
+            DisablePlugin(plugin.PluginDir, plugin.Identifier);
+        }
+
+        public static void DisablePlugin(PluginLoadingContext plugin, Exception exception,
+            PluginLifecyclePhase phase)
+        {
+            if (plugin.PreloadedPlugin?.Instance.SystemPlugin is true) return;
+            plugin.Phase = phase;
+            RecordPluginFailure(plugin, exception);
+            DisablePlugin(plugin);
         }
 
         public static void DisablePlugin(string pluginDir, string plugin)
@@ -591,16 +683,156 @@ namespace BTCPayServer.Plugins
             QueueCommands(pluginDir, ("disable", plugin));
         }
 
+        public static IReadOnlyDictionary<string, PluginFailureDiagnostic> GetPluginFailures(string pluginDir)
+        {
+            try
+            {
+                lock (FailureDiagnosticsLock)
+                {
+                    return ReadPluginFailures(pluginDir);
+                }
+            }
+            catch
+            {
+                return new Dictionary<string, PluginFailureDiagnostic>(StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
+        private static void RecordPluginFailure(
+            PluginLoadingContext plugin,
+            Exception exception,
+            PluginFailureAttribution attribution = PluginFailureAttribution.Confirmed)
+        {
+            RecordPluginFailure(plugin, exception.ToString(), attribution);
+        }
+
+        private static void RecordPluginFailure(
+            PluginLoadingContext plugin,
+            string details,
+            PluginFailureAttribution attribution = PluginFailureAttribution.Confirmed)
+        {
+            var diagnostic = new PluginFailureDiagnostic
+            {
+                Timestamp = DateTimeOffset.UtcNow,
+                PluginIdentifier = plugin.Identifier,
+                PluginVersion = plugin.PreloadedPlugin?.Instance.Version ?? plugin.ManifestVersion,
+                BTCPayVersion = BTCPayServerEnvironment.GetInformationalVersion(),
+                Phase = plugin.Phase,
+                Attribution = attribution,
+                Details = details
+            };
+
+            try
+            {
+                lock (FailureDiagnosticsLock)
+                {
+                    var failures = ReadPluginFailures(plugin.PluginDir);
+                    failures[plugin.Identifier] = diagnostic;
+                    WritePluginFailures(plugin.PluginDir, failures);
+                }
+            }
+            catch
+            {
+                // Diagnostics must never prevent crash protection from disabling a plugin.
+            }
+        }
+
+        public static void ClearFailureDiagnosticsForStartedPlugins(
+            string pluginDir,
+            IEnumerable<IBTCPayServerPlugin> startedPlugins)
+        {
+            var identifiers = startedPlugins
+                .Where(plugin => !plugin.SystemPlugin)
+                .Select(plugin =>
+                {
+                    var context = _pluginLoadingContexts.TryGet(plugin.Identifier);
+                    if (context is not null)
+                        context.Phase = PluginLifecyclePhase.Running;
+                    return context?.Identifier ?? plugin.Identifier;
+                })
+                .ToArray();
+            ClearPluginFailures(pluginDir, identifiers);
+        }
+
+        public static void ClearPluginFailure(string pluginDir, string identifier)
+        {
+            ClearPluginFailures(pluginDir, [identifier]);
+        }
+
+        private static void ClearPluginFailures(string pluginDir, IEnumerable<string> identifiers)
+        {
+            try
+            {
+                lock (FailureDiagnosticsLock)
+                {
+                    var failures = ReadPluginFailures(pluginDir);
+                    var changed = false;
+                    foreach (var identifier in identifiers)
+                        changed |= failures.Remove(identifier);
+                    if (changed)
+                        WritePluginFailures(pluginDir, failures);
+                }
+            }
+            catch
+            {
+                // Diagnostics cleanup must never prevent the server from starting.
+            }
+        }
+
+        private static Dictionary<string, PluginFailureDiagnostic> ReadPluginFailures(string pluginDir)
+        {
+            var path = Path.Join(pluginDir, FailureDiagnosticsFileName);
+            if (!File.Exists(path))
+                return new Dictionary<string, PluginFailureDiagnostic>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                var persisted = JsonConvert.DeserializeObject<Dictionary<string, PluginFailureDiagnostic>>(
+                    File.ReadAllText(path));
+                return persisted is null
+                    ? new Dictionary<string, PluginFailureDiagnostic>(StringComparer.OrdinalIgnoreCase)
+                    : new Dictionary<string, PluginFailureDiagnostic>(persisted, StringComparer.OrdinalIgnoreCase);
+            }
+            catch (JsonException)
+            {
+                return new Dictionary<string, PluginFailureDiagnostic>(StringComparer.OrdinalIgnoreCase);
+            }
+            catch (IOException)
+            {
+                return new Dictionary<string, PluginFailureDiagnostic>(StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
+        private static void WritePluginFailures(string pluginDir,
+            Dictionary<string, PluginFailureDiagnostic> failures)
+        {
+            Directory.CreateDirectory(pluginDir);
+            var path = Path.Join(pluginDir, FailureDiagnosticsFileName);
+            if (failures.Count == 0)
+            {
+                File.Delete(path);
+                return;
+            }
+
+            File.WriteAllText(path, JsonConvert.SerializeObject(failures, Formatting.Indented));
+        }
+
 
         internal static Version? TryReadPluginVersion(string pluginDirectory, string pluginIdentifier)
+        {
+            return TryReadPluginManifest(pluginDirectory, pluginIdentifier)?.Version;
+        }
+
+        private static PluginService.AvailablePlugin? TryReadPluginManifest(
+            string pluginDirectory,
+            string pluginIdentifier)
         {
             var manifestFileName = Path.Join(pluginDirectory, pluginIdentifier + ".json");
             if (!File.Exists(manifestFileName))
                 return null;
             try
             {
-                return JObject.Parse(File.ReadAllText(manifestFileName))
-                    .ToObject<PluginService.AvailablePlugin>()?.Version;
+                return JsonParser.ParseObject(File.ReadAllText(manifestFileName))
+                    .ToObject<PluginService.AvailablePlugin>();
             }
             catch
             {

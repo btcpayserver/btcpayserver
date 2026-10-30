@@ -51,6 +51,8 @@ public class StoreEmailRuleProcessorSender(
     EmailSenderFactory emailSenderFactory)
     : EventHostedServiceBase(eventAggregator, logger)
 {
+    internal const int MaxRecipients = 100;
+
     protected override void SubscribeToEvents()
     {
         Subscribe<TriggerEvent>();
@@ -87,6 +89,11 @@ public class StoreEmailRuleProcessorSender(
                         await triggEvent.Owner.BeforeSending(matchedContext);
                     if (matchedContext.To.Count == 0)
                         continue;
+                    if (!IsWithinRecipientLimit(matchedContext.To, matchedContext.CC, matchedContext.BCC))
+                    {
+                        // This only happens when a plural placeholder expands to a pathological number of recipients.
+                        continue;
+                    }
                     sender.SendEmail(matchedContext.To.ToArray(), matchedContext.CC.ToArray(), matchedContext.BCC.ToArray(), subject.Render(triggEvent.Model), body.Render(triggEvent.Model));
                 }
             }
@@ -104,28 +111,59 @@ public class StoreEmailRuleProcessorSender(
     private void AddToMatchedContext(JObject model, List<MailboxAddress> mailboxAddresses, string[] rulesAddresses)
     {
         mailboxAddresses.AddRange(
-            rulesAddresses
-                .SelectMany(o =>
-                {
-                    var emails = new TextTemplate(o).Render(model);
-                    MailAddressCollection mailCollection = new();
-                    try
-                    {
-                        mailCollection.Add(emails);
-                    }
-                    catch (FormatException)
-                    {
-                        return Array.Empty<MailboxAddress>();
-                    }
+            rulesAddresses.SelectMany(o => ParseEmailAddresses(model, o)));
+    }
 
-                    return mailCollection.Select(a =>
-                        {
-                            MailboxAddressValidator.TryParse(a.ToString(), out var oo);
-                            return oo;
-                        })
-                        .Where(a => a != null)
-                        .ToArray();
-                })
-                .Where(o => o != null)!);
+    internal static MailboxAddress[] ParseEmailAddresses(JObject model, string recipient)
+    {
+        var expectsSingleRecipient = false;
+        var template = new TextTemplate(recipient)
+        {
+            Encode = value =>
+            {
+                expectsSingleRecipient |= !IsPluralPlaceholder(value.Path);
+                return value.Value;
+            }
+        };
+        var emails = template.Render(model);
+        if (string.IsNullOrWhiteSpace(emails))
+            return Array.Empty<MailboxAddress>();
+        MailAddressCollection mailCollection = new();
+        try
+        {
+            mailCollection.Add(emails);
+        }
+        catch (FormatException)
+        {
+            return Array.Empty<MailboxAddress>();
+        }
+        if (expectsSingleRecipient && mailCollection.Count != 1)
+            return Array.Empty<MailboxAddress>();
+
+        return mailCollection
+            .Select(a =>
+            {
+                MailboxAddressValidator.TryParse(a.ToString(), out var oo);
+                return oo;
+            })
+            .OfType<MailboxAddress>()
+            .ToArray();
+    }
+
+    internal static bool IsWithinRecipientLimit(
+        IReadOnlyCollection<MailboxAddress> to,
+        IReadOnlyCollection<MailboxAddress> cc,
+        IReadOnlyCollection<MailboxAddress> bcc)
+    {
+        return to.Count + cc.Count + bcc.Count <= MaxRecipients;
+    }
+
+    private static bool IsPluralPlaceholder(string path)
+    {
+        // In bracket notation (Metadata['emails']), the name ends before the closing "']".
+        var name = path.EndsWith("']", StringComparison.Ordinal) ? path[..^2] : path[(path.LastIndexOf('.') + 1)..];
+        // A trailing "s" denotes a multi-address placeholder, except for singular names such as "Address".
+        return name.EndsWith("s", StringComparison.OrdinalIgnoreCase) &&
+               !name.EndsWith("ss", StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -38,7 +38,7 @@ namespace BTCPayServer.Plugins.Wallets.Views.ViewModels
         {
             if (UploadedPSBTFile != null)
             {
-                if (UploadedPSBTFile.Length > 500 * 1024)
+                if (UploadedPSBTFile.Length > WalletPSBTViewModel.MaxPSBTLength)
                     return null;
                 byte[] bytes = new byte[UploadedPSBTFile.Length];
                 using (var stream = UploadedPSBTFile.OpenReadStream())

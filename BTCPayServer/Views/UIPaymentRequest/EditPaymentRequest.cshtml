@@ -118,8 +118,8 @@
             <div class="form-group">
                 <label asp-for="ExpiryDate" class="form-label"></label>
                 <div class="input-group ">
-                    <input asp-for="ExpiryDate"
-                           value="@(Model.ExpiryDate?.ToString("u", CultureInfo.InvariantCulture))"
+                    <input type="text" asp-for="ExpiryDate"
+                           value="@(Model.ExpiryDate?.ToString("o", CultureInfo.InvariantCulture))"
                            class="form-control flatdtpicker" min="today" placeholder="@StringLocalizer["No expiry date has been set for this payment request"]" />
                     <button id="ClearExpiryDate" class="btn btn-secondary input-group-clear" type="button" title="@StringLocalizer["Clear"]">
                         <vc:icon symbol="close" />
@@ -162,7 +162,7 @@
         <div class="col-xl-10 col-xxl-constrain">
             <div class="form-group">
                 <label asp-for="Description" class="form-label"></label>
-                <textarea asp-for="Description" class="form-control richtext"></textarea>
+                <textarea asp-for="Description" rich-text class="form-control"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
         </div>
@@ -179,13 +179,15 @@
            asp-route-storeId="@storeId"
            asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(payreqId)}")" text-translate="true">Invoices</a>
         <a class="btn btn-secondary" asp-route-storeId="@storeId" asp-route-payReqId="" asp-route-clonedPayReqId="@payreqId" asp-action="EditPaymentRequest" id="ClonePaymentRequest"  permission="@Policies.CanModifyPaymentRequests" text-translate="true">Clone</a>
-        @if (!Model.Archived)
-        {
-            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="@StringLocalizer["Archive this payment request so that it does not appear in the payment request list by default"]" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@payreqId" id="ArchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Archive</a>
-        }
-        else
-        {
-            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="@StringLocalizer["Unarchive this payment request"]" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@payreqId" id="UnarchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Unarchive</a>
-        }
+        <form method="post" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@payreqId" permission="@Policies.CanModifyPaymentRequests" class="d-inline">
+            @if (!Model.Archived)
+            {
+                <button type="submit" class="btn btn-secondary" data-bs-toggle="tooltip" title="@StringLocalizer["Archive this payment request so that it does not appear in the payment request list by default"]" id="ArchivePaymentRequest" text-translate="true">Archive</button>
+            }
+            else
+            {
+                <button type="submit" class="btn btn-secondary" data-bs-toggle="tooltip" title="@StringLocalizer["Unarchive this payment request"]" id="UnarchivePaymentRequest" text-translate="true">Unarchive</button>
+            }
+        </form>
     </div>
 }

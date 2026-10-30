@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Configuration;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -67,7 +68,7 @@ namespace BTCPayServer.Services
         {
             return NetworkType != ChainName.Mainnet ||
                        httpContext.Request.Scheme == "https" ||
-                       httpContext.Request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase) ||
+                       httpContext.Request.IsOnion() ||
                        Extensions.IsLocalNetwork(httpContext.Request.Host.Host);
         }
 

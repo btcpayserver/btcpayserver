@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -188,8 +189,8 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        private async Task Wait(string invoiceId, bool startup) => await Wait(await _invoiceRepository.GetInvoice(invoiceId), startup);
-        private async Task Wait(InvoiceEntity invoice, bool startup)
+        private Task Wait(InvoiceEntity invoice, bool startup) => Wait(invoice.Id, invoice.ExpirationTime, invoice.MonitoringExpiration, startup);
+        private async Task Wait(string invoiceId, DateTimeOffset expirationTime, DateTimeOffset monitoringExpiration, bool startup)
         {
             var startupOffset = TimeSpan.Zero;
 
@@ -201,20 +202,20 @@ namespace BTCPayServer.HostedServices
             try
             {
                 // add 1 second to ensure watch won't trigger moments before invoice expires
-                var delay = (invoice.ExpirationTime.AddSeconds(1) + startupOffset) - DateTimeOffset.UtcNow;
+                var delay = (expirationTime.AddSeconds(1) + startupOffset) - DateTimeOffset.UtcNow;
                 if (delay > TimeSpan.Zero)
                 {
                     await Task.Delay(delay, _Cts.Token);
                 }
-                Watch(invoice.Id);
+                Watch(invoiceId);
 
                 // add 1 second to ensure watch won't trigger moments before monitoring expires
-                delay = invoice.MonitoringExpiration.AddSeconds(1) - DateTimeOffset.UtcNow;
+                delay = monitoringExpiration.AddSeconds(1) - DateTimeOffset.UtcNow;
                 if (delay > TimeSpan.Zero)
                 {
                     await Task.Delay(delay, _Cts.Token);
                 }
-                Watch(invoice.Id);
+                Watch(invoiceId);
             }
             catch when (_Cts.IsCancellationRequested)
             { }
@@ -240,13 +241,13 @@ namespace BTCPayServer.HostedServices
             {
                 if (InvoiceEventNotification.HandlesEvent(b.Name))
                 {
-                    await _notificationSender.SendNotification(new StoreScope(b.Invoice.StoreId),
+                    await _notificationSender.SendNotification(new StoreScope(b.Invoice.StoreId) { Policy = Policies.CanViewInvoices },
                         new InvoiceEventNotification(b.Invoice.Id, b.Name, b.Invoice.StoreId));
                 }
                 if (b.Name == InvoiceEvent.Created)
                 {
                     Watch(b.Invoice.Id);
-                    _ = Wait(b.Invoice.Id, false);
+                    _ = Wait(b.Invoice, false);
                 }
 
                 if (b.Name == InvoiceEvent.ReceivedPayment)
@@ -259,8 +260,8 @@ namespace BTCPayServer.HostedServices
 
         private async Task WaitPendingInvoices()
         {
-            await Task.WhenAll((await GetPendingInvoices(_Cts.Token))
-                .Select(i => Wait(i, true)).ToArray());
+            foreach (var invoice in await GetPendingInvoices(_Cts.Token))
+                _ = Wait(invoice, true);
         }
 
         private async Task<InvoiceEntity[]> GetPendingInvoices(CancellationToken cancellationToken)

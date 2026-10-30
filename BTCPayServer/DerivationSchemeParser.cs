@@ -37,7 +37,8 @@ namespace BTCPayServer
             }
         }
 
-        public static bool MaybeOD(string xpub) => Regex.Match(xpub, @"\(.*?\)").Success;
+        static readonly Regex _maybeODRegex = new Regex(@"\(.*?\)", RegexOptions.NonBacktracking);
+        public static bool MaybeOD(string xpub) => _maybeODRegex.IsMatch(xpub);
         /// <summary>
         /// Parse an output descriptor into a <see cref="DerivationSchemeSettings"/>
         /// </summary>
@@ -320,11 +321,7 @@ namespace BTCPayServer
                 catch { continue; }
             }
 
-            str = string.Join('-', parts.Where(p => !IsLabel(p)));
-            foreach (var label in hintedLabels)
-            {
-                str = $"{str}-[{label}]";
-            }
+            str = string.Join('-', parts.Where(p => !IsLabel(p)).Concat(hintedLabels.Select(label => $"[{label}]")));
             return BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(str);
         }
 

@@ -134,7 +134,7 @@ public class PaymentsReportProvider : ReportProvider
                 values.Add(invoice.Currency);
                 if (invoice.TryGetRate(payment.Currency, out var rate))
                 {
-                    values.Add(DisplayFormatter.ToFormattedAmount(rate * payment.Value, invoice.Currency)); // Currency amount
+                    values.Add(DisplayFormatter.ToFormattedAmount(payment.InvoicePaidAmount.Gross, invoice.Currency)); // Currency amount
                     values.Add(DisplayFormatter.ToFormattedAmount(rate, invoice.Currency));
                 }
                 else

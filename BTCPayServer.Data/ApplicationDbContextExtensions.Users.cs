@@ -37,22 +37,23 @@ public static partial class ApplicationDbContextExtensions
     => dbSet.GetDbConnection()
         .ExecuteAsync(GetUpdateStoreNoActiveUserQuery(selectStoresSql), parameters);
 
-    internal static string GetUpdateStoreNoActiveUserQuery(string selectStoresSql)
+    private static string GetUpdateStoreNoActiveUserQuery(string selectStoresSql)
         => $$"""
              WITH
              -- Select all the stores belonging to the userIds
              stores AS (
                  {{selectStoresSql}}
              ),
-             -- Count all active users of the store
-             active_users AS (
-                 SELECT s."Id",
-                        COUNT(u."Id") FILTER (WHERE u."LockoutEnd" IS NULL OR u."LockoutEnd" <= NOW()) AS active_users
-                 FROM stores st
-                 JOIN "Stores" s ON s."Id" = st.store_id
-                 LEFT JOIN "UserStore" us ON us."StoreDataId" = s."Id"
-                 LEFT JOIN "AspNetUsers" u ON u."Id" = us."ApplicationUserId"
-                 GROUP BY s."Id"
+                 -- Count all active users of the store
+                 active_users AS (
+                     SELECT s."Id",
+                        COUNT(DISTINCT u."Id") FILTER (WHERE uar.user_id IS NULL) AS active_users
+                      FROM stores st
+                      JOIN "Stores" s ON s."Id" = st.store_id
+                      LEFT JOIN "UserStore" us ON us."StoreDataId" = s."Id"
+                      LEFT JOIN "AspNetUsers" u ON u."Id" = us."ApplicationUserId"
+                      LEFT JOIN user_access_restrictions uar ON uar.user_id = u."Id"
+                      GROUP BY s."Id"
              ),
              -- If the total is 0, then the store should have noActiveUser set to true
              expected_disabled AS (
@@ -61,7 +62,7 @@ public static partial class ApplicationDbContextExtensions
              )
              -- Update only the stores not having expected values.
              UPDATE "Stores" s
-             SET "StoreBlob" = jsonb_set("StoreBlob", '{noActiveUser}', to_jsonb(ed.expected_value))
+             SET "StoreBlob" = jsonb_set(COALESCE("StoreBlob", '{}'::jsonb), '{noActiveUser}', to_jsonb(ed.expected_value))
              FROM expected_disabled ed
              WHERE s."Id" = ed."Id" AND ed.expected_value <> ed.current_value;
              """;

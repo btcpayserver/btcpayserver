@@ -34,7 +34,9 @@
             }
         </p>
         <div class="d-grid gap-3 mt-4">
-            <a asp-controller="UIAccount" asp-action="Logout" class="btn btn-primary" text-translate="true">Sign in as another user</a>
+            <form method="post" asp-controller="UIAccount" asp-action="Logout" class="d-grid">
+                <button type="submit" class="btn btn-primary store-invitation__logout" text-translate="true">Sign in as another user</button>
+            </form>
             <a asp-action="ListStores" class="btn btn-secondary" text-translate="true">Back to stores</a>
         </div>
     }
@@ -51,7 +53,7 @@
             @ViewLocalizer["You have been invited to join <strong>{0}</strong> as {1}.", Html.Encode(Model.StoreName), Html.Encode(Model.Role)]
         </p>
         <p class="text-center text-secondary store-invitation__expiry">
-            @StringLocalizer["This invitation expires {0}.", Model.Expiry.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)]
+            @StringLocalizer["This invitation expires {0}.", Model.Expiry.ToTimeAgo()]
         </p>
         <form method="post" class="d-grid gap-3 mt-4">
             <button type="submit" name="command" value="accept" class="btn btn-primary store-invitation__accept" text-translate="true">Accept invitation</button>

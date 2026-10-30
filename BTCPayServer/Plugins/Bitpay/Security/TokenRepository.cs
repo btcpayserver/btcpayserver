@@ -13,7 +13,8 @@ namespace BTCPayServer.Plugins.Bitpay.Security
         Partial,
         Complete,
         ReusedKey,
-        Expired
+        Expired,
+        ReusedCode
     }
 
     public class TokenRepository
@@ -82,28 +83,36 @@ namespace BTCPayServer.Plugins.Bitpay.Security
             return CreatePairingCodeEntity(pairingCode);
         }
 
-        public async Task<PairingResult> PairWithStoreAsync(string pairingCodeId, string storeId)
-        {
-            using var ctx = _Factory.CreateContext();
-            var pairingCode = await ctx.PairingCodes.FindAsync(pairingCodeId);
-            if (pairingCode == null || pairingCode.Expiration < DateTimeOffset.UtcNow)
-                return PairingResult.Expired;
-            pairingCode.StoreDataId = storeId;
-            var result = await ActivateIfComplete(ctx, pairingCode);
-            await ctx.SaveChangesAsync();
-            return result;
-        }
+        public Task<PairingResult> PairWithStoreAsync(string pairingCodeId, string storeId)
+            => PairAsync(pairingCodeId, storeId: storeId);
 
-        public async Task<PairingResult> PairWithSINAsync(string pairingCodeId, string sin)
+        public Task<PairingResult> PairWithSINAsync(string pairingCodeId, string sin)
+            => PairAsync(pairingCodeId, sin: sin);
+
+        private async Task<PairingResult> PairAsync(string pairingCodeId, string storeId = null, string sin = null)
         {
-            using var ctx = _Factory.CreateContext();
-            var pairingCode = await ctx.PairingCodes.FindAsync(pairingCodeId);
-            if (pairingCode == null || pairingCode.Expiration < DateTimeOffset.UtcNow)
-                return PairingResult.Expired;
-            pairingCode.SIN = sin;
-            var result = await ActivateIfComplete(ctx, pairingCode);
-            await ctx.SaveChangesAsync();
-            return result;
+            await using var strategyCtx = _Factory.CreateContext();
+            return await strategyCtx.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+            {
+                await using var ctx = _Factory.CreateContext();
+                await using var tx = await ctx.Database.BeginTransactionAsync();
+                var pairingCode = await ctx.PairingCodes.FromSqlInterpolated(
+                    $"""SELECT * FROM "PairingCodes" WHERE "Id" = {pairingCodeId} FOR UPDATE""").SingleOrDefaultAsync();
+                if (pairingCode == null || pairingCode.Expiration < DateTimeOffset.UtcNow)
+                    return PairingResult.Expired;
+                if ((storeId is not null && !string.IsNullOrEmpty(pairingCode.StoreDataId) && pairingCode.StoreDataId != storeId) ||
+                    (sin is not null && !string.IsNullOrEmpty(pairingCode.SIN) && pairingCode.SIN != sin))
+                    return PairingResult.ReusedCode;
+
+                if (storeId is not null)
+                    pairingCode.StoreDataId = storeId;
+                if (sin is not null)
+                    pairingCode.SIN = sin;
+                var result = await ActivateIfComplete(ctx, pairingCode);
+                await ctx.SaveChangesAsync();
+                await tx.CommitAsync();
+                return result;
+            });
         }
 
 

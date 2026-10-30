@@ -15,7 +15,7 @@ namespace BTCPayServer.Data
         public string[] SpecificEvents { get; set; } = Array.Empty<string>();
         public bool Match(string evt)
         {
-            return Everything || SpecificEvents.Contains(evt);
+            return Everything || SpecificEvents?.Contains(evt) == true;
         }
     }
 
@@ -31,7 +31,7 @@ namespace BTCPayServer.Data
         public byte[] Request { get; set; }
         public void Prune()
         {
-            var request = JObject.Parse(UTF8Encoding.UTF8.GetString(Request));
+            var request = JsonParser.ParseObject(UTF8Encoding.UTF8.GetString(Request));
             foreach (var prop in request.Properties().ToList())
             {
                 if (prop.Name == "type")
@@ -54,6 +54,8 @@ namespace BTCPayServer.Data
     }
     public class WebhookBlob
     {
+        public const int MaxSecretLength = 64;
+
         public string Url { get; set; }
         public bool Active { get; set; } = true;
         public string Secret { get; set; }

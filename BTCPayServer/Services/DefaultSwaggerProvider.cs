@@ -31,7 +31,7 @@ public class DefaultSwaggerProvider : ISwaggerProvider
         {
             await using var stream = fi.CreateReadStream();
             using var reader = new StreamReader(fi.CreateReadStream());
-            var jObject = JObject.Parse(await reader.ReadToEndAsync());
+            var jObject = JsonParser.ParseObject(await reader.ReadToEndAsync());
             if (jObject.Remove("x_experimental") && !Policies.Settings.Experimental)
                 continue;
             json.Merge(jObject);

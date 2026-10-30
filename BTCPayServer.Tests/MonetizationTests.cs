@@ -1,4 +1,5 @@
 #nullable enable
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
@@ -15,6 +16,112 @@ namespace BTCPayServer.Tests;
 
 public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
 {
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task DoesNotAttachNewSubscriberToExistingUser()
+    {
+        await using var s = CreatePlaywrightTester(newDb: true);
+        await s.StartAsync();
+        await s.RegisterNewUser(true);
+        await CreateUser(s, "existing-user@gmail.com");
+
+        await s.CreateNewStore();
+        await GoToMonetization(s);
+        await s.ClickPagePrimary();
+        await s.ConfirmModal();
+        await s.FindAlertMessage(partialText: "Monetization activated");
+
+        SubscriptionEvent.NewSubscriber newSubscriber;
+        await using (await s.SwitchPage())
+        {
+            newSubscriber = await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+            {
+                await s.GoToUrl("/monetization/new-user");
+                await s.Page.FillAsync(".plan-checkout__email", "existing-user@gmail.com");
+                await s.ClickPagePrimary();
+            });
+            await s.Server.WaitForEvent<UserEvent.Registered>(async () =>
+            {
+                await s.GoToUrl("/monetization/new-user");
+                await s.Page.FillAsync(".plan-checkout__email", "new-user@gmail.com");
+                await s.ClickPagePrimary();
+            }, evt => evt.User.Email == "new-user@gmail.com");
+        }
+
+        var dbContextFactory = s.Server.PayTester.GetService<ApplicationDbContextFactory>();
+        await using var ctx = dbContextFactory.CreateContext();
+        var subscriber = await ctx.Subscribers.GetBySelector(
+            newSubscriber.Subscriber.OfferingId,
+            CustomerSelector.ByEmail("existing-user@gmail.com"));
+        Assert.NotNull(subscriber);
+        Assert.Null(subscriber.GetApplicationUserId());
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task DoesNotLockOutAdminSubscriber()
+    {
+        await using var s = CreatePlaywrightTester(newDb: true);
+        await s.StartAsync();
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await GoToMonetization(s);
+        await s.ClickPagePrimary();
+        await s.ConfirmModal();
+        await s.FindAlertMessage(partialText: "Monetization activated");
+
+        var newSubscriber = await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await CreateUser(s, "subscriber-admin@gmail.com");
+        });
+        var userId = newSubscriber.Subscriber.GetApplicationUserId();
+        Assert.NotNull(userId);
+        var userService = s.Server.PayTester.GetService<UserService>();
+        Assert.True(await userService.SetAdminUser(userId, true));
+        Assert.IsType<UserService.SetDisabledResult.Success>(
+            await userService.SetAccessRestriction(userId, UserAccessRestrictionConstants.Monetization, true));
+
+        var eventAggregator = s.Server.PayTester.GetService<EventAggregator>();
+        eventAggregator.Publish(new SubscriptionEvent.SubscriberDisabled(
+            newSubscriber.Subscriber,
+            SubscriptionEvent.DisabledReason.Expired));
+        // This registration is processed later on the same FIFO queue, so its subscriber event is a completion marker.
+        await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
+        {
+            await CreateUser(s, "queue-marker@gmail.com");
+        }, evt => evt.Subscriber.Customer.Email.Get() == "queue-marker@gmail.com");
+
+        var dbContextFactory = s.Server.PayTester.GetService<ApplicationDbContextFactory>();
+        ApplicationUser admin;
+        await using (var ctx = dbContextFactory.CreateContext())
+        {
+            admin = (await ctx.Users.FindAsync(userId))!;
+            Assert.NotNull(admin);
+            Assert.Null(await ctx.UserAccessRestrictions.FindAsync(userId, UserAccessRestrictionConstants.Monetization));
+            admin.EmailConfirmed = true;
+            admin.Approved = true;
+            var subscriber = await ctx.Subscribers.FindAsync(newSubscriber.Subscriber.Id);
+            Assert.NotNull(subscriber);
+            subscriber.IsActive = false;
+            await ctx.SaveChangesAsync();
+        }
+
+        Assert.IsType<UserService.SetDisabledResult.Success>(
+            await userService.SetAccessRestriction(userId, UserAccessRestrictionConstants.Monetization, true));
+        await s.Server.WaitForEvent<MonetizationHostedService.MonetizationAccessUpdated>(() =>
+        {
+            eventAggregator.Publish(new UserEvent.BypassMonetizationChanged(admin, false, newSubscriber.RequestBaseUrl));
+            return Task.CompletedTask;
+        }, update => update.Updated.Contains((userId, false)));
+
+        await using (var ctx = dbContextFactory.CreateContext())
+        {
+            admin = (await ctx.Users.FindAsync(userId))!;
+            Assert.Null(await ctx.UserAccessRestrictions.FindAsync(userId, UserAccessRestrictionConstants.Monetization));
+        }
+        Assert.True(await userService.CanLogin(new UserService.CanLoginContext(admin)));
+    }
+
     [Fact]
     [Trait("Playwright", "Playwright-2")]
     public async Task CanMonetizeServer()
@@ -154,12 +261,12 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var edit = await offeringPMO.Edit("Starter Plan");
         edit.DisableFeatures = ["can-access"];
 
-        var lockoutUpdated = await s.Server.WaitForEvent<MonetizationHostedService.MonetizationLockoutUpdated>(async () =>
+        var accessUpdated = await s.Server.WaitForEvent<MonetizationHostedService.MonetizationAccessUpdated>(async () =>
         {
             await edit.Save();
         });
-        Assert.Equal(4, lockoutUpdated.Updated.Length);
-        Assert.All(lockoutUpdated.Updated, (o) => Assert.True(o.LockoutEnabled));
+        Assert.Equal(4, accessUpdated.Updated.Length);
+        Assert.All(accessUpdated.Updated, (o) => Assert.True(o.Restricted));
 
         // Subscribers aren't suspended... they have a valid subscription, just not one allowing access.
         await s.FastReloadAsync();
@@ -203,7 +310,7 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         }
 
         await offeringPMO.GoToSubscribers();
-        await s.Server.WaitForEvent<MonetizationHostedService.MonetizationLockoutUpdated>(async () =>
+        await s.Server.WaitForEvent<MonetizationHostedService.MonetizationAccessUpdated>(async () =>
         {
             await offeringPMO.Suspend("normal-guest@gmail.com", "You are banned!");
         });
@@ -259,6 +366,23 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await SetBypassMonetization(s, "enrolled-invited@gmail.com", true);
         await CanLog(s, "enrolled-invited@gmail.com");
 
+        // Plan updates should clear stale monetization restrictions for bypass users.
+        var userId = ev.Subscriber.GetApplicationUserId();
+        Assert.NotNull(userId);
+        var userService = s.Server.PayTester.GetService<UserService>();
+        Assert.IsType<UserService.SetDisabledResult.Success>(
+            await userService.SetAccessRestriction(userId, UserAccessRestrictionConstants.Monetization, true));
+        await s.Server.WaitForEvent<MonetizationHostedService.MonetizationAccessUpdated>(() =>
+        {
+            s.Server.PayTester.GetService<EventAggregator>().Publish(new SubscriptionEvent.PlanUpdated(ev.Subscriber.Plan));
+            return Task.CompletedTask;
+        }, update => update.Updated.Contains((userId, false)));
+        var dbContextFactory = s.Server.PayTester.GetService<ApplicationDbContextFactory>();
+        await using (var ctx = dbContextFactory.CreateContext())
+        {
+            Assert.Null(await ctx.UserAccessRestrictions.FindAsync(userId, UserAccessRestrictionConstants.Monetization));
+        }
+
         // Case 4: Edit user — remove bypass from user with no subscriber
         var ev2 = await s.Server.WaitForEvent<SubscriptionEvent.NewSubscriber>(async () =>
         {
@@ -273,11 +397,11 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
         await offeringPMO.GoToSubscribers();
         await offeringPMO.ToggleTestSubscriber("enrolled-invited@gmail.com");
         await s.FindAlertMessage(partialText: "is now test");
-        await using (var portal = await offeringPMO.GoToPortal("enrolled-invited@gmail.com"))
+        await using (var portal = await offeringPMO.GoToPortal("enrolled-invited@gmail.com", closeAfter: false))
         {
-            await s.Server.WaitForEvent<MonetizationHostedService.MonetizationLockoutUpdated>(portal.GoToNextPhase);
+            await s.Server.WaitForEvent<MonetizationHostedService.MonetizationAccessUpdated>(portal.GoToNextPhase);
         }
-        await s.Server.WaitForEvent<MonetizationHostedService.MonetizationLockoutUpdated>(async () =>
+        await s.Server.WaitForEvent<MonetizationHostedService.MonetizationAccessUpdated>(async () =>
         {
             await SetBypassMonetization(s, "enrolled-invited@gmail.com", false);
         });

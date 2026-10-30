@@ -15,7 +15,8 @@ public class MonetizationLoginExtension(
 {
     public override async Task Check(UserService.CanLoginContext context)
     {
-        if (context.User.BypassMonetization)
+        if (context.User.BypassMonetization ||
+            context.User.AccessRestrictions?.Exists(restriction => restriction.Type == UserAccessRestrictionConstants.Monetization) is not true)
             return;
 
         if (settings.Settings is { OfferingId: { } offeringId })

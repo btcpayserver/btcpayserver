@@ -62,7 +62,8 @@ public partial class UIStoresController : Controller
         EventAggregator eventAggregator,
         LightningHistogramService lnHistogramService,
         LightningClientFactoryService lightningClientFactory,
-        StoreLabelRepository storeLabelRepository)
+        StoreLabelRepository storeLabelRepository,
+        PrettyNameProvider prettyName)
     {
         _rateFactory = rateFactory;
         _storeRepo = storeRepo;
@@ -94,6 +95,7 @@ public partial class UIStoresController : Controller
         _lightningClientFactory = lightningClientFactory;
         StringLocalizer = stringLocalizer;
         _storeLabelRepository = storeLabelRepository;
+        _prettyName = prettyName;
     }
 
     private readonly BTCPayServerOptions _btcpayServerOptions;
@@ -125,6 +127,7 @@ public partial class UIStoresController : Controller
     private readonly LightningHistogramService _lnHistogramService;
     private readonly LightningClientFactoryService _lightningClientFactory;
     private readonly StoreLabelRepository _storeLabelRepository;
+    private readonly PrettyNameProvider _prettyName;
 
     public IStringLocalizer StringLocalizer { get; }
 
@@ -194,7 +197,7 @@ public partial class UIStoresController : Controller
             .Select(o =>
                 new PaymentMethodOptionViewModel.Format()
                 {
-                    Name = o.ToString(),
+                    Name = _prettyName.PrettyName(o),
                     Value = o.ToString(),
                     PaymentId = o
                 }).ToArray();

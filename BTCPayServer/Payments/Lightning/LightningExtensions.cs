@@ -1,4 +1,6 @@
 #nullable enable
+using System;
+using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Lightning;
 using BTCPayServer.Services;
@@ -20,7 +22,7 @@ namespace BTCPayServer.Payments.Lightning
             var external = supportedPaymentMethod.GetExternalLightningUrl();
             if (external != null)
             {
-                return lightningClientFactory.Create(external, network);
+                return lightningClientFactory.Create(external, network, supportedPaymentMethod.IsUnsafeConnectionAllowed());
             }
             else
             {
@@ -34,6 +36,19 @@ namespace BTCPayServer.Payments.Lightning
             return lightningInvoice.PaymentHash != null ?
                 uint256.Parse(lightningInvoice.PaymentHash) :
                 BOLT11PaymentRequest.Parse(lightningInvoice.BOLT11, btcpayNetwork).PaymentHash;
+        }
+
+        public static async Task<bool> TryCancelInvoice(this ILightningClient client, string invoiceId)
+        {
+            try
+            {
+                await client.CancelInvoice(invoiceId);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

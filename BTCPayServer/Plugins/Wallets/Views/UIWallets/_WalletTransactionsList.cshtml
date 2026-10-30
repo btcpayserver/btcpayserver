@@ -70,7 +70,7 @@
 				@if (transaction.CanBumpFee)
 				{
 					<a asp-action="WalletBumpFee" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-route-transactionId="@transaction.Id" class="btn btn-link p-0 bumpFee-btn" permission="@WalletPolicies.CanCreateWalletTransactions">
-						<vc:icon symbol="actions-send" />
+						<vc:icon symbol="bump-fee" />
 						<span text-translate="true">Bump fee</span>
 					</a>
 				}

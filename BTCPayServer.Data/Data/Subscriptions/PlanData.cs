@@ -14,6 +14,8 @@ namespace BTCPayServer.Data.Subscriptions;
 [Table("subs_plans")]
 public class PlanData : BaseEntityData
 {
+    public const int MaxDescriptionLength = 1_000;
+
     [Key]
     [Column("id")]
     public string Id { get; set; } = null!;

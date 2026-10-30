@@ -11,11 +11,11 @@
            name="@Model.Name" data-val="true"
            @if (!string.IsNullOrEmpty(Model.HelpText))
            {
-               @Safe.Raw($" aria-describedby=\"HelpText-{Model.Name}\"")
+               <text> aria-describedby="HelpText-@Model.Name"</text>
            }
            @if (Model.Required)
            {
-               @Safe.Raw($" data-val-required=\"{Model.Label} is required.\" required")
+               <text> data-val-required="@Safe.RawEncode(Model.Label) is required." required</text>
            }
     >@Model.Value</textarea>
     <span class="text-danger" data-valmsg-for="@Model.Name" data-valmsg-replace="true">@(isInvalid && errors.Any() ? errors.First().ErrorMessage : string.Empty)</span>

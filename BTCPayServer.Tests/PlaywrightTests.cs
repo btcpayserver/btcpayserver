@@ -87,7 +87,6 @@ namespace BTCPayServer.Tests
                 invoiceId = s.Page.Url[(s.Page.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
             }
 
-            await s.Page.Context.Pages.First().BringToFrontAsync();
             await s.GoToUrl($"/invoices/{invoiceId}/");
             await Expect(s.Page.Locator("text=aa@aa.com")).ToBeVisibleAsync();
             // Payment Request
@@ -101,17 +100,16 @@ namespace BTCPayServer.Tests
             var editUrl = new Uri(s.Page.Url);
             var opening = s.Page.Context.WaitForPageAsync();
             await s.Page.ClickAsync("#ViewPaymentRequest");
-            var popOutPage = await opening;
-            await popOutPage.ClickAsync("[data-test='form-button']");
-            await popOutPage.FillAsync("input[name='buyerEmail']", "aa@aa.com");
-            Assert.Contains("Enter your email", await popOutPage.ContentAsync());
-            await popOutPage.ClickAsync("#page-primary");
-            invoiceId = popOutPage.Url.Split('/').Last();
-            await popOutPage.CloseAsync();
-            await s.Page.Context.Pages.First().BringToFrontAsync();
-            await s.GoToUrl(editUrl.PathAndQuery);
-
-            await Expect(s.Page.Locator("#Email")).ToHaveValueAsync("aa@aa.com");
+            await using (await s.SwitchPage(opening))
+            {
+                await s.Page.ClickAsync("[data-test='form-button']");
+                await s.Page.FillAsync("input[name='buyerEmail']", "aa@aa.com");
+                Assert.Contains("Enter your email", await s.Page.ContentAsync());
+                await s.Page.ClickAsync("#page-primary");
+                invoiceId = s.Page.Url.Split('/').Last();
+                await s.GoToUrl(editUrl.PathAndQuery);
+                await Expect(s.Page.Locator("#Email")).ToHaveValueAsync("aa@aa.com");
+            }
             var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
             Assert.Equal("aa@aa.com", invoice.Metadata.BuyerEmail);
 
@@ -172,6 +170,46 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             var selectOptions = await s.Page.Locator("#FormId >> option").CountAsync();
             Assert.Equal(4, selectOptions);
+        }
+
+        [Fact]
+        public async Task CanUsePayButtonFromExternalWebsite()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.InitializeBTCPayServer();
+
+            await s.GoToStore(s.StoreId, StoreNavPages.PayButton);
+            await s.Page.Locator("#enable-pay-button").ClickAsync();
+            var generatedCode = s.Page.Locator(".pay-button__generated-code");
+            await Expect(generatedCode).ToContainTextAsync("btcpay-form");
+            await s.Page.Locator("#price").FillAsync("10");
+            await s.Page.Locator("#useModal").CheckAsync();
+            await Expect(generatedCode).ToContainTextAsync("modal/btcpay.js");
+            await s.Page.WaitForFunctionAsync("() => !!window.btcpay");
+            var payButtonCode = await generatedCode.InnerTextAsync();
+
+            using var merchantServer = new FakeServer();
+            await merchantServer.Start();
+            var merchantUrl = merchantServer.ServerUri;
+            var navigation = s.Page.GotoAsync(merchantUrl.AbsoluteUri);
+            var request = await merchantServer.GetNextRequest();
+            var body = System.Text.Encoding.UTF8.GetBytes($"<!doctype html><html><body>{payButtonCode}</body></html>");
+            request.Response.StatusCode = 200;
+            request.Response.ContentType = "text/html";
+            request.Response.ContentLength = body.Length;
+            await request.Response.Body.WriteAsync(body);
+            merchantServer.Done();
+            await navigation;
+
+            await Expect(s.Page).ToHaveURLAsync(merchantUrl.AbsoluteUri);
+            await Expect(s.Page.Locator(".btcpay-form")).ToBeVisibleAsync();
+            await s.Page.WaitForFunctionAsync("() => !!window.btcpay");
+            await s.Page.Locator(".btcpay-form .submit").ClickAsync();
+
+            var checkoutFrame = s.Page.Locator("iframe[name='btcpay']");
+            await Expect(checkoutFrame).ToBeVisibleAsync();
+            await Expect(s.Page.FrameLocator("iframe[name='btcpay']").Locator("#Checkout")).ToBeVisibleAsync();
         }
 
         [Fact]
@@ -313,6 +351,7 @@ namespace BTCPayServer.Tests
             await using var s = CreatePlaywrightTester();
             s.Server.DeleteStore = false;
             s.Server.ActivateLightning();
+            s.Server.PayTester.DisableSSRFProtection = true;
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
             var cryptoCode = "BTC";
@@ -337,6 +376,20 @@ namespace BTCPayServer.Tests
 
             await s.Page.CheckAsync("#LUD12Enabled");
             await s.ClickPagePrimary();
+
+            var store = await s.Server.PayTester.StoreRepository.FindStore(storeId);
+            var storeBlob = store.GetStoreBlob();
+            storeBlob.AnyoneCanInvoice = true;
+            store.SetStoreBlob(storeBlob);
+            await s.Server.PayTester.StoreRepository.UpdateStore(store);
+            using (var zeroAmountResponse = await s.Server.PayTester.HttpClient.GetAsync($"BTC/lnurl/{storeId}/pay?amount=0"))
+            {
+                Assert.Equal(HttpStatusCode.BadRequest, zeroAmountResponse.StatusCode);
+            }
+            using (var negativeAmountResponse = await s.Server.PayTester.HttpClient.GetAsync($"BTC/lnurl/{storeId}/pay?amount=-1"))
+            {
+                Assert.Equal(HttpStatusCode.BadRequest, negativeAmountResponse.StatusCode);
+            }
 
             // Topup Invoice test
             var i = await s.CreateInvoice(storeId, null, cryptoCode);
@@ -779,8 +832,7 @@ namespace BTCPayServer.Tests
             {
                 // Can log again
                 await s.LogIn(user.Email, "Password@1!");
-                await s.CreateNewStore();
-                await s.Logout();
+                await s.Page.WaitForURLAsync("**/stores/create");
             }
 
             // Manage user details (edit)
@@ -1982,7 +2034,8 @@ namespace BTCPayServer.Tests
                     Policies.CanModifyServerSettings
              });
 
-            await s.GoToUrl("/logout");
+            await s.GoToHome();
+            await s.Logout();
             await alice.MakeAdmin();
 
             await s.GoToLogin();
@@ -2331,6 +2384,39 @@ namespace BTCPayServer.Tests
             Assert.Contains("100.00 USD", content);
             Assert.Contains(i, content);
 
+            var api = await s.AsTestAccount().CreateClient();
+            var unsafeOrderUrlInvoice = await api.CreateInvoice(s.StoreId, new CreateInvoiceRequest
+            {
+                Amount = 1,
+                Currency = "USD",
+                Metadata = new JObject
+                {
+                    ["orderId"] = "unsafe-order",
+                    ["orderUrl"] = "javascript:alert(1)"
+                },
+                Receipt = new InvoiceDataBase.ReceiptOptions { Enabled = true }
+            });
+            await s.GoToUrl($"/i/{unsafeOrderUrlInvoice.Id}/receipt");
+            Assert.Equal(0, await s.Page.Locator("#StoreLink").CountAsync());
+            await s.GoToInvoice(unsafeOrderUrlInvoice.Id);
+            Assert.Equal(0, await s.Page.Locator(".invoice-order-link").CountAsync());
+
+            var safeOrderUrlInvoice = await api.CreateInvoice(s.StoreId, new CreateInvoiceRequest
+            {
+                Amount = 1,
+                Currency = "USD",
+                Metadata = new JObject
+                {
+                    ["orderId"] = "safe-order",
+                    ["orderUrl"] = "https://example.com/order"
+                },
+                Receipt = new InvoiceDataBase.ReceiptOptions { Enabled = true }
+            });
+            await s.GoToUrl($"/i/{safeOrderUrlInvoice.Id}/receipt");
+            await Expect(s.Page.Locator("#StoreLink")).ToHaveAttributeAsync("href", "https://example.com/order");
+            await s.GoToInvoice(safeOrderUrlInvoice.Id);
+            await Expect(s.Page.Locator(".invoice-order-link")).ToHaveAttributeAsync("href", "https://example.com/order");
+
             await s.GoToInvoices(s.StoreId);
             i = await s.CreateInvoice();
             await s.GoToInvoiceCheckout(i);
@@ -2412,6 +2498,76 @@ namespace BTCPayServer.Tests
                 var title = await s.Page.TitleAsync();
                 Assert.Contains("Page not found", title, StringComparison.OrdinalIgnoreCase);
             });
+        }
+
+        [Fact]
+        public async Task HidesStaleInvoicesFromPublicEndpoints()
+        {
+            await using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            var ownerEmail = await s.RegisterNewUser(true);
+            await s.CreateNewStore();
+            await s.AddDerivationScheme();
+            await s.GoToInvoices();
+            var invoiceId = await s.CreateInvoice();
+            await s.GoToInvoiceCheckout(invoiceId);
+            await s.GoToHome();
+            await s.Logout();
+
+            async Task AssertStatus(string path, HttpStatusCode expectedStatus)
+            {
+                var response = await s.Page.GotoAsync(s.Link(path));
+                Assert.NotNull(response);
+                Assert.Equal((int)expectedStatus, response.Status);
+            }
+
+            async Task<bool> CanOpenStatusWebSocket()
+            {
+                return await s.Page.EvaluateAsync<bool>(
+                    """
+                    path => new Promise(resolve => {
+                        const url = new URL(path, window.location.href);
+                        url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+                        const socket = new WebSocket(url);
+                        socket.onopen = () => {
+                            socket.close();
+                            resolve(true);
+                        };
+                        socket.onerror = () => resolve(false);
+                    })
+                    """,
+                    $"/i/{invoiceId}/status/ws");
+            }
+
+            var publicPaths = new[]
+            {
+                $"/i/{invoiceId}",
+                $"/i/{invoiceId}/status",
+                $"/i/{invoiceId}/receipt"
+            };
+            foreach (var path in publicPaths)
+                await AssertStatus(path, HttpStatusCode.OK);
+            Assert.True(await CanOpenStatusWebSocket());
+
+            await using (var ctx = s.Server.PayTester.GetService<ApplicationDbContextFactory>().CreateContext())
+            {
+                var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
+                Assert.NotNull(invoiceData);
+                var invoice = invoiceData.GetBlob();
+                invoice.MonitoringExpiration = DateTimeOffset.UtcNow.AddMonths(-1).AddSeconds(-1);
+                invoiceData.SetBlob(invoice);
+                await ctx.SaveChangesAsync();
+            }
+
+            foreach (var path in publicPaths)
+                await AssertStatus(path, HttpStatusCode.NotFound);
+            Assert.False(await CanOpenStatusWebSocket());
+
+            await s.GoToLogin();
+            await s.LogIn(ownerEmail, s.Password);
+            foreach (var path in publicPaths)
+                await AssertStatus(path, HttpStatusCode.OK);
+            Assert.True(await CanOpenStatusWebSocket());
         }
 
         [Fact]

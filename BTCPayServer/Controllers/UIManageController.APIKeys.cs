@@ -146,7 +146,7 @@ namespace BTCPayServer.Controllers
                 .Where(permission => _permissionService.IsValidPolicy(permission.Policy))
                 .ToList();
 
-            if (redirect?.IsAbsoluteUri is false)
+            if (!IsSafeRedirect(redirect))
             {
                 redirect = null;
             }
@@ -178,6 +178,11 @@ namespace BTCPayServer.Controllers
         [HttpPost("~/api-keys/authorize")]
         public async Task<IActionResult> AuthorizeAPIKey([FromForm] AuthorizeApiKeysViewModel viewModel)
         {
+            if (!IsSafeRedirect(viewModel.RedirectUrl))
+            {
+                viewModel.RedirectUrl = null;
+            }
+
             viewModel = await SetViewModelValues(viewModel);
             AdjustVMForAuthorization(viewModel);
 
@@ -305,6 +310,8 @@ namespace BTCPayServer.Controllers
             return RedirectToAction("APIKeys");
         }
 
+        private static bool IsSafeRedirect(Uri redirect) => redirect is { IsAbsoluteUri: true } && redirect.Scheme is "http" or "https";
+
         private async Task<APIKeyData> CheckForMatchingApiKey(IEnumerable<Permission> requestedPermissions, AuthorizeApiKeysViewModel vm)
         {
             if (string.IsNullOrEmpty(vm.ApplicationIdentifier) || vm.RedirectUrl == null)
@@ -341,6 +348,12 @@ namespace BTCPayServer.Controllers
                         break;
                     }
 
+                    if (existing == null)
+                    {
+                        fail = true;
+                        break;
+                    }
+
                     if (IsStorePolicy(requested.Key))
                     {
                         if ((vm.SelectiveStores && !existing.Any(p => p.Scope == vm.StoreId)) ||
@@ -366,7 +379,11 @@ namespace BTCPayServer.Controllers
 
         private void AdjustVMForAuthorization(AuthorizeApiKeysViewModel vm)
         {
-            var permissions = vm.Permissions?.Split(';') ?? Array.Empty<string>();
+            // The store is selected by the user, so any scope requested by the application is ignored
+            var permissions = Permission.ToPermissions(vm.Permissions?.Split(';') ?? Array.Empty<string>())
+                .Select(permission => permission.Policy)
+                .Distinct()
+                .ToArray();
             var permissionsWithStoreIDs = new List<string>();
 
             vm.NeedsStorePermission = vm.SelectiveStores && (permissions.Any(IsStorePolicy) || !vm.Strict);
@@ -412,10 +429,14 @@ namespace BTCPayServer.Controllers
                         continue;
                     }
 
-                    // Set the value to true and adjust the other fields based on the policy type
-                    permissionValue.Value = true;
+                    // Requested permissions are preselected, but unless strict, the user can reject them when authorizing
+                    var isRejected = !vm.Strict && !permissionValue.Value &&
+                                     "authorize".Equals(vm.Command, StringComparison.OrdinalIgnoreCase);
 
-                    if (vm.SelectiveStores && permissionValue.IsStorePolicy &&
+                    // Set the value and adjust the other fields based on the policy type
+                    permissionValue.Value = !isRejected;
+
+                    if (!isRejected && vm.SelectiveStores && permissionValue.IsStorePolicy &&
                         wanted.Any(permission => !string.IsNullOrEmpty(permission.Scope)))
                     {
                         permissionValue.StoreMode = AddApiKeyViewModel.ApiKeyStoreMode.Specific;
@@ -445,7 +466,11 @@ namespace BTCPayServer.Controllers
             {
                 return null;
             }
-            var permissionValueItem = viewModel.PermissionValues.Single(item => item.Permission == permission);
+            var permissionValueItem = viewModel.PermissionValues.FirstOrDefault(item => item.Permission == permission);
+            if (permissionValueItem is null)
+            {
+                return BadRequest();
+            }
             var command = parts[1];
             var storeIndex = parts.Length == 3 ? parts[2] : null;
 

@@ -54,7 +54,7 @@ namespace BTCPayServer.Data
                 Blob2 = MigrationExtensions.SanitizeJSON(Blob2);
                 Blob = null;
             }
-            var blob = JObject.Parse(Blob2);
+            var blob = JsonParser.ParseObject(Blob2);
             if (blob["cryptoData"]?["BTC"] is not (null or { Type: JTokenType.Null }))
             {
                 blob.Move(["rate"], ["cryptoData", "BTC", "rate"]);
@@ -108,10 +108,11 @@ namespace BTCPayServer.Data
                     blob.Move(["productInformation", prop.Name], ["metadata", prop.Name]);
             }
             blob.Move(["orderId"], ["metadata", "orderId"]);
-            foreach (string prop in new string[] { "posData", "defaultLanguage", "notificationEmail", "notificationURL", "storeSupportUrl", "redirectURL" })
+            foreach (string prop in new string[] { "posData", "defaultLanguage", "notificationURL", "storeSupportUrl", "redirectURL" })
             {
                 blob.RemoveIfNull(prop);
             }
+            blob.Remove("notificationEmail");
             blob.RemoveIfValue<bool>("fullNotifications", false);
             if (blob["receiptOptions"] is JObject receiptOptions)
             {
@@ -134,7 +135,7 @@ namespace BTCPayServer.Data
             {
                 try
                 {
-                    posData.Value = JObject.Parse(posData.Value<string>());
+                    posData.Value = JsonParser.ParseObject(posData.Value<string>());
                 }
                 catch
                 {
@@ -145,7 +146,7 @@ namespace BTCPayServer.Data
                 posData.Remove();
 
             if (blob["derivationStrategies"] is JValue { Type: JTokenType.String } v)
-                blob["derivationStrategies"] = JObject.Parse(v.Value<string>());
+                blob["derivationStrategies"] = JsonParser.ParseObject(v.Value<string>());
             if (blob["derivationStrategies"] is JObject derivations)
             {
                 foreach (var prop in derivations.Properties().ToList())
@@ -160,7 +161,7 @@ namespace BTCPayServer.Data
                         })
                     {
                         if (val[0] == '{')
-                            derivations[prop.Name] = JObject.Parse(val);
+                            derivations[prop.Name] = JsonParser.ParseObject(val);
                         else
                         {
                             if (val.Contains('-', StringComparison.OrdinalIgnoreCase))

@@ -8,7 +8,7 @@
     Layout = "_Layout";
     ViewData.SetLayoutModel(new($"{nameof(PointOfSalePlugin)}-{Model.Id}",StringLocalizer["Update Point of Sale"]));
 	Csp.UnsafeEval();
-    var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
+    var checkoutFormOptions = await FormDataService.GetSelect(Context.GetStoreData().Id, Model.FormId);
     var baseUrl = this.Context.Request.GetRequestBaseUrl().ToString();
 }
 
@@ -95,7 +95,7 @@
         <div class="col-xxl-constrain">
             <div class="form-group mb-0">
                 <label asp-for="Description" class="form-label"></label>
-                <textarea asp-for="Description" rows="10" cols="40" class="form-control richtext"></textarea>
+                <textarea asp-for="Description" rich-text rows="10" cols="40" class="form-control"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
         </div>

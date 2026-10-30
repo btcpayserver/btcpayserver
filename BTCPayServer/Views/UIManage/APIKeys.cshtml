@@ -1,6 +1,7 @@
 @namespace BTCPayServer.Client
 @using Microsoft.AspNetCore.Html
 @inject Security.ContentSecurityPolicies Csp
+@inject BTCPayServer.Services.CallbackGenerator CallbackGenerator
 @model BTCPayServer.Controllers.UIManageController.ApiKeysViewModel
 @{
 	ViewData.SetLayoutModel(new LayoutModel(nameof(ManageNavPages.APIKeys), StringLocalizer["API Keys"])
@@ -128,7 +129,7 @@
             const apiKeys = @Safe.Json(Model.ApiKeyDatas.Select(data => new
                             {
                                 ApiKey = data.Key,
-                                Host = Context.Request.GetAbsoluteRoot()
+                                Host = CallbackGenerator.GetRequestBaseUrl().ToString()
                             }));
             const qrApp = initQRShow({ title: "API Key QR" });
             delegate("click", "button[data-qr]", e => {

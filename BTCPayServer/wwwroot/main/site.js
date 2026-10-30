@@ -410,16 +410,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     // rich text editor
     if ($.summernote) {
-        $('.richtext').summernote({
+        $('textarea.rich-text-editor').summernote({
             minHeight: 300,
             tableClassName: 'table table-sm',
             insertTableMaxSize: {
                 col: 5,
                 row: 10
             },
-            codeviewFilter: true,
-            codeviewFilterRegex: new RegExp($.summernote.options.codeviewFilterRegex.source + '|<.*?( on\\w+?=.*?)>', 'gi'),
-            codeviewIframeWhitelistSrc: ['twitter.com', 'syndication.twitter.com']
+            codeviewFilter: false
         });
     }
 
@@ -475,7 +473,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const { invoiceId, newState } = $button.dataset
 
         $badge.classList.add('pe-none'); // disable further interaction
-        const response = await fetch(`${baseUrl}/invoices/${invoiceId}/changestate/${newState}`, { method: 'POST' })
+        const tokenInput = $badge.querySelector('input[name="__RequestVerificationToken"]')
+        const headers = {}
+        if (tokenInput?.value) headers.RequestVerificationToken = tokenInput.value
+        const response = await fetch(`${baseUrl}/invoices/${invoiceId}/changestate/${newState}`, { method: 'POST', headers })
         if (response.ok) {
             const { statusString } = await response.json()
             $badge.outerHTML = `<div class="badge badge-${newState}" data-invoice-state-badge="${invoiceId}">${statusString}</div>`

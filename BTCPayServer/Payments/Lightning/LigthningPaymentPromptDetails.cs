@@ -13,6 +13,5 @@ namespace BTCPayServer.Payments.Lightning
         /// The invoice id for the lightning node
         /// </summary>
         public string InvoiceId { get; set; }
-        public string NodeInfo { get; set; }
     }
 }

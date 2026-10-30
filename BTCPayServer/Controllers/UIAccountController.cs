@@ -177,9 +177,8 @@ namespace BTCPayServer.Controllers
             if (model.Method == "Password")
             {
                 user = await userManager.FindByEmailAsync(model.Email ?? "");
-                success = user is not null && await userManager.CheckPasswordAsync(user, model.Password ?? "");
-                if (!success && user is not null && !user.IsDisabledTemporarily)
-                    await userManager.AccessFailedAsync(user);
+                success = user is not null &&
+                          (await signInManager.CheckPasswordSignInAsync(user, model.Password ?? "", true)).Succeeded;
             }
 
             if (model.Method == "LoginCode" && model.LoginCode is not null)
@@ -196,7 +195,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            if (user?.IsDisabledTemporarily is true)
+            if (user is not null && await userManager.IsLockedOutAsync(user))
                 return LockoutView(user);
 
             var errorMessage = StringLocalizer["Invalid login attempt."].Value;
@@ -337,7 +336,7 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction("Login");
             }
-            if (user.IsDisabledTemporarily)
+            if (await userManager.IsLockedOutAsync(user))
                 return LockoutView(user);
             var session = LoginSession.Load(HttpContext.Session);
 
@@ -345,8 +344,8 @@ namespace BTCPayServer.Controllers
             try
             {
                 var k1 = Encoders.Hex.DecodeData(viewModel.LNURLEndpoint.ParseQueryString().Get("k1"));
-                if (lnurlAuthService.FinalLoginStore.TryRemove(user.Id, out var storedk1) &&
-                    storedk1.SequenceEqual(k1))
+                if (lnurlAuthService.FinalLoginStore.TryRemove(user.Id, out var challenge) &&
+                    challenge.IsValid(user) && challenge.K1.SequenceEqual(k1))
                 {
                     lnurlAuthService.FinalLoginStore.TryRemove(user.Id, out _);
                     return await RedirectLoginSuccess(user, session);
@@ -400,7 +399,7 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction("Login");
             }
-            if (user.IsDisabledTemporarily)
+            if (await userManager.IsLockedOutAsync(user))
                 return LockoutView(user);
 
             var session = LoginSession.Load(HttpContext.Session);
@@ -457,7 +456,7 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction("Login");
             }
-            if (user.IsDisabledTemporarily)
+            if (await userManager.IsLockedOutAsync(user))
                 return LockoutView(user);
 
             var session = LoginSession.Load(HttpContext.Session);
@@ -465,12 +464,15 @@ namespace BTCPayServer.Controllers
             var authenticatorCode = (model?.TwoFactorCode ?? "") .Replace(" ", string.Empty, StringComparison.InvariantCulture)
                 .Replace("-", string.Empty, StringComparison.InvariantCulture);
             var success = await userManager.VerifyTwoFactorTokenAsync(user, signInManager.Options.Tokens.AuthenticatorTokenProvider, authenticatorCode);
+            // A successful guess must also win the concurrency check, or parallel guesses bypass lockout.
+            var attemptResult = success ? await userManager.UpdateAsync(user) : await userManager.AccessFailedAsync(user);
+            if (!attemptResult.Succeeded)
+                return new TooManyRequestsResult(ZoneLimits.Login);
             if (success)
             {
                 return await RedirectLoginSuccess(user, session);
             }
 
-            await userManager.AccessFailedAsync(user);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
@@ -500,6 +502,15 @@ namespace BTCPayServer.Controllers
             else
             {
                 await signInManager.SignInAsync(user, session.ToAuthenticationProperties(false), session.AuthenticationMethod);
+                if (await userManager.IsInRoleAsync(user, Roles.ServerAdmin))
+                {
+                    var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+                    if (string.IsNullOrWhiteSpace(serverSettings.BaseUrl))
+                    {
+                        serverSettings.UpdateBaseUrl(Request.GetRequestBaseUrl());
+                        await settingsRepository.UpdateSetting(serverSettings);
+                    }
+                }
             }
             await userManager.ResetAccessFailedCountAsync(user);
             return RedirectToLocal(session.ReturnUrl);
@@ -531,6 +542,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("/register")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
+        [RateLimitsFilter(ZoneLimits.Register, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
         {
             if (!CanLoginOrRegister())
@@ -591,7 +603,7 @@ namespace BTCPayServer.Controllers
         public string RegisteredUserId { get; set; }
         public bool RegisteredAdmin { get; set; }
 
-        [HttpGet("/logout")]
+        [HttpPost("/logout")]
         public async Task<IActionResult> Logout()
         {
             await signInManager.SignOutAsync();

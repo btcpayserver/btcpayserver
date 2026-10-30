@@ -76,7 +76,7 @@ namespace BTCPayServer.HostedServices
             {
                 if (walletTransactionData.Labels.StartsWith('['))
                 {
-                    foreach (var jtoken in JArray.Parse(walletTransactionData.Labels))
+                    foreach (var jtoken in JsonParser.ParseArray(walletTransactionData.Labels))
                     {
                         var l = jtoken.Type == JTokenType.String ? Label.Parse(jtoken.Value<string>())
                                                                 : Label.Parse(jtoken.ToString());
@@ -150,7 +150,7 @@ next:
                         {
                             try
                             {
-                                labelId = JObject.Parse(label.Key)["value"].Value<string>();
+                                labelId = JsonParser.ParseObject(label.Key)["value"].Value<string>();
                             }
                             catch
                             {

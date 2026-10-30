@@ -83,13 +83,18 @@ namespace BTCPayServer.Services.Invoices
                 .Where(data => paymentIds.Contains(data.Id))
                 .ToDictionaryAsync(data => data.Id);
             var eventsToSend = new List<InvoiceEvent>();
+            var invoices = new Dictionary<string, InvoiceEntity>();
             foreach (var payment in payments)
             {
                 var dbPayment = dbPayments[payment.Id];
-                var invBlob = _invoiceRepository.ToEntity(dbPayment.InvoiceData);
                 var wasConfirmed = dbPayment.Status is PaymentStatus.Settled;
                 if (!wasConfirmed && payment.Status is PaymentStatus.Settled)
                 {
+                    if (!invoices.TryGetValue(dbPayment.InvoiceDataId, out var invBlob))
+                    {
+                        invBlob = _invoiceRepository.ToEntity(dbPayment.InvoiceData);
+                        invoices.Add(dbPayment.InvoiceDataId, invBlob);
+                    }
                     eventsToSend.Add(new InvoiceEvent(invBlob, InvoiceEvent.PaymentSettled) { Payment = payment });
                 }
                 dbPayment.SetBlob(payment);

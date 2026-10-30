@@ -6,6 +6,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
 using NBXplorer;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
@@ -43,7 +44,9 @@ namespace BTCPayServer.Data
         public static StoreBlob GetStoreBlob(this StoreData storeData)
         {
             ArgumentNullException.ThrowIfNull(storeData);
-            var result = storeData.StoreBlob == null ? new StoreBlob() : new Serializer(null).ToObject<StoreBlob>(storeData.StoreBlob);
+            var serializer = new Serializer(null);
+            serializer.Settings.MetadataPropertyHandling = MetadataPropertyHandling.Ignore;
+            var result = storeData.StoreBlob == null ? new StoreBlob() : serializer.ToObject<StoreBlob>(storeData.StoreBlob);
             if (result.PaymentMethodCriteria is null)
                 result.PaymentMethodCriteria = new List<PaymentMethodCriteria>();
             result.PaymentMethodCriteria.RemoveAll(criteria => criteria?.PaymentMethod is null);
@@ -78,13 +81,13 @@ namespace BTCPayServer.Data
                 return null;
             if (!onlyEnabled)
             {
-                JObject strategies = JObject.Parse(storeData.DerivationStrategies);
+                JObject strategies = JsonParser.ParseObject(storeData.DerivationStrategies);
                 return strategies[paymentMethodId.ToString()];
             }
             else
             {
                 var excludeFilter = storeData.GetStoreBlob().GetExcludedPaymentMethods();
-                JObject strategies = JObject.Parse(storeData.DerivationStrategies);
+                JObject strategies = JsonParser.ParseObject(storeData.DerivationStrategies);
                 return excludeFilter.Match(paymentMethodId) ? null : strategies[paymentMethodId.ToString()];
             }
         }
@@ -102,7 +105,7 @@ namespace BTCPayServer.Data
         }
         public static void SetPaymentMethodConfig(this StoreData storeData, PaymentMethodId paymentMethodId, JToken? config)
         {
-            JObject strategies = string.IsNullOrEmpty(storeData.DerivationStrategies) ? new JObject() : JObject.Parse(storeData.DerivationStrategies);
+            JObject strategies = string.IsNullOrEmpty(storeData.DerivationStrategies) ? new JObject() : JsonParser.ParseObject(storeData.DerivationStrategies);
             if (config is null)
                 strategies.Remove(paymentMethodId.ToString());
             else
@@ -128,7 +131,7 @@ namespace BTCPayServer.Data
                 return new Dictionary<PaymentMethodId, JToken>();
             var excludeFilter = onlyEnabled ? storeData.GetStoreBlob().GetExcludedPaymentMethods() : null;
             var paymentMethodConfigurations = new Dictionary<PaymentMethodId, JToken>();
-            JObject strategies = JObject.Parse(storeData.DerivationStrategies);
+            JObject strategies = JsonParser.ParseObject(storeData.DerivationStrategies);
             foreach (var strat in strategies.Properties())
             {
                 if (!PaymentMethodId.TryParse(strat.Name, out var paymentMethodId))

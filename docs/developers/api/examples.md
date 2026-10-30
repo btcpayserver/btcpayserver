@@ -75,4 +75,6 @@ Check the client's [examples](https://github.com/btcpayserver/btcpayserver-green
 
 ## OpenAPI clients
 
-The merged OpenAPI document is available at `/swagger/v1/swagger.json`. It can seed generated clients, but review generated number handling, authentication, nullable fields, and endpoint coverage. Regenerate deliberately: the document also includes APIs supplied by plugins installed on that instance.
+You can browse the Greenfield API for the latest BTCPay Server version in the [public API reference](https://docs.btcpayserver.org/API/Greenfield/v1/), without running your own server. Its [OpenAPI (Swagger) document](https://docs.btcpayserver.org/API/Greenfield/v1/swagger.json) is also publicly available.
+
+You can use either OpenAPI document to generate an API client. Use your instance's document at `/swagger/v1/swagger.json` to match its BTCPay Server version and include APIs provided by installed plugins.

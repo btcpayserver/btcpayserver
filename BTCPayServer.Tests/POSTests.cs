@@ -1,12 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Forms;
+using BTCPayServer.Forms.Models;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Models.AppViewModels;
@@ -20,7 +25,9 @@ using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using LNURL;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Playwright;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -79,7 +86,7 @@ fruit tea:
   inventory: 5
   custom: true
 ";
-        var parsedDefault =     MigrationStartupTask.ParsePOSYML(testOriginalDefaultYmlTemplate);
+        var parsedDefault =     TestUtils.ParsePOSYML(testOriginalDefaultYmlTemplate);
         Assert.Equal(6, parsedDefault.Length);
         Assert.Equal( "Green Tea" ,parsedDefault[0].Title);
         Assert.Equal( "green tea" ,parsedDefault[0].Id);
@@ -328,7 +335,7 @@ goodies:
   price: 0
 ";
             vmpos.Currency = "EUR";
-            vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
+            vmpos.Template = AppService.SerializeTemplate(TestUtils.ParsePOSYML(vmpos.Template));
             Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
             await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
             var publicApps = user.GetController<UIPointOfSaleController>();
@@ -797,6 +804,12 @@ goodies:
                 await AssertInvoiceAmount(s, "1.50000000 BTC");
             }
 
+            using (var response = await s.Server.PayTester.HttpClient.GetAsync($"BTC/lnurl/pay/app/{appId}/black-tea"))
+                Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            using (var response = await s.Server.PayTester.HttpClient.GetAsync($"apps/{appId}/pos/print"))
+                Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+            await s.Page.GetByLabel("Request customer data on checkout").SelectOptionAsync("");
             await s.Page.FillAsync("#DefaultTaxRate", "10");
             await s.ClickPagePrimary();
 
@@ -1160,6 +1173,56 @@ goodies:
             Assert.Equal(invoiceId3, invoice.Id);
             Assert.Equal(21.00m, invoice.Price);
             Assert.Equal("EUR", invoice.Currency);
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task POSFormRestoresRoutingAfterValidation()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+
+            var formDataService = tester.PayTester.GetService<FormDataService>();
+            var formData = new FormData
+            {
+                StoreId = user.StoreId,
+                Name = "test",
+                Config = new Form
+                {
+                    Fields = [Field.Create("Name", "name", "", true, null)]
+                }.ToString()
+            };
+            await formDataService.AddOrUpdateForm(formData);
+
+            var appService = tester.PayTester.GetService<AppService>();
+            var app = new AppData
+            {
+                StoreDataId = user.StoreId,
+                Name = "test",
+                AppType = PointOfSaleAppType.AppType
+            };
+            app.SetSettings(new PointOfSaleSettings { FormId = formData.Id });
+            await appService.UpdateOrCreateApp(app);
+
+            var pos = user.GetController<UIPointOfSaleController>();
+            pos.HttpContext.Request.Form = new FormCollection(new Dictionary<string, StringValues>());
+            pos.ModelState.AddModelError("name", "Invalid");
+            var result = await pos.POSFormSubmit(app.Id, new FormViewModel
+            {
+                AspController = "UIInvoice",
+                AspAction = "Checkout",
+                RouteParameters = new Dictionary<string, string> { { "invoiceId", "attacker-controlled" } },
+                FormParameterPrefix = "form_"
+            }, PosViewType.Cart);
+
+            var vm = Assert.IsType<FormViewModel>(Assert.IsType<ViewResult>(result).Model);
+            Assert.Equal("UIPointOfSale", vm.AspController);
+            Assert.Equal(nameof(UIPointOfSaleController.POSFormSubmit), vm.AspAction);
+            Assert.Equal(2, vm.RouteParameters.Count);
+            Assert.Equal(app.Id, vm.RouteParameters["appId"]);
+            Assert.Equal(nameof(PosViewType.Cart), vm.RouteParameters["viewType"]);
         }
 
         private async Task<(string invoiceId, string error)> PosJsonRequest(ServerTester tester, string appId, string query)

@@ -12,6 +12,15 @@ namespace BTCPayServer.Services.Fees;
 
 public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
 {
+    private static readonly TimeSpan[] FeeTargets =
+    [
+        TimeSpan.Zero,
+        TimeSpan.FromMinutes(10.0),
+        TimeSpan.FromMinutes(60.0),
+        TimeSpan.FromHours(6.0),
+        TimeSpan.FromHours(24.0)
+    ];
+
     public FeeProviderFactory(
         BTCPayServerEnvironment Environment,
         ExplorerClientProvider ExplorerClients,
@@ -20,11 +29,18 @@ public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
         IMemoryCache MemoryCache)
     {
         _FeeProviders = new();
+        _NBXplorerFeeProviders = new();
 
         // TODO: Pluginify this
         foreach ((var network, var client) in ExplorerClients.GetAll())
         {
             List<IFeeProvider> providers = new List<IFeeProvider>();
+            var nbXplorerFeeProvider = new NBXplorerFeeProvider(
+                client,
+                MemoryCache,
+                $"NBXplorerFeeProvider-{network.CryptoCode}");
+            providers.Add(nbXplorerFeeProvider);
+            _NBXplorerFeeProviders.Add((network, nbXplorerFeeProvider));
             if (network.IsBTC && Environment.NetworkType != ChainName.Regtest)
             {
                 providers.Add(new MempoolSpaceFeeProvider(
@@ -32,12 +48,8 @@ public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
                     $"MempoolSpaceFeeProvider-{network.CryptoCode}",
                     HttpClientFactory,
                     network is BTCPayNetwork n &&
-                    n.NBitcoinNetwork.ChainName == ChainName.Testnet)
-                {
-                    CachedOnly = true
-                });
+                    n.NBitcoinNetwork.ChainName == ChainName.Testnet));
             }
-            providers.Add(new NBXplorerFeeProvider(client));
             providers.Add(new StaticFeeProvider(new FeeRate(100L, 1)));
             var fallback = new FallbackFeeProvider(providers.ToArray());
 
@@ -47,9 +59,11 @@ public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
 
     class ClampFeeProvider(IFeeProvider inner, NBXplorerDashboard dashboard, string cryptoCode) : IFeeProvider
     {
+        public IFeeProvider Inner { get; } = inner;
+
         public async Task<FeeRate> GetFeeRateAsync(int blockTarget = 20)
         {
-            var rate = await inner.GetFeeRateAsync(blockTarget);
+            var rate = await Inner.GetFeeRateAsync(blockTarget);
             var d = dashboard.Get(cryptoCode);
             var min = d?.MempoolInfo?.MempoolMinfeeRate;
             min ??= d?.Status?.BitcoinStatus?.MinRelayTxFee;
@@ -61,31 +75,16 @@ public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
     }
 
     private readonly Dictionary<BTCPayNetworkBase, IFeeProvider> _FeeProviders;
+    private readonly List<(BTCPayNetwork Network, NBXplorerFeeProvider Provider)> _NBXplorerFeeProviders;
     public IFeeProvider CreateFeeProvider(BTCPayNetworkBase network)
     {
         return _FeeProviders.TryGetValue(network, out var prov) ? prov : throw new NotSupportedException($"No fee provider for this network ({network.CryptoCode})");
     }
 
-    public async Task Do(CancellationToken cancellationToken)
-    {
-        try
-        {
-            await RefreshCache(_FeeProviders.Values);
-        }
-        // Do not spam logs if mempoolspace is down
-        catch (TaskCanceledException)
-        {
-        }
-        catch (HttpRequestException)
-        {
-        }
-    }
-    private Task RefreshCache(IEnumerable<IFeeProvider> feeProviders) => Task.WhenAll(feeProviders.Select(fp => RefreshCache(fp)));
-    private Task RefreshCache(IFeeProvider fp) =>
-        fp switch
-        {
-            FallbackFeeProvider ffp => Task.WhenAll(ffp.Providers.Select(p => RefreshCache(p))),
-            MempoolSpaceFeeProvider mempool => mempool.RefreshCache(),
-            _ => Task.CompletedTask
-        };
+    public Task Do(CancellationToken cancellationToken) =>
+        Task.WhenAll(_NBXplorerFeeProviders.Select(provider =>
+            provider.Provider.RefreshCache(
+                FeeTargets.Select(time =>
+                    (int)provider.Network.NBitcoinNetwork.Consensus.GetExpectedBlocksFor(time)),
+                cancellationToken)));
 }

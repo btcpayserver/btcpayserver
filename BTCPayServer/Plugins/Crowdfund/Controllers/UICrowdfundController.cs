@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,7 +50,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         FormDataService formDataService,
         IStringLocalizer stringLocalizer,
         CrowdfundAppType appType,
-        Safe safe)
+        Safe safe,
+        IRateLimitService rateLimitService)
         : Controller
     {
         public FormDataService FormDataService { get; } = formDataService;
@@ -93,9 +95,12 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraint(CrowdfundAppType.AppType)]
-        [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, string formResponse = null, CancellationToken cancellationToken = default)
         {
+            // Throttled here rather than with a filter, as AppHub.CreateInvoice and CrowdfundFormSubmit call this action directly
+            if (await Throttle(cancellationToken))
+                return new TooManyRequestsResult(ZoneLimits.PublicInvoices);
+
             var app = await appService.GetApp(appId, CrowdfundAppType.AppType, true);
 
             if (app == null)
@@ -108,6 +113,11 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             {
                 return NotFound("Crowdfund is not currently active");
             }
+
+            if (request.Email?.Length > LengthLimits.MaxEmailLength)
+                return NotFound("Email is too long");
+            if (request.RedirectUrl?.Length > LengthLimits.MaxUrlLength)
+                return NotFound("Redirect URL is too long");
 
             var info = await GetAppInfo(appId);
             if (!isAdmin &&
@@ -161,33 +171,28 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             if (settings.FormId is not null)
             {
-                var formData = await FormDataService.GetForm(settings.FormId);
+                var formData = await FormDataService.GetCheckoutForm(app.StoreDataId, settings.FormId);
                 if (formData is not null)
                 {
                     formResponseJObject = TryParseJObject(formResponse) ?? new JObject();
                     var form = Form.Parse(formData.Config);
                     FormDataService.SetValues(form, formResponseJObject);
+                    var amtField = form.GetFieldByFullName($"{FormDataService.InvoiceParameterPrefix}amount");
+                    if (amtField is null)
+                    {
+                        amtField = new Field
+                        {
+                            Name = $"{FormDataService.InvoiceParameterPrefix}amount",
+                            Type = "hidden",
+                            Constant = true
+                        };
+                        form.Fields.Add(amtField);
+                    }
+                    amtField.Value = price?.ToString(CultureInfo.InvariantCulture);
                     if (!FormDataService.Validate(form, ModelState))
                     {
                         // someone tried to bypass validation
                         return RedirectToAction(nameof(ViewCrowdfund), new { appId });
-                    }
-
-
-                    var amtField = form.GetFieldByFullName($"{FormDataService.InvoiceParameterPrefix}amount");
-                    if (amtField is null)
-                    {
-                        form.Fields.Add(new Field
-                        {
-                            Name = $"{FormDataService.InvoiceParameterPrefix}amount",
-                            Type = "hidden",
-                            Value = price?.ToString(),
-                            Constant = true
-                        });
-                    }
-                    else
-                    {
-                        amtField.Value = price?.ToString();
                     }
                     formResponseJObject = FormDataService.GetValues(form);
 
@@ -260,7 +265,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         {
             try
             {
-                return JObject.Parse(posData);
+                return JsonParser.ParseObject(posData);
             }
             catch
             {
@@ -278,7 +283,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return NotFound();
 
             var settings = app.GetSettings<CrowdfundSettings>();
-            var formData = await FormDataService.GetForm(settings.FormId);
+            var formData = await FormDataService.GetCheckoutForm(app.StoreDataId, settings.FormId);
             if (formData is null)
             {
                 return RedirectToAction(nameof(ViewCrowdfund), new { appId });
@@ -317,7 +322,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return NotFound();
 
             var settings = app.GetSettings<CrowdfundSettings>();
-            var formData = await FormDataService.GetForm(settings.FormId);
+            var formData = await FormDataService.GetCheckoutForm(app.StoreDataId, settings.FormId);
             if (formData is null)
             {
                 return RedirectToAction(nameof(ViewCrowdfund));
@@ -351,6 +356,9 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return ContributeToCrowdfund(appId, req, formResponse: FormDataService.GetValues(form).ToString()).Result;
             }
 
+            viewModel.AspController = nameof(UICrowdfundController).TrimEnd("Controller", StringComparison.InvariantCulture);
+            viewModel.AspAction = nameof(CrowdfundFormSubmit);
+            viewModel.RouteParameters = new Dictionary<string, string> { { "appId", appId }, { "amount", amount.ToString() }, { "choiceKey", choiceKey } };
             viewModel.FormName = formData.Name;
             viewModel.Form = form;
 
@@ -422,6 +430,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return NotFound();
 
             vm.AppId = app.Id;
+            vm.StoreId = app.StoreDataId;
             vm.TargetCurrency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, vm.TargetCurrency);
             if (currencies.GetCurrencyData(vm.TargetCurrency, false) == null)
                 ModelState.AddModelError(nameof(vm.TargetCurrency), "Invalid currency");
@@ -444,14 +453,26 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 vm.ResetEvery = nameof(CrowdfundResetEvery.Never);
             }
 
-            if (Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery) != CrowdfundResetEvery.Never && !vm.StartDate.HasValue)
+            if (!Enum.TryParse<CrowdfundResetEvery>(vm.ResetEvery, out var resetEvery) || !Enum.IsDefined(resetEvery))
+            {
+                ModelState.AddModelError(nameof(vm.ResetEvery), "Invalid reset period");
+                resetEvery = CrowdfundResetEvery.Never;
+            }
+
+            if (resetEvery != CrowdfundResetEvery.Never && !vm.StartDate.HasValue)
             {
                 ModelState.AddModelError(nameof(vm.StartDate), "A start date is needed when the goal resets every X amount of time");
             }
 
-            if (Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery) != CrowdfundResetEvery.Never && vm.ResetEveryAmount <= 0)
+            if (resetEvery != CrowdfundResetEvery.Never && vm.ResetEveryAmount <= 0)
             {
                 ModelState.AddModelError(nameof(vm.ResetEveryAmount), "You must reset the goal at a minimum of 1");
+            }
+
+            if (resetEvery != CrowdfundResetEvery.Never && vm.StartDate is { } startDate && vm.ResetEveryAmount > 0 &&
+                !CrowdfundSettings.TryGetNextResetDate(startDate, resetEvery, vm.ResetEveryAmount, out _))
+            {
+                ModelState.AddModelError(nameof(vm.ResetEveryAmount), "The reset interval exceeds the supported date range");
             }
 
             if (vm.StartDate != null && vm.EndDate != null && DateTime.Compare((DateTime)vm.StartDate, (DateTime)vm.EndDate) > 0)
@@ -522,7 +543,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 SoundsEnabled = vm.SoundsEnabled,
                 AnimationsEnabled = vm.AnimationsEnabled,
                 ResetEveryAmount = vm.ResetEveryAmount,
-                ResetEvery = Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery),
+                ResetEvery = resetEvery,
                 DisplayPerksValue = vm.DisplayPerksValue,
                 DisplayPerksRanking = vm.DisplayPerksRanking,
                 SortPerksByPopularity = vm.SortPerksByPopularity,
@@ -582,6 +603,10 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         private AppData GetCurrentApp() => HttpContext.GetAppDataOrNull();
 
         private string GetUserId() => User.GetIdOrNull();
+
+        private async Task<bool> Throttle(CancellationToken cancellationToken) =>
+            HttpContext.Connection is { RemoteIpAddress: { } addr } &&
+            !await rateLimitService.Throttle(ZoneLimits.PublicInvoices, addr.ToString(), cancellationToken);
 
         private async Task<ViewCrowdfundViewModel> GetAppInfo(string appId)
         {

@@ -152,7 +152,7 @@ namespace BTCPayServer.Services.Apps
             return (res, e) =>
             {
                 // flatten single items from POS data
-                var data = e.Metadata.PosData?.ToObject<PosAppData>();
+                var data = e.Metadata.PosData is { } posData ? PosAppData.TryParse(posData) : null;
                 var hasCart = data is { Cart.Length: > 0 };
                 var hasAmounts = data is { Amounts.Length: > 0 };
                 var date = e.InvoiceTime.Date;
@@ -417,13 +417,13 @@ retry:
                 CrowdfundAppType.AppType => "PerksTemplate",
                 _ => "Template"
             };
-            var settings = JObject.Parse(row.settings);
+            var settings = JsonParser.ParseObject(row.settings);
             if (!settings.TryGetValue(templatePath, out var template))
                 return;
 
             var items = template.Type switch
             {
-                JTokenType.String => JArray.Parse(template.Value<string>()!),
+                JTokenType.String => JsonParser.ParseArray(template.Value<string>()!),
                 JTokenType.Array => (JArray)template,
                 _ => null
             };
@@ -462,7 +462,7 @@ retry:
             }
             else
             {
-                ctx.Apps.Update(app);
+                ctx.Entry(app).State = EntityState.Modified;
                 ctx.Entry(app).Property(data => data.Created).IsModified = false;
                 ctx.Entry(app).Property(data => data.Id).IsModified = false;
                 ctx.Entry(app).Property(data => data.AppType).IsModified = false;
@@ -482,7 +482,7 @@ retry:
             result = null;
             try
             {
-                result = JObject.Parse(json);
+                result = JsonParser.ParseObject(json);
                 return true;
             }
             catch
@@ -516,14 +516,14 @@ retry:
                         JObject v2 => v2["value"]?.Value<decimal>() ?? 0m,
                         _ => 0m
                     };
-                    if (int.TryParse(countStr, out var count))
-                    {
-                        cartItems.Add(new AppCartItem { Id = id, Title = title, Count = count, Price = price });
-                    }
+                    if (!int.TryParse(countStr, out var count) || count <= 0 || price < 0)
+                        return false;
+                    _ = price * count;
+                    cartItems.Add(new AppCartItem { Id = id, Title = title, Count = count, Price = price });
                 }
                 return true;
             }
-            catch (FormatException)
+            catch (Exception ex) when (ex is InvalidCastException or FormatException or OverflowException)
             {
                 return false;
             }

@@ -181,6 +181,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Amount), $"The amount should less than {GreenfieldConstants.MaxAmount}.");
             }
             request.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();
+            if (!string.IsNullOrEmpty(request.Checkout.RedirectURL) &&
+                (!Uri.TryCreate(request.Checkout.RedirectURL, UriKind.Absolute, out var redirectUri) ||
+                 redirectUri.Scheme is not ("http" or "https")))
+            {
+                request.AddModelError(invoiceRequest => invoiceRequest.Checkout.RedirectURL,
+                    "The redirect URL must be an absolute HTTP or HTTPS URL.", this);
+            }
             if (request.Checkout.PaymentMethods?.Any() is true)
             {
                 for (int i = 0; i < request.Checkout.PaymentMethods.Length; i++)
@@ -239,7 +246,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
         }
 
-        [Authorize(Policy = Policies.CanModifyInvoices,
+        [Authorize(Policy = Policies.CanManageInvoiceStatus,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/invoices/{invoiceId}/status")]
         [HttpPost("~/api/v1/invoices/{invoiceId}/status")]
@@ -431,6 +438,12 @@ namespace BTCPayServer.Controllers.Greenfield
                     break;
 
                 case RefundVariant.CurrentRate:
+                    if (rateResult.BidAsk is null)
+                    {
+                        ModelState.AddModelError(nameof(request.RefundVariant),
+                            $"Impossible to fetch rate: {rateResult.EvaluatedRule}");
+                        return this.CreateValidationError(ModelState);
+                    }
                     createPullPayment.Currency = paymentPrompt.Currency;
                     createPullPayment.Amount = Math.Round(paidCurrency / rateResult.BidAsk.Bid, appliedDivisibility);
                     createPullPayment.AutoApproveClaims = true;

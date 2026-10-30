@@ -9,32 +9,87 @@ namespace BTCPayServer;
 
 public class TextTemplate(string template)
 {
-    static readonly Regex _interpolationRegex = new Regex(@"\{([^}]+)\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    public const int MaxUrlLength = 8192;
+    const int MaxPathLength = 256;
+    static readonly Regex _interpolationRegex = new Regex(@"\{([^{}]+)\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    static readonly Regex _pathRegex = new Regex("""^\$(?:\.[^\s.*()\[\]'"]+|\[[0-9]+\]|\['(?:[^'\\]|\\.)*'\]|\["(?:[^"\\]|\\.)*"\])*\s*\z""", RegexOptions.NonBacktracking | RegexOptions.CultureInvariant);
+
+    public static TextTemplate CreateUrlTemplate(string template) =>
+        new TextTemplate(template)
+        {
+            MaxOutputLength = MaxUrlLength,
+            NotFoundReplacement = path => $"{{{path}}}",
+            ParsingErrorReplacement = path => $"{{{path}}}",
+            EncodeFallbackReplacements = false,
+            Encode = value => Uri.EscapeDataString(value.Value)
+        };
+
     public Func<string, string> NotFoundReplacement { get; set; } = path => $"[NotFound({path})]";
     public Func<string, string> ParsingErrorReplacement { get; set; } = path => $"[ParsingError({path})]";
 
     public Func<(string Path, string Value), string> Encode { get; set; } = v => v.Value;
+    public bool EncodeFallbackReplacements { get; set; } = true;
+    public int? MaxOutputLength { get; init; }
 
     public string Render(JObject model)
     {
         model = (JObject)ToLowerCase(model);
-        return _interpolationRegex.Replace(template, match =>
+        var result = new StringBuilder(MaxOutputLength is int maxLength
+            ? Math.Min(template.Length, maxLength)
+            : template.Length);
+        var offset = 0;
+        foreach (Match match in _interpolationRegex.Matches(template))
         {
-            var path = match.Groups[1].Value;
-            var initial = path;
-            if (!path.StartsWith("$."))
-                path = $"$.{path}";
-            path = path.ToLowerInvariant();
-            try
-            {
-                var token = model.SelectToken(path);
-                return Encode((initial, token?.ToString() ?? NotFoundReplacement(initial)));
-            }
-            catch
-            {
-                return Encode((initial, ParsingErrorReplacement(initial)));
-            }
-        });
+            var literalLength = match.Index - offset;
+            if (ExceedsMaxOutputLength(result.Length, literalLength))
+                return string.Empty;
+            result.Append(template, offset, literalLength);
+
+            var replacement = RenderMatch(model, match);
+            if (ExceedsMaxOutputLength(result.Length, replacement.Length))
+                return string.Empty;
+            result.Append(replacement);
+            offset = match.Index + match.Length;
+        }
+
+        var remainingLength = template.Length - offset;
+        if (ExceedsMaxOutputLength(result.Length, remainingLength))
+            return string.Empty;
+        result.Append(template, offset, remainingLength);
+        return result.ToString();
+    }
+
+    private string RenderMatch(JObject model, Match match)
+    {
+        var path = match.Groups[1].Value;
+        var initial = path;
+        if (path.Length > MaxPathLength)
+            return RenderFallback(initial, ParsingErrorReplacement);
+        if (!path.StartsWith("$."))
+            path = $"$.{path}";
+        path = path.ToLowerInvariant();
+        if (!_pathRegex.IsMatch(path))
+            return RenderFallback(initial, ParsingErrorReplacement);
+        try
+        {
+            var token = model.SelectToken(path);
+            return token is null
+                ? RenderFallback(initial, NotFoundReplacement)
+                : Encode((initial, token.ToString()));
+        }
+        catch
+        {
+            return RenderFallback(initial, ParsingErrorReplacement);
+        }
+    }
+
+    private bool ExceedsMaxOutputLength(int currentLength, int appendedLength) =>
+        MaxOutputLength is int maxLength && (long)currentLength + appendedLength > maxLength;
+
+    private string RenderFallback(string path, Func<string, string> replacement)
+    {
+        var value = replacement(path);
+        return EncodeFallbackReplacements ? Encode((path, value)) : value;
     }
 
     public List<string> GetPaths(JObject model)

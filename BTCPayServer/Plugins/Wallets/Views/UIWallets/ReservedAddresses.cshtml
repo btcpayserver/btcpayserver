@@ -52,7 +52,7 @@
                             <span class="d-flex flex-wrap gap-2 align-items-center" not-permission="@WalletPolicies.CanManageWalletTransactions">
                                 @foreach (var label in address.Labels)
                                 {
-                                    <span class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
+                                    <span class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor" v-pre>
                                         <span>@label.Text</span>
                                         @if (!string.IsNullOrEmpty(label.Link))
                                         {

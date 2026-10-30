@@ -84,6 +84,9 @@ public class LightningPendingPayoutListener : BaseAsyncService
 
                 var client =
                     pm.CreateLightningClient(networks[pmi], _options.Value, _lightningClientFactoryService);
+                var expectedProofs = payoutByStoreByPaymentMethod.ToDictionary(
+                    payoutData => payoutData.Id,
+                    payoutData => payoutData.GetProofBlobJson());
                 foreach (PayoutData payoutData in payoutByStoreByPaymentMethod)
                 {
                     var handler = _payoutHandlers.TryGet(payoutData.GetPayoutMethodId()) as LightningLikePayoutHandler;
@@ -113,6 +116,11 @@ public class LightningPendingPayoutListener : BaseAsyncService
                         continue;
                     }
 
+                    // A missing lookup result does not establish that the payment failed.
+                    // Keep its proof so the next iteration can check the same payment again.
+                    if (proof is not null && payment is null)
+                        continue;
+
                     payoutData.State = payment?.Status switch
                     {
                         LightningPaymentStatus.Complete => PayoutState.Completed,
@@ -126,18 +134,19 @@ public class LightningPendingPayoutListener : BaseAsyncService
                         proof.Preimage = payment.Preimage;
                         payoutData.SetProofBlob(proof, null);
                     }
-				}
+                }
 
                 foreach (PayoutData payoutData in payoutByStoreByPaymentMethod)
                 {
                     if (payoutData.State != PayoutState.InProgress)
                     {
-                        // This update can fail if the payout has been updated in the meantime
                         await _pullPaymentHostedService.MarkPaid(new HostedServices.MarkPayoutRequest()
                         {
                             PayoutId = payoutData.Id,
                             State = payoutData.State,
-                            Proof = payoutData.State is PayoutState.Completed ? JObject.Parse(payoutData.Proof) : null
+                            Proof = payoutData.State is PayoutState.Completed ? JsonParser.ParseObject(payoutData.Proof) : null,
+                            ExpectedState = PayoutState.InProgress,
+                            ExpectedProof = expectedProofs[payoutData.Id]
                         });
                     }
                 }

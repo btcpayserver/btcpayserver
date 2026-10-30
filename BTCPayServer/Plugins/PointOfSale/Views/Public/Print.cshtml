@@ -1,6 +1,7 @@
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Payments
 @using BTCPayServer.Payments.Lightning
+@using BTCPayServer.Payments.LNURLPay
 @using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
 @using BTCPayServer.Services.Invoices
@@ -51,7 +52,7 @@ else
     <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.StoreBranding)" />
     @if (!string.IsNullOrEmpty(Model.Description))
     {
-        <div class="lead text-center">@Safe.Raw(Model.Description)</div>
+        <div class="lead text-center">@Safe.RawRichText(Model.Description)</div>
     }
     <main>
         @if (supported is not null)
@@ -113,7 +114,7 @@ else
                             </div>
                             @if (!string.IsNullOrWhiteSpace(item.Description))
                             {
-                                <p class="card-text">@Safe.Raw(item.Description)</p>
+                                <p class="card-text">@Safe.RawRichText(item.Description)</p>
                             }
                         </div>
                         @if (item.Inventory is null or > 0)
@@ -128,7 +129,7 @@ else
                                 }, Context.Request.Scheme, Context.Request.Host.ToString())!);
                                 var lnUrl = LNURL.EncodeUri(lnurlEndpoint, "payRequest", supported.UseBech32Scheme);
                                 <a href="@lnUrl" rel="noreferrer noopener" class="card-img-bottom">
-                                    <vc:qr-code data="@lnUrl.ToString().ToUpperInvariant()" />
+                                    <vc:qr-code data="@LNURLPayPaymentLinkExtension.FormatPaymentLinkForQRCode(lnUrl.ToString(), supported.UseBech32Scheme)" />
                                 </a>
                             }
                         }

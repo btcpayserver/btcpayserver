@@ -48,6 +48,7 @@ namespace BTCPayServer.Data
                 .WithMany(a => a.Invoices).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<InvoiceData>().HasIndex(o => o.StoreDataId);
             builder.Entity<InvoiceData>().HasIndex(o => o.Created);
+            builder.Entity<InvoiceData>().HasIndex(o => new { o.StoreDataId, o.Created }).IsDescending(false, true);
             builder.Entity<InvoiceData>()
                     .Property(o => o.Blob2)
                     .HasColumnType("JSONB");

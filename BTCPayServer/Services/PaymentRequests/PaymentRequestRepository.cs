@@ -48,7 +48,7 @@ namespace BTCPayServer.Services.PaymentRequests
             }
             else
             {
-                context.PaymentRequests.Update(entity);
+                context.Entry(entity).State = EntityState.Modified;
             }
 
             await context.SaveChangesAsync();
@@ -224,7 +224,15 @@ namespace BTCPayServer.Services.PaymentRequests
             return items;
         }
 
+        [Obsolete("Use the overload accepting PaymentRequestData.")]
         public async Task<InvoiceEntity[]> GetInvoicesForPaymentRequest(string paymentRequestId,
+            InvoiceQuery invoiceQuery = null)
+        {
+            var paymentRequest = await FindPaymentRequest(paymentRequestId, null);
+            return paymentRequest is null ? [] : await GetInvoicesForPaymentRequest(paymentRequest, invoiceQuery);
+        }
+
+        public async Task<InvoiceEntity[]> GetInvoicesForPaymentRequest(PaymentRequestData paymentRequest,
             InvoiceQuery invoiceQuery = null)
         {
             if (invoiceQuery == null)
@@ -232,9 +240,10 @@ namespace BTCPayServer.Services.PaymentRequests
                 invoiceQuery = new InvoiceQuery();
             }
 
-            invoiceQuery.OrderId = new[] { GetOrderIdForPaymentRequest(paymentRequestId) };
+            invoiceQuery.StoreId = new[] { paymentRequest.StoreDataId };
+            invoiceQuery.OrderId = new[] { GetOrderIdForPaymentRequest(paymentRequest.Id) };
             return (await _InvoiceRepository.GetInvoices(invoiceQuery))
-                .Where(i => i.InternalTags.Contains(GetInternalTag(paymentRequestId)))
+                .Where(i => i.InternalTags.Contains(GetInternalTag(paymentRequest.Id)))
                 .ToArray();
         }
 

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.InvoicingModels
@@ -17,7 +18,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-        [Required]
+        [BindNever]
         [DisplayName("Store Id")]
         public string StoreId
         {
@@ -25,6 +26,7 @@ namespace BTCPayServer.Models.InvoicingModels
         }
 
         [DisplayName("Order Id")]
+        [MaxLength(LengthLimits.MaxOrderIdLength)]
         public string OrderId
         {
             get; set;
@@ -48,15 +50,9 @@ namespace BTCPayServer.Models.InvoicingModels
         }
 
         [MailboxAddress]
+        [MaxLength(LengthLimits.MaxEmailLength)]
         [DisplayName("Buyer Email")]
         public string BuyerEmail
-        {
-            get; set;
-        }
-
-        [Uri]
-        [DisplayName("Notification URL")]
-        public string NotificationUrl
         {
             get; set;
         }
@@ -69,13 +65,6 @@ namespace BTCPayServer.Models.InvoicingModels
 
         [DisplayName("Available Payment Methods")]
         public SelectList AvailablePaymentMethods
-        {
-            get; set;
-        }
-
-        [MailboxAddress]
-        [DisplayName("Notification Email")]
-        public string NotificationEmail
         {
             get; set;
         }

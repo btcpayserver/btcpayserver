@@ -60,7 +60,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
             var settings = await _emailSenderFactory.GetSettings();
-            settings = EmailSettings.FromData(request, settings?.Password);
+            settings = EmailSettings.FromData(request, settings?.GetPasswordFor(request.Server));
 
             // important to save as EmailSettings otherwise it won't be able to be fetched
             await _settingsRepository.UpdateSetting(settings);

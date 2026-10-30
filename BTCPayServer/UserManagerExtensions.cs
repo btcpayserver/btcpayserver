@@ -27,6 +27,18 @@ namespace BTCPayServer
             return (await userManager.GetValidTwoFactorProvidersAsync(user)).Contains(userManager.Options.Tokens.AuthenticatorTokenProvider);
         }
 
+        public static async Task<bool> CheckPasswordWithLockoutAsync(this UserManager<ApplicationUser> userManager, ApplicationUser user, string? password)
+        {
+            if (string.IsNullOrEmpty(password) || await userManager.IsLockedOutAsync(user))
+                return false;
+            if (await userManager.CheckPasswordAsync(user, password))
+            {
+                return (await userManager.ResetAccessFailedCountAsync(user)).Succeeded;
+            }
+            await userManager.AccessFailedAsync(user);
+            return false;
+        }
+
         public static async Task<string?> GenerateInvitationTokenAsync(this UserManager<ApplicationUser> userManager, string userId)
         {
             var token = Guid.NewGuid().ToString("n")[..12];

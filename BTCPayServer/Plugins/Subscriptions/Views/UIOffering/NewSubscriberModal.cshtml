@@ -1,5 +1,5 @@
 ﻿@model List<SubscriptionsViewModel.SelectablePlan>
-<div class="modal fade" id="newSubscriberModal" tabindex="-1" aria-hidden="true">
+<div class="new-subscriber-modal modal fade" id="newSubscriberModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -45,7 +45,7 @@
                         <!-- Vue-driven select -->
                         <select id="newSubscriber-plan"
                                 name="planId"
-                                class="form-select"
+                                class="new-subscriber-modal__plan form-select"
                                 v-model="selectedPlanId"
                                 :disabled="!canEditPlan">
                             <option :value="p.id" v-for="p in plans" :key="p.id">

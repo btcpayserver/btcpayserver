@@ -13,18 +13,14 @@
     @if (isCheckbox)
     {
         <input id="@Model.Name" type="@Model.Type" class="form-check-input @(errors is null ? "" : "is-invalid")"
-               name="@Model.Name" value="true" data-val="true" readonly="@Model.Constant"
-               @if (Model.Value == "true")
-               {
-                   @Safe.Raw(" checked")
-               }
+               name="@Model.Name" value="true" data-val="true" readonly="@Model.Constant" checked="@(Model.Value == "true")"
                @if (!string.IsNullOrEmpty(Model.HelpText))
                {
-                   @Safe.Raw($" aria-describedby=\"HelpText-{Model.Name}\"")
+                   <text> aria-describedby="HelpText-@Model.Name"</text>
                }
                @if (Model.Required)
                {
-                   @Safe.Raw($" data-val-required=\"{Model.Label} is required.\" required")
+                   <text> data-val-required="@Safe.RawEncode(Model.Label) is required." required</text>
                } />
         <label class="form-check-label" for="@Model.Name"@(Model.Required ? " data-required" : "")>
             @Safe.Raw(Model.Label)
@@ -39,11 +35,11 @@
                name="@Model.Name" value="@Model.Value" data-val="true" readonly="@Model.Constant"
                @if (!string.IsNullOrEmpty(Model.HelpText))
                {
-                   @Safe.Raw($" aria-describedby=\"HelpText-{Model.Name}\"")
+                   <text> aria-describedby="HelpText-@Model.Name"</text>
                }
                @if (Model.Required)
                {
-                   @Safe.Raw($" data-val-required=\"{Model.Label} is required.\" required")
+                   <text> data-val-required="@Safe.RawEncode(Model.Label) is required." required</text>
                } />
     }
     <span class="text-danger" data-valmsg-for="@Model.Name" data-valmsg-replace="true">@(isInvalid && errors.Any() ? errors.First().ErrorMessage : string.Empty)</span>

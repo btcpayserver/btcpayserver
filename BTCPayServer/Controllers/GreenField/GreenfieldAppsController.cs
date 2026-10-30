@@ -161,9 +161,10 @@ namespace BTCPayServer.Controllers.Greenfield
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetAllApps()
         {
+            var storeIds = HttpContext.GetStoresData().Select(s => s.Id).ToHashSet();
             var apps = await _appService.GetAllApps(User.GetId(), includeArchived: true);
 
-            return Ok(apps.Select(ToModel).ToArray());
+            return Ok(apps.Where(a => storeIds.Contains(a.StoreId)).Select(ToModel).ToArray());
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/apps")]
@@ -189,6 +190,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpGet("~/api/v1/apps/pos/{appId}")]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetPosApp(string appId)
         {
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType, includeArchived: true);
@@ -222,6 +224,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpGet("~/api/v1/apps/crowdfund/{appId}")]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetCrowdfundApp(string appId)
         {
             var app = await _appService.GetApp(appId, CrowdfundAppType.AppType, includeArchived: true);
@@ -557,6 +560,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 }
             }
 
+            if (request.ResetEvery.HasValue && !Enum.IsDefined(request.ResetEvery.Value))
+            {
+                ModelState.AddModelError(nameof(request.ResetEvery), "Invalid reset period");
+            }
+
             if (request.ResetEvery.HasValue && request.ResetEvery != CrowdfundResetEvery.Never)
             {
                 if (request.StartDate == null)
@@ -566,6 +574,12 @@ namespace BTCPayServer.Controllers.Greenfield
                 if (request.ResetEveryAmount <= 0)
                 {
                     ModelState.AddModelError(nameof(request.ResetEveryAmount), "You must reset the goal at a minimum of 1");
+                }
+                else if (Enum.IsDefined(request.ResetEvery.Value) && request.StartDate is { } startDate &&
+                         !CrowdfundSettings.TryGetNextResetDate(startDate.UtcDateTime,
+                             (Services.Apps.CrowdfundResetEvery)request.ResetEvery.Value, request.ResetEveryAmount ?? 1, out _))
+                {
+                    ModelState.AddModelError(nameof(request.ResetEveryAmount), "The reset interval exceeds the supported date range");
                 }
             }
 
@@ -591,9 +605,10 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.AppName), "App name is missing");
             }
-            else if (request.AppName.Length is < 1 or > 50)
+            else if (request.AppName.Length is < AppData.MinNameLength or > AppData.MaxNameLength)
             {
-                ModelState.AddModelError(nameof(request.AppName), "App name can only be between 1 and 50 characters");
+                ModelState.AddModelError(nameof(request.AppName),
+                    $"App name can only be between {AppData.MinNameLength} and {AppData.MaxNameLength} characters");
             }
         }
     }

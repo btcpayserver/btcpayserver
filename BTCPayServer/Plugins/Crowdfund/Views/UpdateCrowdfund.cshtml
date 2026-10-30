@@ -12,7 +12,7 @@
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(CrowdfundPlugin)}-{Model.AppId}", StringLocalizer["Update Crowdfund"]));
 	Csp.UnsafeEval();
     var canUpload = await FileService.IsAvailable();
-    var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
+    var checkoutFormOptions = await FormDataService.GetSelect(Context.GetStoreData().Id, Model.FormId);
 }
 
 @section PageHeadContent {
@@ -114,7 +114,7 @@
         <div class="col-xxl-constrain">
             <div class="form-group">
                 <label asp-for="Description" class="form-label" data-required></label>
-                <textarea asp-for="Description" rows="20" cols="40" class="form-control richtext"></textarea>
+                <textarea asp-for="Description" rich-text rows="20" cols="40" class="form-control"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
         </div>
@@ -139,8 +139,8 @@
                 <div class="form-group mb-0 w-250px">
                     <label asp-for="StartDate" class="form-label"></label>
                     <div class="input-group flex-nowrap">
-                        <input type="datetime-local" asp-for="StartDate"
-                               value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
+                        <input type="text" asp-for="StartDate"
+                               value="@(Model.StartDate?.ToString("o", CultureInfo.InvariantCulture))"
                                class="form-control flatdtpicker"
                                placeholder="@StringLocalizer["No start date has been set"]" />
                         <button class="btn btn-secondary input-group-clear px-3" type="button" title="Clear">
@@ -151,8 +151,8 @@
                 <div class="form-group mb-0 w-250px">
                     <label asp-for="EndDate" class="form-label"></label>
                     <div class="input-group flex-nowrap">
-                        <input type="datetime-local" asp-for="EndDate"
-                               value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
+                        <input type="text" asp-for="EndDate"
+                               value="@(Model.EndDate?.ToString("o", CultureInfo.InvariantCulture))"
                                class="form-control flatdtpicker"
                                placeholder="@StringLocalizer["No end date has been set"]" />
                         <button class="btn btn-secondary input-group-clear px-3" type="button" title="Clear" id="clear_end">
@@ -360,4 +360,3 @@ Please insert valid HTML here. Only meta tags accepted.'>
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete app"], StringLocalizer["This app will be removed from this store."], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
-

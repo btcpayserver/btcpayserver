@@ -51,7 +51,7 @@ public class SubscriberData : BaseEntityData
     public decimal? PaidAmount { get; set; }
 
     public decimal GetCredit(string? currency = null)
-        => Credits.FirstOrDefault(c => (currency ?? c.Currency).Equals(Plan.Currency, StringComparison.OrdinalIgnoreCase))?.Amount ?? 0m;
+        => Credits.FirstOrDefault(c => c.Currency.Equals(currency?.Trim() ?? Plan.Currency, StringComparison.OrdinalIgnoreCase))?.Amount ?? 0m;
 
     public decimal MissingCredit()
     => Math.Max(0m, NextPlan.Price - GetCredit(NextPlan.Currency));
@@ -82,8 +82,10 @@ public class SubscriberData : BaseEntityData
         {
             var total = pe - PlanStarted;
             var remaining = pe - now;
-            var unused = (decimal)(remaining.TotalMilliseconds / total.TotalMilliseconds);
-            return pa * unused;
+            if (total <= TimeSpan.Zero)
+                return null;
+            var unused = Math.Clamp(remaining.TotalMilliseconds / total.TotalMilliseconds, 0.0, 1.0);
+            return pa * (decimal)unused;
         }
 
         return null;
@@ -217,7 +219,7 @@ public class SubscriberData : BaseEntityData
 
             (PeriodEnd, GracePeriodEnd) = plan.GetPeriodEnd(startDate);
             ReminderDate = PeriodEnd - TimeSpan.FromDays(PaymentReminderDaysOrDefault);
-            PlanStarted = now;
+            PlanStarted = startDate < now ? startDate : now;
             TrialEnd = null;
             PaidAmount = plan.Price;
         }

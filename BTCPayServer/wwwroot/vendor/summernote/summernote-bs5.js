@@ -1,13 +1,12 @@
 /*!
- *
- * Super simple wysiwyg editor v0.8.18
+ * 
+ * Super simple WYSIWYG editor v0.9.1
  * https://summernote.org
  *
+ * Copyright 2013~ Hackerwins and contributors
+ * Summernote may be freely distributed under the MIT license.
  *
- * Copyright 2013- Alan Hong. and other contributors
- * summernote may be freely distributed under the MIT license.
- *
- * Date: 2020-05-20T18:09Z
+ * Date: 2024-10-09T10:28Z
  *
  */
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -19,219 +18,21 @@
 		var a = typeof exports === 'object' ? factory(require("jquery")) : factory(root["jQuery"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(window, function(__WEBPACK_EXTERNAL_MODULE__0__) {
-return /******/ (function(modules) { // webpackBootstrap
-/******/ 	// The module cache
-/******/ 	var installedModules = {};
-/******/
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/
-/******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId]) {
-/******/ 			return installedModules[moduleId].exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			i: moduleId,
-/******/ 			l: false,
-/******/ 			exports: {}
-/******/ 		};
-/******/
-/******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
-/******/ 		// Flag the module as loaded
-/******/ 		module.l = true;
-/******/
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/
-/******/
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
-/******/
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
-/******/
-/******/ 	// define getter function for harmony exports
-/******/ 	__webpack_require__.d = function(exports, name, getter) {
-/******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
-/******/ 		}
-/******/ 	};
-/******/
-/******/ 	// define __esModule on exports
-/******/ 	__webpack_require__.r = function(exports) {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
-/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/
-/******/ 	// create a fake namespace object
-/******/ 	// mode & 1: value is a module id, require it
-/******/ 	// mode & 2: merge all properties of value into the ns
-/******/ 	// mode & 4: return value when already ns object
-/******/ 	// mode & 8|1: behave like require
-/******/ 	__webpack_require__.t = function(value, mode) {
-/******/ 		if(mode & 1) value = __webpack_require__(value);
-/******/ 		if(mode & 8) return value;
-/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
-/******/ 		var ns = Object.create(null);
-/******/ 		__webpack_require__.r(ns);
-/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
-/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
-/******/ 		return ns;
-/******/ 	};
-/******/
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-/******/ 	__webpack_require__.n = function(module) {
-/******/ 		var getter = module && module.__esModule ?
-/******/ 			function getDefault() { return module['default']; } :
-/******/ 			function getModuleExports() { return module; };
-/******/ 		__webpack_require__.d(getter, 'a', getter);
-/******/ 		return getter;
-/******/ 	};
-/******/
-/******/ 	// Object.prototype.hasOwnProperty.call
-/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-/******/
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
-/******/
-/******/
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 53);
-/******/ })
-/************************************************************************/
-/******/ ({
+})(self, (__WEBPACK_EXTERNAL_MODULE__8938__) => {
+return /******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({
 
-/***/ 0:
-/***/ (function(module, exports) {
+/***/ 7000:
+/***/ ((__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE__0__;
-
-/***/ }),
-
-/***/ 1:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
+/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8938);
 /* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(jquery__WEBPACK_IMPORTED_MODULE_0__);
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
-var Renderer = /*#__PURE__*/function () {
-  function Renderer(markup, children, options, callback) {
-    _classCallCheck(this, Renderer);
-
-    this.markup = markup;
-    this.children = children;
-    this.options = options;
-    this.callback = callback;
-  }
-
-  _createClass(Renderer, [{
-    key: "render",
-    value: function render($parent) {
-      var $node = jquery__WEBPACK_IMPORTED_MODULE_0___default()(this.markup);
-
-      if (this.options && this.options.contents) {
-        $node.html(this.options.contents);
-      }
-
-      if (this.options && this.options.className) {
-        $node.addClass(this.options.className);
-      }
-
-      if (this.options && this.options.data) {
-        jquery__WEBPACK_IMPORTED_MODULE_0___default.a.each(this.options.data, function (k, v) {
-          $node.attr('data-' + k, v);
-        });
-      }
-
-      if (this.options && this.options.click) {
-        $node.on('click', this.options.click);
-      }
-
-      if (this.children) {
-        var $container = $node.find('.note-children-container');
-        this.children.forEach(function (child) {
-          child.render($container.length ? $container : $node);
-        });
-      }
-
-      if (this.callback) {
-        this.callback($node, this.options);
-      }
-
-      if (this.options && this.options.callback) {
-        this.options.callback($node);
-      }
-
-      if ($parent) {
-        $parent.append($node);
-      }
-
-      return $node;
-    }
-  }]);
-
-  return Renderer;
-}();
-
-/* harmony default export */ __webpack_exports__["a"] = ({
-  create: function create(markup, callback) {
-    return function () {
-      var options = _typeof(arguments[1]) === 'object' ? arguments[1] : arguments[0];
-      var children = Array.isArray(arguments[0]) ? arguments[0] : [];
-
-      if (options && options.children) {
-        children = options.children;
-      }
-
-      return new Renderer(markup, children, options, callback);
-    };
-  }
-});
-
-/***/ }),
-
-/***/ 2:
-/***/ (function(module, exports) {
-
-/* WEBPACK VAR INJECTION */(function(__webpack_amd_options__) {/* globals __webpack_amd_options__ */
-module.exports = __webpack_amd_options__;
-
-/* WEBPACK VAR INJECTION */}.call(this, {}))
-
-/***/ }),
-
-/***/ 3:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-
-// EXTERNAL MODULE: external {"root":"jQuery","commonjs2":"jquery","commonjs":"jquery","amd":"jquery"}
-var external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_ = __webpack_require__(0);
-var external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default = /*#__PURE__*/__webpack_require__.n(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_);
-
-// CONCATENATED MODULE: ./src/js/base/summernote-en-US.js
-
-external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote || {
+(jquery__WEBPACK_IMPORTED_MODULE_0___default().summernote) = (jquery__WEBPACK_IMPORTED_MODULE_0___default().summernote) || {
   lang: {}
 };
-external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.extend(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.lang, {
+jquery__WEBPACK_IMPORTED_MODULE_0___default().extend(true, (jquery__WEBPACK_IMPORTED_MODULE_0___default().summernote).lang, {
   'en-US': {
     font: {
       bold: 'Bold',
@@ -274,7 +75,7 @@ external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.exten
       videoLink: 'Video Link',
       insert: 'Insert Video',
       url: 'Video URL',
-      providers: '(YouTube, Vimeo, Vine, Instagram, DailyMotion or Youku)'
+      providers: '(YouTube, Google Drive, Vimeo, Vine, Instagram, DailyMotion, Youku, Peertube)'
     },
     link: {
       link: 'Link',
@@ -283,8 +84,7 @@ external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.exten
       edit: 'Edit',
       textToDisplay: 'Text to display',
       url: 'To what URL should this link go?',
-      openInNewWindow: 'Open in new window',
-      useProtocol: 'Use default protocol'
+      openInNewWindow: 'Open in new window'
     },
     table: {
       table: 'Table',
@@ -392,9 +192,82 @@ external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.exten
     }
   }
 });
-// CONCATENATED MODULE: ./src/js/base/core/env.js
 
-var isSupportAmd = typeof define === 'function' && __webpack_require__(2); // eslint-disable-line
+/***/ }),
+
+/***/ 8938:
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__8938__;
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__webpack_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+
+// EXTERNAL MODULE: external {"root":"jQuery","commonjs":"jquery","commonjs2":"jquery","amd":"jquery"}
+var external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_ = __webpack_require__(8938);
+var external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default = /*#__PURE__*/__webpack_require__.n(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_);
+// EXTERNAL MODULE: ./src/lang/summernote-en-US.js
+var summernote_en_US = __webpack_require__(7000);
+;// CONCATENATED MODULE: ./src/js/core/env.js
+
 
 /**
  * returns whether font is installed or not.
@@ -402,49 +275,59 @@ var isSupportAmd = typeof define === 'function' && __webpack_require__(2); // es
  * @param {String} fontName
  * @return {Boolean}
  */
-
 var genericFontFamilies = ['sans-serif', 'serif', 'monospace', 'cursive', 'fantasy'];
-
 function validFontName(fontName) {
-  return external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.inArray(fontName.toLowerCase(), genericFontFamilies) === -1 ? "'".concat(fontName, "'") : fontName;
+  return external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().inArray(fontName.toLowerCase(), genericFontFamilies) === -1 ? "'".concat(fontName, "'") : fontName;
 }
-
-function env_isFontInstalled(fontName) {
-  var testFontName = fontName === 'Comic Sans MS' ? 'Courier New' : 'Comic Sans MS';
-  var testText = 'mmmmmmmmmmwwwww';
-  var testSize = '200px';
-  var canvas = document.createElement('canvas');
-  var context = canvas.getContext('2d');
-  context.font = testSize + " '" + testFontName + "'";
-  var originalWidth = context.measureText(testText).width;
-  context.font = testSize + ' ' + validFontName(fontName) + ', "' + testFontName + '"';
-  var width = context.measureText(testText).width;
-  return originalWidth !== width;
+function createIsFontInstalledFunc() {
+  var testText = "mw";
+  var fontSize = "20px";
+  var canvasWidth = 40;
+  var canvasHeight = 20;
+  var canvas = document.createElement("canvas");
+  var context = canvas.getContext("2d", {
+    willReadFrequently: true
+  });
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+  context.textAlign = "center";
+  context.fillStyle = "black";
+  context.textBaseline = "middle";
+  function getPxInfo(font, testFontName) {
+    context.clearRect(0, 0, canvasWidth, canvasHeight);
+    context.font = fontSize + ' ' + validFontName(font) + ', "' + testFontName + '"';
+    context.fillText(testText, canvasWidth / 2, canvasHeight / 2);
+    // Get pixel information
+    var pxInfo = context.getImageData(0, 0, canvasWidth, canvasHeight).data;
+    return pxInfo.join("");
+  }
+  return function (fontName) {
+    var testFontName = fontName === 'Comic Sans MS' ? 'Courier New' : 'Comic Sans MS';
+    var testInfo = getPxInfo(testFontName, testFontName);
+    var fontInfo = getPxInfo(fontName, testFontName);
+    return testInfo !== fontInfo;
+  };
 }
-
 var userAgent = navigator.userAgent;
 var isMSIE = /MSIE|Trident/i.test(userAgent);
 var browserVersion;
-
 if (isMSIE) {
   var matches = /MSIE (\d+[.]\d+)/.exec(userAgent);
-
   if (matches) {
     browserVersion = parseFloat(matches[1]);
   }
-
   matches = /Trident\/.*rv:([0-9]{1,}[.0-9]{0,})/.exec(userAgent);
-
   if (matches) {
     browserVersion = parseFloat(matches[1]);
   }
 }
-
 var isEdge = /Edge\/\d+/.test(userAgent);
-var isSupportTouch = 'ontouchstart' in window || navigator.MaxTouchPoints > 0 || navigator.msMaxTouchPoints > 0; // [workaround] IE doesn't have input events for contentEditable
-// - see: https://goo.gl/4bfIvA
+var isSupportTouch = 'ontouchstart' in window || navigator.MaxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
 
+// [workaround] IE doesn't have input events for contentEditable
+// - see: https://goo.gl/4bfIvA
 var inputEventName = isMSIE ? 'DOMCharacterDataModified DOMSubtreeModified DOMNodeInserted' : 'input';
+
 /**
  * @class core.env
  *
@@ -453,8 +336,7 @@ var inputEventName = isMSIE ? 'DOMCharacterDataModified DOMSubtreeModified DOMNo
  * @singleton
  * @alternateClassName env
  */
-
-/* harmony default export */ var env = ({
+/* harmony default export */ const env = ({
   isMac: navigator.appVersion.indexOf('Mac') > -1,
   isMSIE: isMSIE,
   isEdge: isEdge,
@@ -464,16 +346,15 @@ var inputEventName = isMSIE ? 'DOMCharacterDataModified DOMSubtreeModified DOMNo
   isChrome: !isEdge && /chrome/i.test(userAgent),
   isSafari: !isEdge && /safari/i.test(userAgent) && !/chrome/i.test(userAgent),
   browserVersion: browserVersion,
-  jqueryVersion: parseFloat(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.fn.jquery),
-  isSupportAmd: isSupportAmd,
   isSupportTouch: isSupportTouch,
-  isFontInstalled: env_isFontInstalled,
+  isFontInstalled: createIsFontInstalledFunc(),
   isW3CRangeSupport: !!document.createRange,
   inputEventName: inputEventName,
   genericFontFamilies: genericFontFamilies,
   validFontName: validFontName
 });
-// CONCATENATED MODULE: ./src/js/base/core/func.js
+;// CONCATENATED MODULE: ./src/js/core/func.js
+
 
 /**
  * @class core.func
@@ -483,73 +364,63 @@ var inputEventName = isMSIE ? 'DOMCharacterDataModified DOMSubtreeModified DOMNo
  * @singleton
  * @alternateClassName func
  */
-
 function eq(itemA) {
   return function (itemB) {
     return itemA === itemB;
   };
 }
-
 function eq2(itemA, itemB) {
   return itemA === itemB;
 }
-
 function peq2(propName) {
   return function (itemA, itemB) {
     return itemA[propName] === itemB[propName];
   };
 }
-
 function ok() {
   return true;
 }
-
 function fail() {
   return false;
 }
-
 function not(f) {
   return function () {
     return !f.apply(f, arguments);
   };
 }
-
 function and(fA, fB) {
   return function (item) {
     return fA(item) && fB(item);
   };
 }
-
 function func_self(a) {
   return a;
 }
-
-function func_invoke(obj, method) {
+function invoke(obj, method) {
   return function () {
     return obj[method].apply(obj, arguments);
   };
 }
-
 var idCounter = 0;
+
 /**
  * reset globally-unique id
  *
  */
-
 function resetUniqueId() {
   idCounter = 0;
 }
+
 /**
  * generate a globally-unique id
  *
  * @param {String} [prefix]
  */
-
-
 function uniqueId(prefix) {
   var id = ++idCounter + '';
   return prefix ? prefix + id : id;
 }
+
 /**
  * returns bnd (bounds) from rect
  *
@@ -563,10 +434,8 @@ function uniqueId(prefix) {
  * @return {Number} bounds.width
  * @return {Number} bounds.height
  */
-
-
 function rect2bnd(rect) {
-  var $document = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(document);
+  var $document = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(document);
   return {
     top: rect.top + $document.scrollTop(),
     left: rect.left + $document.scrollLeft(),
@@ -574,37 +443,34 @@ function rect2bnd(rect) {
     height: rect.bottom - rect.top
   };
 }
+
 /**
  * returns a copy of the object where the keys have become the values and the values the keys.
  * @param {Object} obj
  * @return {Object}
  */
-
-
 function invertObject(obj) {
   var inverted = {};
-
   for (var key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
       inverted[obj[key]] = key;
     }
   }
-
   return inverted;
 }
+
 /**
  * @param {String} namespace
  * @param {String} [prefix]
  * @return {String}
  */
-
-
 function namespaceToCamel(namespace, prefix) {
   prefix = prefix || '';
   return prefix + namespace.split('.').map(function (name) {
     return name.substring(0, 1).toUpperCase() + name.substring(1);
   }).join('');
 }
+
 /**
  * Returns a function, that, as long as it continues to be invoked, will not
  * be triggered. The function will be called after it stops being called for
@@ -615,44 +481,36 @@ function namespaceToCamel(namespace, prefix) {
  * @param {Boolean} immediate
  * @return {Function}
  */
-
-
 function debounce(func, wait, immediate) {
   var timeout;
   return function () {
     var context = this;
     var args = arguments;
-
     var later = function later() {
       timeout = null;
-
       if (!immediate) {
         func.apply(context, args);
       }
     };
-
     var callNow = immediate && !timeout;
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
-
     if (callNow) {
       func.apply(context, args);
     }
   };
 }
+
 /**
  *
  * @param {String} url
  * @return {Boolean}
  */
-
-
 function isValidUrl(url) {
   var expression = /[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/gi;
   return expression.test(url);
 }
-
-/* harmony default export */ var func = ({
+/* harmony default export */ const func = ({
   eq: eq,
   eq2: eq2,
   peq2: peq2,
@@ -661,7 +519,7 @@ function isValidUrl(url) {
   self: func_self,
   not: not,
   and: and,
-  invoke: func_invoke,
+  invoke: invoke,
   resetUniqueId: resetUniqueId,
   uniqueId: uniqueId,
   rect2bnd: rect2bnd,
@@ -670,80 +528,72 @@ function isValidUrl(url) {
   debounce: debounce,
   isValidUrl: isValidUrl
 });
-// CONCATENATED MODULE: ./src/js/base/core/lists.js
+;// CONCATENATED MODULE: ./src/js/core/lists.js
+
 
 /**
  * returns the first item of an array.
  *
  * @param {Array} array
  */
-
-function lists_head(array) {
+function head(array) {
   return array[0];
 }
+
 /**
  * returns the last item of an array.
  *
  * @param {Array} array
  */
-
-
-function lists_last(array) {
+function last(array) {
   return array[array.length - 1];
 }
+
 /**
  * returns everything but the last entry of the array.
  *
  * @param {Array} array
  */
-
-
 function initial(array) {
   return array.slice(0, array.length - 1);
 }
+
 /**
  * returns the rest of the items in an array.
  *
  * @param {Array} array
  */
-
-
 function tail(array) {
   return array.slice(1);
 }
+
 /**
  * returns item of array
  */
-
-
 function find(array, pred) {
   for (var idx = 0, len = array.length; idx < len; idx++) {
     var item = array[idx];
-
     if (pred(item)) {
       return item;
     }
   }
 }
+
 /**
  * returns true if all of the values in the array pass the predicate truth test.
  */
-
-
 function lists_all(array, pred) {
   for (var idx = 0, len = array.length; idx < len; idx++) {
     if (!pred(array[idx])) {
       return false;
     }
   }
-
   return true;
 }
+
 /**
  * returns true if the value is present in the list.
  */
-
-
 function contains(array, item) {
   if (array && array.length && item) {
     if (array.indexOf) {
@@ -753,48 +603,43 @@ function contains(array, item) {
       return array.contains(item);
     }
   }
-
   return false;
 }
+
 /**
  * get sum from a list
  *
  * @param {Array} array - array
  * @param {Function} fn - iterator
  */
-
-
 function sum(array, fn) {
   fn = fn || func.self;
   return array.reduce(function (memo, v) {
     return memo + fn(v);
   }, 0);
 }
+
 /**
  * returns a copy of the collection with array type.
  * @param {Collection} collection - collection eg) node.childNodes, ...
  */
-
-
 function from(collection) {
   var result = [];
   var length = collection.length;
   var idx = -1;
-
   while (++idx < length) {
     result[idx] = collection[idx];
   }
-
   return result;
 }
+
 /**
  * returns whether list is empty or not
  */
-
-
-function lists_isEmpty(array) {
+function isEmpty(array) {
   return !array || !array.length;
 }
+
 /**
  * cluster elements by predicate function.
  *
@@ -802,91 +647,77 @@ function lists_isEmpty(array) {
  * @param {Function} fn - predicate function for cluster rule
  * @param {Array[]}
  */
-
-
 function clusterBy(array, fn) {
   if (!array.length) {
     return [];
   }
-
   var aTail = tail(array);
   return aTail.reduce(function (memo, v) {
-    var aLast = lists_last(memo);
-
-    if (fn(lists_last(aLast), v)) {
+    var aLast = last(memo);
+    if (fn(last(aLast), v)) {
       aLast[aLast.length] = v;
     } else {
       memo[memo.length] = [v];
     }
-
     return memo;
-  }, [[lists_head(array)]]);
+  }, [[head(array)]]);
 }
+
 /**
  * returns a copy of the array with all false values removed
  *
  * @param {Array} array - array
  * @param {Function} fn - predicate function for cluster rule
  */
-
-
 function compact(array) {
   var aResult = [];
-
   for (var idx = 0, len = array.length; idx < len; idx++) {
     if (array[idx]) {
       aResult.push(array[idx]);
     }
   }
-
   return aResult;
 }
+
 /**
  * produces a duplicate-free version of the array
  *
  * @param {Array} array
  */
-
-
 function unique(array) {
   var results = [];
-
   for (var idx = 0, len = array.length; idx < len; idx++) {
     if (!contains(results, array[idx])) {
       results.push(array[idx]);
     }
   }
-
   return results;
 }
+
 /**
  * returns next item.
  * @param {Array} array
  */
-
-
-function lists_next(array, item) {
+function next(array, item) {
   if (array && array.length && item) {
     var idx = array.indexOf(item);
     return idx === -1 ? null : array[idx + 1];
   }
-
   return null;
 }
+
 /**
  * returns prev item.
  * @param {Array} array
  */
-
-
 function prev(array, item) {
   if (array && array.length && item) {
     var idx = array.indexOf(item);
     return idx === -1 ? null : array[idx - 1];
   }
-
   return null;
 }
+
 /**
  * @class core.list
  *
@@ -895,32 +726,31 @@ function prev(array, item) {
  * @singleton
  * @alternateClassName list
  */
-
-
-/* harmony default export */ var lists = ({
-  head: lists_head,
-  last: lists_last,
+/* harmony default export */ const lists = ({
+  head: head,
+  last: last,
   initial: initial,
   tail: tail,
   prev: prev,
-  next: lists_next,
+  next: next,
   find: find,
   contains: contains,
   all: lists_all,
   sum: sum,
   from: from,
-  isEmpty: lists_isEmpty,
+  isEmpty: isEmpty,
   clusterBy: clusterBy,
   compact: compact,
   unique: unique
 });
-// CONCATENATED MODULE: ./src/js/base/core/dom.js
+;// CONCATENATED MODULE: ./src/js/core/dom.js
 
 
 
 
 var NBSP_CHAR = String.fromCharCode(160);
 var ZERO_WIDTH_NBSP_CHAR = "\uFEFF";
+
 /**
  * @method isEditable
  *
@@ -929,10 +759,10 @@ var ZERO_WIDTH_NBSP_CHAR = "\uFEFF";
  * @param {Node} node
  * @return {Boolean}
  */
-
 function isEditable(node) {
-  return node && external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(node).hasClass('note-editable');
+  return node && external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(node).hasClass('note-editable');
 }
+
 /**
  * @method isControlSizing
  *
@@ -941,11 +771,10 @@ function isEditable(node) {
  * @param {Node} node
  * @return {Boolean}
  */
-
-
 function isControlSizing(node) {
-  return node && external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(node).hasClass('note-control-sizing');
+  return node && external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(node).hasClass('note-control-sizing');
 }
+
 /**
  * @method makePredByNodeName
  *
@@ -954,14 +783,13 @@ function isControlSizing(node) {
  * @param {String} nodeName
  * @return {Function}
  */
-
-
 function makePredByNodeName(nodeName) {
   nodeName = nodeName.toUpperCase();
   return function (node) {
     return node && node.nodeName.toUpperCase() === nodeName;
   };
 }
+
 /**
  * @method isText
  *
@@ -970,11 +798,10 @@ function makePredByNodeName(nodeName) {
  * @param {Node} node
  * @return {Boolean} true if node's type is text(3)
  */
-
-
 function isText(node) {
   return node && node.nodeType === 3;
 }
+
 /**
  * @method isElement
  *
@@ -983,75 +810,58 @@ function isText(node) {
  * @param {Node} node
  * @return {Boolean} true if node's type is element(1)
  */
-
-
 function isElement(node) {
   return node && node.nodeType === 1;
 }
+
 /**
  * ex) br, col, embed, hr, img, input, ...
  * @see http://www.w3.org/html/wg/drafts/html/master/syntax.html#void-elements
  */
-
-
 function isVoid(node) {
   return node && /^BR|^IMG|^HR|^IFRAME|^BUTTON|^INPUT|^AUDIO|^VIDEO|^EMBED/.test(node.nodeName.toUpperCase());
 }
-
 function isPara(node) {
   if (isEditable(node)) {
     return false;
-  } // Chrome(v31.0), FF(v25.0.1) use DIV for paragraph
+  }
 
-
+  // Chrome(v31.0), FF(v25.0.1) use DIV for paragraph
   return node && /^DIV|^P|^LI|^H[1-7]/.test(node.nodeName.toUpperCase());
 }
-
 function isHeading(node) {
   return node && /^H[1-7]/.test(node.nodeName.toUpperCase());
 }
-
 var isPre = makePredByNodeName('PRE');
 var isLi = makePredByNodeName('LI');
-
 function isPurePara(node) {
   return isPara(node) && !isLi(node);
 }
-
 var isTable = makePredByNodeName('TABLE');
 var isData = makePredByNodeName('DATA');
-
-function dom_isInline(node) {
+function isInline(node) {
   return !isBodyContainer(node) && !isList(node) && !isHr(node) && !isPara(node) && !isTable(node) && !isBlockquote(node) && !isData(node);
 }
-
 function isList(node) {
   return node && /^UL|^OL/.test(node.nodeName.toUpperCase());
 }
-
 var isHr = makePredByNodeName('HR');
-
-function dom_isCell(node) {
+function isCell(node) {
   return node && /^TD|^TH/.test(node.nodeName.toUpperCase());
 }
-
 var isBlockquote = makePredByNodeName('BLOCKQUOTE');
-
 function isBodyContainer(node) {
-  return dom_isCell(node) || isBlockquote(node) || isEditable(node);
+  return isCell(node) || isBlockquote(node) || isEditable(node);
 }
-
 var isAnchor = makePredByNodeName('A');
-
 function isParaInline(node) {
-  return dom_isInline(node) && !!dom_ancestor(node, isPara);
+  return isInline(node) && !!ancestor(node, isPara);
 }
-
 function isBodyInline(node) {
-  return dom_isInline(node) && !dom_ancestor(node, isPara);
+  return isInline(node) && !ancestor(node, isPara);
 }
-
 var isBody = makePredByNodeName('BODY');
+
 /**
  * returns whether nodeB is closest sibling of nodeA
  *
@@ -1059,10 +869,10 @@ var isBody = makePredByNodeName('BODY');
  * @param {Node} nodeB
  * @return {Boolean}
  */
-
 function isClosestSibling(nodeA, nodeB) {
   return nodeA.nextSibling === nodeB || nodeA.previousSibling === nodeB;
 }
+
 /**
  * returns array of closest siblings with node
  *
@@ -1070,32 +880,26 @@ function isClosestSibling(nodeA, nodeB) {
  * @param {function} [pred] - predicate function
  * @return {Node[]}
  */
-
-
 function withClosestSiblings(node, pred) {
   pred = pred || func.ok;
   var siblings = [];
-
   if (node.previousSibling && pred(node.previousSibling)) {
     siblings.push(node.previousSibling);
   }
-
   siblings.push(node);
-
   if (node.nextSibling && pred(node.nextSibling)) {
     siblings.push(node.nextSibling);
   }
-
   return siblings;
 }
+
 /**
  * blank HTML for cursor position
  * - [workaround] old IE only works with &nbsp;
  * - [workaround] IE11 and other browser works with bogus br
  */
-
-
 var blankHTML = env.isMSIE && env.browserVersion < 11 ? '&nbsp;' : '<br>';
+
 /**
  * @method nodeLength
  *
@@ -1103,44 +907,37 @@ var blankHTML = env.isMSIE && env.browserVersion < 11 ? '&nbsp;' : '<br>';
  *
  * @param {Node} node
  */
-
 function nodeLength(node) {
   if (isText(node)) {
     return node.nodeValue.length;
   }
-
   if (node) {
     return node.childNodes.length;
   }
-
   return 0;
 }
+
 /**
  * returns whether deepest child node is empty or not.
  *
  * @param {Node} node
  * @return {Boolean}
  */
-
-
 function deepestChildIsEmpty(node) {
   do {
     if (node.firstElementChild === null || node.firstElementChild.innerHTML === '') break;
   } while (node = node.firstElementChild);
-
   return dom_isEmpty(node);
 }
+
 /**
  * returns whether node is empty or not.
  *
  * @param {Node} node
  * @return {Boolean}
  */
-
-
 function dom_isEmpty(node) {
   var len = nodeLength(node);
-
   if (len === 0) {
     return true;
   } else if (!isText(node) && len === 1 && node.innerHTML === blankHTML) {
@@ -1150,187 +947,160 @@ function dom_isEmpty(node) {
     // ex) <p></p>, <span></span>
     return true;
   }
-
   return false;
 }
+
 /**
  * padding blankHTML if node is empty (for cursor position)
  */
-
-
 function paddingBlankHTML(node) {
   if (!isVoid(node) && !nodeLength(node)) {
     node.innerHTML = blankHTML;
   }
 }
+
 /**
  * find nearest ancestor predicate hit
  *
  * @param {Node} node
  * @param {Function} pred - predicate function
  */
-
-
-function dom_ancestor(node, pred) {
+function ancestor(node, pred) {
   while (node) {
     if (pred(node)) {
       return node;
     }
-
     if (isEditable(node)) {
       break;
     }
-
     node = node.parentNode;
   }
-
   return null;
 }
+
 /**
  * find nearest ancestor only single child blood line and predicate hit
  *
  * @param {Node} node
  * @param {Function} pred - predicate function
  */
-
-
 function singleChildAncestor(node, pred) {
   node = node.parentNode;
-
   while (node) {
     if (nodeLength(node) !== 1) {
       break;
     }
-
     if (pred(node)) {
       return node;
     }
-
     if (isEditable(node)) {
       break;
     }
-
     node = node.parentNode;
   }
-
   return null;
 }
+
 /**
  * returns new array of ancestor nodes (until predicate hit).
  *
  * @param {Node} node
  * @param {Function} [optional] pred - predicate function
  */
-
-
 function listAncestor(node, pred) {
   pred = pred || func.fail;
   var ancestors = [];
-  dom_ancestor(node, function (el) {
+  ancestor(node, function (el) {
     if (!isEditable(el)) {
       ancestors.push(el);
     }
-
     return pred(el);
   });
   return ancestors;
 }
+
 /**
  * find farthest ancestor predicate hit
  */
-
-
 function lastAncestor(node, pred) {
   var ancestors = listAncestor(node);
   return lists.last(ancestors.filter(pred));
 }
+
 /**
  * returns common ancestor node between two nodes.
  *
  * @param {Node} nodeA
  * @param {Node} nodeB
  */
-
-
-function dom_commonAncestor(nodeA, nodeB) {
+function commonAncestor(nodeA, nodeB) {
   var ancestors = listAncestor(nodeA);
-
   for (var n = nodeB; n; n = n.parentNode) {
     if (ancestors.indexOf(n) > -1) return n;
   }
-
   return null; // difference document area
 }
+
 /**
  * listing all previous siblings (until predicate hit).
  *
  * @param {Node} node
  * @param {Function} [optional] pred - predicate function
  */
-
-
 function listPrev(node, pred) {
   pred = pred || func.fail;
   var nodes = [];
-
   while (node) {
     if (pred(node)) {
       break;
     }
-
     nodes.push(node);
     node = node.previousSibling;
   }
-
   return nodes;
 }
+
 /**
  * listing next siblings (until predicate hit).
  *
  * @param {Node} node
  * @param {Function} [pred] - predicate function
  */
-
-
 function listNext(node, pred) {
   pred = pred || func.fail;
   var nodes = [];
-
   while (node) {
     if (pred(node)) {
       break;
     }
-
     nodes.push(node);
     node = node.nextSibling;
   }
-
   return nodes;
 }
+
 /**
  * listing descendant nodes
  *
  * @param {Node} node
  * @param {Function} [pred] - predicate function
  */
-
-
 function listDescendant(node, pred) {
   var descendants = [];
-  pred = pred || func.ok; // start DFS(depth first search) with node
+  pred = pred || func.ok;
 
+  // start DFS(depth first search) with node
   (function fnWalk(current) {
     if (node !== current && pred(current)) {
       descendants.push(current);
     }
-
     for (var idx = 0, len = current.childNodes.length; idx < len; idx++) {
       fnWalk(current.childNodes[idx]);
     }
   })(node);
-
   return descendants;
 }
+
 /**
  * wrap node with new tag.
  *
@@ -1338,82 +1108,80 @@ function listDescendant(node, pred) {
  * @param {Node} tagName of wrapper
  * @return {Node} - wrapper
  */
-
-
 function wrap(node, wrapperName) {
   var parent = node.parentNode;
-  var wrapper = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<' + wrapperName + '>')[0];
+  var wrapper = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<' + wrapperName + '>')[0];
   parent.insertBefore(wrapper, node);
   wrapper.appendChild(node);
   return wrapper;
 }
+
 /**
  * insert node after preceding
  *
  * @param {Node} node
  * @param {Node} preceding - predicate function
  */
-
-
 function insertAfter(node, preceding) {
   var next = preceding.nextSibling;
   var parent = preceding.parentNode;
-
   if (next) {
     parent.insertBefore(node, next);
   } else {
     parent.appendChild(node);
   }
-
   return node;
 }
+
 /**
  * append elements.
  *
  * @param {Node} node
  * @param {Collection} aChild
  */
-
-
-function appendChildNodes(node, aChild) {
-  external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(aChild, function (idx, child) {
+function appendChildNodes(node, aChild, isSkipPaddingBlankHTML) {
+  external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(aChild, function (idx, child) {
+    // special case: appending a pure UL/OL to a LI element creates inaccessible LI element
+    // e.g. press enter in last LI which has UL/OL-subelements
+    // Therefore, if current node is LI element with no child nodes (text-node) and appending a list, add a br before
+    if (!isSkipPaddingBlankHTML && isLi(node) && node.firstChild === null && isList(child)) {
+      node.appendChild(create("br"));
+    }
     node.appendChild(child);
   });
   return node;
 }
+
 /**
  * returns whether boundaryPoint is left edge or not.
  *
  * @param {BoundaryPoint} point
  * @return {Boolean}
  */
-
-
 function isLeftEdgePoint(point) {
   return point.offset === 0;
 }
+
 /**
  * returns whether boundaryPoint is right edge or not.
  *
  * @param {BoundaryPoint} point
  * @return {Boolean}
  */
-
-
 function isRightEdgePoint(point) {
   return point.offset === nodeLength(point.node);
 }
+
 /**
  * returns whether boundaryPoint is edge or not.
  *
  * @param {BoundaryPoint} point
  * @return {Boolean}
  */
-
-
 function isEdgePoint(point) {
   return isLeftEdgePoint(point) || isRightEdgePoint(point);
 }
+
 /**
  * returns whether node is left edge of ancestor or not.
  *
@@ -1421,19 +1189,16 @@ function isEdgePoint(point) {
  * @param {Node} ancestor
  * @return {Boolean}
  */
-
-
-function dom_isLeftEdgeOf(node, ancestor) {
+function isLeftEdgeOf(node, ancestor) {
   while (node && node !== ancestor) {
-    if (dom_position(node) !== 0) {
+    if (position(node) !== 0) {
       return false;
     }
-
     node = node.parentNode;
   }
-
   return true;
 }
+
 /**
  * returns whether node is right edge of ancestor or not.
  *
@@ -1441,65 +1206,55 @@ function dom_isLeftEdgeOf(node, ancestor) {
  * @param {Node} ancestor
  * @return {Boolean}
  */
-
-
 function isRightEdgeOf(node, ancestor) {
   if (!ancestor) {
     return false;
   }
-
   while (node && node !== ancestor) {
-    if (dom_position(node) !== nodeLength(node.parentNode) - 1) {
+    if (position(node) !== nodeLength(node.parentNode) - 1) {
       return false;
     }
-
     node = node.parentNode;
   }
-
   return true;
 }
+
 /**
  * returns whether point is left edge of ancestor or not.
  * @param {BoundaryPoint} point
  * @param {Node} ancestor
  * @return {Boolean}
  */
-
-
 function isLeftEdgePointOf(point, ancestor) {
-  return isLeftEdgePoint(point) && dom_isLeftEdgeOf(point.node, ancestor);
+  return isLeftEdgePoint(point) && isLeftEdgeOf(point.node, ancestor);
 }
+
 /**
  * returns whether point is right edge of ancestor or not.
  * @param {BoundaryPoint} point
  * @param {Node} ancestor
  * @return {Boolean}
  */
-
-
 function isRightEdgePointOf(point, ancestor) {
   return isRightEdgePoint(point) && isRightEdgeOf(point.node, ancestor);
 }
+
 /**
  * returns offset from parent.
  *
  * @param {Node} node
  */
-
-
-function dom_position(node) {
+function position(node) {
   var offset = 0;
-
   while (node = node.previousSibling) {
     offset += 1;
   }
-
   return offset;
 }
-
 function hasChildren(node) {
   return !!(node && node.childNodes && node.childNodes.length);
 }
+
 /**
  * returns previous boundaryPoint
  *
@@ -1507,19 +1262,15 @@ function hasChildren(node) {
  * @param {Boolean} isSkipInnerOffset
  * @return {BoundaryPoint}
  */
-
-
-function dom_prevPoint(point, isSkipInnerOffset) {
+function prevPoint(point, isSkipInnerOffset) {
   var node;
   var offset;
-
   if (point.offset === 0) {
     if (isEditable(point.node)) {
       return null;
     }
-
     node = point.node.parentNode;
-    offset = dom_position(point.node);
+    offset = position(point.node);
   } else if (hasChildren(point.node)) {
     node = point.node.childNodes[point.offset - 1];
     offset = nodeLength(node);
@@ -1527,12 +1278,12 @@ function dom_prevPoint(point, isSkipInnerOffset) {
     node = point.node;
     offset = isSkipInnerOffset ? 0 : point.offset - 1;
   }
-
   return {
     node: node,
     offset: offset
   };
 }
+
 /**
  * returns next boundaryPoint
  *
@@ -1540,24 +1291,19 @@ function dom_prevPoint(point, isSkipInnerOffset) {
  * @param {Boolean} isSkipInnerOffset
  * @return {BoundaryPoint}
  */
-
-
-function dom_nextPoint(point, isSkipInnerOffset) {
+function nextPoint(point, isSkipInnerOffset) {
   var node, offset;
-
   if (nodeLength(point.node) === point.offset) {
     if (isEditable(point.node)) {
       return null;
     }
-
     var nextTextNode = getNextTextNode(point.node);
-
     if (nextTextNode) {
       node = nextTextNode;
       offset = 0;
     } else {
       node = point.node.parentNode;
-      offset = dom_position(point.node) + 1;
+      offset = position(point.node) + 1;
     }
   } else if (hasChildren(point.node)) {
     node = point.node.childNodes[point.offset];
@@ -1566,49 +1312,31 @@ function dom_nextPoint(point, isSkipInnerOffset) {
     node = point.node;
     offset = isSkipInnerOffset ? nodeLength(point.node) : point.offset + 1;
   }
-
   return {
     node: node,
     offset: offset
   };
 }
+
 /**
+ * Find next boundaryPoint for preorder / depth first traversal of the DOM
  * returns next boundaryPoint with empty node
  *
  * @param {BoundaryPoint} point
  * @param {Boolean} isSkipInnerOffset
  * @return {BoundaryPoint}
  */
-
-
 function nextPointWithEmptyNode(point, isSkipInnerOffset) {
-  var node, offset; // if node is empty string node, return current node's sibling.
-
-  if (dom_isEmpty(point.node)) {
-    node = point.node.nextSibling;
+  var node,
     offset = 0;
-    return {
-      node: node,
-      offset: offset
-    };
-  }
-
   if (nodeLength(point.node) === point.offset) {
     if (isEditable(point.node)) {
       return null;
     }
+    node = point.node.parentNode;
+    offset = position(point.node) + 1;
 
-    var nextTextNode = getNextTextNode(point.node);
-
-    if (nextTextNode) {
-      node = nextTextNode;
-      offset = 0;
-    } else {
-      node = point.node.parentNode;
-      offset = dom_position(point.node) + 1;
-    } // if next node is editable, return current node's sibling node.
-
-
+    // if parent node is editable,  return current node's sibling node.
     if (isEditable(node)) {
       node = point.node.nextSibling;
       offset = 0;
@@ -1616,35 +1344,25 @@ function nextPointWithEmptyNode(point, isSkipInnerOffset) {
   } else if (hasChildren(point.node)) {
     node = point.node.childNodes[point.offset];
     offset = 0;
-
-    if (dom_isEmpty(node)) {
-      return null;
-    }
   } else {
     node = point.node;
     offset = isSkipInnerOffset ? nodeLength(point.node) : point.offset + 1;
-
-    if (dom_isEmpty(node)) {
-      return null;
-    }
   }
-
   return {
     node: node,
     offset: offset
   };
 }
+
 /*
 * returns the next Text node index or 0 if not found.
 */
-
-
 function getNextTextNode(actual) {
   if (!actual.nextSibling) return undefined;
   if (actual.parent !== actual.nextSibling.parent) return undefined;
-  if (isText(actual.nextSibling)) return actual.nextSibling;
-  return getNextTextNode(actual.nextSibling);
+  if (isText(actual.nextSibling)) return actual.nextSibling;else return getNextTextNode(actual.nextSibling);
 }
+
 /**
  * returns whether pointA and pointB is same or not.
  *
@@ -1652,33 +1370,28 @@ function getNextTextNode(actual) {
  * @param {BoundaryPoint} pointB
  * @return {Boolean}
  */
-
-
 function isSamePoint(pointA, pointB) {
   return pointA.node === pointB.node && pointA.offset === pointB.offset;
 }
+
 /**
  * returns whether point is visible (can set cursor) or not.
  *
  * @param {BoundaryPoint} point
  * @return {Boolean}
  */
-
-
 function isVisiblePoint(point) {
   if (isText(point.node) || !hasChildren(point.node) || dom_isEmpty(point.node)) {
     return true;
   }
-
   var leftNode = point.node.childNodes[point.offset - 1];
   var rightNode = point.node.childNodes[point.offset];
-
-  if ((!leftNode || isVoid(leftNode)) && (!rightNode || isVoid(rightNode))) {
+  if ((!leftNode || isVoid(leftNode)) && (!rightNode || isVoid(rightNode)) || isTable(rightNode)) {
     return true;
   }
-
   return false;
 }
+
 /**
  * @method prevPointUtil
  *
@@ -1686,19 +1399,16 @@ function isVisiblePoint(point) {
  * @param {Function} pred
  * @return {BoundaryPoint}
  */
-
-
 function prevPointUntil(point, pred) {
   while (point) {
     if (pred(point)) {
       return point;
     }
-
-    point = dom_prevPoint(point);
+    point = prevPoint(point);
   }
-
   return null;
 }
+
 /**
  * @method nextPointUntil
  *
@@ -1706,75 +1416,64 @@ function prevPointUntil(point, pred) {
  * @param {Function} pred
  * @return {BoundaryPoint}
  */
-
-
 function nextPointUntil(point, pred) {
   while (point) {
     if (pred(point)) {
       return point;
     }
-
-    point = dom_nextPoint(point);
+    point = nextPoint(point);
   }
-
   return null;
 }
+
 /**
  * returns whether point has character or not.
  *
  * @param {Point} point
  * @return {Boolean}
  */
-
-
 function isCharPoint(point) {
   if (!isText(point.node)) {
     return false;
   }
-
   var ch = point.node.nodeValue.charAt(point.offset - 1);
   return ch && ch !== ' ' && ch !== NBSP_CHAR;
 }
+
 /**
  * returns whether point has space or not.
  *
  * @param {Point} point
  * @return {Boolean}
  */
-
-
 function isSpacePoint(point) {
   if (!isText(point.node)) {
     return false;
   }
-
   var ch = point.node.nodeValue.charAt(point.offset - 1);
   return ch === ' ' || ch === NBSP_CHAR;
 }
+
 /**
- * @method walkPoint
+ * @method walkPoint - preorder / depth first traversal of the DOM
  *
  * @param {BoundaryPoint} startPoint
  * @param {BoundaryPoint} endPoint
  * @param {Function} handler
  * @param {Boolean} isSkipInnerOffset
  */
-
-
 function walkPoint(startPoint, endPoint, handler, isSkipInnerOffset) {
   var point = startPoint;
-
-  while (point) {
+  while (point && point.node) {
     handler(point);
-
     if (isSamePoint(point, endPoint)) {
       break;
     }
-
     var isSkipOffset = isSkipInnerOffset && startPoint.node !== point.node && endPoint.node !== point.node;
     point = nextPointWithEmptyNode(point, isSkipOffset);
   }
 }
+
 /**
  * @method makeOffsetPath
  *
@@ -1783,12 +1482,11 @@ function walkPoint(startPoint, endPoint, handler, isSkipInnerOffset) {
  * @param {Node} ancestor - ancestor node
  * @param {Node} node
  */
-
-
 function makeOffsetPath(ancestor, node) {
   var ancestors = listAncestor(node, func.eq(ancestor));
-  return ancestors.map(dom_position).reverse();
+  return ancestors.map(position).reverse();
 }
+
 /**
  * @method fromOffsetPath
  *
@@ -1797,11 +1495,8 @@ function makeOffsetPath(ancestor, node) {
  * @param {Node} ancestor - ancestor node
  * @param {array} offsets - offsetPath
  */
-
-
 function fromOffsetPath(ancestor, offsets) {
   var current = ancestor;
-
   for (var i = 0, len = offsets.length; i < len; i++) {
     if (current.childNodes.length <= offsets[i]) {
       current = current.childNodes[current.childNodes.length - 1];
@@ -1809,9 +1504,9 @@ function fromOffsetPath(ancestor, offsets) {
       current = current.childNodes[offsets[i]];
     }
   }
-
   return current;
 }
+
 /**
  * @method splitNode
  *
@@ -1824,53 +1519,48 @@ function fromOffsetPath(ancestor, offsets) {
  * @param {Boolean} [options.isDiscardEmptySplits] - default: false
  * @return {Node} right node of boundaryPoint
  */
-
-
 function splitNode(point, options) {
   var isSkipPaddingBlankHTML = options && options.isSkipPaddingBlankHTML;
   var isNotSplitEdgePoint = options && options.isNotSplitEdgePoint;
   var isDiscardEmptySplits = options && options.isDiscardEmptySplits;
-
   if (isDiscardEmptySplits) {
     isSkipPaddingBlankHTML = true;
-  } // edge case
+  }
 
-
+  // edge case
   if (isEdgePoint(point) && (isText(point.node) || isNotSplitEdgePoint)) {
     if (isLeftEdgePoint(point)) {
       return point.node;
     } else if (isRightEdgePoint(point)) {
       return point.node.nextSibling;
     }
-  } // split #text
+  }
 
-
+  // split #text
   if (isText(point.node)) {
     return point.node.splitText(point.offset);
   } else {
     var childNode = point.node.childNodes[point.offset];
+    var childNodes = listNext(childNode);
     var clone = insertAfter(point.node.cloneNode(false), point.node);
-    appendChildNodes(clone, listNext(childNode));
-
+    appendChildNodes(clone, childNodes);
     if (!isSkipPaddingBlankHTML) {
       paddingBlankHTML(point.node);
       paddingBlankHTML(clone);
     }
-
     if (isDiscardEmptySplits) {
       if (dom_isEmpty(point.node)) {
         remove(point.node);
       }
-
       if (dom_isEmpty(clone)) {
         remove(clone);
         return point.node.nextSibling;
       }
     }
-
     return clone;
   }
 }
+
 /**
  * @method splitTree
  *
@@ -1883,29 +1573,51 @@ function splitNode(point, options) {
  * @param {Boolean} [options.isNotSplitEdgePoint] - default: false
  * @return {Node} right node of boundaryPoint
  */
-
-
 function splitTree(root, point, options) {
   // ex) [#text, <span>, <p>]
   var ancestors = listAncestor(point.node, func.eq(root));
-
   if (!ancestors.length) {
     return null;
   } else if (ancestors.length === 1) {
     return splitNode(point, options);
   }
-
+  // Filter elements with sibling elements
+  if (ancestors.length > 2) {
+    var domList = ancestors.slice(0, ancestors.length - 1);
+    var ifHasNextSibling = domList.find(function (item) {
+      return item.nextSibling;
+    });
+    if (ifHasNextSibling && point.offset != 0 && isRightEdgePoint(point)) {
+      var nestSibling = ifHasNextSibling.nextSibling;
+      var textNode;
+      if (nestSibling.nodeType == 1) {
+        textNode = nestSibling.childNodes[0];
+        ancestors = listAncestor(textNode, func.eq(root));
+        point = {
+          node: textNode,
+          offset: 0
+        };
+      } else if (nestSibling.nodeType == 3 && !nestSibling.data.match(/[\n\r]/g)) {
+        textNode = nestSibling;
+        ancestors = listAncestor(textNode, func.eq(root));
+        point = {
+          node: textNode,
+          offset: 0
+        };
+      }
+    }
+  }
   return ancestors.reduce(function (node, parent) {
     if (node === point.node) {
       node = splitNode(point, options);
     }
-
     return splitNode({
       node: parent,
-      offset: node ? dom_position(node) : nodeLength(parent)
+      offset: node ? position(node) : nodeLength(parent)
     }, options);
   });
 }
+
 /**
  * split point
  *
@@ -1913,8 +1625,6 @@ function splitTree(root, point, options) {
  * @param {Boolean} isInline
  * @return {Object}
  */
-
-
 function splitPoint(point, isInline) {
   // find splitRoot, container
   //  - inline: splitRoot is a child of paragraph
@@ -1923,38 +1633,36 @@ function splitPoint(point, isInline) {
   var ancestors = listAncestor(point.node, pred);
   var topAncestor = lists.last(ancestors) || point.node;
   var splitRoot, container;
-
   if (pred(topAncestor)) {
     splitRoot = ancestors[ancestors.length - 2];
     container = topAncestor;
   } else {
     splitRoot = topAncestor;
     container = splitRoot.parentNode;
-  } // if splitRoot is exists, split with splitTree
+  }
 
-
+  // if splitRoot is exists, split with splitTree
   var pivot = splitRoot && splitTree(splitRoot, point, {
     isSkipPaddingBlankHTML: isInline,
     isNotSplitEdgePoint: isInline
-  }); // if container is point.node, find pivot with point.offset
+  });
 
+  // if container is point.node, find pivot with point.offset
   if (!pivot && container === point.node) {
     pivot = point.node.childNodes[point.offset];
   }
-
   return {
     rightNode: pivot,
     container: container
   };
 }
-
-function dom_create(nodeName) {
+function create(nodeName) {
   return document.createElement(nodeName);
 }
-
 function createText(text) {
   return document.createTextNode(text);
 }
+
 /**
  * @method remove
  *
@@ -1963,52 +1671,43 @@ function createText(text) {
  * @param {Node} node
  * @param {Boolean} isRemoveChild
  */
-
-
 function remove(node, isRemoveChild) {
   if (!node || !node.parentNode) {
     return;
   }
-
   if (node.removeNode) {
     return node.removeNode(isRemoveChild);
   }
-
   var parent = node.parentNode;
-
   if (!isRemoveChild) {
     var nodes = [];
-
     for (var i = 0, len = node.childNodes.length; i < len; i++) {
       nodes.push(node.childNodes[i]);
     }
-
     for (var _i = 0, _len = nodes.length; _i < _len; _i++) {
       parent.insertBefore(nodes[_i], node);
     }
   }
-
   parent.removeChild(node);
 }
+
 /**
  * @method removeWhile
  *
  * @param {Node} node
  * @param {Function} pred
  */
-
-
 function removeWhile(node, pred) {
   while (node) {
     if (isEditable(node) || !pred(node)) {
       break;
     }
-
     var parent = node.parentNode;
     remove(node);
     node = parent;
   }
 }
+
 /**
  * @method replace
  *
@@ -2018,40 +1717,33 @@ function removeWhile(node, pred) {
  * @param {String} nodeName
  * @return {Node} - new node
  */
-
-
-function dom_replace(node, nodeName) {
+function replace(node, nodeName) {
   if (node.nodeName.toUpperCase() === nodeName.toUpperCase()) {
     return node;
   }
-
-  var newNode = dom_create(nodeName);
-
+  var newNode = create(nodeName);
   if (node.style.cssText) {
     newNode.style.cssText = node.style.cssText;
   }
-
   appendChildNodes(newNode, lists.from(node.childNodes));
   insertAfter(newNode, node);
   remove(node);
   return newNode;
 }
-
 var isTextarea = makePredByNodeName('TEXTAREA');
+
 /**
  * @param {jQuery} $node
  * @param {Boolean} [stripLinebreaks] - default: false
  */
-
-function dom_value($node, stripLinebreaks) {
+function value($node, stripLinebreaks) {
   var val = isTextarea($node[0]) ? $node.val() : $node.html();
-
   if (stripLinebreaks) {
     return val.replace(/[\n\r]/g, '');
   }
-
   return val;
 }
+
 /**
  * @method html
  *
@@ -2060,11 +1752,8 @@ function dom_value($node, stripLinebreaks) {
  * @param {jQuery} $node
  * @param {Boolean} [isNewlineOnBlock]
  */
-
-
-function dom_html($node, isNewlineOnBlock) {
-  var markup = dom_value($node);
-
+function html($node, isNewlineOnBlock) {
+  var markup = value($node);
   if (isNewlineOnBlock) {
     var regexTag = /<(\/?)(\b(?!!)[^>\s]*)(.*?)(\s*\/?>)/g;
     markup = markup.replace(regexTag, function (match, endSlash, name) {
@@ -2075,12 +1764,10 @@ function dom_html($node, isNewlineOnBlock) {
     });
     markup = markup.trim();
   }
-
   return markup;
 }
-
 function posFromPlaceholder(placeholder) {
-  var $placeholder = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(placeholder);
+  var $placeholder = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(placeholder);
   var pos = $placeholder.offset();
   var height = $placeholder.outerHeight(true); // include margin
 
@@ -2089,18 +1776,17 @@ function posFromPlaceholder(placeholder) {
     top: pos.top + height
   };
 }
-
 function attachEvents($node, events) {
   Object.keys(events).forEach(function (key) {
     $node.on(key, events[key]);
   });
 }
-
 function detachEvents($node, events) {
   Object.keys(events).forEach(function (key) {
     $node.off(key, events[key]);
   });
 }
+
 /**
  * @method isCustomStyleTag
  *
@@ -2109,22 +1795,16 @@ function detachEvents($node, events) {
  *
  * @param {Node} an HTML DOM node
  */
-
-
 function isCustomStyleTag(node) {
   return node && !isText(node) && lists.contains(node.classList, 'note-styletag');
 }
-
-/* harmony default export */ var dom = ({
+/* harmony default export */ const dom = ({
   /** @property {String} NBSP_CHAR */
   NBSP_CHAR: NBSP_CHAR,
-
   /** @property {String} ZERO_WIDTH_NBSP_CHAR */
   ZERO_WIDTH_NBSP_CHAR: ZERO_WIDTH_NBSP_CHAR,
-
   /** @property {String} blank */
   blank: blankHTML,
-
   /** @property {String} emptyPara */
   emptyPara: "<p>".concat(blankHTML, "</p>"),
   makePredByNodeName: makePredByNodeName,
@@ -2136,8 +1816,8 @@ function isCustomStyleTag(node) {
   isPara: isPara,
   isPurePara: isPurePara,
   isHeading: isHeading,
-  isInline: dom_isInline,
-  isBlock: func.not(dom_isInline),
+  isInline: isInline,
+  isBlock: func.not(isInline),
   isBodyInline: isBodyInline,
   isBody: isBody,
   isParaInline: isParaInline,
@@ -2145,7 +1825,7 @@ function isCustomStyleTag(node) {
   isList: isList,
   isTable: isTable,
   isData: isData,
-  isCell: dom_isCell,
+  isCell: isCell,
   isBlockquote: isBlockquote,
   isBodyContainer: isBodyContainer,
   isAnchor: isAnchor,
@@ -2168,12 +1848,12 @@ function isCustomStyleTag(node) {
   isLeftEdgePoint: isLeftEdgePoint,
   isRightEdgePoint: isRightEdgePoint,
   isEdgePoint: isEdgePoint,
-  isLeftEdgeOf: dom_isLeftEdgeOf,
+  isLeftEdgeOf: isLeftEdgeOf,
   isRightEdgeOf: isRightEdgeOf,
   isLeftEdgePointOf: isLeftEdgePointOf,
   isRightEdgePointOf: isRightEdgePointOf,
-  prevPoint: dom_prevPoint,
-  nextPoint: dom_nextPoint,
+  prevPoint: prevPoint,
+  nextPoint: nextPoint,
   nextPointWithEmptyNode: nextPointWithEmptyNode,
   isSamePoint: isSamePoint,
   isVisiblePoint: isVisiblePoint,
@@ -2182,106 +1862,98 @@ function isCustomStyleTag(node) {
   isCharPoint: isCharPoint,
   isSpacePoint: isSpacePoint,
   walkPoint: walkPoint,
-  ancestor: dom_ancestor,
+  ancestor: ancestor,
   singleChildAncestor: singleChildAncestor,
   listAncestor: listAncestor,
   lastAncestor: lastAncestor,
   listNext: listNext,
   listPrev: listPrev,
   listDescendant: listDescendant,
-  commonAncestor: dom_commonAncestor,
+  commonAncestor: commonAncestor,
   wrap: wrap,
   insertAfter: insertAfter,
   appendChildNodes: appendChildNodes,
-  position: dom_position,
+  position: position,
   hasChildren: hasChildren,
   makeOffsetPath: makeOffsetPath,
   fromOffsetPath: fromOffsetPath,
   splitTree: splitTree,
   splitPoint: splitPoint,
-  create: dom_create,
+  create: create,
   createText: createText,
   remove: remove,
   removeWhile: removeWhile,
-  replace: dom_replace,
-  html: dom_html,
-  value: dom_value,
+  replace: replace,
+  html: html,
+  value: value,
   posFromPlaceholder: posFromPlaceholder,
   attachEvents: attachEvents,
   detachEvents: detachEvents,
   isCustomStyleTag: isCustomStyleTag
 });
-// CONCATENATED MODULE: ./src/js/base/Context.js
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
+;// CONCATENATED MODULE: ./src/js/Context.js
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
-var Context_Context = /*#__PURE__*/function () {
+
+var Context = /*#__PURE__*/function () {
   /**
    * @param {jQuery} $note
    * @param {Object} options
    */
   function Context($note, options) {
     _classCallCheck(this, Context);
-
     this.$note = $note;
     this.memos = {};
     this.modules = {};
     this.layoutInfo = {};
-    this.options = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.extend(true, {}, options); // init ui with options
+    this.options = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().extend(true, {}, options);
 
-    external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui_template(this.options);
-    this.ui = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui;
+    // init ui with options
+    (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.ui = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().summernote.ui_template(this.options);
+    this.ui = (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.ui;
     this.initialize();
   }
+
   /**
    * create layout and initialize modules and other resources
    */
-
-
-  _createClass(Context, [{
+  return _createClass(Context, [{
     key: "initialize",
     value: function initialize() {
       this.layoutInfo = this.ui.createLayout(this.$note);
-
       this._initialize();
-
       this.$note.hide();
       return this;
     }
+
     /**
      * destroy modules and other resources and remove layout
      */
-
   }, {
     key: "destroy",
     value: function destroy() {
       this._destroy();
-
       this.$note.removeData('summernote');
       this.ui.removeLayout(this.$note, this.layoutInfo);
     }
+
     /**
      * destory modules and other resources and initialize it again
      */
-
   }, {
     key: "reset",
     value: function reset() {
       var disabled = this.isDisabled();
       this.code(dom.emptyPara);
-
       this._destroy();
-
       this._initialize();
-
       if (disabled) {
         this.disable();
       }
@@ -2290,18 +1962,19 @@ var Context_Context = /*#__PURE__*/function () {
     key: "_initialize",
     value: function _initialize() {
       var _this = this;
-
       // set own id
-      this.options.id = func.uniqueId(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.now()); // set default container for tooltips, popovers, and dialogs
+      this.options.id = func.uniqueId(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().now());
+      // set default container for tooltips, popovers, and dialogs
+      this.options.container = this.options.container || this.layoutInfo.editor;
 
-      this.options.container = this.options.container || this.layoutInfo.editor; // add optional buttons
-
-      var buttons = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.extend({}, this.options.buttons);
+      // add optional buttons
+      var buttons = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().extend({}, this.options.buttons);
       Object.keys(buttons).forEach(function (key) {
         _this.memo('button.' + key, buttons[key]);
       });
-      var modules = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.extend({}, this.options.modules, external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.plugins || {}); // add and initialize modules
+      var modules = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().extend({}, this.options.modules, (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.plugins || {});
 
+      // add and initialize modules
       Object.keys(modules).forEach(function (key) {
         _this.module(key, modules[key], true);
       });
@@ -2313,22 +1986,20 @@ var Context_Context = /*#__PURE__*/function () {
     key: "_destroy",
     value: function _destroy() {
       var _this2 = this;
-
       // destroy modules with reversed order
       Object.keys(this.modules).reverse().forEach(function (key) {
         _this2.removeModule(key);
       });
       Object.keys(this.memos).forEach(function (key) {
         _this2.removeMemo(key);
-      }); // trigger custom onDestroy callback
-
+      });
+      // trigger custom onDestroy callback
       this.triggerEvent('destroy', this);
     }
   }, {
     key: "code",
     value: function code(html) {
       var isActivated = this.invoke('codeview.isActivated');
-
       if (html === undefined) {
         this.invoke('codeview.sync');
         return isActivated ? this.layoutInfo.codable.val() : this.layoutInfo.editable.html();
@@ -2338,7 +2009,6 @@ var Context_Context = /*#__PURE__*/function () {
         } else {
           this.layoutInfo.editable.html(html);
         }
-
         this.$note.val(html);
         this.triggerEvent('change', html, this.layoutInfo.editable);
       }
@@ -2363,7 +2033,6 @@ var Context_Context = /*#__PURE__*/function () {
       if (this.invoke('codeview.isActivated')) {
         this.invoke('codeview.deactivate');
       }
-
       this.layoutInfo.editable.attr('contenteditable', false);
       this.options.editing = false;
       this.invoke('toolbar.deactivate', true);
@@ -2375,11 +2044,9 @@ var Context_Context = /*#__PURE__*/function () {
       var namespace = lists.head(arguments);
       var args = lists.tail(lists.from(arguments));
       var callback = this.options.callbacks[func.namespaceToCamel(namespace, 'on')];
-
       if (callback) {
         callback.apply(this.$note[0], args);
       }
-
       this.$note.trigger('summernote.' + namespace, args);
     }
   }, {
@@ -2387,17 +2054,16 @@ var Context_Context = /*#__PURE__*/function () {
     value: function initializeModule(key) {
       var module = this.modules[key];
       module.shouldInitialize = module.shouldInitialize || func.ok;
-
       if (!module.shouldInitialize()) {
         return;
-      } // initialize module
+      }
 
-
+      // initialize module
       if (module.initialize) {
         module.initialize();
-      } // attach events
+      }
 
-
+      // attach events
       if (module.events) {
         dom.attachEvents(this.$note, module.events);
       }
@@ -2408,9 +2074,7 @@ var Context_Context = /*#__PURE__*/function () {
       if (arguments.length === 1) {
         return this.modules[key];
       }
-
       this.modules[key] = new ModuleClass(this);
-
       if (!withoutIntialize) {
         this.initializeModule(key);
       }
@@ -2419,17 +2083,14 @@ var Context_Context = /*#__PURE__*/function () {
     key: "removeModule",
     value: function removeModule(key) {
       var module = this.modules[key];
-
       if (module.shouldInitialize()) {
         if (module.events) {
           dom.detachEvents(this.$note, module.events);
         }
-
         if (module.destroy) {
           module.destroy();
         }
       }
-
       delete this.modules[key];
     }
   }, {
@@ -2438,7 +2099,6 @@ var Context_Context = /*#__PURE__*/function () {
       if (arguments.length === 1) {
         return this.memos[key];
       }
-
       this.memos[key] = obj;
     }
   }, {
@@ -2447,21 +2107,18 @@ var Context_Context = /*#__PURE__*/function () {
       if (this.memos[key] && this.memos[key].destroy) {
         this.memos[key].destroy();
       }
-
       delete this.memos[key];
     }
+
     /**
      * Some buttons need to change their visual style immediately once they get pressed
      */
-
   }, {
     key: "createInvokeHandlerAndUpdateState",
     value: function createInvokeHandlerAndUpdateState(namespace, value) {
       var _this3 = this;
-
       return function (event) {
         _this3.createInvokeHandler(namespace, value)(event);
-
         _this3.invoke('buttons.updateCurrentStyle');
       };
     }
@@ -2469,11 +2126,9 @@ var Context_Context = /*#__PURE__*/function () {
     key: "createInvokeHandler",
     value: function createInvokeHandler(namespace, value) {
       var _this4 = this;
-
       return function (event) {
         event.preventDefault();
-        var $target = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(event.target);
-
+        var $target = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(event.target);
         _this4.invoke(namespace, value || $target.closest('[data-value]').data('value'), $target);
       };
     }
@@ -2487,7 +2142,6 @@ var Context_Context = /*#__PURE__*/function () {
       var moduleName = hasSeparator && lists.head(splits);
       var methodName = hasSeparator ? lists.last(splits) : lists.head(splits);
       var module = this.modules[moduleName || 'editor'];
-
       if (!moduleName && this[methodName]) {
         return this[methodName].apply(this, args);
       } else if (module && module[methodName] && module.shouldInitialize()) {
@@ -2495,17 +2149,15 @@ var Context_Context = /*#__PURE__*/function () {
       }
     }
   }]);
-
-  return Context;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/summernote.js
-
-
+;// CONCATENATED MODULE: ./src/js/summernote.js
+function summernote_typeof(o) { "@babel/helpers - typeof"; return summernote_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, summernote_typeof(o); }
 
 
-external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.fn.extend({
+
+
+external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().fn.extend({
   /**
    * Summernote API
    *
@@ -2513,44 +2165,42 @@ external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.fn.ex
    * @return {this}
    */
   summernote: function summernote() {
-    var type = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.type(lists.head(arguments));
+    var type = summernote_typeof(lists.head(arguments));
     var isExternalAPICalled = type === 'string';
     var hasInitOptions = type === 'object';
-    var options = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.extend({}, external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.options, hasInitOptions ? lists.head(arguments) : {}); // Update options
+    var options = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().extend({}, (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.options, hasInitOptions ? lists.head(arguments) : {});
 
-    options.langInfo = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.extend(true, {}, external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.lang['en-US'], external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.lang[options.lang]);
-    options.icons = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.extend(true, {}, external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.options.icons, options.icons);
+    // Update options
+    options.langInfo = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().extend(true, {}, (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.lang['en-US'], (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.lang[options.lang]);
+    options.icons = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().extend(true, {}, (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.options.icons, options.icons);
     options.tooltip = options.tooltip === 'auto' ? !env.isSupportTouch : options.tooltip;
     this.each(function (idx, note) {
-      var $note = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(note);
-
+      var $note = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(note);
       if (!$note.data('summernote')) {
-        var context = new Context_Context($note, options);
+        var context = new Context($note, options);
         $note.data('summernote', context);
         $note.data('summernote').triggerEvent('init', context.layoutInfo);
       }
     });
     var $note = this.first();
-
     if ($note.length) {
       var context = $note.data('summernote');
-
       if (isExternalAPICalled) {
         return context.invoke.apply(context, lists.from(arguments));
       } else if (options.focus) {
         context.invoke('editor.focus');
       }
     }
-
     return this;
   }
 });
-// CONCATENATED MODULE: ./src/js/base/core/range.js
-function range_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function range_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function range_createClass(Constructor, protoProps, staticProps) { if (protoProps) range_defineProperties(Constructor.prototype, protoProps); if (staticProps) range_defineProperties(Constructor, staticProps); return Constructor; }
+;// CONCATENATED MODULE: ./src/js/core/range.js
+function range_typeof(o) { "@babel/helpers - typeof"; return range_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, range_typeof(o); }
+function range_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function range_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, range_toPropertyKey(o.key), o); } }
+function range_createClass(e, r, t) { return r && range_defineProperties(e.prototype, r), t && range_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function range_toPropertyKey(t) { var i = range_toPrimitive(t, "string"); return "symbol" == range_typeof(i) ? i : i + ""; }
+function range_toPrimitive(t, r) { if ("object" != range_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != range_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
@@ -2566,28 +2216,22 @@ function range_createClass(Constructor, protoProps, staticProps) { if (protoProp
  *
  * @see http://msdn.microsoft.com/en-us/library/ie/ms535872(v=vs.85).aspx
  */
-
 function textRangeToPoint(textRange, isStart) {
   var container = textRange.parentElement();
   var offset;
   var tester = document.body.createTextRange();
   var prevContainer;
   var childNodes = lists.from(container.childNodes);
-
   for (offset = 0; offset < childNodes.length; offset++) {
     if (dom.isText(childNodes[offset])) {
       continue;
     }
-
     tester.moveToElementText(childNodes[offset]);
-
     if (tester.compareEndPoints('StartToStart', textRange) >= 0) {
       break;
     }
-
     prevContainer = childNodes[offset];
   }
-
   if (offset !== 0 && dom.isText(childNodes[offset - 1])) {
     var textRangeStart = document.body.createTextRange();
     var curTextNode = null;
@@ -2597,40 +2241,35 @@ function textRangeToPoint(textRange, isStart) {
     var pointTester = textRange.duplicate();
     pointTester.setEndPoint('StartToStart', textRangeStart);
     var textCount = pointTester.text.replace(/[\r\n]/g, '').length;
-
     while (textCount > curTextNode.nodeValue.length && curTextNode.nextSibling) {
       textCount -= curTextNode.nodeValue.length;
       curTextNode = curTextNode.nextSibling;
-    } // [workaround] enforce IE to re-reference curTextNode, hack
+    }
 
-
+    // [workaround] enforce IE to re-reference curTextNode, hack
     var dummy = curTextNode.nodeValue; // eslint-disable-line
 
     if (isStart && curTextNode.nextSibling && dom.isText(curTextNode.nextSibling) && textCount === curTextNode.nodeValue.length) {
       textCount -= curTextNode.nodeValue.length;
       curTextNode = curTextNode.nextSibling;
     }
-
     container = curTextNode;
     offset = textCount;
   }
-
   return {
     cont: container,
     offset: offset
   };
 }
+
 /**
  * return TextRange from boundary point (inspired by google closure-library)
  * @param {BoundaryPoint} point
  * @return {TextRange}
  */
-
-
 function pointToTextRange(point) {
   var textRangeInfo = function textRangeInfo(container, offset) {
     var node, isCollapseToStart;
-
     if (dom.isText(container)) {
       var prevTextNodes = dom.listPrev(container, func.not(dom.isText));
       var prevContainer = lists.last(prevTextNodes).previousSibling;
@@ -2639,22 +2278,18 @@ function pointToTextRange(point) {
       isCollapseToStart = !prevContainer;
     } else {
       node = container.childNodes[offset] || container;
-
       if (dom.isText(node)) {
         return textRangeInfo(node, 0);
       }
-
       offset = 0;
       isCollapseToStart = false;
     }
-
     return {
       node: node,
       collapseToStart: isCollapseToStart,
       offset: offset
     };
   };
-
   var textRange = document.body.createTextRange();
   var info = textRangeInfo(point.node, point.offset);
   textRange.moveToElementText(info.node);
@@ -2662,6 +2297,7 @@ function pointToTextRange(point) {
   textRange.moveStart('character', info.offset);
   return textRange;
 }
+
 /**
    * Wrapped Range
    *
@@ -2671,30 +2307,28 @@ function pointToTextRange(point) {
    * @param {Node} ec - end container
    * @param {Number} eo - end offset
    */
-
-
-var range_WrappedRange = /*#__PURE__*/function () {
+var WrappedRange = /*#__PURE__*/function () {
   function WrappedRange(sc, so, ec, eo) {
     range_classCallCheck(this, WrappedRange);
-
     this.sc = sc;
     this.so = so;
     this.ec = ec;
-    this.eo = eo; // isOnEditable: judge whether range is on editable or not
+    this.eo = eo;
 
-    this.isOnEditable = this.makeIsOn(dom.isEditable); // isOnList: judge whether range is on list node or not
-
-    this.isOnList = this.makeIsOn(dom.isList); // isOnAnchor: judge whether range is on anchor node or not
-
-    this.isOnAnchor = this.makeIsOn(dom.isAnchor); // isOnCell: judge whether range is on cell node or not
-
-    this.isOnCell = this.makeIsOn(dom.isCell); // isOnData: judge whether range is on data node or not
-
+    // isOnEditable: judge whether range is on editable or not
+    this.isOnEditable = this.makeIsOn(dom.isEditable);
+    // isOnList: judge whether range is on list node or not
+    this.isOnList = this.makeIsOn(dom.isList);
+    // isOnAnchor: judge whether range is on anchor node or not
+    this.isOnAnchor = this.makeIsOn(dom.isAnchor);
+    // isOnCell: judge whether range is on cell node or not
+    this.isOnCell = this.makeIsOn(dom.isCell);
+    // isOnData: judge whether range is on data node or not
     this.isOnData = this.makeIsOn(dom.isData);
-  } // nativeRange: get nativeRange from sc, so, ec, eo
+  }
 
-
-  range_createClass(WrappedRange, [{
+  // nativeRange: get nativeRange from sc, so, ec, eo
+  return range_createClass(WrappedRange, [{
     key: "nativeRange",
     value: function nativeRange() {
       if (env.isW3CRangeSupport) {
@@ -2740,50 +2374,44 @@ var range_WrappedRange = /*#__PURE__*/function () {
         offset: this.eo
       };
     }
+
     /**
      * select update visible range
      */
-
   }, {
     key: "select",
     value: function select() {
       var nativeRng = this.nativeRange();
-
       if (env.isW3CRangeSupport) {
         var selection = document.getSelection();
-
         if (selection.rangeCount > 0) {
           selection.removeAllRanges();
         }
-
         selection.addRange(nativeRng);
       } else {
         nativeRng.select();
       }
-
       return this;
     }
+
     /**
      * Moves the scrollbar to start container(sc) of current range
      *
      * @return {WrappedRange}
      */
-
   }, {
     key: "scrollIntoView",
     value: function scrollIntoView(container) {
-      var height = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(container).height();
-
+      var height = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(container).height();
       if (container.scrollTop + height < this.sc.offsetTop) {
         container.scrollTop += Math.abs(container.scrollTop + height - this.sc.offsetTop);
       }
-
       return this;
     }
+
     /**
      * @return {WrappedRange}
      */
-
   }, {
     key: "normalize",
     value: function normalize() {
@@ -2796,60 +2424,53 @@ var range_WrappedRange = /*#__PURE__*/function () {
       var getVisiblePoint = function getVisiblePoint(point, isLeftToRight) {
         if (!point) {
           return point;
-        } // Just use the given point [XXX:Adhoc]
+        }
+
+        // Just use the given point [XXX:Adhoc]
         //  - case 01. if the point is on the middle of the node
         //  - case 02. if the point is on the right edge and prefer to choose left node
         //  - case 03. if the point is on the left edge and prefer to choose right node
         //  - case 04. if the point is on the right edge and prefer to choose right node but the node is void
         //  - case 05. if the point is on the left edge and prefer to choose left node but the node is void
         //  - case 06. if the point is on the block node and there is no children
-
-
         if (dom.isVisiblePoint(point)) {
           if (!dom.isEdgePoint(point) || dom.isRightEdgePoint(point) && !isLeftToRight || dom.isLeftEdgePoint(point) && isLeftToRight || dom.isRightEdgePoint(point) && isLeftToRight && dom.isVoid(point.node.nextSibling) || dom.isLeftEdgePoint(point) && !isLeftToRight && dom.isVoid(point.node.previousSibling) || dom.isBlock(point.node) && dom.isEmpty(point.node)) {
             return point;
           }
-        } // point on block's edge
+        }
 
-
+        // point on block's edge
         var block = dom.ancestor(point.node, dom.isBlock);
         var hasRightNode = false;
-
         if (!hasRightNode) {
           var prevPoint = dom.prevPoint(point) || {
             node: null
           };
           hasRightNode = (dom.isLeftEdgePointOf(point, block) || dom.isVoid(prevPoint.node)) && !isLeftToRight;
         }
-
         var hasLeftNode = false;
-
         if (!hasLeftNode) {
           var _nextPoint = dom.nextPoint(point) || {
             node: null
           };
-
           hasLeftNode = (dom.isRightEdgePointOf(point, block) || dom.isVoid(_nextPoint.node)) && isLeftToRight;
         }
-
         if (hasRightNode || hasLeftNode) {
           // returns point already on visible point
           if (dom.isVisiblePoint(point)) {
             return point;
-          } // reverse direction
-
-
+          }
+          // reverse direction
           isLeftToRight = !isLeftToRight;
         }
-
         var nextPoint = isLeftToRight ? dom.nextPointUntil(dom.nextPoint(point), dom.isVisiblePoint) : dom.prevPointUntil(dom.prevPoint(point), dom.isVisiblePoint);
         return nextPoint || point;
       };
-
       var endPoint = getVisiblePoint(this.getEndPoint(), false);
       var startPoint = this.isCollapsed() ? endPoint : getVisiblePoint(this.getStartPoint(), true);
       return new WrappedRange(startPoint.node, startPoint.offset, endPoint.node, endPoint.offset);
     }
+
     /**
      * returns matched nodes on range
      *
@@ -2859,14 +2480,14 @@ var range_WrappedRange = /*#__PURE__*/function () {
      * @param {Boolean} [options.fullyContains]
      * @return {Node[]}
      */
-
   }, {
     key: "nodes",
     value: function nodes(pred, options) {
       pred = pred || func.ok;
       var includeAncestor = options && options.includeAncestor;
-      var fullyContains = options && options.fullyContains; // TODO compare points and sort
+      var fullyContains = options && options.fullyContains;
 
+      // TODO compare points and sort
       var startPoint = this.getStartPoint();
       var endPoint = this.getEndPoint();
       var nodes = [];
@@ -2875,14 +2496,11 @@ var range_WrappedRange = /*#__PURE__*/function () {
         if (dom.isEditable(point.node)) {
           return;
         }
-
         var node;
-
         if (fullyContains) {
           if (dom.isLeftEdgePoint(point)) {
             leftEdgeNodes.push(point.node);
           }
-
           if (dom.isRightEdgePoint(point) && lists.contains(leftEdgeNodes, point.node)) {
             node = point.node;
           }
@@ -2891,59 +2509,53 @@ var range_WrappedRange = /*#__PURE__*/function () {
         } else {
           node = point.node;
         }
-
         if (node && pred(node)) {
           nodes.push(node);
         }
       }, true);
       return lists.unique(nodes);
     }
+
     /**
      * returns commonAncestor of range
      * @return {Element} - commonAncestor
      */
-
   }, {
     key: "commonAncestor",
     value: function commonAncestor() {
       return dom.commonAncestor(this.sc, this.ec);
     }
+
     /**
      * returns expanded range by pred
      *
      * @param {Function} pred - predicate function
      * @return {WrappedRange}
      */
-
   }, {
     key: "expand",
     value: function expand(pred) {
       var startAncestor = dom.ancestor(this.sc, pred);
       var endAncestor = dom.ancestor(this.ec, pred);
-
       if (!startAncestor && !endAncestor) {
         return new WrappedRange(this.sc, this.so, this.ec, this.eo);
       }
-
       var boundaryPoints = this.getPoints();
-
       if (startAncestor) {
         boundaryPoints.sc = startAncestor;
         boundaryPoints.so = 0;
       }
-
       if (endAncestor) {
         boundaryPoints.ec = endAncestor;
         boundaryPoints.eo = dom.nodeLength(endAncestor);
       }
-
       return new WrappedRange(boundaryPoints.sc, boundaryPoints.so, boundaryPoints.ec, boundaryPoints.eo);
     }
+
     /**
      * @param {Boolean} isCollapseToStart
      * @return {WrappedRange}
      */
-
   }, {
     key: "collapse",
     value: function collapse(isCollapseToStart) {
@@ -2953,73 +2565,68 @@ var range_WrappedRange = /*#__PURE__*/function () {
         return new WrappedRange(this.ec, this.eo, this.ec, this.eo);
       }
     }
+
     /**
      * splitText on range
      */
-
   }, {
     key: "splitText",
     value: function splitText() {
       var isSameContainer = this.sc === this.ec;
       var boundaryPoints = this.getPoints();
-
       if (dom.isText(this.ec) && !dom.isEdgePoint(this.getEndPoint())) {
         this.ec.splitText(this.eo);
       }
-
       if (dom.isText(this.sc) && !dom.isEdgePoint(this.getStartPoint())) {
         boundaryPoints.sc = this.sc.splitText(this.so);
         boundaryPoints.so = 0;
-
         if (isSameContainer) {
           boundaryPoints.ec = boundaryPoints.sc;
           boundaryPoints.eo = this.eo - this.so;
         }
       }
-
       return new WrappedRange(boundaryPoints.sc, boundaryPoints.so, boundaryPoints.ec, boundaryPoints.eo);
     }
+
     /**
      * delete contents on range
      * @return {WrappedRange}
      */
-
   }, {
     key: "deleteContents",
     value: function deleteContents() {
       if (this.isCollapsed()) {
         return this;
       }
-
       var rng = this.splitText();
       var nodes = rng.nodes(null, {
         fullyContains: true
-      }); // find new cursor point
+      });
 
+      // find new cursor point
       var point = dom.prevPointUntil(rng.getStartPoint(), function (point) {
         return !lists.contains(nodes, point.node);
       });
       var emptyParents = [];
-      external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(nodes, function (idx, node) {
+      external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(nodes, function (idx, node) {
         // find empty parents
         var parent = node.parentNode;
-
         if (point.node !== parent && dom.nodeLength(parent) === 1) {
           emptyParents.push(parent);
         }
-
         dom.remove(node, false);
-      }); // remove empty parents
+      });
 
-      external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(emptyParents, function (idx, node) {
+      // remove empty parents
+      external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(emptyParents, function (idx, node) {
         dom.remove(node, false);
       });
       return new WrappedRange(point.node, point.offset, point.node, point.offset).normalize();
     }
+
     /**
      * makeIsOn: return isOn(pred) function
      */
-
   }, {
     key: "makeIsOn",
     value: function makeIsOn(pred) {
@@ -3028,36 +2635,35 @@ var range_WrappedRange = /*#__PURE__*/function () {
         return !!ancestor && ancestor === dom.ancestor(this.ec, pred);
       };
     }
+
     /**
      * @param {Function} pred
      * @return {Boolean}
      */
-
   }, {
     key: "isLeftEdgeOf",
     value: function isLeftEdgeOf(pred) {
       if (!dom.isLeftEdgePoint(this.getStartPoint())) {
         return false;
       }
-
       var node = dom.ancestor(this.sc, pred);
       return node && dom.isLeftEdgeOf(this.sc, node);
     }
+
     /**
      * returns whether range was collapsed or not
      */
-
   }, {
     key: "isCollapsed",
     value: function isCollapsed() {
       return this.sc === this.ec && this.so === this.eo;
     }
+
     /**
      * wrap inline nodes which children of body with paragraph
      *
      * @return {WrappedRange}
      */
-
   }, {
     key: "wrapBodyInlineWithPara",
     value: function wrapBodyInlineWithPara() {
@@ -3065,173 +2671,154 @@ var range_WrappedRange = /*#__PURE__*/function () {
         this.sc.innerHTML = dom.emptyPara;
         return new WrappedRange(this.sc.firstChild, 0, this.sc.firstChild, 0);
       }
+
       /**
        * [workaround] firefox often create range on not visible point. so normalize here.
        *  - firefox: |<p>text</p>|
        *  - chrome: <p>|text|</p>
        */
-
-
       var rng = this.normalize();
-
       if (dom.isParaInline(this.sc) || dom.isPara(this.sc)) {
         return rng;
-      } // find inline top ancestor
+      }
 
-
+      // find inline top ancestor
       var topAncestor;
-
       if (dom.isInline(rng.sc)) {
         var ancestors = dom.listAncestor(rng.sc, func.not(dom.isInline));
         topAncestor = lists.last(ancestors);
-
         if (!dom.isInline(topAncestor)) {
           topAncestor = ancestors[ancestors.length - 2] || rng.sc.childNodes[rng.so];
         }
       } else {
         topAncestor = rng.sc.childNodes[rng.so > 0 ? rng.so - 1 : 0];
       }
-
       if (topAncestor) {
         // siblings not in paragraph
         var inlineSiblings = dom.listPrev(topAncestor, dom.isParaInline).reverse();
-        inlineSiblings = inlineSiblings.concat(dom.listNext(topAncestor.nextSibling, dom.isParaInline)); // wrap with paragraph
+        inlineSiblings = inlineSiblings.concat(dom.listNext(topAncestor.nextSibling, dom.isParaInline));
 
+        // wrap with paragraph
         if (inlineSiblings.length) {
           var para = dom.wrap(lists.head(inlineSiblings), 'p');
           dom.appendChildNodes(para, lists.tail(inlineSiblings));
         }
       }
-
       return this.normalize();
     }
+
     /**
      * insert node at current cursor
      *
      * @param {Node} node
+     * @param {Boolean} doNotInsertPara - default is false, removes added <p> that's added if true
      * @return {Node}
      */
-
   }, {
     key: "insertNode",
     value: function insertNode(node) {
+      var doNotInsertPara = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var rng = this;
-
       if (dom.isText(node) || dom.isInline(node)) {
         rng = this.wrapBodyInlineWithPara().deleteContents();
       }
-
       var info = dom.splitPoint(rng.getStartPoint(), dom.isInline(node));
-
       if (info.rightNode) {
         info.rightNode.parentNode.insertBefore(node, info.rightNode);
-
-        if (dom.isEmpty(info.rightNode) && dom.isPara(node)) {
+        if (dom.isEmpty(info.rightNode) && (doNotInsertPara || dom.isPara(node))) {
           info.rightNode.parentNode.removeChild(info.rightNode);
         }
       } else {
         info.container.appendChild(node);
       }
-
       return node;
     }
+
     /**
      * insert html at current cursor
      */
-
   }, {
     key: "pasteHTML",
     value: function pasteHTML(markup) {
-      markup = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.trim(markup);
-      var contentsContainer = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<div></div>').html(markup)[0];
-      var childNodes = lists.from(contentsContainer.childNodes); // const rng = this.wrapBodyInlineWithPara().deleteContents();
+      markup = ((markup || '') + '').trim(markup);
+      var contentsContainer = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<div></div>').html(markup)[0];
+      var childNodes = lists.from(contentsContainer.childNodes);
 
+      // const rng = this.wrapBodyInlineWithPara().deleteContents();
       var rng = this;
       var reversed = false;
-
       if (rng.so >= 0) {
         childNodes = childNodes.reverse();
         reversed = true;
       }
-
       childNodes = childNodes.map(function (childNode) {
-        return rng.insertNode(childNode);
+        return rng.insertNode(childNode, !dom.isInline(childNode));
       });
-
       if (reversed) {
         childNodes = childNodes.reverse();
       }
-
       return childNodes;
     }
+
     /**
      * returns text in range
      *
      * @return {String}
      */
-
   }, {
     key: "toString",
     value: function toString() {
       var nativeRng = this.nativeRange();
       return env.isW3CRangeSupport ? nativeRng.toString() : nativeRng.text;
     }
+
     /**
      * returns range for word before cursor
      *
      * @param {Boolean} [findAfter] - find after cursor, default: false
      * @return {WrappedRange}
      */
-
   }, {
     key: "getWordRange",
     value: function getWordRange(findAfter) {
       var endPoint = this.getEndPoint();
-
       if (!dom.isCharPoint(endPoint)) {
         return this;
       }
-
       var startPoint = dom.prevPointUntil(endPoint, function (point) {
         return !dom.isCharPoint(point);
       });
-
       if (findAfter) {
         endPoint = dom.nextPointUntil(endPoint, function (point) {
           return !dom.isCharPoint(point);
         });
       }
-
       return new WrappedRange(startPoint.node, startPoint.offset, endPoint.node, endPoint.offset);
     }
+
     /**
      * returns range for words before cursor
      *
      * @param {Boolean} [findAfter] - find after cursor, default: false
      * @return {WrappedRange}
      */
-
   }, {
     key: "getWordsRange",
     value: function getWordsRange(findAfter) {
       var endPoint = this.getEndPoint();
-
       var isNotTextPoint = function isNotTextPoint(point) {
         return !dom.isCharPoint(point) && !dom.isSpacePoint(point);
       };
-
       if (isNotTextPoint(endPoint)) {
         return this;
       }
-
       var startPoint = dom.prevPointUntil(endPoint, isNotTextPoint);
-
       if (findAfter) {
         endPoint = dom.nextPointUntil(endPoint, isNotTextPoint);
       }
-
       return new WrappedRange(startPoint.node, startPoint.offset, endPoint.node, endPoint.offset);
     }
+
     /**
      * returns range for words before cursor that match with a Regex
      *
@@ -3243,7 +2830,6 @@ var range_WrappedRange = /*#__PURE__*/function () {
      * @param {RegExp} [regex]
      * @return {WrappedRange|null}
      */
-
   }, {
     key: "getWordsMatchRange",
     value: function getWordsMatchRange(regex) {
@@ -3252,7 +2838,6 @@ var range_WrappedRange = /*#__PURE__*/function () {
         if (!dom.isCharPoint(point) && !dom.isSpacePoint(point)) {
           return true;
         }
-
         var rng = new WrappedRange(point.node, point.offset, endPoint.node, endPoint.offset);
         var result = regex.exec(rng.toString());
         return result && result.index === 0;
@@ -3260,19 +2845,18 @@ var range_WrappedRange = /*#__PURE__*/function () {
       var rng = new WrappedRange(startPoint.node, startPoint.offset, endPoint.node, endPoint.offset);
       var text = rng.toString();
       var result = regex.exec(text);
-
       if (result && result[0].length === text.length) {
         return rng;
       } else {
         return null;
       }
     }
+
     /**
      * create offsetPath bookmark
      *
      * @param {Node} editable
      */
-
   }, {
     key: "bookmark",
     value: function bookmark(editable) {
@@ -3287,12 +2871,12 @@ var range_WrappedRange = /*#__PURE__*/function () {
         }
       };
     }
+
     /**
      * create offsetPath bookmark base on paragraph
      *
      * @param {Node[]} paras
      */
-
   }, {
     key: "paraBookmark",
     value: function paraBookmark(paras) {
@@ -3307,11 +2891,11 @@ var range_WrappedRange = /*#__PURE__*/function () {
         }
       };
     }
+
     /**
      * getClientRects
      * @return {Rect[]}
      */
-
   }, {
     key: "getClientRects",
     value: function getClientRects() {
@@ -3319,8 +2903,6 @@ var range_WrappedRange = /*#__PURE__*/function () {
       return nativeRng.getClientRects();
     }
   }]);
-
-  return WrappedRange;
 }();
 /**
  * Data structure
@@ -3329,9 +2911,7 @@ var range_WrappedRange = /*#__PURE__*/function () {
  *
  * See to http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level-2-Range-Position
  */
-
-
-/* harmony default export */ var range = ({
+/* harmony default export */ const range = ({
   /**
    * create Range Object From arguments or Browser Selection
    *
@@ -3343,25 +2923,21 @@ var range_WrappedRange = /*#__PURE__*/function () {
    */
   create: function create(sc, so, ec, eo) {
     if (arguments.length === 4) {
-      return new range_WrappedRange(sc, so, ec, eo);
+      return new WrappedRange(sc, so, ec, eo);
     } else if (arguments.length === 2) {
       // collapsed
       ec = sc;
       eo = so;
-      return new range_WrappedRange(sc, so, ec, eo);
+      return new WrappedRange(sc, so, ec, eo);
     } else {
       var wrappedRange = this.createFromSelection();
-
       if (!wrappedRange && arguments.length === 1) {
         var bodyElement = arguments[0];
-
         if (dom.isEditable(bodyElement)) {
           bodyElement = bodyElement.lastChild;
         }
-
         return this.createFromBodyElement(bodyElement, dom.emptyPara === arguments[0].innerHTML);
       }
-
       return wrappedRange;
     }
   },
@@ -3372,10 +2948,8 @@ var range_WrappedRange = /*#__PURE__*/function () {
   },
   createFromSelection: function createFromSelection() {
     var sc, so, ec, eo;
-
     if (env.isW3CRangeSupport) {
       var selection = document.getSelection();
-
       if (!selection || selection.rangeCount === 0) {
         return null;
       } else if (dom.isBody(selection.anchorNode)) {
@@ -3383,7 +2957,6 @@ var range_WrappedRange = /*#__PURE__*/function () {
         // We won't never need it.
         return null;
       }
-
       var nativeRng = selection.getRangeAt(0);
       sc = nativeRng.startContainer;
       so = nativeRng.startOffset;
@@ -3397,21 +2970,19 @@ var range_WrappedRange = /*#__PURE__*/function () {
       var textRangeStart = textRange;
       textRangeStart.collapse(true);
       var startPoint = textRangeToPoint(textRangeStart, true);
-      var endPoint = textRangeToPoint(textRangeEnd, false); // same visible point case: range was collapsed.
+      var endPoint = textRangeToPoint(textRangeEnd, false);
 
+      // same visible point case: range was collapsed.
       if (dom.isText(startPoint.node) && dom.isLeftEdgePoint(startPoint) && dom.isTextNode(endPoint.node) && dom.isRightEdgePoint(endPoint) && endPoint.node.nextSibling === startPoint.node) {
         startPoint = endPoint;
       }
-
       sc = startPoint.cont;
       so = startPoint.offset;
       ec = endPoint.cont;
       eo = endPoint.offset;
     }
-
-    return new range_WrappedRange(sc, so, ec, eo);
+    return new WrappedRange(sc, so, ec, eo);
   },
-
   /**
    * @method
    *
@@ -3424,13 +2995,13 @@ var range_WrappedRange = /*#__PURE__*/function () {
     var sc = node;
     var so = 0;
     var ec = node;
-    var eo = dom.nodeLength(ec); // browsers can't target a picture or void node
+    var eo = dom.nodeLength(ec);
 
+    // browsers can't target a picture or void node
     if (dom.isVoid(sc)) {
       so = dom.listPrev(sc).length - 1;
       sc = sc.parentNode;
     }
-
     if (dom.isBR(ec)) {
       eo = dom.listPrev(ec).length - 1;
       ec = ec.parentNode;
@@ -3438,10 +3009,8 @@ var range_WrappedRange = /*#__PURE__*/function () {
       eo = dom.listPrev(ec).length;
       ec = ec.parentNode;
     }
-
     return this.create(sc, so, ec, eo);
   },
-
   /**
    * create WrappedRange from node after position
    *
@@ -3451,7 +3020,6 @@ var range_WrappedRange = /*#__PURE__*/function () {
   createFromNodeBefore: function createFromNodeBefore(node) {
     return this.createFromNode(node).collapse(true);
   },
-
   /**
    * create WrappedRange from node after position
    *
@@ -3461,7 +3029,6 @@ var range_WrappedRange = /*#__PURE__*/function () {
   createFromNodeAfter: function createFromNodeAfter(node) {
     return this.createFromNode(node).collapse();
   },
-
   /**
    * @method
    *
@@ -3476,9 +3043,8 @@ var range_WrappedRange = /*#__PURE__*/function () {
     var so = bookmark.s.offset;
     var ec = dom.fromOffsetPath(editable, bookmark.e.path);
     var eo = bookmark.e.offset;
-    return new range_WrappedRange(sc, so, ec, eo);
+    return new WrappedRange(sc, so, ec, eo);
   },
-
   /**
    * @method
    *
@@ -3493,10 +3059,10 @@ var range_WrappedRange = /*#__PURE__*/function () {
     var eo = bookmark.e.offset;
     var sc = dom.fromOffsetPath(lists.head(paras), bookmark.s.path);
     var ec = dom.fromOffsetPath(lists.last(paras), bookmark.e.path);
-    return new range_WrappedRange(sc, so, ec, eo);
+    return new WrappedRange(sc, so, ec, eo);
   }
 });
-// CONCATENATED MODULE: ./src/js/base/core/key.js
+;// CONCATENATED MODULE: ./src/js/core/key.js
 
 
 var KEY_MAP = {
@@ -3544,6 +3110,7 @@ var KEY_MAP = {
   'PAGEUP': 33,
   'PAGEDOWN': 34
 };
+
 /**
  * @class core.key
  *
@@ -3552,8 +3119,7 @@ var KEY_MAP = {
  * @singleton
  * @alternateClassName key
  */
-
-/* harmony default export */ var core_key = ({
+/* harmony default export */ const key = ({
   /**
    * @method isEdit
    *
@@ -3563,7 +3129,16 @@ var KEY_MAP = {
   isEdit: function isEdit(keyCode) {
     return lists.contains([KEY_MAP.BACKSPACE, KEY_MAP.TAB, KEY_MAP.ENTER, KEY_MAP.SPACE, KEY_MAP.DELETE], keyCode);
   },
-
+  /**
+   * @method isRemove
+   *
+   * @param {Number} keyCode
+   * @return {Boolean}
+   */
+  isRemove: function isRemove(keyCode) {
+    // LB
+    return lists.contains([KEY_MAP.BACKSPACE, KEY_MAP.DELETE], keyCode);
+  },
   /**
    * @method isMove
    *
@@ -3573,7 +3148,6 @@ var KEY_MAP = {
   isMove: function isMove(keyCode) {
     return lists.contains([KEY_MAP.LEFT, KEY_MAP.UP, KEY_MAP.RIGHT, KEY_MAP.DOWN], keyCode);
   },
-
   /**
    * @method isNavigation
    *
@@ -3583,7 +3157,6 @@ var KEY_MAP = {
   isNavigation: function isNavigation(keyCode) {
     return lists.contains([KEY_MAP.HOME, KEY_MAP.END, KEY_MAP.PAGEUP, KEY_MAP.PAGEDOWN], keyCode);
   },
-
   /**
    * @property {Object} nameFromCode
    * @property {String} nameFromCode.8 "BACKSPACE"
@@ -3591,7 +3164,8 @@ var KEY_MAP = {
   nameFromCode: func.invertObject(KEY_MAP),
   code: KEY_MAP
 });
-// CONCATENATED MODULE: ./src/js/base/core/async.js
+;// CONCATENATED MODULE: ./src/js/core/async.js
+
 
 /**
  * @method readFileAsDataURL
@@ -3601,12 +3175,11 @@ var KEY_MAP = {
  * @param {File} file
  * @return {Promise} - then: dataUrl
  */
-
 function readFileAsDataURL(file) {
-  return external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.Deferred(function (deferred) {
-    external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.extend(new FileReader(), {
-      onload: function onload(e) {
-        var dataURL = e.target.result;
+  return external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().Deferred(function (deferred) {
+    external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().extend(new FileReader(), {
+      onload: function onload(event) {
+        var dataURL = event.target.result;
         deferred.resolve(dataURL);
       },
       onerror: function onerror(err) {
@@ -3615,6 +3188,7 @@ function readFileAsDataURL(file) {
     }).readAsDataURL(file);
   }).promise();
 }
+
 /**
  * @method createImage
  *
@@ -3623,10 +3197,9 @@ function readFileAsDataURL(file) {
  * @param {String} url
  * @return {Promise} - then: $image
  */
-
 function createImage(url) {
-  return external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.Deferred(function (deferred) {
-    var $img = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<img>');
+  return external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().Deferred(function (deferred) {
+    var $img = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<img>');
     $img.one('load', function () {
       $img.off('error abort');
       deferred.resolve($img);
@@ -3638,27 +3211,24 @@ function createImage(url) {
     }).appendTo(document.body).attr('src', url);
   }).promise();
 }
-// CONCATENATED MODULE: ./src/js/base/editing/History.js
-function History_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+;// CONCATENATED MODULE: ./src/js/editing/History.js
+function History_typeof(o) { "@babel/helpers - typeof"; return History_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, History_typeof(o); }
+function History_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function History_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, History_toPropertyKey(o.key), o); } }
+function History_createClass(e, r, t) { return r && History_defineProperties(e.prototype, r), t && History_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function History_toPropertyKey(t) { var i = History_toPrimitive(t, "string"); return "symbol" == History_typeof(i) ? i : i + ""; }
+function History_toPrimitive(t, r) { if ("object" != History_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != History_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
-function History_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function History_createClass(Constructor, protoProps, staticProps) { if (protoProps) History_defineProperties(Constructor.prototype, protoProps); if (staticProps) History_defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
-var History_History = /*#__PURE__*/function () {
+var History = /*#__PURE__*/function () {
   function History(context) {
     History_classCallCheck(this, History);
-
     this.stack = [];
     this.stackOffset = -1;
     this.context = context;
     this.$editable = context.layoutInfo.editable;
     this.editable = this.$editable[0];
   }
-
-  History_createClass(History, [{
+  return History_createClass(History, [{
     key: "makeSnapshot",
     value: function makeSnapshot() {
       var rng = range.create(this.editable);
@@ -3683,66 +3253,71 @@ var History_History = /*#__PURE__*/function () {
       if (snapshot.contents !== null) {
         this.$editable.html(snapshot.contents);
       }
-
       if (snapshot.bookmark !== null) {
         range.createFromBookmark(this.editable, snapshot.bookmark).select();
       }
     }
+
     /**
     * @method rewind
     * Rewinds the history stack back to the first snapshot taken.
     * Leaves the stack intact, so that "Redo" can still be used.
     */
-
   }, {
     key: "rewind",
     value: function rewind() {
       // Create snap shot if not yet recorded
       if (this.$editable.html() !== this.stack[this.stackOffset].contents) {
         this.recordUndo();
-      } // Return to the first available snapshot.
+      }
 
+      // Return to the first available snapshot.
+      this.stackOffset = 0;
 
-      this.stackOffset = 0; // Apply that snapshot.
-
+      // Apply that snapshot.
       this.applySnapshot(this.stack[this.stackOffset]);
     }
+
     /**
     *  @method commit
     *  Resets history stack, but keeps current editor's content.
     */
-
   }, {
     key: "commit",
     value: function commit() {
       // Clear the stack.
-      this.stack = []; // Restore stackOffset to its original value.
+      this.stack = [];
 
-      this.stackOffset = -1; // Record our first snapshot (of nothing).
+      // Restore stackOffset to its original value.
+      this.stackOffset = -1;
 
+      // Record our first snapshot (of nothing).
       this.recordUndo();
     }
+
     /**
     * @method reset
     * Resets the history stack completely; reverting to an empty editor.
     */
-
   }, {
     key: "reset",
     value: function reset() {
       // Clear the stack.
-      this.stack = []; // Restore stackOffset to its original value.
+      this.stack = [];
 
-      this.stackOffset = -1; // Clear the editable area.
+      // Restore stackOffset to its original value.
+      this.stackOffset = -1;
 
-      this.$editable.html(''); // Record our first snapshot (of nothing).
+      // Clear the editable area.
+      this.$editable.html('');
 
+      // Record our first snapshot (of nothing).
       this.recordUndo();
     }
+
     /**
      * undo
      */
-
   }, {
     key: "undo",
     value: function undo() {
@@ -3750,16 +3325,15 @@ var History_History = /*#__PURE__*/function () {
       if (this.$editable.html() !== this.stack[this.stackOffset].contents) {
         this.recordUndo();
       }
-
       if (this.stackOffset > 0) {
         this.stackOffset--;
         this.applySnapshot(this.stack[this.stackOffset]);
       }
     }
+
     /**
      * redo
      */
-
   }, {
     key: "redo",
     value: function redo() {
@@ -3768,54 +3342,50 @@ var History_History = /*#__PURE__*/function () {
         this.applySnapshot(this.stack[this.stackOffset]);
       }
     }
+
     /**
      * recorded undo
      */
-
   }, {
     key: "recordUndo",
     value: function recordUndo() {
-      this.stackOffset++; // Wash out stack after stackOffset
+      this.stackOffset++;
 
+      // Wash out stack after stackOffset
       if (this.stack.length > this.stackOffset) {
         this.stack = this.stack.slice(0, this.stackOffset);
-      } // Create new snapshot and push it to the end
+      }
 
+      // Create new snapshot and push it to the end
+      this.stack.push(this.makeSnapshot());
 
-      this.stack.push(this.makeSnapshot()); // If the stack size reachs to the limit, then slice it
-
+      // If the stack size reachs to the limit, then slice it
       if (this.stack.length > this.context.options.historyLimit) {
         this.stack.shift();
         this.stackOffset -= 1;
       }
     }
   }]);
-
-  return History;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/editing/Style.js
-function Style_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Style_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Style_createClass(Constructor, protoProps, staticProps) { if (protoProps) Style_defineProperties(Constructor.prototype, protoProps); if (staticProps) Style_defineProperties(Constructor, staticProps); return Constructor; }
-
-
+;// CONCATENATED MODULE: ./src/js/editing/Style.js
+function Style_typeof(o) { "@babel/helpers - typeof"; return Style_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Style_typeof(o); }
+function Style_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Style_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Style_toPropertyKey(o.key), o); } }
+function Style_createClass(e, r, t) { return r && Style_defineProperties(e.prototype, r), t && Style_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Style_toPropertyKey(t) { var i = Style_toPrimitive(t, "string"); return "symbol" == Style_typeof(i) ? i : i + ""; }
+function Style_toPrimitive(t, r) { if ("object" != Style_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Style_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
 
-
-var Style_Style = /*#__PURE__*/function () {
+var Style = /*#__PURE__*/function () {
   function Style() {
     Style_classCallCheck(this, Style);
   }
-
-  Style_createClass(Style, [{
+  return Style_createClass(Style, [{
     key: "jQueryCSS",
-
+    value:
     /**
      * @method jQueryCSS
      *
@@ -3829,24 +3399,20 @@ var Style_Style = /*#__PURE__*/function () {
      * @param  {Array} propertyNames - An array of one or more CSS properties.
      * @return {Object}
      */
-    value: function jQueryCSS($obj, propertyNames) {
-      if (env.jqueryVersion < 1.9) {
-        var result = {};
-        external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(propertyNames, function (idx, propertyName) {
-          result[propertyName] = $obj.css(propertyName);
-        });
-        return result;
-      }
-
-      return $obj.css(propertyNames);
+    function jQueryCSS($obj, propertyNames) {
+      var result = {};
+      external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(propertyNames, function (idx, propertyName) {
+        result[propertyName] = $obj.css(propertyName);
+      });
+      return result;
     }
+
     /**
      * returns style object from node
      *
      * @param {jQuery} $node
      * @return {Object}
      */
-
   }, {
     key: "fromNode",
     value: function fromNode($node) {
@@ -3857,22 +3423,23 @@ var Style_Style = /*#__PURE__*/function () {
       styleInfo['font-size-unit'] = fontSize.match(/[a-z%]+$/);
       return styleInfo;
     }
+
     /**
      * paragraph level style
      *
      * @param {WrappedRange} rng
      * @param {Object} styleInfo
      */
-
   }, {
     key: "stylePara",
     value: function stylePara(rng, styleInfo) {
-      external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(rng.nodes(dom.isPara, {
+      external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(rng.nodes(dom.isPara, {
         includeAncestor: true
       }), function (idx, para) {
-        external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(para).css(styleInfo);
+        external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(para).css(styleInfo);
       });
     }
+
     /**
      * insert and returns styleNodes on range.
      *
@@ -3883,7 +3450,6 @@ var Style_Style = /*#__PURE__*/function () {
      * @param {Boolean} [options.onlyPartialContains] - default: `false`
      * @return {Node[]}
      */
-
   }, {
     key: "styleNodes",
     value: function styleNodes(rng, options) {
@@ -3891,32 +3457,28 @@ var Style_Style = /*#__PURE__*/function () {
       var nodeName = options && options.nodeName || 'SPAN';
       var expandClosestSibling = !!(options && options.expandClosestSibling);
       var onlyPartialContains = !!(options && options.onlyPartialContains);
-
       if (rng.isCollapsed()) {
         return [rng.insertNode(dom.create(nodeName))];
       }
-
       var pred = dom.makePredByNodeName(nodeName);
       var nodes = rng.nodes(dom.isText, {
         fullyContains: true
       }).map(function (text) {
         return dom.singleChildAncestor(text, pred) || dom.wrap(text, nodeName);
       });
-
       if (expandClosestSibling) {
         if (onlyPartialContains) {
-          var nodesInRange = rng.nodes(); // compose with partial contains predication
-
+          var nodesInRange = rng.nodes();
+          // compose with partial contains predication
           pred = func.and(pred, function (node) {
             return lists.contains(nodesInRange, node);
           });
         }
-
         return nodes.map(function (node) {
           var siblings = dom.withClosestSiblings(node, pred);
           var head = lists.head(siblings);
           var tails = lists.tail(siblings);
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(tails, function (idx, elem) {
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(tails, function (idx, elem) {
             dom.appendChildNodes(head, elem.childNodes);
             dom.remove(elem);
           });
@@ -3926,22 +3488,23 @@ var Style_Style = /*#__PURE__*/function () {
         return nodes;
       }
     }
+
     /**
      * get current style on cursor
      *
      * @param {WrappedRange} rng
      * @return {Object} - object contains style properties.
      */
-
   }, {
     key: "current",
     value: function current(rng) {
-      var $cont = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(!dom.isElement(rng.sc) ? rng.sc.parentNode : rng.sc);
-      var styleInfo = this.fromNode($cont); // document.queryCommandState for toggle state
-      // [workaround] prevent Firefox nsresult: "0x80004005 (NS_ERROR_FAILURE)"
+      var $cont = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(!dom.isElement(rng.sc) ? rng.sc.parentNode : rng.sc);
+      var styleInfo = this.fromNode($cont);
 
+      // document.queryCommandState for toggle state
+      // [workaround] prevent Firefox nsresult: "0x80004005 (NS_ERROR_FAILURE)"
       try {
-        styleInfo = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.extend(styleInfo, {
+        styleInfo = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().extend(styleInfo, {
           'font-bold': document.queryCommandState('bold') ? 'bold' : 'normal',
           'font-italic': document.queryCommandState('italic') ? 'italic' : 'normal',
           'font-underline': document.queryCommandState('underline') ? 'underline' : 'normal',
@@ -3950,10 +3513,11 @@ var Style_Style = /*#__PURE__*/function () {
           'font-strikethrough': document.queryCommandState('strikethrough') ? 'strikethrough' : 'normal',
           'font-family': document.queryCommandValue('fontname') || styleInfo['font-family']
         });
-      } catch (e) {} // eslint-disable-next-line
+      } catch (e) {
+        // eslint-disable-next-line
+      }
+
       // list-style-type to list-style(unordered, ordered)
-
-
       if (!rng.isOnList()) {
         styleInfo['list-style'] = 'none';
       } else {
@@ -3961,90 +3525,78 @@ var Style_Style = /*#__PURE__*/function () {
         var isUnordered = orderedTypes.indexOf(styleInfo['list-style-type']) > -1;
         styleInfo['list-style'] = isUnordered ? 'unordered' : 'ordered';
       }
-
       var para = dom.ancestor(rng.sc, dom.isPara);
-
       if (para && para.style['line-height']) {
         styleInfo['line-height'] = para.style.lineHeight;
       } else {
         var lineHeight = parseInt(styleInfo['line-height'], 10) / parseInt(styleInfo['font-size'], 10);
         styleInfo['line-height'] = lineHeight.toFixed(1);
       }
-
       styleInfo.anchor = rng.isOnAnchor() && dom.ancestor(rng.sc, dom.isAnchor);
       styleInfo.ancestors = dom.listAncestor(rng.sc, dom.isEditable);
       styleInfo.range = rng;
       return styleInfo;
     }
   }]);
-
-  return Style;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/editing/Bullet.js
-function Bullet_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Bullet_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Bullet_createClass(Constructor, protoProps, staticProps) { if (protoProps) Bullet_defineProperties(Constructor.prototype, protoProps); if (staticProps) Bullet_defineProperties(Constructor, staticProps); return Constructor; }
-
-
+;// CONCATENATED MODULE: ./src/js/editing/Bullet.js
+function Bullet_typeof(o) { "@babel/helpers - typeof"; return Bullet_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Bullet_typeof(o); }
+function Bullet_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Bullet_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Bullet_toPropertyKey(o.key), o); } }
+function Bullet_createClass(e, r, t) { return r && Bullet_defineProperties(e.prototype, r), t && Bullet_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Bullet_toPropertyKey(t) { var i = Bullet_toPrimitive(t, "string"); return "symbol" == Bullet_typeof(i) ? i : i + ""; }
+function Bullet_toPrimitive(t, r) { if ("object" != Bullet_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Bullet_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
 
 
-var Bullet_Bullet = /*#__PURE__*/function () {
+var Bullet = /*#__PURE__*/function () {
   function Bullet() {
     Bullet_classCallCheck(this, Bullet);
   }
-
-  Bullet_createClass(Bullet, [{
+  return Bullet_createClass(Bullet, [{
     key: "insertOrderedList",
-
+    value:
     /**
      * toggle ordered list
      */
-    value: function insertOrderedList(editable) {
+    function insertOrderedList(editable) {
       this.toggleList('OL', editable);
     }
+
     /**
      * toggle unordered list
      */
-
   }, {
     key: "insertUnorderedList",
     value: function insertUnorderedList(editable) {
       this.toggleList('UL', editable);
     }
+
     /**
      * indent
      */
-
   }, {
     key: "indent",
     value: function indent(editable) {
       var _this = this;
-
       var rng = range.create(editable).wrapBodyInlineWithPara();
       var paras = rng.nodes(dom.isPara, {
         includeAncestor: true
       });
       var clustereds = lists.clusterBy(paras, func.peq2('parentNode'));
-      external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(clustereds, function (idx, paras) {
+      external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(clustereds, function (idx, paras) {
         var head = lists.head(paras);
-
         if (dom.isLi(head)) {
           var previousList = _this.findList(head.previousSibling);
-
           if (previousList) {
             paras.map(function (para) {
               return previousList.appendChild(para);
             });
           } else {
             _this.wrapList(paras, head.parentNode.nodeName);
-
             paras.map(function (para) {
               return para.parentNode;
             }).map(function (para) {
@@ -4052,8 +3604,8 @@ var Bullet_Bullet = /*#__PURE__*/function () {
             });
           }
         } else {
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(paras, function (idx, para) {
-            external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(para).css('marginLeft', function (idx, val) {
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(paras, function (idx, para) {
+            external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(para).css('marginLeft', function (idx, val) {
               return (parseInt(val, 10) || 0) + 25;
             });
           });
@@ -4061,28 +3613,26 @@ var Bullet_Bullet = /*#__PURE__*/function () {
       });
       rng.select();
     }
+
     /**
      * outdent
      */
-
   }, {
     key: "outdent",
     value: function outdent(editable) {
       var _this2 = this;
-
       var rng = range.create(editable).wrapBodyInlineWithPara();
       var paras = rng.nodes(dom.isPara, {
         includeAncestor: true
       });
       var clustereds = lists.clusterBy(paras, func.peq2('parentNode'));
-      external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(clustereds, function (idx, paras) {
+      external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(clustereds, function (idx, paras) {
         var head = lists.head(paras);
-
         if (dom.isLi(head)) {
           _this2.releaseList([paras]);
         } else {
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(paras, function (idx, para) {
-            external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(para).css('marginLeft', function (idx, val) {
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(paras, function (idx, para) {
+            external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(para).css('marginLeft', function (idx, val) {
               val = parseInt(val, 10) || 0;
               return val > 25 ? val - 25 : '';
             });
@@ -4091,54 +3641,53 @@ var Bullet_Bullet = /*#__PURE__*/function () {
       });
       rng.select();
     }
+
     /**
      * toggle list
      *
      * @param {String} listName - OL or UL
      */
-
   }, {
     key: "toggleList",
     value: function toggleList(listName, editable) {
       var _this3 = this;
-
       var rng = range.create(editable).wrapBodyInlineWithPara();
       var paras = rng.nodes(dom.isPara, {
         includeAncestor: true
       });
       var bookmark = rng.paraBookmark(paras);
-      var clustereds = lists.clusterBy(paras, func.peq2('parentNode')); // paragraph to list
+      var clustereds = lists.clusterBy(paras, func.peq2('parentNode'));
 
+      // paragraph to list
       if (lists.find(paras, dom.isPurePara)) {
         var wrappedParas = [];
-        external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(clustereds, function (idx, paras) {
+        external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(clustereds, function (idx, paras) {
           wrappedParas = wrappedParas.concat(_this3.wrapList(paras, listName));
         });
-        paras = wrappedParas; // list to paragraph or change list style
+        paras = wrappedParas;
+        // list to paragraph or change list style
       } else {
         var diffLists = rng.nodes(dom.isList, {
           includeAncestor: true
         }).filter(function (listNode) {
-          return !external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.nodeName(listNode, listName);
+          return !external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().nodeName(listNode, listName);
         });
-
         if (diffLists.length) {
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(diffLists, function (idx, listNode) {
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(diffLists, function (idx, listNode) {
             dom.replace(listNode, listName);
           });
         } else {
           paras = this.releaseList(clustereds, true);
         }
       }
-
       range.createFromParaBookmark(bookmark, paras).select();
     }
+
     /**
      * @param {Node[]} paras
      * @param {String} listName
      * @return {Node[]}
      */
-
   }, {
     key: "wrapList",
     value: function wrapList(paras, listName) {
@@ -4146,21 +3695,22 @@ var Bullet_Bullet = /*#__PURE__*/function () {
       var last = lists.last(paras);
       var prevList = dom.isList(head.previousSibling) && head.previousSibling;
       var nextList = dom.isList(last.nextSibling) && last.nextSibling;
-      var listNode = prevList || dom.insertAfter(dom.create(listName || 'UL'), last); // P to LI
+      var listNode = prevList || dom.insertAfter(dom.create(listName || 'UL'), last);
 
+      // P to LI
       paras = paras.map(function (para) {
         return dom.isPurePara(para) ? dom.replace(para, 'LI') : para;
-      }); // append to list(<ul>, <ol>)
+      });
 
-      dom.appendChildNodes(listNode, paras);
-
+      // append to list(<ul>, <ol>)
+      dom.appendChildNodes(listNode, paras, true);
       if (nextList) {
-        dom.appendChildNodes(listNode, lists.from(nextList.childNodes));
+        dom.appendChildNodes(listNode, lists.from(nextList.childNodes), true);
         dom.remove(nextList);
       }
-
       return paras;
     }
+
     /**
      * @method releaseList
      *
@@ -4168,40 +3718,32 @@ var Bullet_Bullet = /*#__PURE__*/function () {
      * @param {Boolean} isEscapseToBody
      * @return {Node[]}
      */
-
   }, {
     key: "releaseList",
     value: function releaseList(clustereds, isEscapseToBody) {
       var _this4 = this;
-
       var releasedParas = [];
-      external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(clustereds, function (idx, paras) {
+      external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(clustereds, function (idx, paras) {
         var head = lists.head(paras);
         var last = lists.last(paras);
         var headList = isEscapseToBody ? dom.lastAncestor(head, dom.isList) : head.parentNode;
         var parentItem = headList.parentNode;
-
         if (headList.parentNode.nodeName === 'LI') {
           paras.map(function (para) {
             var newList = _this4.findNextSiblings(para);
-
             if (parentItem.nextSibling) {
               parentItem.parentNode.insertBefore(para, parentItem.nextSibling);
             } else {
               parentItem.parentNode.appendChild(para);
             }
-
             if (newList.length) {
               _this4.wrapList(newList, headList.nodeName);
-
               para.appendChild(newList[0].parentNode);
             }
           });
-
           if (headList.children.length === 0) {
             parentItem.removeChild(headList);
           }
-
           if (parentItem.childNodes.length === 0) {
             parentItem.parentNode.removeChild(parentItem);
           }
@@ -4218,33 +3760,34 @@ var Bullet_Bullet = /*#__PURE__*/function () {
           }, {
             isSkipPaddingBlankHTML: true
           });
-          paras = isEscapseToBody ? dom.listDescendant(middleList, dom.isLi) : lists.from(middleList.childNodes).filter(dom.isLi); // LI to P
+          paras = isEscapseToBody ? dom.listDescendant(middleList, dom.isLi) : lists.from(middleList.childNodes).filter(dom.isLi);
 
+          // LI to P
           if (isEscapseToBody || !dom.isList(headList.parentNode)) {
             paras = paras.map(function (para) {
               return dom.replace(para, 'P');
             });
           }
-
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(lists.from(paras).reverse(), function (idx, para) {
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(lists.from(paras).reverse(), function (idx, para) {
             dom.insertAfter(para, headList);
-          }); // remove empty lists
+          });
 
+          // remove empty lists
           var rootLists = lists.compact([headList, middleList, lastList]);
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(rootLists, function (idx, rootList) {
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(rootLists, function (idx, rootList) {
             var listNodes = [rootList].concat(dom.listDescendant(rootList, dom.isList));
-            external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(listNodes.reverse(), function (idx, listNode) {
+            external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(listNodes.reverse(), function (idx, listNode) {
               if (!dom.nodeLength(listNode)) {
                 dom.remove(listNode, true);
               }
             });
           });
         }
-
         releasedParas = releasedParas.concat(paras);
       });
       return releasedParas;
     }
+
     /**
      * @method appendToPrevious
      *
@@ -4254,12 +3797,12 @@ var Bullet_Bullet = /*#__PURE__*/function () {
      * @param {HTMLNode} ListItem
      * @return {HTMLNode}
      */
-
   }, {
     key: "appendToPrevious",
     value: function appendToPrevious(node) {
       return node.previousSibling ? dom.appendChildNodes(node.previousSibling, [node]) : this.wrapList([node], 'LI');
     }
+
     /**
      * @method findList
      *
@@ -4268,7 +3811,6 @@ var Bullet_Bullet = /*#__PURE__*/function () {
      * @param {HTMLNode} ListItem
      * @return {Array[]}
      */
-
   }, {
     key: "findList",
     value: function findList(node) {
@@ -4276,6 +3818,7 @@ var Bullet_Bullet = /*#__PURE__*/function () {
         return ['OL', 'UL'].indexOf(child.nodeName) > -1;
       }) : null;
     }
+
     /**
      * @method findNextSiblings
      *
@@ -4284,31 +3827,26 @@ var Bullet_Bullet = /*#__PURE__*/function () {
      * @param {HTMLNode} ListItem
      * @return {HTMLNode}
      */
-
   }, {
     key: "findNextSiblings",
     value: function findNextSiblings(node) {
       var siblings = [];
-
       while (node.nextSibling) {
         siblings.push(node.nextSibling);
         node = node.nextSibling;
       }
-
       return siblings;
     }
   }]);
-
-  return Bullet;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/editing/Typing.js
-function Typing_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Typing_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Typing_createClass(Constructor, protoProps, staticProps) { if (protoProps) Typing_defineProperties(Constructor.prototype, protoProps); if (staticProps) Typing_defineProperties(Constructor, staticProps); return Constructor; }
+;// CONCATENATED MODULE: ./src/js/editing/Typing.js
+function Typing_typeof(o) { "@babel/helpers - typeof"; return Typing_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Typing_typeof(o); }
+function Typing_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Typing_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Typing_toPropertyKey(o.key), o); } }
+function Typing_createClass(e, r, t) { return r && Typing_defineProperties(e.prototype, r), t && Typing_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Typing_toPropertyKey(t) { var i = Typing_toPrimitive(t, "string"); return "symbol" == Typing_typeof(i) ? i : i + ""; }
+function Typing_toPrimitive(t, r) { if ("object" != Typing_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Typing_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
@@ -4320,24 +3858,21 @@ function Typing_createClass(Constructor, protoProps, staticProps) { if (protoPro
  * Typing
  *
  */
-
-var Typing_Typing = /*#__PURE__*/function () {
+var Typing = /*#__PURE__*/function () {
   function Typing(context) {
     Typing_classCallCheck(this, Typing);
-
     // a Bullet instance to toggle lists off
-    this.bullet = new Bullet_Bullet();
+    this.bullet = new Bullet();
     this.options = context.options;
   }
+
   /**
    * insert tab
    *
    * @param {WrappedRange} rng
    * @param {Number} tabsize
    */
-
-
-  Typing_createClass(Typing, [{
+  return Typing_createClass(Typing, [{
     key: "insertTab",
     value: function insertTab(rng, tabsize) {
       var tab = dom.createText(new Array(tabsize + 1).join(dom.NBSP_CHAR));
@@ -4346,6 +3881,7 @@ var Typing_Typing = /*#__PURE__*/function () {
       rng = range.create(tab, tabsize);
       rng.select();
     }
+
     /**
      * insert paragraph
      *
@@ -4357,19 +3893,21 @@ var Typing_Typing = /*#__PURE__*/function () {
      *   1 - Break the first blockquote in the ancestors list
      *   2 - Break all blockquotes, so that the new paragraph is not quoted (this is the default)
      */
-
   }, {
     key: "insertParagraph",
     value: function insertParagraph(editable, rng) {
-      rng = rng || range.create(editable); // deleteContents on range.
+      rng = rng || range.create(editable);
 
-      rng = rng.deleteContents(); // Wrap range if it needs to be wrapped by paragraph
+      // deleteContents on range.
+      rng = rng.deleteContents();
 
-      rng = rng.wrapBodyInlineWithPara(); // finding paragraph
+      // Wrap range if it needs to be wrapped by paragraph
+      rng = rng.wrapBodyInlineWithPara();
 
+      // finding paragraph
       var splitRoot = dom.ancestor(rng.sc, dom.isPara);
-      var nextPara; // on paragraph: split paragraph
-
+      var nextPara;
+      // on paragraph: split paragraph
       if (splitRoot) {
         // if it is an empty line with li
         if (dom.isLi(splitRoot) && (dom.isEmpty(splitRoot) || dom.deepestChildIsEmpty(splitRoot))) {
@@ -4378,71 +3916,65 @@ var Typing_Typing = /*#__PURE__*/function () {
           return;
         } else {
           var blockquote = null;
-
           if (this.options.blockquoteBreakingLevel === 1) {
             blockquote = dom.ancestor(splitRoot, dom.isBlockquote);
           } else if (this.options.blockquoteBreakingLevel === 2) {
             blockquote = dom.lastAncestor(splitRoot, dom.isBlockquote);
           }
-
           if (blockquote) {
             // We're inside a blockquote and options ask us to break it
-            nextPara = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(dom.emptyPara)[0]; // If the split is right before a <br>, remove it so that there's no "empty line"
+            nextPara = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(dom.emptyPara)[0];
+            // If the split is right before a <br>, remove it so that there's no "empty line"
             // after the split in the new blockquote created
-
             if (dom.isRightEdgePoint(rng.getStartPoint()) && dom.isBR(rng.sc.nextSibling)) {
-              external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(rng.sc.nextSibling).remove();
+              external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(rng.sc.nextSibling).remove();
             }
-
             var split = dom.splitTree(blockquote, rng.getStartPoint(), {
               isDiscardEmptySplits: true
             });
-
             if (split) {
               split.parentNode.insertBefore(nextPara, split);
             } else {
               dom.insertAfter(nextPara, blockquote); // There's no split if we were at the end of the blockquote
             }
           } else {
-            nextPara = dom.splitTree(splitRoot, rng.getStartPoint()); // not a blockquote, just insert the paragraph
+            nextPara = dom.splitTree(splitRoot, rng.getStartPoint());
 
+            // not a blockquote, just insert the paragraph
             var emptyAnchors = dom.listDescendant(splitRoot, dom.isEmptyAnchor);
             emptyAnchors = emptyAnchors.concat(dom.listDescendant(nextPara, dom.isEmptyAnchor));
-            external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(emptyAnchors, function (idx, anchor) {
+            external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(emptyAnchors, function (idx, anchor) {
               dom.remove(anchor);
-            }); // replace empty heading, pre or custom-made styleTag with P tag
+            });
 
+            // replace empty heading, pre or custom-made styleTag with P tag
             if ((dom.isHeading(nextPara) || dom.isPre(nextPara) || dom.isCustomStyleTag(nextPara)) && dom.isEmpty(nextPara)) {
               nextPara = dom.replace(nextPara, 'p');
             }
           }
-        } // no paragraph: insert empty paragraph
-
+        }
+        // no paragraph: insert empty paragraph
       } else {
         var next = rng.sc.childNodes[rng.so];
-        nextPara = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(dom.emptyPara)[0];
-
+        nextPara = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(dom.emptyPara)[0];
         if (next) {
           rng.sc.insertBefore(nextPara, next);
         } else {
           rng.sc.appendChild(nextPara);
         }
       }
-
       range.create(nextPara, 0).normalize().select().scrollIntoView(editable);
     }
   }]);
-
-  return Typing;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/editing/Table.js
-function Table_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Table_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Table_createClass(Constructor, protoProps, staticProps) { if (protoProps) Table_defineProperties(Constructor.prototype, protoProps); if (staticProps) Table_defineProperties(Constructor, staticProps); return Constructor; }
+;// CONCATENATED MODULE: ./src/js/editing/Table.js
+function Table_typeof(o) { "@babel/helpers - typeof"; return Table_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Table_typeof(o); }
+function Table_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Table_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Table_toPropertyKey(o.key), o); } }
+function Table_createClass(e, r, t) { return r && Table_defineProperties(e.prototype, r), t && Table_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Table_toPropertyKey(t) { var i = Table_toPrimitive(t, "string"); return "symbol" == Table_typeof(i) ? i : i + ""; }
+function Table_toPrimitive(t, r) { if ("object" != Table_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Table_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
@@ -4455,36 +3987,34 @@ function Table_createClass(Constructor, protoProps, staticProps) { if (protoProp
  * @param {enum} action Action to be applied. Use enum: TableResultAction.requestAction
  * @param {object} domTable Dom element of table to make changes.
  */
-
 var TableResultAction = function TableResultAction(startPoint, where, action, domTable) {
   var _startPoint = {
     'colPos': 0,
     'rowPos': 0
   };
   var _virtualTable = [];
-  var _actionCellList = []; /// ///////////////////////////////////////////
+  var _actionCellList = [];
+
+  /// ///////////////////////////////////////////
   // Private functions
   /// ///////////////////////////////////////////
 
   /**
    * Set the startPoint of action.
    */
-
   function setStartPoint() {
     if (!startPoint || !startPoint.tagName || startPoint.tagName.toLowerCase() !== 'td' && startPoint.tagName.toLowerCase() !== 'th') {
       // Impossible to identify start Cell point
       return;
     }
-
     _startPoint.colPos = startPoint.cellIndex;
-
     if (!startPoint.parentElement || !startPoint.parentElement.tagName || startPoint.parentElement.tagName.toLowerCase() !== 'tr') {
       // Impossible to identify start Row point
       return;
     }
-
     _startPoint.rowPos = startPoint.parentElement.rowIndex;
   }
+
   /**
    * Define virtual table position info object.
    *
@@ -4494,8 +4024,6 @@ var TableResultAction = function TableResultAction(startPoint, where, action, do
    * @param {object} baseCell Cell affected by this position.
    * @param {bool} isSpan Inform if it is an span cell/row.
    */
-
-
   function setVirtualTablePosition(rowIndex, cellIndex, baseRow, baseCell, isRowSpan, isColSpan, isVirtualCell) {
     var objPosition = {
       'baseRow': baseRow,
@@ -4504,21 +4032,18 @@ var TableResultAction = function TableResultAction(startPoint, where, action, do
       'isColSpan': isColSpan,
       'isVirtual': isVirtualCell
     };
-
     if (!_virtualTable[rowIndex]) {
       _virtualTable[rowIndex] = [];
     }
-
     _virtualTable[rowIndex][cellIndex] = objPosition;
   }
+
   /**
    * Create action cell object.
    *
    * @param {object} virtualTableCellObj Object of specific position on virtual table.
    * @param {enum} resultAction Action to be applied in that item.
    */
-
-
   function getActionCell(virtualTableCellObj, resultAction, virtualRowPosition, virtualColPosition) {
     return {
       'baseCell': virtualTableCellObj.baseCell,
@@ -4529,61 +4054,54 @@ var TableResultAction = function TableResultAction(startPoint, where, action, do
       }
     };
   }
+
   /**
    * Recover free index of row to append Cell.
    *
    * @param {int} rowIndex Index of row to find free space.
    * @param {int} cellIndex Index of cell to find free space in table.
    */
-
-
   function recoverCellIndex(rowIndex, cellIndex) {
     if (!_virtualTable[rowIndex]) {
       return cellIndex;
     }
-
     if (!_virtualTable[rowIndex][cellIndex]) {
       return cellIndex;
     }
-
     var newCellIndex = cellIndex;
-
     while (_virtualTable[rowIndex][newCellIndex]) {
       newCellIndex++;
-
       if (!_virtualTable[rowIndex][newCellIndex]) {
         return newCellIndex;
       }
     }
   }
+
   /**
    * Recover info about row and cell and add information to virtual table.
    *
    * @param {object} row Row to recover information.
    * @param {object} cell Cell to recover information.
    */
-
-
   function addCellInfoToVirtual(row, cell) {
     var cellIndex = recoverCellIndex(row.rowIndex, cell.cellIndex);
     var cellHasColspan = cell.colSpan > 1;
     var cellHasRowspan = cell.rowSpan > 1;
     var isThisSelectedCell = row.rowIndex === _startPoint.rowPos && cell.cellIndex === _startPoint.colPos;
-    setVirtualTablePosition(row.rowIndex, cellIndex, row, cell, cellHasRowspan, cellHasColspan, false); // Add span rows to virtual Table.
+    setVirtualTablePosition(row.rowIndex, cellIndex, row, cell, cellHasRowspan, cellHasColspan, false);
 
+    // Add span rows to virtual Table.
     var rowspanNumber = cell.attributes.rowSpan ? parseInt(cell.attributes.rowSpan.value, 10) : 0;
-
     if (rowspanNumber > 1) {
       for (var rp = 1; rp < rowspanNumber; rp++) {
         var rowspanIndex = row.rowIndex + rp;
         adjustStartPoint(rowspanIndex, cellIndex, cell, isThisSelectedCell);
         setVirtualTablePosition(rowspanIndex, cellIndex, row, cell, true, cellHasColspan, true);
       }
-    } // Add span cols to virtual table.
+    }
 
-
+    // Add span cols to virtual table.
     var colspanNumber = cell.attributes.colSpan ? parseInt(cell.attributes.colSpan.value, 10) : 0;
-
     if (colspanNumber > 1) {
       for (var cp = 1; cp < colspanNumber; cp++) {
         var cellspanIndex = recoverCellIndex(row.rowIndex, cellIndex + cp);
@@ -4592,6 +4110,7 @@ var TableResultAction = function TableResultAction(startPoint, where, action, do
       }
     }
   }
+
   /**
    * Process validation and adjust of start point if needed
    *
@@ -4600,64 +4119,53 @@ var TableResultAction = function TableResultAction(startPoint, where, action, do
    * @param {object} cell
    * @param {bool} isSelectedCell
    */
-
-
   function adjustStartPoint(rowIndex, cellIndex, cell, isSelectedCell) {
     if (rowIndex === _startPoint.rowPos && _startPoint.colPos >= cell.cellIndex && cell.cellIndex <= cellIndex && !isSelectedCell) {
       _startPoint.colPos++;
     }
   }
+
   /**
    * Create virtual table of cells with all cells, including span cells.
    */
-
-
   function createVirtualTable() {
     var rows = domTable.rows;
-
     for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
       var cells = rows[rowIndex].cells;
-
       for (var cellIndex = 0; cellIndex < cells.length; cellIndex++) {
         addCellInfoToVirtual(rows[rowIndex], cells[cellIndex]);
       }
     }
   }
+
   /**
    * Get action to be applied on the cell.
    *
    * @param {object} cell virtual table cell to apply action
    */
-
-
   function getDeleteResultActionToCell(cell) {
     switch (where) {
       case TableResultAction.where.Column:
         if (cell.isColSpan) {
           return TableResultAction.resultAction.SubtractSpanCount;
         }
-
         break;
-
       case TableResultAction.where.Row:
         if (!cell.isVirtual && cell.isRowSpan) {
           return TableResultAction.resultAction.AddCell;
         } else if (cell.isRowSpan) {
           return TableResultAction.resultAction.SubtractSpanCount;
         }
-
         break;
     }
-
     return TableResultAction.resultAction.RemoveCell;
   }
+
   /**
    * Get action to be applied on the cell.
    *
    * @param {object} cell virtual table cell to apply action
    */
-
-
   function getAddResultActionToCell(cell) {
     switch (where) {
       case TableResultAction.where.Column:
@@ -4666,86 +4174,69 @@ var TableResultAction = function TableResultAction(startPoint, where, action, do
         } else if (cell.isRowSpan && cell.isVirtual) {
           return TableResultAction.resultAction.Ignore;
         }
-
         break;
-
       case TableResultAction.where.Row:
         if (cell.isRowSpan) {
           return TableResultAction.resultAction.SumSpanCount;
         } else if (cell.isColSpan && cell.isVirtual) {
           return TableResultAction.resultAction.Ignore;
         }
-
         break;
     }
-
     return TableResultAction.resultAction.AddCell;
   }
-
   function init() {
     setStartPoint();
     createVirtualTable();
-  } /// ///////////////////////////////////////////
+  }
+
+  /// ///////////////////////////////////////////
   // Public functions
   /// ///////////////////////////////////////////
 
   /**
    * Recover array os what to do in table.
    */
-
-
   this.getActionList = function () {
     var fixedRow = where === TableResultAction.where.Row ? _startPoint.rowPos : -1;
     var fixedCol = where === TableResultAction.where.Column ? _startPoint.colPos : -1;
     var actualPosition = 0;
     var canContinue = true;
-
     while (canContinue) {
       var rowPosition = fixedRow >= 0 ? fixedRow : actualPosition;
       var colPosition = fixedCol >= 0 ? fixedCol : actualPosition;
       var row = _virtualTable[rowPosition];
-
       if (!row) {
         canContinue = false;
         return _actionCellList;
       }
-
       var cell = row[colPosition];
-
       if (!cell) {
         canContinue = false;
         return _actionCellList;
-      } // Define action to be applied in this cell
+      }
 
-
+      // Define action to be applied in this cell
       var resultAction = TableResultAction.resultAction.Ignore;
-
       switch (action) {
         case TableResultAction.requestAction.Add:
           resultAction = getAddResultActionToCell(cell);
           break;
-
         case TableResultAction.requestAction.Delete:
           resultAction = getDeleteResultActionToCell(cell);
           break;
       }
-
       _actionCellList.push(getActionCell(cell, resultAction, rowPosition, colPosition));
-
       actualPosition++;
     }
-
     return _actionCellList;
   };
-
   init();
 };
 /**
 *
 * Where action occours enum.
 */
-
-
 TableResultAction.where = {
   'Row': 0,
   'Column': 1
@@ -4754,7 +4245,6 @@ TableResultAction.where = {
 *
 * Requested action to apply enum.
 */
-
 TableResultAction.requestAction = {
   'Add': 0,
   'Delete': 1
@@ -4763,7 +4253,6 @@ TableResultAction.requestAction = {
 *
 * Result action to be executed enum.
 */
-
 TableResultAction.resultAction = {
   'Ignore': 0,
   'SubtractSpanCount': 1,
@@ -4771,6 +4260,7 @@ TableResultAction.resultAction = {
   'AddCell': 3,
   'SumSpanCount': 4
 };
+
 /**
  *
  * @class editing.Table
@@ -4778,31 +4268,29 @@ TableResultAction.resultAction = {
  * Table
  *
  */
-
-var Table_Table = /*#__PURE__*/function () {
+var Table = /*#__PURE__*/function () {
   function Table() {
     Table_classCallCheck(this, Table);
   }
-
-  Table_createClass(Table, [{
+  return Table_createClass(Table, [{
     key: "tab",
-
+    value:
     /**
      * handle tab key
      *
      * @param {WrappedRange} rng
      * @param {Boolean} isShift
      */
-    value: function tab(rng, isShift) {
+    function tab(rng, isShift) {
       var cell = dom.ancestor(rng.commonAncestor(), dom.isCell);
       var table = dom.ancestor(cell, dom.isTable);
       var cells = dom.listDescendant(table, dom.isCell);
       var nextCell = lists[isShift ? 'prev' : 'next'](cells, cell);
-
       if (nextCell) {
         range.create(nextCell, 0).select();
       }
     }
+
     /**
      * Add a new row
      *
@@ -4810,39 +4298,33 @@ var Table_Table = /*#__PURE__*/function () {
      * @param {String} position (top/bottom)
      * @return {Node}
      */
-
   }, {
     key: "addRow",
     value: function addRow(rng, position) {
       var cell = dom.ancestor(rng.commonAncestor(), dom.isCell);
-      var currentTr = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(cell).closest('tr');
+      var currentTr = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(cell).closest('tr');
       var trAttributes = this.recoverAttributes(currentTr);
-      var html = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<tr' + trAttributes + '></tr>');
-      var vTable = new TableResultAction(cell, TableResultAction.where.Row, TableResultAction.requestAction.Add, external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(currentTr).closest('table')[0]);
+      var html = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<tr' + trAttributes + '></tr>');
+      var vTable = new TableResultAction(cell, TableResultAction.where.Row, TableResultAction.requestAction.Add, external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(currentTr).closest('table')[0]);
       var actions = vTable.getActionList();
-
       for (var idCell = 0; idCell < actions.length; idCell++) {
         var currentCell = actions[idCell];
         var tdAttributes = this.recoverAttributes(currentCell.baseCell);
-
         switch (currentCell.action) {
           case TableResultAction.resultAction.AddCell:
             html.append('<td' + tdAttributes + '>' + dom.blank + '</td>');
             break;
-
           case TableResultAction.resultAction.SumSpanCount:
             {
               if (position === 'top') {
                 var baseCellTr = currentCell.baseCell.parent;
                 var isTopFromRowSpan = (!baseCellTr ? 0 : currentCell.baseCell.closest('tr').rowIndex) <= currentTr[0].rowIndex;
-
                 if (isTopFromRowSpan) {
-                  var newTd = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<div></div>').append(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<td' + tdAttributes + '>' + dom.blank + '</td>').removeAttr('rowspan')).html();
+                  var newTd = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<div></div>').append(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<td' + tdAttributes + '>' + dom.blank + '</td>').removeAttr('rowspan')).html();
                   html.append(newTd);
                   break;
                 }
               }
-
               var rowspanNumber = parseInt(currentCell.baseCell.rowSpan, 10);
               rowspanNumber++;
               currentCell.baseCell.setAttribute('rowSpan', rowspanNumber);
@@ -4850,21 +4332,19 @@ var Table_Table = /*#__PURE__*/function () {
             break;
         }
       }
-
       if (position === 'top') {
         currentTr.before(html);
       } else {
         var cellHasRowspan = cell.rowSpan > 1;
-
         if (cellHasRowspan) {
           var lastTrIndex = currentTr[0].rowIndex + (cell.rowSpan - 2);
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(currentTr).parent().find('tr')[lastTrIndex]).after(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(html));
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(currentTr).parent().find('tr')[lastTrIndex]).after(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(html));
           return;
         }
-
         currentTr.after(html);
       }
     }
+
     /**
      * Add a new col
      *
@@ -4872,115 +4352,97 @@ var Table_Table = /*#__PURE__*/function () {
      * @param {String} position (left/right)
      * @return {Node}
      */
-
   }, {
     key: "addCol",
     value: function addCol(rng, position) {
       var cell = dom.ancestor(rng.commonAncestor(), dom.isCell);
-      var row = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(cell).closest('tr');
-      var rowsGroup = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(row).siblings();
+      var row = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(cell).closest('tr');
+      var rowsGroup = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(row).siblings();
       rowsGroup.push(row);
-      var vTable = new TableResultAction(cell, TableResultAction.where.Column, TableResultAction.requestAction.Add, external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(row).closest('table')[0]);
+      var vTable = new TableResultAction(cell, TableResultAction.where.Column, TableResultAction.requestAction.Add, external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(row).closest('table')[0]);
       var actions = vTable.getActionList();
-
       for (var actionIndex = 0; actionIndex < actions.length; actionIndex++) {
         var currentCell = actions[actionIndex];
         var tdAttributes = this.recoverAttributes(currentCell.baseCell);
-
         switch (currentCell.action) {
           case TableResultAction.resultAction.AddCell:
             if (position === 'right') {
-              external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(currentCell.baseCell).after('<td' + tdAttributes + '>' + dom.blank + '</td>');
+              external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(currentCell.baseCell).after('<td' + tdAttributes + '>' + dom.blank + '</td>');
             } else {
-              external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(currentCell.baseCell).before('<td' + tdAttributes + '>' + dom.blank + '</td>');
+              external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(currentCell.baseCell).before('<td' + tdAttributes + '>' + dom.blank + '</td>');
             }
-
             break;
-
           case TableResultAction.resultAction.SumSpanCount:
             if (position === 'right') {
               var colspanNumber = parseInt(currentCell.baseCell.colSpan, 10);
               colspanNumber++;
               currentCell.baseCell.setAttribute('colSpan', colspanNumber);
             } else {
-              external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(currentCell.baseCell).before('<td' + tdAttributes + '>' + dom.blank + '</td>');
+              external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(currentCell.baseCell).before('<td' + tdAttributes + '>' + dom.blank + '</td>');
             }
-
             break;
         }
       }
     }
+
     /*
     * Copy attributes from element.
     *
     * @param {object} Element to recover attributes.
     * @return {string} Copied string elements.
     */
-
   }, {
     key: "recoverAttributes",
     value: function recoverAttributes(el) {
       var resultStr = '';
-
       if (!el) {
         return resultStr;
       }
-
       var attrList = el.attributes || [];
-
       for (var i = 0; i < attrList.length; i++) {
         if (attrList[i].name.toLowerCase() === 'id') {
           continue;
         }
-
         if (attrList[i].specified) {
           resultStr += ' ' + attrList[i].name + '=\'' + attrList[i].value + '\'';
         }
       }
-
       return resultStr;
     }
+
     /**
      * Delete current row
      *
      * @param {WrappedRange} rng
      * @return {Node}
      */
-
   }, {
     key: "deleteRow",
     value: function deleteRow(rng) {
       var cell = dom.ancestor(rng.commonAncestor(), dom.isCell);
-      var row = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(cell).closest('tr');
-      var cellPos = row.children('td, th').index(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(cell));
+      var row = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(cell).closest('tr');
+      var cellPos = row.children('td, th').index(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(cell));
       var rowPos = row[0].rowIndex;
-      var vTable = new TableResultAction(cell, TableResultAction.where.Row, TableResultAction.requestAction.Delete, external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(row).closest('table')[0]);
+      var vTable = new TableResultAction(cell, TableResultAction.where.Row, TableResultAction.requestAction.Delete, external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(row).closest('table')[0]);
       var actions = vTable.getActionList();
-
       for (var actionIndex = 0; actionIndex < actions.length; actionIndex++) {
         if (!actions[actionIndex]) {
           continue;
         }
-
         var baseCell = actions[actionIndex].baseCell;
         var virtualPosition = actions[actionIndex].virtualTable;
         var hasRowspan = baseCell.rowSpan && baseCell.rowSpan > 1;
         var rowspanNumber = hasRowspan ? parseInt(baseCell.rowSpan, 10) : 0;
-
         switch (actions[actionIndex].action) {
           case TableResultAction.resultAction.Ignore:
             continue;
-
           case TableResultAction.resultAction.AddCell:
             {
               var nextRow = row.next('tr')[0];
-
               if (!nextRow) {
                 continue;
               }
-
               var cloneRow = row[0].cells[cellPos];
-
               if (hasRowspan) {
                 if (rowspanNumber > 2) {
                   rowspanNumber--;
@@ -4995,78 +4457,65 @@ var Table_Table = /*#__PURE__*/function () {
               }
             }
             continue;
-
           case TableResultAction.resultAction.SubtractSpanCount:
             if (hasRowspan) {
               if (rowspanNumber > 2) {
                 rowspanNumber--;
                 baseCell.setAttribute('rowSpan', rowspanNumber);
-
                 if (virtualPosition.rowIndex !== rowPos && baseCell.cellIndex === cellPos) {
                   baseCell.innerHTML = '';
                 }
               } else if (rowspanNumber === 2) {
                 baseCell.removeAttribute('rowSpan');
-
                 if (virtualPosition.rowIndex !== rowPos && baseCell.cellIndex === cellPos) {
                   baseCell.innerHTML = '';
                 }
               }
             }
-
             continue;
-
           case TableResultAction.resultAction.RemoveCell:
             // Do not need remove cell because row will be deleted.
             continue;
         }
       }
-
       row.remove();
     }
+
     /**
      * Delete current col
      *
      * @param {WrappedRange} rng
      * @return {Node}
      */
-
   }, {
     key: "deleteCol",
     value: function deleteCol(rng) {
       var cell = dom.ancestor(rng.commonAncestor(), dom.isCell);
-      var row = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(cell).closest('tr');
-      var cellPos = row.children('td, th').index(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(cell));
-      var vTable = new TableResultAction(cell, TableResultAction.where.Column, TableResultAction.requestAction.Delete, external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(row).closest('table')[0]);
+      var row = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(cell).closest('tr');
+      var cellPos = row.children('td, th').index(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(cell));
+      var vTable = new TableResultAction(cell, TableResultAction.where.Column, TableResultAction.requestAction.Delete, external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(row).closest('table')[0]);
       var actions = vTable.getActionList();
-
       for (var actionIndex = 0; actionIndex < actions.length; actionIndex++) {
         if (!actions[actionIndex]) {
           continue;
         }
-
         switch (actions[actionIndex].action) {
           case TableResultAction.resultAction.Ignore:
             continue;
-
           case TableResultAction.resultAction.SubtractSpanCount:
             {
               var baseCell = actions[actionIndex].baseCell;
               var hasColspan = baseCell.colSpan && baseCell.colSpan > 1;
-
               if (hasColspan) {
                 var colspanNumber = baseCell.colSpan ? parseInt(baseCell.colSpan, 10) : 0;
-
                 if (colspanNumber > 2) {
                   colspanNumber--;
                   baseCell.setAttribute('colSpan', colspanNumber);
-
                   if (baseCell.cellIndex === cellPos) {
                     baseCell.innerHTML = '';
                   }
                 } else if (colspanNumber === 2) {
                   baseCell.removeAttribute('colSpan');
-
                   if (baseCell.cellIndex === cellPos) {
                     baseCell.innerHTML = '';
                   }
@@ -5074,13 +4523,13 @@ var Table_Table = /*#__PURE__*/function () {
               }
             }
             continue;
-
           case TableResultAction.resultAction.RemoveCell:
             dom.remove(actions[actionIndex].baseCell, true);
             continue;
         }
       }
     }
+
     /**
      * create empty table element
      *
@@ -5088,60 +4537,50 @@ var Table_Table = /*#__PURE__*/function () {
      * @param {Number} colCount
      * @return {Node}
      */
-
   }, {
     key: "createTable",
     value: function createTable(colCount, rowCount, options) {
       var tds = [];
       var tdHTML;
-
       for (var idxCol = 0; idxCol < colCount; idxCol++) {
         tds.push('<td>' + dom.blank + '</td>');
       }
-
       tdHTML = tds.join('');
       var trs = [];
       var trHTML;
-
       for (var idxRow = 0; idxRow < rowCount; idxRow++) {
         trs.push('<tr>' + tdHTML + '</tr>');
       }
-
       trHTML = trs.join('');
-      var $table = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<table>' + trHTML + '</table>');
-
+      var $table = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<table>' + trHTML + '</table>');
       if (options && options.tableClassName) {
         $table.addClass(options.tableClassName);
       }
-
       return $table[0];
     }
+
     /**
      * Delete current table
      *
      * @param {WrappedRange} rng
      * @return {Node}
      */
-
   }, {
     key: "deleteTable",
     value: function deleteTable(rng) {
       var cell = dom.ancestor(rng.commonAncestor(), dom.isCell);
-      external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(cell).closest('table').remove();
+      external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(cell).closest('table').remove();
     }
   }]);
-
-  return Table;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/Editor.js
-function Editor_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Editor_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Editor_createClass(Constructor, protoProps, staticProps) { if (protoProps) Editor_defineProperties(Constructor.prototype, protoProps); if (staticProps) Editor_defineProperties(Constructor, staticProps); return Constructor; }
-
+;// CONCATENATED MODULE: ./src/js/module/Editor.js
+function Editor_typeof(o) { "@babel/helpers - typeof"; return Editor_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Editor_typeof(o); }
+function Editor_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Editor_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Editor_toPropertyKey(o.key), o); } }
+function Editor_createClass(e, r, t) { return r && Editor_defineProperties(e.prototype, r), t && Editor_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Editor_toPropertyKey(t) { var i = Editor_toPrimitive(t, "string"); return "symbol" == Editor_typeof(i) ? i : i + ""; }
+function Editor_toPrimitive(t, r) { if ("object" != Editor_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Editor_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
@@ -5156,16 +4595,17 @@ function Editor_createClass(Constructor, protoProps, staticProps) { if (protoPro
 
 
 var KEY_BOGUS = 'bogus';
+var MAILTO_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+var TEL_PATTERN = /^(\+?\d{1,3}[\s-]?)?(\d{1,4})[\s-]?(\d{1,4})[\s-]?(\d{1,4})$/;
+var URL_SCHEME_PATTERN = /^([A-Za-z][A-Za-z0-9+-.]*\:|#|\/)/;
+
 /**
  * @class Editor
  */
-
-var Editor_Editor = /*#__PURE__*/function () {
+var Editor = /*#__PURE__*/function () {
   function Editor(context) {
     var _this = this;
-
     Editor_classCallCheck(this, Editor);
-
     this.context = context;
     this.$note = context.layoutInfo.note;
     this.$editor = context.layoutInfo.editor;
@@ -5175,11 +4615,11 @@ var Editor_Editor = /*#__PURE__*/function () {
     this.editable = this.$editable[0];
     this.lastRange = null;
     this.snapshot = null;
-    this.style = new Style_Style();
-    this.table = new Table_Table();
-    this.typing = new Typing_Typing(context);
-    this.bullet = new Bullet_Bullet();
-    this.history = new History_History(context);
+    this.style = new Style();
+    this.table = new Table();
+    this.typing = new Typing(context);
+    this.bullet = new Bullet();
+    this.history = new History(context);
     this.context.memo('help.escape', this.lang.help.escape);
     this.context.memo('help.undo', this.lang.help.undo);
     this.context.memo('help.redo', this.lang.help.redo);
@@ -5192,48 +4632,39 @@ var Editor_Editor = /*#__PURE__*/function () {
     this.context.memo('help.outdent', this.lang.help.outdent);
     this.context.memo('help.formatPara', this.lang.help.formatPara);
     this.context.memo('help.insertHorizontalRule', this.lang.help.insertHorizontalRule);
-    this.context.memo('help.fontName', this.lang.help.fontName); // native commands(with execCommand), generate function for execCommand
+    this.context.memo('help.fontName', this.lang.help.fontName);
 
+    // native commands(with execCommand), generate function for execCommand
     var commands = ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull', 'formatBlock', 'removeFormat', 'backColor'];
-
     for (var idx = 0, len = commands.length; idx < len; idx++) {
       this[commands[idx]] = function (sCmd) {
         return function (value) {
           _this.beforeCommand();
-
           document.execCommand(sCmd, false, value);
-
           _this.afterCommand(true);
         };
       }(commands[idx]);
-
       this.context.memo('help.' + commands[idx], this.lang.help[commands[idx]]);
     }
-
     this.fontName = this.wrapCommand(function (value) {
       return _this.fontStyling('font-family', env.validFontName(value));
     });
     this.fontSize = this.wrapCommand(function (value) {
       var unit = _this.currentStyle()['font-size-unit'];
-
       return _this.fontStyling('font-size', value + unit);
     });
     this.fontSizeUnit = this.wrapCommand(function (value) {
       var size = _this.currentStyle()['font-size'];
-
       return _this.fontStyling('font-size', size + value);
     });
-
     for (var _idx = 1; _idx <= 6; _idx++) {
       this['formatH' + _idx] = function (idx) {
         return function () {
           _this.formatBlock('H' + idx);
         };
       }(_idx);
-
       this.context.memo('help.formatH' + _idx, this.lang.help['formatH' + _idx]);
     }
-
     this.insertParagraph = this.wrapCommand(function () {
       _this.typing.insertParagraph(_this.editable);
     });
@@ -5249,132 +4680,113 @@ var Editor_Editor = /*#__PURE__*/function () {
     this.outdent = this.wrapCommand(function () {
       _this.bullet.outdent(_this.editable);
     });
+
     /**
      * insertNode
      * insert node
      * @param {Node} node
      */
-
     this.insertNode = this.wrapCommand(function (node) {
-      if (_this.isLimited(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(node).text().length)) {
+      if (_this.isLimited(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(node).text().length)) {
         return;
       }
-
       var rng = _this.getLastRange();
-
       rng.insertNode(node);
-
       _this.setLastRange(range.createFromNodeAfter(node).select());
     });
+
     /**
      * insert text
      * @param {String} text
      */
-
     this.insertText = this.wrapCommand(function (text) {
       if (_this.isLimited(text.length)) {
         return;
       }
-
       var rng = _this.getLastRange();
-
       var textNode = rng.insertNode(dom.createText(text));
-
       _this.setLastRange(range.create(textNode, dom.nodeLength(textNode)).select());
     });
+
     /**
      * paste HTML
      * @param {String} markup
      */
-
     this.pasteHTML = this.wrapCommand(function (markup) {
       if (_this.isLimited(markup.length)) {
         return;
       }
-
       markup = _this.context.invoke('codeview.purify', markup);
-
       var contents = _this.getLastRange().pasteHTML(markup);
-
       _this.setLastRange(range.createFromNodeAfter(lists.last(contents)).select());
     });
+
     /**
      * formatBlock
      *
      * @param {String} tagName
      */
-
     this.formatBlock = this.wrapCommand(function (tagName, $target) {
       var onApplyCustomStyle = _this.options.callbacks.onApplyCustomStyle;
-
       if (onApplyCustomStyle) {
         onApplyCustomStyle.call(_this, $target, _this.context, _this.onFormatBlock);
       } else {
         _this.onFormatBlock(tagName, $target);
       }
     });
+
     /**
      * insert horizontal rule
      */
-
     this.insertHorizontalRule = this.wrapCommand(function () {
       var hrNode = _this.getLastRange().insertNode(dom.create('HR'));
-
       if (hrNode.nextSibling) {
         _this.setLastRange(range.create(hrNode.nextSibling, 0).normalize().select());
       }
     });
+
     /**
      * lineHeight
      * @param {String} value
      */
-
     this.lineHeight = this.wrapCommand(function (value) {
       _this.style.stylePara(_this.getLastRange(), {
         lineHeight: value
       });
     });
+
     /**
      * create link (command)
      *
      * @param {Object} linkInfo
      */
-
     this.createLink = this.wrapCommand(function (linkInfo) {
+      var rel = [];
       var linkUrl = linkInfo.url;
       var linkText = linkInfo.text;
       var isNewWindow = linkInfo.isNewWindow;
-      var checkProtocol = linkInfo.checkProtocol;
-
+      var addNoReferrer = _this.options.linkAddNoReferrer;
+      var addNoOpener = _this.options.linkAddNoOpener;
       var rng = linkInfo.range || _this.getLastRange();
-
       var additionalTextLength = linkText.length - rng.toString().length;
-
       if (additionalTextLength > 0 && _this.isLimited(additionalTextLength)) {
         return;
       }
+      var isTextChanged = rng.toString() !== linkText;
 
-      var isTextChanged = rng.toString() !== linkText; // handle spaced urls from input
-
+      // handle spaced urls from input
       if (typeof linkUrl === 'string') {
         linkUrl = linkUrl.trim();
       }
-
       if (_this.options.onCreateLink) {
         linkUrl = _this.options.onCreateLink(linkUrl);
-      } else if (checkProtocol) {
-        // if url doesn't have any protocol and not even a relative or a label, use http:// as default
-        linkUrl = /^([A-Za-z][A-Za-z0-9+-.]*\:|#|\/)/.test(linkUrl) ? linkUrl : _this.options.defaultProtocol + linkUrl;
+      } else {
+        linkUrl = _this.checkLinkUrl(linkUrl);
       }
-      
-      linkUrl = linkUrl.replace(this.options.codeviewFilterRegex, '');
-      linkText = linkText.replace(this.options.codeviewFilterRegex, '');
-
       var anchors = [];
-
       if (isTextChanged) {
         rng = rng.deleteContents();
-        var anchor = rng.insertNode(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<A>' + linkText + '</A>')[0]);
+        var anchor = rng.insertNode(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<A></A>').text(linkText)[0]);
         anchors.push(anchor);
       } else {
         anchors = _this.style.styleNodes(rng, {
@@ -5383,19 +4795,26 @@ var Editor_Editor = /*#__PURE__*/function () {
           onlyPartialContains: true
         });
       }
-
-      external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(anchors, function (idx, anchor) {
-        external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(anchor).attr('href', linkUrl);
-
+      external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(anchors, function (idx, anchor) {
+        external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(anchor).attr('href', linkUrl);
         if (isNewWindow) {
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(anchor).attr('target', '_blank');
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(anchor).attr('target', '_blank');
+          if (addNoReferrer) {
+            rel.push('noreferrer');
+          }
+          if (addNoOpener) {
+            rel.push('noopener');
+          }
+          if (rel.length) {
+            external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(anchor).attr('rel', rel.join(' '));
+          }
         } else {
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(anchor).removeAttr('target');
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(anchor).removeAttr('target');
         }
       });
-
       _this.setLastRange(_this.createRangeFromList(anchors).select());
     });
+
     /**
      * setting color
      *
@@ -5403,77 +4822,70 @@ var Editor_Editor = /*#__PURE__*/function () {
      * @param {String} sObjColor.foreColor foreground color
      * @param {String} sObjColor.backColor background color
      */
-
     this.color = this.wrapCommand(function (colorInfo) {
       var foreColor = colorInfo.foreColor;
       var backColor = colorInfo.backColor;
-
       if (foreColor) {
         document.execCommand('foreColor', false, foreColor);
       }
-
       if (backColor) {
         document.execCommand('backColor', false, backColor);
       }
     });
+
     /**
      * Set foreground color
      *
      * @param {String} colorCode foreground color code
      */
-
     this.foreColor = this.wrapCommand(function (colorInfo) {
       document.execCommand('foreColor', false, colorInfo);
     });
+
     /**
      * insert Table
      *
      * @param {String} dimension of table (ex : "5x5")
      */
-
     this.insertTable = this.wrapCommand(function (dim) {
       var dimension = dim.split('x');
-
       var rng = _this.getLastRange().deleteContents();
-
       rng.insertNode(_this.table.createTable(dimension[0], dimension[1], _this.options));
     });
+
     /**
      * remove media object and Figure Elements if media object is img with Figure.
      */
-
     this.removeMedia = this.wrapCommand(function () {
-      var $target = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(_this.restoreTarget()).parent();
-
+      var $target = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(_this.restoreTarget()).parent();
       if ($target.closest('figure').length) {
         $target.closest('figure').remove();
       } else {
-        $target = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(_this.restoreTarget()).detach();
+        $target = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(_this.restoreTarget()).detach();
       }
-
+      _this.setLastRange(range.createFromSelection($target).select());
       _this.context.triggerEvent('media.delete', $target, _this.$editable);
     });
+
     /**
      * float me
      *
      * @param {String} value
      */
-
     this.floatMe = this.wrapCommand(function (value) {
-      var $target = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(_this.restoreTarget());
+      var $target = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(_this.restoreTarget());
       $target.toggleClass('note-float-left', value === 'left');
       $target.toggleClass('note-float-right', value === 'right');
       $target.css('float', value === 'none' ? '' : value);
     });
+
     /**
      * resize overlay element
      * @param {String} value
      */
-
     this.resize = this.wrapCommand(function (value) {
-      var $target = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(_this.restoreTarget());
+      var $target = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(_this.restoreTarget());
       value = parseFloat(value);
-
       if (value === 0) {
         $target.css('width', '');
       } else {
@@ -5484,24 +4896,20 @@ var Editor_Editor = /*#__PURE__*/function () {
       }
     });
   }
-
-  Editor_createClass(Editor, [{
+  return Editor_createClass(Editor, [{
     key: "initialize",
     value: function initialize() {
       var _this2 = this;
-
       // bind custom events
       this.$editable.on('keydown', function (event) {
-        if (event.keyCode === core_key.code.ENTER) {
+        if (event.keyCode === key.code.ENTER) {
           _this2.context.triggerEvent('enter', event);
         }
+        _this2.context.triggerEvent('keydown', event);
 
-        _this2.context.triggerEvent('keydown', event); // keep a snapshot to limit text on input event
-
-
+        // keep a snapshot to limit text on input event
         _this2.snapshot = _this2.history.makeSnapshot();
         _this2.hasKeyShortCut = false;
-
         if (!event.isDefaultPrevented()) {
           if (_this2.options.shortcuts) {
             _this2.hasKeyShortCut = _this2.handleKeyMap(event);
@@ -5509,18 +4917,15 @@ var Editor_Editor = /*#__PURE__*/function () {
             _this2.preventDefaultEditableShortCuts(event);
           }
         }
-
         if (_this2.isLimited(1, event)) {
           var lastRange = _this2.getLastRange();
-
           if (lastRange.eo - lastRange.so === 0) {
             return false;
           }
         }
+        _this2.setLastRange();
 
-        _this2.setLastRange(); // record undo in the key event except keyMap.
-
-
+        // record undo in the key event except keyMap.
         if (_this2.options.recordEveryKeystroke) {
           if (_this2.hasKeyShortCut === false) {
             _this2.history.recordUndo();
@@ -5528,11 +4933,9 @@ var Editor_Editor = /*#__PURE__*/function () {
         }
       }).on('keyup', function (event) {
         _this2.setLastRange();
-
         _this2.context.triggerEvent('keyup', event);
       }).on('focus', function (event) {
         _this2.setLastRange();
-
         _this2.context.triggerEvent('focus', event);
       }).on('blur', function (event) {
         _this2.context.triggerEvent('blur', event);
@@ -5540,16 +4943,15 @@ var Editor_Editor = /*#__PURE__*/function () {
         _this2.context.triggerEvent('mousedown', event);
       }).on('mouseup', function (event) {
         _this2.setLastRange();
-
         _this2.history.recordUndo();
-
         _this2.context.triggerEvent('mouseup', event);
       }).on('scroll', function (event) {
         _this2.context.triggerEvent('scroll', event);
       }).on('paste', function (event) {
         _this2.setLastRange();
-
         _this2.context.triggerEvent('paste', event);
+      }).on('copy', function (event) {
+        _this2.context.triggerEvent('copy', event);
       }).on('input', function () {
         // To limit composition characters (e.g. Korean)
         if (_this2.isLimited(0) && _this2.snapshot) {
@@ -5558,12 +4960,11 @@ var Editor_Editor = /*#__PURE__*/function () {
       });
       this.$editable.attr('spellcheck', this.options.spellCheck);
       this.$editable.attr('autocorrect', this.options.spellCheck);
-
       if (this.options.disableGrammar) {
         this.$editable.attr('data-gramm', false);
-      } // init content before set event
+      }
 
-
+      // init content before set event
       this.$editable.html(dom.html(this.$note) || dom.emptyPara);
       this.$editable.on(env.inputEventName, func.debounce(function () {
         _this2.context.triggerEvent('change', _this2.$editable.html(), _this2.$editable);
@@ -5573,12 +4974,10 @@ var Editor_Editor = /*#__PURE__*/function () {
       }).on('focusout', function (event) {
         _this2.context.triggerEvent('focusout', event);
       });
-
       if (this.options.airMode) {
         if (this.options.overrideContextMenu) {
           this.$editor.on('contextmenu', function (event) {
             _this2.context.triggerEvent('contextmenu', event);
-
             return false;
           });
         }
@@ -5586,20 +4985,16 @@ var Editor_Editor = /*#__PURE__*/function () {
         if (this.options.width) {
           this.$editor.outerWidth(this.options.width);
         }
-
         if (this.options.height) {
           this.$editable.outerHeight(this.options.height);
         }
-
         if (this.options.maxHeight) {
           this.$editable.css('max-height', this.options.maxHeight);
         }
-
         if (this.options.minHeight) {
           this.$editable.css('min-height', this.options.minHeight);
         }
       }
-
       this.history.recordUndo();
       this.setLastRange();
     }
@@ -5613,39 +5008,33 @@ var Editor_Editor = /*#__PURE__*/function () {
     value: function handleKeyMap(event) {
       var keyMap = this.options.keyMap[env.isMac ? 'mac' : 'pc'];
       var keys = [];
-
       if (event.metaKey) {
         keys.push('CMD');
       }
-
       if (event.ctrlKey && !event.altKey) {
         keys.push('CTRL');
       }
-
       if (event.shiftKey) {
         keys.push('SHIFT');
       }
-
-      var keyName = core_key.nameFromCode[event.keyCode];
-
+      var keyName = key.nameFromCode[event.keyCode];
       if (keyName) {
         keys.push(keyName);
       }
-
       var eventName = keyMap[keys.join('+')];
-
       if (keyName === 'TAB' && !this.options.tabDisable) {
         this.afterCommand();
       } else if (eventName) {
         if (this.context.invoke(eventName) !== false) {
-          event.preventDefault(); // if keyMap action was invoked
-
+          event.preventDefault();
           return true;
         }
-      } else if (core_key.isEdit(event.keyCode)) {
+      } else if (key.isEdit(event.keyCode)) {
+        if (key.isRemove(event.keyCode)) {
+          this.context.invoke('removed');
+        }
         this.afterCommand();
       }
-
       return false;
     }
   }, {
@@ -5660,26 +5049,35 @@ var Editor_Editor = /*#__PURE__*/function () {
     key: "isLimited",
     value: function isLimited(pad, event) {
       pad = pad || 0;
-
       if (typeof event !== 'undefined') {
-        if (core_key.isMove(event.keyCode) || core_key.isNavigation(event.keyCode) || event.ctrlKey || event.metaKey || lists.contains([core_key.code.BACKSPACE, core_key.code.DELETE], event.keyCode)) {
+        if (key.isMove(event.keyCode) || key.isNavigation(event.keyCode) || event.ctrlKey || event.metaKey || lists.contains([key.code.BACKSPACE, key.code.DELETE], event.keyCode)) {
           return false;
         }
       }
-
       if (this.options.maxTextLength > 0) {
         if (this.$editable.text().length + pad > this.options.maxTextLength) {
           return true;
         }
       }
-
       return false;
     }
+  }, {
+    key: "checkLinkUrl",
+    value: function checkLinkUrl(linkUrl) {
+      if (MAILTO_PATTERN.test(linkUrl)) {
+        return 'mailto://' + linkUrl;
+      } else if (TEL_PATTERN.test(linkUrl)) {
+        return 'tel://' + linkUrl;
+      } else if (!URL_SCHEME_PATTERN.test(linkUrl)) {
+        return 'http://' + linkUrl;
+      }
+      return linkUrl;
+    }
+
     /**
      * create range
      * @return {WrappedRange}
      */
-
   }, {
     key: "createRange",
     value: function createRange() {
@@ -5687,13 +5085,13 @@ var Editor_Editor = /*#__PURE__*/function () {
       this.setLastRange();
       return this.getLastRange();
     }
+
     /**
      * create a new range from the list of elements
      *
      * @param {list} dom element list
      * @return {WrappedRange}
      */
-
   }, {
     key: "createRangeFromList",
     value: function createRangeFromList(lst) {
@@ -5703,6 +5101,7 @@ var Editor_Editor = /*#__PURE__*/function () {
       var endPoint = endRange.getEndPoint();
       return range.create(startPoint.node, startPoint.offset, endPoint.node, endPoint.offset);
     }
+
     /**
      * set the last range
      *
@@ -5711,7 +5110,6 @@ var Editor_Editor = /*#__PURE__*/function () {
      *
      * @param {WrappedRange} rng
      */
-
   }, {
     key: "setLastRange",
     value: function setLastRange(rng) {
@@ -5719,12 +5117,12 @@ var Editor_Editor = /*#__PURE__*/function () {
         this.lastRange = rng;
       } else {
         this.lastRange = range.create(this.editable);
-
-        if (external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(this.lastRange.sc).closest('.note-editable').length === 0) {
+        if (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(this.lastRange.sc).closest('.note-editable').length === 0) {
           this.lastRange = range.createFromBodyElement(this.editable);
         }
       }
     }
+
     /**
      * get the last range
      *
@@ -5733,16 +5131,15 @@ var Editor_Editor = /*#__PURE__*/function () {
      *
      * @return {WrappedRange}
      */
-
   }, {
     key: "getLastRange",
     value: function getLastRange() {
       if (!this.lastRange) {
         this.setLastRange();
       }
-
       return this.lastRange;
     }
+
     /**
      * saveRange
      *
@@ -5750,7 +5147,6 @@ var Editor_Editor = /*#__PURE__*/function () {
      *
      * @param {Boolean} [thenCollapse=false]
      */
-
   }, {
     key: "saveRange",
     value: function saveRange(thenCollapse) {
@@ -5758,12 +5154,12 @@ var Editor_Editor = /*#__PURE__*/function () {
         this.getLastRange().collapse().select();
       }
     }
+
     /**
      * restoreRange
      *
      * restore lately range
      */
-
   }, {
     key: "restoreRange",
     value: function restoreRange() {
@@ -5787,40 +5183,38 @@ var Editor_Editor = /*#__PURE__*/function () {
     value: function restoreTarget() {
       return this.$editable.data('target');
     }
+
     /**
      * currentStyle
      *
      * current style
      * @return {Object|Boolean} unfocus
      */
-
   }, {
     key: "currentStyle",
     value: function currentStyle() {
       var rng = range.create();
-
       if (rng) {
         rng = rng.normalize();
       }
-
       return rng ? this.style.current(rng) : this.style.fromNode(this.$editable);
     }
+
     /**
      * style from node
      *
      * @param {jQuery} $node
      * @return {Object}
      */
-
   }, {
     key: "styleFromNode",
     value: function styleFromNode($node) {
       return this.style.fromNode($node);
     }
+
     /**
      * undo
      */
-
   }, {
     key: "undo",
     value: function undo() {
@@ -5828,10 +5222,10 @@ var Editor_Editor = /*#__PURE__*/function () {
       this.history.undo();
       this.context.triggerEvent('change', this.$editable.html(), this.$editable);
     }
+
     /*
     * commit
     */
-
   }, {
     key: "commit",
     value: function commit() {
@@ -5839,10 +5233,10 @@ var Editor_Editor = /*#__PURE__*/function () {
       this.history.commit();
       this.context.triggerEvent('change', this.$editable.html(), this.$editable);
     }
+
     /**
      * redo
      */
-
   }, {
     key: "redo",
     value: function redo() {
@@ -5850,50 +5244,49 @@ var Editor_Editor = /*#__PURE__*/function () {
       this.history.redo();
       this.context.triggerEvent('change', this.$editable.html(), this.$editable);
     }
+
     /**
      * before command
      */
-
   }, {
     key: "beforeCommand",
     value: function beforeCommand() {
-      this.context.triggerEvent('before.command', this.$editable.html()); // Set styleWithCSS before run a command
+      this.context.triggerEvent('before.command', this.$editable.html());
 
-      document.execCommand('styleWithCSS', false, this.options.styleWithCSS); // keep focus on editable before command execution
+      // Set styleWithCSS before run a command
+      document.execCommand('styleWithCSS', false, this.options.styleWithCSS);
 
+      // keep focus on editable before command execution
       this.focus();
     }
+
     /**
      * after command
      * @param {Boolean} isPreventTrigger
      */
-
   }, {
     key: "afterCommand",
     value: function afterCommand(isPreventTrigger) {
       this.normalizeContent();
       this.history.recordUndo();
-
       if (!isPreventTrigger) {
         this.context.triggerEvent('change', this.$editable.html(), this.$editable);
       }
     }
+
     /**
      * handle tab key
      */
-
   }, {
     key: "tab",
     value: function tab() {
       var rng = this.getLastRange();
-
       if (rng.isCollapsed() && rng.isOnCell()) {
         this.table.tab(rng);
       } else {
         if (this.options.tabSize === 0) {
           return false;
         }
-
         if (!this.isLimited(this.options.tabSize)) {
           this.beforeCommand();
           this.typing.insertTab(rng, this.options.tabSize);
@@ -5901,15 +5294,14 @@ var Editor_Editor = /*#__PURE__*/function () {
         }
       }
     }
+
     /**
      * handle shift+tab key
      */
-
   }, {
     key: "untab",
     value: function untab() {
       var rng = this.getLastRange();
-
       if (rng.isCollapsed() && rng.isOnCell()) {
         this.table.tab(rng, true);
       } else {
@@ -5918,10 +5310,10 @@ var Editor_Editor = /*#__PURE__*/function () {
         }
       }
     }
+
     /**
      * run given function between beforeCommand and afterCommand
      */
-
   }, {
     key: "wrapCommand",
     value: function wrapCommand(fn) {
@@ -5932,55 +5324,64 @@ var Editor_Editor = /*#__PURE__*/function () {
       };
     }
     /**
+     * removed (function added by 1der1)
+    */
+  }, {
+    key: "removed",
+    value: function removed(rng, node, tagName) {
+      // LB
+      rng = range.create();
+      if (rng.isCollapsed() && rng.isOnCell()) {
+        node = rng.ec;
+        if ((tagName = node.tagName) && node.childElementCount === 1 && node.childNodes[0].tagName === "BR") {
+          if (tagName === "P") {
+            node.remove();
+          } else if (['TH', 'TD'].indexOf(tagName) >= 0) {
+            node.firstChild.remove();
+          }
+        }
+      }
+    }
+    /**
      * insert image
      *
      * @param {String} src
      * @param {String|Function} param
      * @return {Promise}
      */
-
   }, {
     key: "insertImage",
     value: function insertImage(src, param) {
       var _this3 = this;
-
       return createImage(src, param).then(function ($image) {
         _this3.beforeCommand();
-
         if (typeof param === 'function') {
           param($image);
         } else {
           if (typeof param === 'string') {
             $image.attr('data-filename', param);
           }
-
           $image.css('width', Math.min(_this3.$editable.width(), $image.width()));
         }
-
         $image.show();
-
         _this3.getLastRange().insertNode($image[0]);
-
         _this3.setLastRange(range.createFromNodeAfter($image[0]).select());
-
         _this3.afterCommand();
       }).fail(function (e) {
         _this3.context.triggerEvent('image.upload.error', e);
       });
     }
+
     /**
      * insertImages
      * @param {File[]} files
      */
-
   }, {
     key: "insertImagesAsDataURL",
     value: function insertImagesAsDataURL(files) {
       var _this4 = this;
-
-      external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(files, function (idx, file) {
+      external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(files, function (idx, file) {
         var filename = file.name;
-
         if (_this4.options.maximumImageFileSize && _this4.options.maximumImageFileSize < file.size) {
           _this4.context.triggerEvent('image.upload.error', _this4.lang.image.maximumFileSizeError);
         } else {
@@ -5992,56 +5393,58 @@ var Editor_Editor = /*#__PURE__*/function () {
         }
       });
     }
+
     /**
      * insertImagesOrCallback
      * @param {File[]} files
      */
-
   }, {
     key: "insertImagesOrCallback",
     value: function insertImagesOrCallback(files) {
-      var callbacks = this.options.callbacks; // If onImageUpload set,
-
+      var callbacks = this.options.callbacks;
+      // If onImageUpload set,
       if (callbacks.onImageUpload) {
-        this.context.triggerEvent('image.upload', files); // else insert Image as dataURL
+        this.context.triggerEvent('image.upload', files);
+        // else insert Image as dataURL
       } else {
         this.insertImagesAsDataURL(files);
       }
     }
+
     /**
      * return selected plain text
      * @return {String} text
      */
-
   }, {
     key: "getSelectedText",
     value: function getSelectedText() {
-      var rng = this.getLastRange(); // if range on anchor, expand range with anchor
+      var rng = this.getLastRange();
 
+      // if range on anchor, expand range with anchor
       if (rng.isOnAnchor()) {
         rng = range.createFromNode(dom.ancestor(rng.sc, dom.isAnchor));
       }
-
       return rng.toString();
     }
   }, {
     key: "onFormatBlock",
     value: function onFormatBlock(tagName, $target) {
       // [workaround] for MSIE, IE need `<`
-      document.execCommand('FormatBlock', false, env.isMSIE ? '<' + tagName + '>' : tagName); // support custom class
+      document.execCommand('FormatBlock', false, env.isMSIE ? '<' + tagName + '>' : tagName);
 
+      // support custom class
       if ($target && $target.length) {
         // find the exact element has given tagName
         if ($target[0].tagName.toUpperCase() !== tagName.toUpperCase()) {
           $target = $target.find(tagName);
         }
-
         if ($target && $target.length) {
+          var currentRange = this.createRange();
+          var $parent = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()([currentRange.sc, currentRange.ec]).closest(tagName);
+          // remove class added for current block
+          $parent.removeClass();
           var className = $target[0].className || '';
-
           if (className) {
-            var currentRange = this.createRange();
-            var $parent = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()([currentRange.sc, currentRange.ec]).closest(tagName);
             $parent.addClass(className);
           }
         }
@@ -6056,16 +5459,15 @@ var Editor_Editor = /*#__PURE__*/function () {
     key: "fontStyling",
     value: function fontStyling(target, value) {
       var rng = this.getLastRange();
-
       if (rng !== '') {
         var spans = this.style.styleNodes(rng);
         this.$editor.find('.note-status-output').html('');
-        external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(spans).css(target, value); // [workaround] added styled bogus span for style
-        //  - also bogus character needed for cursor position
+        external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(spans).css(target, value);
 
+        // [workaround] added styled bogus span for style
+        //  - also bogus character needed for cursor position
         if (rng.isCollapsed()) {
           var firstSpan = lists.head(spans);
-
           if (firstSpan && !dom.nodeLength(firstSpan)) {
             firstSpan.innerHTML = dom.ZERO_WIDTH_NBSP_CHAR;
             range.createFromNode(firstSpan.firstChild).select();
@@ -6073,27 +5475,26 @@ var Editor_Editor = /*#__PURE__*/function () {
             this.$editable.data(KEY_BOGUS, firstSpan);
           }
         } else {
-          this.setLastRange(this.createRangeFromList(spans).select());
+          rng.select();
         }
       } else {
-        var noteStatusOutput = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.now();
+        var noteStatusOutput = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().now();
         this.$editor.find('.note-status-output').html('<div id="note-status-output-' + noteStatusOutput + '" class="alert alert-info">' + this.lang.output.noSelection + '</div>');
         setTimeout(function () {
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('#note-status-output-' + noteStatusOutput).remove();
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('#note-status-output-' + noteStatusOutput).remove();
         }, 5000);
       }
     }
+
     /**
      * unlink
      *
      * @type command
      */
-
   }, {
     key: "unlink",
     value: function unlink() {
       var rng = this.getLastRange();
-
       if (rng.isOnAnchor()) {
         var anchor = dom.ancestor(rng.sc, dom.isAnchor);
         rng = range.createFromNode(anchor);
@@ -6104,6 +5505,7 @@ var Editor_Editor = /*#__PURE__*/function () {
         this.afterCommand();
       }
     }
+
     /**
      * returns link info
      *
@@ -6113,31 +5515,32 @@ var Editor_Editor = /*#__PURE__*/function () {
      * @return {Boolean} [return.isNewWindow=true]
      * @return {String} [return.url=""]
      */
-
   }, {
     key: "getLinkInfo",
     value: function getLinkInfo() {
-      var rng = this.getLastRange().expand(dom.isAnchor); // Get the first anchor on range(for edit).
-
-      var $anchor = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(lists.head(rng.nodes(dom.isAnchor)));
+      if (!this.hasFocus()) {
+        this.focus();
+      }
+      var rng = this.getLastRange().expand(dom.isAnchor);
+      // Get the first anchor on range(for edit).
+      var $anchor = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(lists.head(rng.nodes(dom.isAnchor)));
       var linkInfo = {
         range: rng,
         text: rng.toString(),
         url: $anchor.length ? $anchor.attr('href') : ''
-      }; // When anchor exists,
+      };
 
+      // When anchor exists,
       if ($anchor.length) {
         // Set isNewWindow by checking its target.
         linkInfo.isNewWindow = $anchor.attr('target') === '_blank';
       }
-
       return linkInfo;
     }
   }, {
     key: "addRow",
     value: function addRow(position) {
       var rng = this.getLastRange(this.$editable);
-
       if (rng.isCollapsed() && rng.isOnCell()) {
         this.beforeCommand();
         this.table.addRow(rng, position);
@@ -6148,7 +5551,6 @@ var Editor_Editor = /*#__PURE__*/function () {
     key: "addCol",
     value: function addCol(position) {
       var rng = this.getLastRange(this.$editable);
-
       if (rng.isCollapsed() && rng.isOnCell()) {
         this.beforeCommand();
         this.table.addCol(rng, position);
@@ -6159,7 +5561,6 @@ var Editor_Editor = /*#__PURE__*/function () {
     key: "deleteRow",
     value: function deleteRow() {
       var rng = this.getLastRange(this.$editable);
-
       if (rng.isCollapsed() && rng.isOnCell()) {
         this.beforeCommand();
         this.table.deleteRow(rng);
@@ -6170,7 +5571,6 @@ var Editor_Editor = /*#__PURE__*/function () {
     key: "deleteCol",
     value: function deleteCol() {
       var rng = this.getLastRange(this.$editable);
-
       if (rng.isCollapsed() && rng.isOnCell()) {
         this.beforeCommand();
         this.table.deleteCol(rng);
@@ -6181,24 +5581,22 @@ var Editor_Editor = /*#__PURE__*/function () {
     key: "deleteTable",
     value: function deleteTable() {
       var rng = this.getLastRange(this.$editable);
-
       if (rng.isCollapsed() && rng.isOnCell()) {
         this.beforeCommand();
         this.table.deleteTable(rng);
         this.afterCommand();
       }
     }
+
     /**
      * @param {Position} pos
      * @param {jQuery} $target - target element
      * @param {Boolean} [bKeepRatio] - keep ratio
      */
-
   }, {
     key: "resizeTo",
     value: function resizeTo(pos, $target, bKeepRatio) {
       var imageSize;
-
       if (bKeepRatio) {
         var newRatio = pos.y / pos.x;
         var ratio = $target.data('ratio');
@@ -6212,258 +5610,231 @@ var Editor_Editor = /*#__PURE__*/function () {
           height: pos.y
         };
       }
-
       $target.css(imageSize);
     }
+
     /**
      * returns whether editable area has focus or not.
      */
-
   }, {
     key: "hasFocus",
     value: function hasFocus() {
       return this.$editable.is(':focus');
     }
+
     /**
      * set focus
      */
-
   }, {
     key: "focus",
     value: function focus() {
       // [workaround] Screen will move when page is scolled in IE.
       //  - do focus when not focused
       if (!this.hasFocus()) {
-        this.$editable.focus();
+        this.$editable.trigger('focus');
       }
     }
+
     /**
      * returns whether contents is empty or not.
      * @return {Boolean}
      */
-
   }, {
     key: "isEmpty",
     value: function isEmpty() {
       return dom.isEmpty(this.$editable[0]) || dom.emptyPara === this.$editable.html();
     }
+
     /**
      * Removes all contents and restores the editable instance to an _emptyPara_.
      */
-
   }, {
     key: "empty",
     value: function empty() {
       this.context.invoke('code', dom.emptyPara);
     }
+
     /**
      * normalize content
      */
-
   }, {
     key: "normalizeContent",
     value: function normalizeContent() {
       this.$editable[0].normalize();
     }
   }]);
-
-  return Editor;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/Clipboard.js
-function Clipboard_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Clipboard_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Clipboard_createClass(Constructor, protoProps, staticProps) { if (protoProps) Clipboard_defineProperties(Constructor.prototype, protoProps); if (staticProps) Clipboard_defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
-var Clipboard_Clipboard = /*#__PURE__*/function () {
+;// CONCATENATED MODULE: ./src/js/module/Clipboard.js
+function Clipboard_typeof(o) { "@babel/helpers - typeof"; return Clipboard_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Clipboard_typeof(o); }
+function Clipboard_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Clipboard_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Clipboard_toPropertyKey(o.key), o); } }
+function Clipboard_createClass(e, r, t) { return r && Clipboard_defineProperties(e.prototype, r), t && Clipboard_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Clipboard_toPropertyKey(t) { var i = Clipboard_toPrimitive(t, "string"); return "symbol" == Clipboard_typeof(i) ? i : i + ""; }
+function Clipboard_toPrimitive(t, r) { if ("object" != Clipboard_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Clipboard_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+var Clipboard = /*#__PURE__*/function () {
   function Clipboard(context) {
     Clipboard_classCallCheck(this, Clipboard);
-
     this.context = context;
+    this.options = context.options;
     this.$editable = context.layoutInfo.editable;
   }
-
-  Clipboard_createClass(Clipboard, [{
+  return Clipboard_createClass(Clipboard, [{
     key: "initialize",
     value: function initialize() {
       this.$editable.on('paste', this.pasteByEvent.bind(this));
     }
+
     /**
      * paste by clipboard event
      *
      * @param {Event} event
      */
-
   }, {
     key: "pasteByEvent",
     value: function pasteByEvent(event) {
       var _this = this;
-
+      if (this.context.isDisabled()) {
+        return;
+      }
       var clipboardData = event.originalEvent.clipboardData;
-
       if (clipboardData && clipboardData.items && clipboardData.items.length) {
-        var item = clipboardData.items.length > 1 ? clipboardData.items[1] : lists.head(clipboardData.items);
+        var clipboardFiles = clipboardData.files;
+        var clipboardText = clipboardData.getData('Text');
 
-        if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
-          // paste img file
-          this.context.invoke('editor.insertImagesOrCallback', [item.getAsFile()]);
+        // paste img file
+        if (clipboardFiles.length > 0 && this.options.allowClipboardImagePasting) {
+          this.context.invoke('editor.insertImagesOrCallback', clipboardFiles);
           event.preventDefault();
-        } else if (item.kind === 'string') {
-          // paste text with maxTextLength check
-          if (this.context.invoke('editor.isLimited', clipboardData.getData('Text').length)) {
-            event.preventDefault();
-          }
+        }
+
+        // paste text with maxTextLength check
+        if (clipboardText.length > 0 && this.context.invoke('editor.isLimited', clipboardText.length)) {
+          event.preventDefault();
         }
       } else if (window.clipboardData) {
         // for IE
         var text = window.clipboardData.getData('text');
-
         if (this.context.invoke('editor.isLimited', text.length)) {
           event.preventDefault();
         }
-      } // Call editor.afterCommand after proceeding default event handler
+      }
 
-
+      // Call editor.afterCommand after proceeding default event handler
       setTimeout(function () {
         _this.context.invoke('editor.afterCommand');
       }, 10);
     }
   }]);
-
-  return Clipboard;
 }();
 
+;// CONCATENATED MODULE: ./src/js/module/Dropzone.js
+function Dropzone_typeof(o) { "@babel/helpers - typeof"; return Dropzone_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Dropzone_typeof(o); }
+function Dropzone_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Dropzone_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Dropzone_toPropertyKey(o.key), o); } }
+function Dropzone_createClass(e, r, t) { return r && Dropzone_defineProperties(e.prototype, r), t && Dropzone_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Dropzone_toPropertyKey(t) { var i = Dropzone_toPrimitive(t, "string"); return "symbol" == Dropzone_typeof(i) ? i : i + ""; }
+function Dropzone_toPrimitive(t, r) { if ("object" != Dropzone_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Dropzone_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
-// CONCATENATED MODULE: ./src/js/base/module/Dropzone.js
-function Dropzone_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Dropzone_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Dropzone_createClass(Constructor, protoProps, staticProps) { if (protoProps) Dropzone_defineProperties(Constructor.prototype, protoProps); if (staticProps) Dropzone_defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
-var Dropzone_Dropzone = /*#__PURE__*/function () {
+var Dropzone = /*#__PURE__*/function () {
   function Dropzone(context) {
     Dropzone_classCallCheck(this, Dropzone);
-
     this.context = context;
-    this.$eventListener = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(document);
+    this.$eventListener = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(document);
     this.$editor = context.layoutInfo.editor;
     this.$editable = context.layoutInfo.editable;
     this.options = context.options;
     this.lang = this.options.langInfo;
     this.documentEventHandlers = {};
-    this.$dropzone = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(['<div class="note-dropzone">', '<div class="note-dropzone-message"></div>', '</div>'].join('')).prependTo(this.$editor);
+    this.$dropzone = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(['<div class="note-dropzone">', '<div class="note-dropzone-message"></div>', '</div>'].join('')).prependTo(this.$editor);
   }
+
   /**
    * attach Drag and Drop Events
    */
-
-
-  Dropzone_createClass(Dropzone, [{
+  return Dropzone_createClass(Dropzone, [{
     key: "initialize",
     value: function initialize() {
       if (this.options.disableDragAndDrop) {
         // prevent default drop event
         this.documentEventHandlers.onDrop = function (e) {
           e.preventDefault();
-        }; // do not consider outside of dropzone
-
-
+        };
+        // do not consider outside of dropzone
         this.$eventListener = this.$dropzone;
         this.$eventListener.on('drop', this.documentEventHandlers.onDrop);
       } else {
         this.attachDragAndDropEvent();
       }
     }
+
     /**
      * attach Drag and Drop Events
      */
-
   }, {
     key: "attachDragAndDropEvent",
     value: function attachDragAndDropEvent() {
       var _this = this;
-
-      var collection = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()();
+      var collection = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()();
       var $dropzoneMessage = this.$dropzone.find('.note-dropzone-message');
-
       this.documentEventHandlers.onDragenter = function (e) {
         var isCodeview = _this.context.invoke('codeview.isActivated');
-
         var hasEditorSize = _this.$editor.width() > 0 && _this.$editor.height() > 0;
-
         if (!isCodeview && !collection.length && hasEditorSize) {
           _this.$editor.addClass('dragover');
-
           _this.$dropzone.width(_this.$editor.width());
-
           _this.$dropzone.height(_this.$editor.height());
-
           $dropzoneMessage.text(_this.lang.image.dragImageHere);
         }
-
         collection = collection.add(e.target);
       };
-
       this.documentEventHandlers.onDragleave = function (e) {
-        collection = collection.not(e.target); // If nodeName is BODY, then just make it over (fix for IE)
+        collection = collection.not(e.target);
 
+        // If nodeName is BODY, then just make it over (fix for IE)
         if (!collection.length || e.target.nodeName === 'BODY') {
-          collection = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()();
-
+          collection = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()();
           _this.$editor.removeClass('dragover');
         }
       };
-
       this.documentEventHandlers.onDrop = function () {
-        collection = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()();
-
+        collection = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()();
         _this.$editor.removeClass('dragover');
-      }; // show dropzone on dragenter when dragging a object to document
+      };
+
+      // show dropzone on dragenter when dragging a object to document
       // -but only if the editor is visible, i.e. has a positive width and height
+      this.$eventListener.on('dragenter', this.documentEventHandlers.onDragenter).on('dragleave', this.documentEventHandlers.onDragleave).on('drop', this.documentEventHandlers.onDrop);
 
-
-      this.$eventListener.on('dragenter', this.documentEventHandlers.onDragenter).on('dragleave', this.documentEventHandlers.onDragleave).on('drop', this.documentEventHandlers.onDrop); // change dropzone's message on hover.
-
+      // change dropzone's message on hover.
       this.$dropzone.on('dragenter', function () {
         _this.$dropzone.addClass('hover');
-
         $dropzoneMessage.text(_this.lang.image.dropImage);
       }).on('dragleave', function () {
         _this.$dropzone.removeClass('hover');
-
         $dropzoneMessage.text(_this.lang.image.dragImageHere);
-      }); // attach dropImage
+      });
 
+      // attach dropImage
       this.$dropzone.on('drop', function (event) {
-        var dataTransfer = event.originalEvent.dataTransfer; // stop the browser from opening the dropped content
+        var dataTransfer = event.originalEvent.dataTransfer;
 
+        // stop the browser from opening the dropped content
         event.preventDefault();
-
         if (dataTransfer && dataTransfer.files && dataTransfer.files.length) {
-          _this.$editable.focus();
-
+          _this.$editable.trigger('focus');
           _this.context.invoke('editor.insertImagesOrCallback', dataTransfer.files);
         } else {
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(dataTransfer.types, function (idx, type) {
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(dataTransfer.types, function (idx, type) {
             // skip moz-specific types
             if (type.toLowerCase().indexOf('_moz_') > -1) {
               return;
             }
-
             var content = dataTransfer.getData(type);
-
             if (type.toLowerCase().indexOf('text') > -1) {
               _this.context.invoke('editor.pasteHTML', content);
             } else {
-              external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(content).each(function (idx, item) {
+              external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(content).each(function (idx, item) {
                 _this.context.invoke('editor.insertNode', item);
               });
             }
@@ -6475,59 +5846,48 @@ var Dropzone_Dropzone = /*#__PURE__*/function () {
     key: "destroy",
     value: function destroy() {
       var _this2 = this;
-
       Object.keys(this.documentEventHandlers).forEach(function (key) {
-        _this2.$eventListener.off(key.substr(2).toLowerCase(), _this2.documentEventHandlers[key]);
+        _this2.$eventListener.off(key.slice(2).toLowerCase(), _this2.documentEventHandlers[key]);
       });
       this.documentEventHandlers = {};
     }
   }]);
-
-  return Dropzone;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/Codeview.js
-function _createForOfIteratorHelper(o) { if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (o = _unsupportedIterableToArray(o))) { var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var it, normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(n); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function Codeview_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Codeview_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Codeview_createClass(Constructor, protoProps, staticProps) { if (protoProps) Codeview_defineProperties(Constructor.prototype, protoProps); if (staticProps) Codeview_defineProperties(Constructor, staticProps); return Constructor; }
+;// CONCATENATED MODULE: ./src/js/module/Codeview.js
+function Codeview_typeof(o) { "@babel/helpers - typeof"; return Codeview_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Codeview_typeof(o); }
+function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function Codeview_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Codeview_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Codeview_toPropertyKey(o.key), o); } }
+function Codeview_createClass(e, r, t) { return r && Codeview_defineProperties(e.prototype, r), t && Codeview_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Codeview_toPropertyKey(t) { var i = Codeview_toPrimitive(t, "string"); return "symbol" == Codeview_typeof(i) ? i : i + ""; }
+function Codeview_toPrimitive(t, r) { if ("object" != Codeview_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Codeview_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
 /**
  * @class Codeview
  */
-
-var Codeview_CodeView = /*#__PURE__*/function () {
+var CodeView = /*#__PURE__*/function () {
   function CodeView(context) {
     Codeview_classCallCheck(this, CodeView);
-
     this.context = context;
     this.$editor = context.layoutInfo.editor;
     this.$editable = context.layoutInfo.editable;
     this.$codable = context.layoutInfo.codable;
     this.options = context.options;
     this.CodeMirrorConstructor = window.CodeMirror;
-
     if (this.options.codemirror.CodeMirrorConstructor) {
       this.CodeMirrorConstructor = this.options.codemirror.CodeMirrorConstructor;
     }
   }
-
-  Codeview_createClass(CodeView, [{
+  return Codeview_createClass(CodeView, [{
     key: "sync",
     value: function sync(html) {
       var isCodeview = this.isActivated();
       var CodeMirror = this.CodeMirrorConstructor;
-
       if (isCodeview) {
         if (html) {
           if (CodeMirror) {
@@ -6546,26 +5906,25 @@ var Codeview_CodeView = /*#__PURE__*/function () {
     key: "initialize",
     value: function initialize() {
       var _this = this;
-
       this.$codable.on('keyup', function (event) {
-        if (event.keyCode === core_key.code.ESCAPE) {
+        if (event.keyCode === key.code.ESCAPE) {
           _this.deactivate();
         }
       });
     }
+
     /**
      * @return {Boolean}
      */
-
   }, {
     key: "isActivated",
     value: function isActivated() {
       return this.$editor.hasClass('codeview');
     }
+
     /**
      * toggle codeview
      */
-
   }, {
     key: "toggle",
     value: function toggle() {
@@ -6574,22 +5933,21 @@ var Codeview_CodeView = /*#__PURE__*/function () {
       } else {
         this.activate();
       }
-
       this.context.triggerEvent('codeview.toggled');
     }
+
     /**
      * purify input value
      * @param value
      * @returns {*}
      */
-
   }, {
     key: "purify",
     value: function purify(value) {
       if (this.options.codeviewFilter) {
         // filter code view regex
-        value = value.replace(this.options.codeviewFilterRegex, ''); // allow specific iframe tag
-
+        value = value.replace(this.options.codeviewFilterRegex, '');
+        // allow specific iframe tag
         if (this.options.codeviewIframeFilter) {
           var whitelist = this.options.codeviewIframeWhitelistSrc.concat(this.options.codeviewIframeWhitelistSrcBase);
           value = value.replace(/(<iframe.*?>.*?(?:<\/iframe>)?)/gi, function (tag) {
@@ -6597,14 +5955,11 @@ var Codeview_CodeView = /*#__PURE__*/function () {
             if (/<.+src(?==?('|"|\s)?)[\s\S]+src(?=('|"|\s)?)[^>]*?>/i.test(tag)) {
               return '';
             }
-
             var _iterator = _createForOfIteratorHelper(whitelist),
-                _step;
-
+              _step;
             try {
               for (_iterator.s(); !(_step = _iterator.n()).done;) {
                 var src = _step.value;
-
                 // pass if src is trusted
                 if (new RegExp('src="(https?:)?\/\/' + src.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '\/(.+)"').test(tag)) {
                   return tag;
@@ -6615,34 +5970,33 @@ var Codeview_CodeView = /*#__PURE__*/function () {
             } finally {
               _iterator.f();
             }
-
             return '';
           });
         }
       }
-
       return value;
     }
+
     /**
      * activate code view
      */
-
   }, {
     key: "activate",
     value: function activate() {
       var _this2 = this;
-
       var CodeMirror = this.CodeMirrorConstructor;
       this.$codable.val(dom.html(this.$editable, this.options.prettifyHtml));
       this.$codable.height(this.$editable.height());
       this.context.invoke('toolbar.updateCodeview', true);
       this.context.invoke('airPopover.updateCodeview', true);
       this.$editor.addClass('codeview');
-      this.$codable.focus(); // activate CodeMirror as codable
+      this.$codable.trigger('focus');
 
+      // activate CodeMirror as codable
       if (CodeMirror) {
-        var cmEditor = CodeMirror.fromTextArea(this.$codable[0], this.options.codemirror); // CodeMirror TernServer
+        var cmEditor = CodeMirror.fromTextArea(this.$codable[0], this.options.codemirror);
 
+        // CodeMirror TernServer
         if (this.options.codemirror.tern) {
           var server = new CodeMirror.TernServer(this.options.codemirror.tern);
           cmEditor.ternServer = server;
@@ -6650,14 +6004,14 @@ var Codeview_CodeView = /*#__PURE__*/function () {
             server.updateArgHints(cm);
           });
         }
-
         cmEditor.on('blur', function (event) {
           _this2.context.triggerEvent('blur.codeview', cmEditor.getValue(), event);
         });
         cmEditor.on('change', function () {
           _this2.context.triggerEvent('change.codeview', cmEditor.getValue(), cmEditor);
-        }); // CodeMirror hasn't Padding.
+        });
 
+        // CodeMirror hasn't Padding.
         cmEditor.setSize(null, this.$editable.outerHeight());
         this.$codable.data('cmEditor', cmEditor);
       } else {
@@ -6669,32 +6023,29 @@ var Codeview_CodeView = /*#__PURE__*/function () {
         });
       }
     }
+
     /**
      * deactivate code view
      */
-
   }, {
     key: "deactivate",
     value: function deactivate() {
-      var CodeMirror = this.CodeMirrorConstructor; // deactivate CodeMirror as codable
-
+      var CodeMirror = this.CodeMirrorConstructor;
+      // deactivate CodeMirror as codable
       if (CodeMirror) {
         var cmEditor = this.$codable.data('cmEditor');
         this.$codable.val(cmEditor.getValue());
         cmEditor.toTextArea();
       }
-
       var value = this.purify(dom.value(this.$codable, this.options.prettifyHtml) || dom.emptyPara);
       var isChange = this.$editable.html() !== value;
       this.$editable.html(value);
       this.$editable.height(this.options.height ? this.$codable.height() : 'auto');
       this.$editor.removeClass('codeview');
-
       if (isChange) {
         this.context.triggerEvent('change', this.$editable.html(), this.$editable);
       }
-
-      this.$editable.focus();
+      this.$editable.trigger('focus');
       this.context.invoke('toolbar.updateCodeview', false);
       this.context.invoke('airPopover.updateCodeview', false);
     }
@@ -6706,57 +6057,52 @@ var Codeview_CodeView = /*#__PURE__*/function () {
       }
     }
   }]);
-
-  return CodeView;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/Statusbar.js
-function Statusbar_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Statusbar_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Statusbar_createClass(Constructor, protoProps, staticProps) { if (protoProps) Statusbar_defineProperties(Constructor.prototype, protoProps); if (staticProps) Statusbar_defineProperties(Constructor, staticProps); return Constructor; }
-
+;// CONCATENATED MODULE: ./src/js/module/Statusbar.js
+function Statusbar_typeof(o) { "@babel/helpers - typeof"; return Statusbar_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Statusbar_typeof(o); }
+function Statusbar_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Statusbar_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Statusbar_toPropertyKey(o.key), o); } }
+function Statusbar_createClass(e, r, t) { return r && Statusbar_defineProperties(e.prototype, r), t && Statusbar_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Statusbar_toPropertyKey(t) { var i = Statusbar_toPrimitive(t, "string"); return "symbol" == Statusbar_typeof(i) ? i : i + ""; }
+function Statusbar_toPrimitive(t, r) { if ("object" != Statusbar_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Statusbar_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 var EDITABLE_PADDING = 24;
-
-var Statusbar_Statusbar = /*#__PURE__*/function () {
+var Statusbar = /*#__PURE__*/function () {
   function Statusbar(context) {
     Statusbar_classCallCheck(this, Statusbar);
-
-    this.$document = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(document);
+    this.$document = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(document);
     this.$statusbar = context.layoutInfo.statusbar;
     this.$editable = context.layoutInfo.editable;
+    this.$codable = context.layoutInfo.codable;
     this.options = context.options;
   }
-
-  Statusbar_createClass(Statusbar, [{
+  return Statusbar_createClass(Statusbar, [{
     key: "initialize",
     value: function initialize() {
       var _this = this;
-
       if (this.options.airMode || this.options.disableResizeEditor) {
         this.destroy();
         return;
       }
-
-      this.$statusbar.on('mousedown', function (event) {
+      this.$statusbar.on('mousedown touchstart', function (event) {
         event.preventDefault();
         event.stopPropagation();
-
         var editableTop = _this.$editable.offset().top - _this.$document.scrollTop();
-
-        var onMouseMove = function onMouseMove(event) {
-          var height = event.clientY - (editableTop + EDITABLE_PADDING);
+        var editableCodeTop = _this.$codable.offset().top - _this.$document.scrollTop();
+        var onStatusbarMove = function onStatusbarMove(event) {
+          var originalEvent = event.type == 'mousemove' ? event : event.originalEvent.touches[0];
+          var height = originalEvent.clientY - (editableTop + EDITABLE_PADDING);
+          var heightCode = originalEvent.clientY - (editableCodeTop + EDITABLE_PADDING);
           height = _this.options.minheight > 0 ? Math.max(height, _this.options.minheight) : height;
           height = _this.options.maxHeight > 0 ? Math.min(height, _this.options.maxHeight) : height;
-
+          heightCode = _this.options.minheight > 0 ? Math.max(heightCode, _this.options.minheight) : heightCode;
+          heightCode = _this.options.maxHeight > 0 ? Math.min(heightCode, _this.options.maxHeight) : heightCode;
           _this.$editable.height(height);
+          _this.$codable.height(heightCode);
         };
-
-        _this.$document.on('mousemove', onMouseMove).one('mouseup', function () {
-          _this.$document.off('mousemove', onMouseMove);
+        _this.$document.on('mousemove touchmove', onStatusbarMove).one('mouseup touchend', function () {
+          _this.$document.off('mousemove touchmove', onStatusbarMove);
         });
       });
     }
@@ -6767,106 +6113,95 @@ var Statusbar_Statusbar = /*#__PURE__*/function () {
       this.$statusbar.addClass('locked');
     }
   }]);
-
-  return Statusbar;
 }();
 
+;// CONCATENATED MODULE: ./src/js/module/Fullscreen.js
+function Fullscreen_typeof(o) { "@babel/helpers - typeof"; return Fullscreen_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Fullscreen_typeof(o); }
+function Fullscreen_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Fullscreen_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Fullscreen_toPropertyKey(o.key), o); } }
+function Fullscreen_createClass(e, r, t) { return r && Fullscreen_defineProperties(e.prototype, r), t && Fullscreen_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Fullscreen_toPropertyKey(t) { var i = Fullscreen_toPrimitive(t, "string"); return "symbol" == Fullscreen_typeof(i) ? i : i + ""; }
+function Fullscreen_toPrimitive(t, r) { if ("object" != Fullscreen_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Fullscreen_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
-// CONCATENATED MODULE: ./src/js/base/module/Fullscreen.js
-function Fullscreen_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Fullscreen_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Fullscreen_createClass(Constructor, protoProps, staticProps) { if (protoProps) Fullscreen_defineProperties(Constructor.prototype, protoProps); if (staticProps) Fullscreen_defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
-var Fullscreen_Fullscreen = /*#__PURE__*/function () {
+var Fullscreen = /*#__PURE__*/function () {
   function Fullscreen(context) {
     var _this = this;
-
     Fullscreen_classCallCheck(this, Fullscreen);
-
     this.context = context;
     this.$editor = context.layoutInfo.editor;
     this.$toolbar = context.layoutInfo.toolbar;
     this.$editable = context.layoutInfo.editable;
     this.$codable = context.layoutInfo.codable;
-    this.$window = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(window);
-    this.$scrollbar = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('html, body');
-
+    this.$window = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(window);
+    this.$scrollbar = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('html, body');
+    this.scrollbarClassName = 'note-fullscreen-body';
     this.onResize = function () {
       _this.resizeTo({
         h: _this.$window.height() - _this.$toolbar.outerHeight()
       });
     };
   }
-
-  Fullscreen_createClass(Fullscreen, [{
+  return Fullscreen_createClass(Fullscreen, [{
     key: "resizeTo",
     value: function resizeTo(size) {
       this.$editable.css('height', size.h);
       this.$codable.css('height', size.h);
-
       if (this.$codable.data('cmeditor')) {
         this.$codable.data('cmeditor').setsize(null, size.h);
       }
     }
+
     /**
      * toggle fullscreen
      */
-
   }, {
     key: "toggle",
     value: function toggle() {
       this.$editor.toggleClass('fullscreen');
-
-      if (this.isFullscreen()) {
+      var isFullscreen = this.isFullscreen();
+      this.$scrollbar.toggleClass(this.scrollbarClassName, isFullscreen);
+      if (isFullscreen) {
         this.$editable.data('orgHeight', this.$editable.css('height'));
         this.$editable.data('orgMaxHeight', this.$editable.css('maxHeight'));
         this.$editable.css('maxHeight', '');
         this.$window.on('resize', this.onResize).trigger('resize');
-        this.$scrollbar.css('overflow', 'hidden');
       } else {
         this.$window.off('resize', this.onResize);
         this.resizeTo({
           h: this.$editable.data('orgHeight')
         });
         this.$editable.css('maxHeight', this.$editable.css('orgMaxHeight'));
-        this.$scrollbar.css('overflow', 'visible');
       }
-
-      this.context.invoke('toolbar.updateFullscreen', this.isFullscreen());
+      this.context.invoke('toolbar.updateFullscreen', isFullscreen);
     }
   }, {
     key: "isFullscreen",
     value: function isFullscreen() {
       return this.$editor.hasClass('fullscreen');
     }
+  }, {
+    key: "destroy",
+    value: function destroy() {
+      this.$scrollbar.removeClass(this.scrollbarClassName);
+    }
   }]);
-
-  return Fullscreen;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/Handle.js
-function Handle_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Handle_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Handle_createClass(Constructor, protoProps, staticProps) { if (protoProps) Handle_defineProperties(Constructor.prototype, protoProps); if (staticProps) Handle_defineProperties(Constructor, staticProps); return Constructor; }
-
-
+;// CONCATENATED MODULE: ./src/js/module/Handle.js
+function Handle_typeof(o) { "@babel/helpers - typeof"; return Handle_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Handle_typeof(o); }
+function Handle_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Handle_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Handle_toPropertyKey(o.key), o); } }
+function Handle_createClass(e, r, t) { return r && Handle_defineProperties(e.prototype, r), t && Handle_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Handle_toPropertyKey(t) { var i = Handle_toPrimitive(t, "string"); return "symbol" == Handle_typeof(i) ? i : i + ""; }
+function Handle_toPrimitive(t, r) { if ("object" != Handle_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Handle_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
-var Handle_Handle = /*#__PURE__*/function () {
+var Handle = /*#__PURE__*/function () {
   function Handle(context) {
     var _this = this;
-
     Handle_classCallCheck(this, Handle);
-
     this.context = context;
-    this.$document = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(document);
+    this.$document = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(document);
     this.$editingArea = context.layoutInfo.editingArea;
     this.options = context.options;
     this.lang = this.options.langInfo;
@@ -6887,51 +6222,40 @@ var Handle_Handle = /*#__PURE__*/function () {
       }
     };
   }
-
-  Handle_createClass(Handle, [{
+  return Handle_createClass(Handle, [{
     key: "initialize",
     value: function initialize() {
       var _this2 = this;
-
-      this.$handle = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(['<div class="note-handle">', '<div class="note-control-selection">', '<div class="note-control-selection-bg"></div>', '<div class="note-control-holder note-control-nw"></div>', '<div class="note-control-holder note-control-ne"></div>', '<div class="note-control-holder note-control-sw"></div>', '<div class="', this.options.disableResizeImage ? 'note-control-holder' : 'note-control-sizing', ' note-control-se"></div>', this.options.disableResizeImage ? '' : '<div class="note-control-selection-info"></div>', '</div>', '</div>'].join('')).prependTo(this.$editingArea);
+      this.$handle = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(['<div class="note-handle">', '<div class="note-control-selection">', '<div class="note-control-selection-bg"></div>', '<div class="note-control-holder note-control-nw"></div>', '<div class="note-control-holder note-control-ne"></div>', '<div class="note-control-holder note-control-sw"></div>', '<div class="', this.options.disableResizeImage ? 'note-control-holder' : 'note-control-sizing', ' note-control-se"></div>', this.options.disableResizeImage ? '' : '<div class="note-control-selection-info"></div>', '</div>', '</div>'].join('')).prependTo(this.$editingArea);
       this.$handle.on('mousedown', function (event) {
         if (dom.isControlSizing(event.target)) {
           event.preventDefault();
           event.stopPropagation();
-
           var $target = _this2.$handle.find('.note-control-selection').data('target');
-
           var posStart = $target.offset();
-
           var scrollTop = _this2.$document.scrollTop();
-
           var onMouseMove = function onMouseMove(event) {
             _this2.context.invoke('editor.resizeTo', {
               x: event.clientX - posStart.left,
               y: event.clientY - (posStart.top - scrollTop)
             }, $target, !event.shiftKey);
-
             _this2.update($target[0], event);
           };
-
           _this2.$document.on('mousemove', onMouseMove).one('mouseup', function (e) {
             e.preventDefault();
-
             _this2.$document.off('mousemove', onMouseMove);
-
             _this2.context.invoke('editor.afterCommand');
           });
-
           if (!$target.data('ratio')) {
             // original ratio.
             $target.data('ratio', $target.height() / $target.width());
           }
         }
-      }); // Listen for scrolling on the handle overlay.
+      });
 
-      this.$handle.on('wheel', function (e) {
-        e.preventDefault();
-
+      // Listen for scrolling on the handle overlay.
+      this.$handle.on('wheel', function (event) {
+        event.preventDefault();
         _this2.update();
       });
     }
@@ -6946,48 +6270,37 @@ var Handle_Handle = /*#__PURE__*/function () {
       if (this.context.isDisabled()) {
         return false;
       }
-
       var isImage = dom.isImg(target);
       var $selection = this.$handle.find('.note-control-selection');
       this.context.invoke('imagePopover.update', target, event);
-
       if (isImage) {
-        var $image = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(target);
-        var position = $image.position();
-        var pos = {
-          left: position.left + parseInt($image.css('marginLeft'), 10),
-          top: position.top + parseInt($image.css('marginTop'), 10)
-        }; // exclude margin
-
-        var imageSize = {
-          w: $image.outerWidth(false),
-          h: $image.outerHeight(false)
-        };
+        var $image = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(target);
+        var areaRect = this.$editingArea[0].getBoundingClientRect();
+        var imageRect = target.getBoundingClientRect();
         $selection.css({
           display: 'block',
-          left: pos.left,
-          top: pos.top,
-          width: imageSize.w,
-          height: imageSize.h
+          left: imageRect.left - areaRect.left,
+          top: imageRect.top - areaRect.top,
+          width: imageRect.width,
+          height: imageRect.height
         }).data('target', $image); // save current image element.
 
         var origImageObj = new Image();
         origImageObj.src = $image.attr('src');
-        var sizingText = imageSize.w + 'x' + imageSize.h + ' (' + this.lang.image.original + ': ' + origImageObj.width + 'x' + origImageObj.height + ')';
+        var sizingText = imageRect.width + 'x' + imageRect.height + ' (' + this.lang.image.original + ': ' + origImageObj.width + 'x' + origImageObj.height + ')';
         $selection.find('.note-control-selection-info').text(sizingText);
         this.context.invoke('editor.saveTarget', target);
       } else {
         this.hide();
       }
-
       return isImage;
     }
+
     /**
      * hide
      *
      * @param {jQuery} $handle
      */
-
   }, {
     key: "hide",
     value: function hide() {
@@ -6995,45 +6308,39 @@ var Handle_Handle = /*#__PURE__*/function () {
       this.$handle.children().hide();
     }
   }]);
-
-  return Handle;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/AutoLink.js
-function AutoLink_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function AutoLink_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function AutoLink_createClass(Constructor, protoProps, staticProps) { if (protoProps) AutoLink_defineProperties(Constructor.prototype, protoProps); if (staticProps) AutoLink_defineProperties(Constructor, staticProps); return Constructor; }
-
+;// CONCATENATED MODULE: ./src/js/module/AutoLink.js
+function AutoLink_typeof(o) { "@babel/helpers - typeof"; return AutoLink_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, AutoLink_typeof(o); }
+function AutoLink_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function AutoLink_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, AutoLink_toPropertyKey(o.key), o); } }
+function AutoLink_createClass(e, r, t) { return r && AutoLink_defineProperties(e.prototype, r), t && AutoLink_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function AutoLink_toPropertyKey(t) { var i = AutoLink_toPrimitive(t, "string"); return "symbol" == AutoLink_typeof(i) ? i : i + ""; }
+function AutoLink_toPrimitive(t, r) { if ("object" != AutoLink_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != AutoLink_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
 var defaultScheme = 'http://';
-var linkPattern = /^([A-Za-z][A-Za-z0-9+-.]*\:[\/]{2}|tel:|mailto:[A-Z0-9._%+-]+@)?(www\.)?(.+)$/i;
-
-var AutoLink_AutoLink = /*#__PURE__*/function () {
+var linkPattern = /^([A-Za-z][A-Za-z0-9+-.]*\:[\/]{2}|tel:|mailto:[A-Z0-9._%+-]+@|xmpp:[A-Z0-9._%+-]+@)?(www\.)?(.+)$/i;
+var AutoLink = /*#__PURE__*/function () {
   function AutoLink(context) {
     var _this = this;
-
     AutoLink_classCallCheck(this, AutoLink);
-
     this.context = context;
     this.options = context.options;
+    this.$editable = context.layoutInfo.editable;
     this.events = {
-      'summernote.keyup': function summernoteKeyup(we, e) {
-        if (!e.isDefaultPrevented()) {
-          _this.handleKeyup(e);
+      'summernote.keyup': function summernoteKeyup(we, event) {
+        if (!event.isDefaultPrevented()) {
+          _this.handleKeyup(event);
         }
       },
-      'summernote.keydown': function summernoteKeydown(we, e) {
-        _this.handleKeydown(e);
+      'summernote.keydown': function summernoteKeydown(we, event) {
+        _this.handleKeydown(event);
       }
     };
   }
-
-  AutoLink_createClass(AutoLink, [{
+  return AutoLink_createClass(AutoLink, [{
     key: "initialize",
     value: function initialize() {
       this.lastWordRange = null;
@@ -7049,63 +6356,55 @@ var AutoLink_AutoLink = /*#__PURE__*/function () {
       if (!this.lastWordRange) {
         return;
       }
-
       var keyword = this.lastWordRange.toString();
       var match = keyword.match(linkPattern);
-
       if (match && (match[1] || match[2])) {
         var link = match[1] ? keyword : defaultScheme + keyword;
-        var urlText = this.options.showDomainOnlyForAutolink ? keyword.replace(/^(?:https?:\/\/)?(?:tel?:?)?(?:mailto?:?)?(?:www\.)?/i, '').split('/')[0] : keyword;
-        var node = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<a></a>').html(urlText).attr('href', link)[0];
-
+        var urlText = this.options.showDomainOnlyForAutolink ? keyword.replace(/^(?:https?:\/\/)?(?:tel?:?)?(?:mailto?:?)?(?:xmpp?:?)?(?:www\.)?/i, '').split('/')[0] : keyword;
+        var node = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<a></a>').html(urlText).attr('href', link)[0];
         if (this.context.options.linkTargetBlank) {
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(node).attr('target', '_blank');
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(node).attr('target', '_blank');
         }
-
         this.lastWordRange.insertNode(node);
         this.lastWordRange = null;
         this.context.invoke('editor.focus');
+        this.context.triggerEvent('change', this.$editable.html(), this.$editable);
       }
     }
   }, {
     key: "handleKeydown",
-    value: function handleKeydown(e) {
-      if (lists.contains([core_key.code.ENTER, core_key.code.SPACE], e.keyCode)) {
+    value: function handleKeydown(event) {
+      if (lists.contains([key.code.ENTER, key.code.SPACE], event.keyCode)) {
         var wordRange = this.context.invoke('editor.createRange').getWordRange();
         this.lastWordRange = wordRange;
       }
     }
   }, {
     key: "handleKeyup",
-    value: function handleKeyup(e) {
-      if (lists.contains([core_key.code.ENTER, core_key.code.SPACE], e.keyCode)) {
+    value: function handleKeyup(event) {
+      if (key.code.SPACE === event.keyCode || key.code.ENTER === event.keyCode && !event.shiftKey) {
         this.replace();
       }
     }
   }]);
-
-  return AutoLink;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/AutoSync.js
-function AutoSync_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function AutoSync_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function AutoSync_createClass(Constructor, protoProps, staticProps) { if (protoProps) AutoSync_defineProperties(Constructor.prototype, protoProps); if (staticProps) AutoSync_defineProperties(Constructor, staticProps); return Constructor; }
+;// CONCATENATED MODULE: ./src/js/module/AutoSync.js
+function AutoSync_typeof(o) { "@babel/helpers - typeof"; return AutoSync_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, AutoSync_typeof(o); }
+function AutoSync_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function AutoSync_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, AutoSync_toPropertyKey(o.key), o); } }
+function AutoSync_createClass(e, r, t) { return r && AutoSync_defineProperties(e.prototype, r), t && AutoSync_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function AutoSync_toPropertyKey(t) { var i = AutoSync_toPrimitive(t, "string"); return "symbol" == AutoSync_typeof(i) ? i : i + ""; }
+function AutoSync_toPrimitive(t, r) { if ("object" != AutoSync_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != AutoSync_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 /**
  * textarea auto sync.
  */
-
-var AutoSync_AutoSync = /*#__PURE__*/function () {
+var AutoSync = /*#__PURE__*/function () {
   function AutoSync(context) {
     var _this = this;
-
     AutoSync_classCallCheck(this, AutoSync);
-
     this.$note = context.layoutInfo.note;
     this.events = {
       'summernote.change': function summernoteChange() {
@@ -7113,52 +6412,44 @@ var AutoSync_AutoSync = /*#__PURE__*/function () {
       }
     };
   }
-
-  AutoSync_createClass(AutoSync, [{
+  return AutoSync_createClass(AutoSync, [{
     key: "shouldInitialize",
     value: function shouldInitialize() {
       return dom.isTextarea(this.$note[0]);
     }
   }]);
-
-  return AutoSync;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/AutoReplace.js
-function AutoReplace_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function AutoReplace_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function AutoReplace_createClass(Constructor, protoProps, staticProps) { if (protoProps) AutoReplace_defineProperties(Constructor.prototype, protoProps); if (staticProps) AutoReplace_defineProperties(Constructor, staticProps); return Constructor; }
-
-
+;// CONCATENATED MODULE: ./src/js/module/AutoReplace.js
+function AutoReplace_typeof(o) { "@babel/helpers - typeof"; return AutoReplace_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, AutoReplace_typeof(o); }
+function AutoReplace_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function AutoReplace_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, AutoReplace_toPropertyKey(o.key), o); } }
+function AutoReplace_createClass(e, r, t) { return r && AutoReplace_defineProperties(e.prototype, r), t && AutoReplace_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function AutoReplace_toPropertyKey(t) { var i = AutoReplace_toPrimitive(t, "string"); return "symbol" == AutoReplace_typeof(i) ? i : i + ""; }
+function AutoReplace_toPrimitive(t, r) { if ("object" != AutoReplace_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != AutoReplace_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
-var AutoReplace_AutoReplace = /*#__PURE__*/function () {
+var AutoReplace = /*#__PURE__*/function () {
   function AutoReplace(context) {
     var _this = this;
-
     AutoReplace_classCallCheck(this, AutoReplace);
-
     this.context = context;
     this.options = context.options.replace || {};
-    this.keys = [core_key.code.ENTER, core_key.code.SPACE, core_key.code.PERIOD, core_key.code.COMMA, core_key.code.SEMICOLON, core_key.code.SLASH];
+    this.keys = [key.code.ENTER, key.code.SPACE, key.code.PERIOD, key.code.COMMA, key.code.SEMICOLON, key.code.SLASH];
     this.previousKeydownCode = null;
     this.events = {
-      'summernote.keyup': function summernoteKeyup(we, e) {
-        if (!e.isDefaultPrevented()) {
-          _this.handleKeyup(e);
+      'summernote.keyup': function summernoteKeyup(we, event) {
+        if (!event.isDefaultPrevented()) {
+          _this.handleKeyup(event);
         }
       },
-      'summernote.keydown': function summernoteKeydown(we, e) {
-        _this.handleKeydown(e);
+      'summernote.keydown': function summernoteKeydown(we, event) {
+        _this.handleKeydown(event);
       }
     };
   }
-
-  AutoReplace_createClass(AutoReplace, [{
+  return AutoReplace_createClass(AutoReplace, [{
     key: "shouldInitialize",
     value: function shouldInitialize() {
       return !!this.options.match;
@@ -7179,13 +6470,11 @@ var AutoReplace_AutoReplace = /*#__PURE__*/function () {
       if (!this.lastWord) {
         return;
       }
-
       var self = this;
       var keyword = this.lastWord.toString();
       this.options.match(keyword, function (match) {
         if (match) {
           var node = '';
-
           if (typeof match === 'string') {
             node = dom.createText(match);
           } else if (match instanceof jQuery) {
@@ -7193,7 +6482,6 @@ var AutoReplace_AutoReplace = /*#__PURE__*/function () {
           } else if (match instanceof Node) {
             node = match;
           }
-
           if (!node) return;
           self.lastWord.insertNode(node);
           self.lastWord = null;
@@ -7203,58 +6491,48 @@ var AutoReplace_AutoReplace = /*#__PURE__*/function () {
     }
   }, {
     key: "handleKeydown",
-    value: function handleKeydown(e) {
+    value: function handleKeydown(event) {
       // this forces it to remember the last whole word, even if multiple termination keys are pressed
       // before the previous key is let go.
       if (this.previousKeydownCode && lists.contains(this.keys, this.previousKeydownCode)) {
-        this.previousKeydownCode = e.keyCode;
+        this.previousKeydownCode = event.keyCode;
         return;
       }
-
-      if (lists.contains(this.keys, e.keyCode)) {
+      if (lists.contains(this.keys, event.keyCode)) {
         var wordRange = this.context.invoke('editor.createRange').getWordRange();
         this.lastWord = wordRange;
       }
-
-      this.previousKeydownCode = e.keyCode;
+      this.previousKeydownCode = event.keyCode;
     }
   }, {
     key: "handleKeyup",
-    value: function handleKeyup(e) {
-      if (lists.contains(this.keys, e.keyCode)) {
+    value: function handleKeyup(event) {
+      if (lists.contains(this.keys, event.keyCode)) {
         this.replace();
       }
     }
   }]);
-
-  return AutoReplace;
 }();
 
+;// CONCATENATED MODULE: ./src/js/module/Placeholder.js
+function Placeholder_typeof(o) { "@babel/helpers - typeof"; return Placeholder_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Placeholder_typeof(o); }
+function Placeholder_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Placeholder_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Placeholder_toPropertyKey(o.key), o); } }
+function Placeholder_createClass(e, r, t) { return r && Placeholder_defineProperties(e.prototype, r), t && Placeholder_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Placeholder_toPropertyKey(t) { var i = Placeholder_toPrimitive(t, "string"); return "symbol" == Placeholder_typeof(i) ? i : i + ""; }
+function Placeholder_toPrimitive(t, r) { if ("object" != Placeholder_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Placeholder_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
-// CONCATENATED MODULE: ./src/js/base/module/Placeholder.js
-function Placeholder_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Placeholder_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Placeholder_createClass(Constructor, protoProps, staticProps) { if (protoProps) Placeholder_defineProperties(Constructor.prototype, protoProps); if (staticProps) Placeholder_defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
-var Placeholder_Placeholder = /*#__PURE__*/function () {
+var Placeholder = /*#__PURE__*/function () {
   function Placeholder(context) {
     var _this = this;
-
     Placeholder_classCallCheck(this, Placeholder);
-
     this.context = context;
     this.$editingArea = context.layoutInfo.editingArea;
     this.options = context.options;
-
     if (this.options.inheritPlaceholder === true) {
       // get placeholder value from the original element
       this.options.placeholder = this.context.$note.attr('placeholder') || this.options.placeholder;
     }
-
     this.events = {
       'summernote.init summernote.change': function summernoteInitSummernoteChange() {
         _this.update();
@@ -7264,8 +6542,7 @@ var Placeholder_Placeholder = /*#__PURE__*/function () {
       }
     };
   }
-
-  Placeholder_createClass(Placeholder, [{
+  return Placeholder_createClass(Placeholder, [{
     key: "shouldInitialize",
     value: function shouldInitialize() {
       return !!this.options.placeholder;
@@ -7274,8 +6551,7 @@ var Placeholder_Placeholder = /*#__PURE__*/function () {
     key: "initialize",
     value: function initialize() {
       var _this2 = this;
-
-      this.$placeholder = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<div class="note-placeholder">');
+      this.$placeholder = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<div class="note-placeholder"></div>');
       this.$placeholder.on('click', function () {
         _this2.context.invoke('focus');
       }).html(this.options.placeholder).prependTo(this.$editingArea);
@@ -7293,48 +6569,39 @@ var Placeholder_Placeholder = /*#__PURE__*/function () {
       this.$placeholder.toggle(isShow);
     }
   }]);
-
-  return Placeholder;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/Buttons.js
-function Buttons_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Buttons_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Buttons_createClass(Constructor, protoProps, staticProps) { if (protoProps) Buttons_defineProperties(Constructor.prototype, protoProps); if (staticProps) Buttons_defineProperties(Constructor, staticProps); return Constructor; }
-
-
+;// CONCATENATED MODULE: ./src/js/module/Buttons.js
+function Buttons_typeof(o) { "@babel/helpers - typeof"; return Buttons_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Buttons_typeof(o); }
+function Buttons_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Buttons_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Buttons_toPropertyKey(o.key), o); } }
+function Buttons_createClass(e, r, t) { return r && Buttons_defineProperties(e.prototype, r), t && Buttons_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Buttons_toPropertyKey(t) { var i = Buttons_toPrimitive(t, "string"); return "symbol" == Buttons_typeof(i) ? i : i + ""; }
+function Buttons_toPrimitive(t, r) { if ("object" != Buttons_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Buttons_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
 
-var Buttons_Buttons = /*#__PURE__*/function () {
+var Buttons = /*#__PURE__*/function () {
   function Buttons(context) {
     Buttons_classCallCheck(this, Buttons);
-
-    this.ui = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui;
+    this.ui = (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.ui;
     this.context = context;
     this.$toolbar = context.layoutInfo.toolbar;
     this.options = context.options;
     this.lang = this.options.langInfo;
     this.invertedKeyMap = func.invertObject(this.options.keyMap[env.isMac ? 'mac' : 'pc']);
   }
-
-  Buttons_createClass(Buttons, [{
+  return Buttons_createClass(Buttons, [{
     key: "representShortcut",
     value: function representShortcut(editorMethod) {
       var shortcut = this.invertedKeyMap[editorMethod];
-
       if (!this.options.shortcuts || !shortcut) {
         return '';
       }
-
       if (env.isMac) {
         shortcut = shortcut.replace('CMD', '⌘').replace('SHIFT', '⇧');
       }
-
       shortcut = shortcut.replace('BACKSLASH', '\\').replace('SLASH', '/').replace('LEFTBRACKET', '[').replace('RIGHTBRACKET', ']');
       return ' (' + shortcut + ')';
     }
@@ -7344,7 +6611,6 @@ var Buttons_Buttons = /*#__PURE__*/function () {
       if (!this.options.tooltip && o.tooltip) {
         delete o.tooltip;
       }
-
       o.container = this.options.container;
       return this.ui.button(o);
     }
@@ -7368,7 +6634,6 @@ var Buttons_Buttons = /*#__PURE__*/function () {
       if (!Object.prototype.hasOwnProperty.call(this.fontInstalledMap, name)) {
         this.fontInstalledMap[name] = env.isFontInstalled(name) || lists.contains(this.options.fontNamesIgnoreCheck, name);
       }
-
       return this.fontInstalledMap[name];
     }
   }, {
@@ -7381,16 +6646,14 @@ var Buttons_Buttons = /*#__PURE__*/function () {
     key: "colorPalette",
     value: function colorPalette(className, tooltip, backColor, foreColor) {
       var _this = this;
-
       return this.ui.buttonGroup({
         className: 'note-color ' + className,
         children: [this.button({
           className: 'note-current-color-button',
           contents: this.ui.icon(this.options.icons.font + ' note-recent-color'),
           tooltip: tooltip,
-          click: function click(e) {
-            var $button = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(e.currentTarget);
-
+          click: function click(event) {
+            var $button = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(event.currentTarget);
             if (backColor && foreColor) {
               _this.context.invoke('editor.color', {
                 backColor: $button.attr('data-backColor'),
@@ -7408,12 +6671,10 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           },
           callback: function callback($button) {
             var $recentColor = $button.find('.note-recent-color');
-
             if (backColor) {
               $recentColor.css('background-color', _this.options.colorButton.backColor);
               $button.attr('data-backColor', _this.options.colorButton.backColor);
             }
-
             if (foreColor) {
               $recentColor.css('color', _this.options.colorButton.foreColor);
               $button.attr('data-foreColor', _this.options.colorButton.foreColor);
@@ -7425,13 +6686,16 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: this.ui.dropdownButtonContents('', this.options),
           tooltip: this.lang.color.more,
-          data: { 'bs-toggle': 'dropdown' }
+          data: {
+            toggle: 'dropdown'
+          }
         }), this.ui.dropdown({
-          items: (backColor ? ['<div class="note-palette">', '<div class="note-palette-title">' + this.lang.color.background + '</div>', '<div>', '<button type="button" class="note-color-reset btn btn-light btn-default" data-event="backColor" data-value="transparent">', this.lang.color.transparent, '</button>', '</div>', '<div class="note-holder" data-event="backColor"><!-- back colors --></div>', '<div>', '<button type="button" class="note-color-select btn btn-light btn-default" data-event="openPalette" data-value="backColorPicker">', this.lang.color.cpSelect, '</button>', '<input type="color" id="backColorPicker" class="note-btn note-color-select-btn" value="' + this.options.colorButton.backColor + '" data-event="backColorPalette">', '</div>', '<div class="note-holder-custom" id="backColorPalette" data-event="backColor"></div>', '</div>'].join('') : '') + (foreColor ? ['<div class="note-palette">', '<div class="note-palette-title">' + this.lang.color.foreground + '</div>', '<div>', '<button type="button" class="note-color-reset btn btn-light btn-default" data-event="removeFormat" data-value="foreColor">', this.lang.color.resetToDefault, '</button>', '</div>', '<div class="note-holder" data-event="foreColor"><!-- fore colors --></div>', '<div>', '<button type="button" class="note-color-select btn btn-light btn-default" data-event="openPalette" data-value="foreColorPicker">', this.lang.color.cpSelect, '</button>', '<input type="color" id="foreColorPicker" class="note-btn note-color-select-btn" value="' + this.options.colorButton.foreColor + '" data-event="foreColorPalette">', '</div>', // Fix missing Div, Commented to find easily if it's wrong
-          '<div class="note-holder-custom" id="foreColorPalette" data-event="foreColor"></div>', '</div>'].join('') : ''),
+          items: (backColor ? ['<div class="note-palette">', '<div class="note-palette-title">' + this.lang.color.background + '</div>', '<div>', '<button type="button" class="note-color-reset btn btn-light btn-default" data-event="backColor" data-value="transparent">', this.lang.color.transparent, '</button>', '</div>', '<div class="note-holder" data-event="backColor"><!-- back colors --></div>', '<div>', '<button type="button" class="note-color-select btn btn-light btn-default" data-event="openPalette" data-value="backColorPicker-' + this.options.id + '">', this.lang.color.cpSelect, '</button>', '<input type="color" id="backColorPicker-' + this.options.id + '" class="note-btn note-color-select-btn" value="' + this.options.colorButton.backColor + '" data-event="backColorPalette-' + this.options.id + '">', '</div>', '<div class="note-holder-custom" id="backColorPalette-' + this.options.id + '" data-event="backColor"></div>', '</div>'].join('') : '') + (foreColor ? ['<div class="note-palette">', '<div class="note-palette-title">' + this.lang.color.foreground + '</div>', '<div>', '<button type="button" class="note-color-reset btn btn-light btn-default" data-event="removeFormat" data-value="foreColor">', this.lang.color.resetToDefault, '</button>', '</div>', '<div class="note-holder" data-event="foreColor"><!-- fore colors --></div>', '<div>', '<button type="button" class="note-color-select btn btn-light btn-default" data-event="openPalette" data-value="foreColorPicker-' + this.options.id + '">', this.lang.color.cpSelect, '</button>', '<input type="color" id="foreColorPicker-' + this.options.id + '" class="note-btn note-color-select-btn" value="' + this.options.colorButton.foreColor + '" data-event="foreColorPalette-' + this.options.id + '">', '</div>',
+          // Fix missing Div, Commented to find easily if it's wrong
+          '<div class="note-holder-custom" id="foreColorPalette-' + this.options.id + '" data-event="foreColor"></div>', '</div>'].join('') : ''),
           callback: function callback($dropdown) {
             $dropdown.find('.note-holder').each(function (idx, item) {
-              var $holder = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(item);
+              var $holder = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(item);
               $holder.append(_this.ui.palette({
                 colors: _this.options.colors,
                 colorsName: _this.options.colorsName,
@@ -7441,10 +6705,9 @@ var Buttons_Buttons = /*#__PURE__*/function () {
               }).render());
             });
             /* TODO: do we have to record recent custom colors within cookies? */
-
             var customColors = [['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF']];
             $dropdown.find('.note-holder-custom').each(function (idx, item) {
-              var $holder = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(item);
+              var $holder = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(item);
               $holder.append(_this.ui.palette({
                 colors: customColors,
                 colorsName: customColors,
@@ -7454,31 +6717,32 @@ var Buttons_Buttons = /*#__PURE__*/function () {
               }).render());
             });
             $dropdown.find('input[type=color]').each(function (idx, item) {
-              external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(item).change(function () {
-                var $chip = $dropdown.find('#' + external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(this).data('event')).find('.note-color-btn').first();
+              external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(item).on("change", function () {
+                var $chip = $dropdown.find('#' + external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(this).data('event')).find('.note-color-btn').first();
                 var color = this.value.toUpperCase();
                 $chip.css('background-color', color).attr('aria-label', color).attr('data-value', color).attr('data-original-title', color);
-                $chip.click();
+                $chip.trigger('click');
               });
             });
           },
           click: function click(event) {
             event.stopPropagation();
-            var $parent = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('.' + className).find('.note-dropdown-menu');
-            var $button = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(event.target);
+            var $parent = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('.' + className).find('.note-dropdown-menu');
+            var $button = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(event.target);
             var eventName = $button.data('event');
             var value = $button.attr('data-value');
-
             if (eventName === 'openPalette') {
               var $picker = $parent.find('#' + value);
-              var $palette = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()($parent.find('#' + $picker.data('event')).find('.note-color-row')[0]); // Shift palette chips
+              var $palette = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()($parent.find('#' + $picker.data('event')).find('.note-color-row')[0]);
 
-              var $chip = $palette.find('.note-color-btn').last().detach(); // Set chip attributes
+              // Shift palette chips
+              var $chip = $palette.find('.note-color-btn').last().detach();
 
+              // Set chip attributes
               var color = $picker.val();
               $chip.css('background-color', color).attr('aria-label', color).attr('data-value', color).attr('data-original-title', color);
               $palette.prepend($chip);
-              $picker.click();
+              $picker.trigger('click');
             } else {
               if (lists.contains(['backColor', 'foreColor'], eventName)) {
                 var key = eventName === 'backColor' ? 'background-color' : 'color';
@@ -7487,7 +6751,6 @@ var Buttons_Buttons = /*#__PURE__*/function () {
                 $color.css(key, value);
                 $currentButton.attr('data-' + eventName, value);
               }
-
               _this.context.invoke('editor.' + eventName, value);
             }
           }
@@ -7498,13 +6761,14 @@ var Buttons_Buttons = /*#__PURE__*/function () {
     key: "addToolbarButtons",
     value: function addToolbarButtons() {
       var _this2 = this;
-
       this.context.memo('button.style', function () {
         return _this2.ui.buttonGroup([_this2.button({
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents(_this2.ui.icon(_this2.options.icons.magic), _this2.options),
           tooltip: _this2.lang.style.style,
-          data: { 'bs-toggle': 'dropdown' }
+          data: {
+            toggle: 'dropdown'
+          }
         }), _this2.ui.dropdown({
           className: 'dropdown-style',
           items: _this2.options.styleTags,
@@ -7517,7 +6781,6 @@ var Buttons_Buttons = /*#__PURE__*/function () {
                 title: Object.prototype.hasOwnProperty.call(_this2.lang.style, item) ? _this2.lang.style[item] : item
               };
             }
-
             var tag = item.tag;
             var title = item.title;
             var style = item.style ? ' style="' + item.style + '" ' : '';
@@ -7527,10 +6790,8 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           click: _this2.context.createInvokeHandler('editor.formatBlock')
         })]).render();
       });
-
-      var _loop = function _loop(styleIdx, styleLen) {
+      var _loop = function _loop() {
         var item = _this2.options.styleTags[styleIdx];
-
         _this2.context.memo('button.style.' + item, function () {
           return _this2.button({
             className: 'note-btn-style-' + item,
@@ -7540,11 +6801,9 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           }).render();
         });
       };
-
       for (var styleIdx = 0, styleLen = this.options.styleTags.length; styleIdx < styleLen; styleIdx++) {
-        _loop(styleIdx, styleLen);
+        _loop();
       }
-
       this.context.memo('button.bold', function () {
         return _this2.button({
           className: 'note-btn-bold',
@@ -7602,12 +6861,10 @@ var Buttons_Buttons = /*#__PURE__*/function () {
       });
       this.context.memo('button.fontname', function () {
         var styleInfo = _this2.context.invoke('editor.currentStyle');
-
         if (_this2.options.addDefaultFonts) {
           // Add 'default' fonts into the fontnames array if not exist
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(styleInfo['font-family'].split(','), function (idx, fontname) {
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(styleInfo['font-family'].split(','), function (idx, fontname) {
             fontname = fontname.trim().replace(/['"]+/g, '');
-
             if (_this2.isFontDeservedToAdd(fontname)) {
               if (_this2.options.fontNames.indexOf(fontname) === -1) {
                 _this2.options.fontNames.push(fontname);
@@ -7615,12 +6872,13 @@ var Buttons_Buttons = /*#__PURE__*/function () {
             }
           });
         }
-
         return _this2.ui.buttonGroup([_this2.button({
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents('<span class="note-current-fontname"></span>', _this2.options),
           tooltip: _this2.lang.font.name,
-          data: { 'bs-toggle': 'dropdown' }
+          data: {
+            toggle: 'dropdown'
+          }
         }), _this2.ui.dropdownCheck({
           className: 'dropdown-fontname',
           checkClassName: _this2.options.icons.menuCheck,
@@ -7637,7 +6895,9 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents('<span class="note-current-fontsize"></span>', _this2.options),
           tooltip: _this2.lang.font.size,
-          data: { 'bs-toggle': 'dropdown' }
+          data: {
+            toggle: 'dropdown'
+          }
         }), _this2.ui.dropdownCheck({
           className: 'dropdown-fontsize',
           checkClassName: _this2.options.icons.menuCheck,
@@ -7651,7 +6911,9 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents('<span class="note-current-fontsizeunit"></span>', _this2.options),
           tooltip: _this2.lang.font.sizeunit,
-          data: { 'bs-toggle': 'dropdown' }
+          data: {
+            toggle: 'dropdown'
+          }
         }), _this2.ui.dropdownCheck({
           className: 'dropdown-fontsizeunit',
           checkClassName: _this2.options.icons.menuCheck,
@@ -7724,7 +6986,9 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents(_this2.ui.icon(_this2.options.icons.alignLeft), _this2.options),
           tooltip: _this2.lang.paragraph.paragraph,
-          data: { 'bs-toggle': 'dropdown' }
+          data: {
+            toggle: 'dropdown'
+          }
         }), _this2.ui.dropdown([_this2.ui.buttonGroup({
           className: 'note-align',
           children: [justifyLeft, justifyCenter, justifyRight, justifyFull]
@@ -7738,7 +7002,9 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents(_this2.ui.icon(_this2.options.icons.textHeight), _this2.options),
           tooltip: _this2.lang.font.height,
-          data: { 'bs-toggle': 'dropdown' }
+          data: {
+            toggle: 'dropdown'
+          }
         }), _this2.ui.dropdownCheck({
           items: _this2.options.lineHeights,
           checkClassName: _this2.options.icons.menuCheck,
@@ -7752,7 +7018,9 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           className: 'dropdown-toggle',
           contents: _this2.ui.dropdownButtonContents(_this2.ui.icon(_this2.options.icons.table), _this2.options),
           tooltip: _this2.lang.table.table,
-          data: { 'bs-toggle': 'dropdown' }
+          data: {
+            toggle: 'dropdown'
+          }
         }), _this2.ui.dropdown({
           title: _this2.lang.table.table,
           className: 'note-table',
@@ -7763,7 +7031,7 @@ var Buttons_Buttons = /*#__PURE__*/function () {
             $catcher.css({
               width: _this2.options.insertTableMaxSize.col + 'em',
               height: _this2.options.insertTableMaxSize.row + 'em'
-            }).mousedown(_this2.context.createInvokeHandler('editor.insertTable')).on('mousemove', _this2.tableMoveHandler.bind(_this2));
+            }).on('mousedown', _this2.context.createInvokeHandler('editor.insertTable')).on('mousemove', _this2.tableMoveHandler.bind(_this2));
           }
         }).render();
       });
@@ -7833,6 +7101,7 @@ var Buttons_Buttons = /*#__PURE__*/function () {
         }).render();
       });
     }
+
     /**
      * image: [
      *   ['imageResize', ['resizeFull', 'resizeHalf', 'resizeQuarter', 'resizeNone']],
@@ -7840,12 +7109,10 @@ var Buttons_Buttons = /*#__PURE__*/function () {
      *   ['remove', ['removeMedia']],
      * ],
      */
-
   }, {
     key: "addImagePopoverButtons",
     value: function addImagePopoverButtons() {
       var _this3 = this;
-
       // Image Size Buttons
       this.context.memo('button.resizeFull', function () {
         return _this3.button({
@@ -7874,8 +7141,9 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           tooltip: _this3.lang.image.resizeNone,
           click: _this3.context.createInvokeHandler('editor.resize', '0')
         }).render();
-      }); // Float Buttons
+      });
 
+      // Float Buttons
       this.context.memo('button.floatLeft', function () {
         return _this3.button({
           contents: _this3.ui.icon(_this3.options.icons.floatLeft),
@@ -7896,8 +7164,9 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           tooltip: _this3.lang.image.floatNone,
           click: _this3.context.createInvokeHandler('editor.floatMe', 'none')
         }).render();
-      }); // Remove Buttons
+      });
 
+      // Remove Buttons
       this.context.memo('button.removeMedia', function () {
         return _this3.button({
           contents: _this3.ui.icon(_this3.options.icons.trash),
@@ -7910,7 +7179,6 @@ var Buttons_Buttons = /*#__PURE__*/function () {
     key: "addLinkPopoverButtons",
     value: function addLinkPopoverButtons() {
       var _this4 = this;
-
       this.context.memo('button.linkDialogShow', function () {
         return _this4.button({
           contents: _this4.ui.icon(_this4.options.icons.link),
@@ -7926,18 +7194,17 @@ var Buttons_Buttons = /*#__PURE__*/function () {
         }).render();
       });
     }
+
     /**
      * table : [
      *  ['add', ['addRowDown', 'addRowUp', 'addColLeft', 'addColRight']],
      *  ['delete', ['deleteRow', 'deleteCol', 'deleteTable']]
      * ],
      */
-
   }, {
     key: "addTablePopoverButtons",
     value: function addTablePopoverButtons() {
       var _this5 = this;
-
       this.context.memo('button.addRowUp', function () {
         return _this5.button({
           className: 'btn-md',
@@ -8005,27 +7272,22 @@ var Buttons_Buttons = /*#__PURE__*/function () {
         var $group = this.ui.buttonGroup({
           className: 'note-' + groupName
         }).render();
-
         for (var idx = 0, len = buttons.length; idx < len; idx++) {
           var btn = this.context.memo('button.' + buttons[idx]);
-
           if (btn) {
             $group.append(typeof btn === 'function' ? btn(this.context) : btn);
           }
         }
-
         $group.appendTo($container);
       }
     }
+
     /**
      * @param {jQuery} [$container]
      */
-
   }, {
     key: "updateCurrentStyle",
     value: function updateCurrentStyle($container) {
-      var _this6 = this;
-
       var $cont = $container || this.$toolbar;
       var styleInfo = this.context.invoke('editor.currentStyle');
       this.updateBtnStates($cont, {
@@ -8048,71 +7310,68 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           return styleInfo['font-strikethrough'] === 'strikethrough';
         }
       });
-
       if (styleInfo['font-family']) {
         var fontNames = styleInfo['font-family'].split(',').map(function (name) {
           return name.replace(/[\'\"]/g, '').replace(/\s+$/, '').replace(/^\s+/, '');
         });
         var fontName = lists.find(fontNames, this.isFontInstalled.bind(this));
         $cont.find('.dropdown-fontname a').each(function (idx, item) {
-          var $item = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(item); // always compare string to avoid creating another func.
-
+          var $item = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(item);
+          // always compare string to avoid creating another func.
           var isChecked = $item.data('value') + '' === fontName + '';
           $item.toggleClass('checked', isChecked);
         });
         $cont.find('.note-current-fontname').text(fontName).css('font-family', fontName);
       }
-
       if (styleInfo['font-size']) {
         var fontSize = styleInfo['font-size'];
         $cont.find('.dropdown-fontsize a').each(function (idx, item) {
-          var $item = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(item); // always compare with string to avoid creating another func.
-
+          var $item = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(item);
+          // always compare with string to avoid creating another func.
           var isChecked = $item.data('value') + '' === fontSize + '';
           $item.toggleClass('checked', isChecked);
         });
         $cont.find('.note-current-fontsize').text(fontSize);
         var fontSizeUnit = styleInfo['font-size-unit'];
         $cont.find('.dropdown-fontsizeunit a').each(function (idx, item) {
-          var $item = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(item);
+          var $item = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(item);
           var isChecked = $item.data('value') + '' === fontSizeUnit + '';
           $item.toggleClass('checked', isChecked);
         });
         $cont.find('.note-current-fontsizeunit').text(fontSizeUnit);
       }
-
       if (styleInfo['line-height']) {
         var lineHeight = styleInfo['line-height'];
-        $cont.find('.dropdown-line-height li a').each(function (idx, item) {
+        $cont.find('.dropdown-line-height a').each(function (idx, item) {
+          var $item = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(item);
           // always compare with string to avoid creating another func.
-          var isChecked = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(item).data('value') + '' === lineHeight + '';
-          _this6.className = isChecked ? 'checked' : '';
+          var isChecked = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(item).data('value') + '' === lineHeight + '';
+          $item.toggleClass('checked', isChecked);
         });
+        $cont.find('.note-current-line-height').text(lineHeight);
       }
     }
   }, {
     key: "updateBtnStates",
     value: function updateBtnStates($container, infos) {
-      var _this7 = this;
-
-      external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.each(infos, function (selector, pred) {
-        _this7.ui.toggleBtnActive($container.find(selector), pred());
+      var _this6 = this;
+      external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(infos, function (selector, pred) {
+        _this6.ui.toggleBtnActive($container.find(selector), pred());
       });
     }
   }, {
     key: "tableMoveHandler",
     value: function tableMoveHandler(event) {
       var PX_PER_EM = 18;
-      var $picker = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(event.target.parentNode); // target is mousecatcher
-
+      var $picker = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(event.target.parentNode); // target is mousecatcher
       var $dimensionDisplay = $picker.next();
       var $catcher = $picker.find('.note-dimension-picker-mousecatcher');
       var $highlighted = $picker.find('.note-dimension-picker-highlighted');
       var $unhighlighted = $picker.find('.note-dimension-picker-unhighlighted');
-      var posOffset; // HTML5 with jQuery - e.offsetX is undefined in Firefox
-
+      var posOffset;
+      // HTML5 with jQuery - e.offsetX is undefined in Firefox
       if (event.offsetX === undefined) {
-        var posCatcher = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(event.target).offset();
+        var posCatcher = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(event.target).offset();
         posOffset = {
           x: event.pageX - posCatcher.left,
           y: event.pageY - posCatcher.top
@@ -8123,7 +7382,6 @@ var Buttons_Buttons = /*#__PURE__*/function () {
           y: event.offsetY
         };
       }
-
       var dim = {
         c: Math.ceil(posOffset.x / PX_PER_EM) || 1,
         r: Math.ceil(posOffset.y / PX_PER_EM) || 1
@@ -8133,44 +7391,36 @@ var Buttons_Buttons = /*#__PURE__*/function () {
         height: dim.r + 'em'
       });
       $catcher.data('value', dim.c + 'x' + dim.r);
-
       if (dim.c > 3 && dim.c < this.options.insertTableMaxSize.col) {
         $unhighlighted.css({
           width: dim.c + 1 + 'em'
         });
       }
-
       if (dim.r > 3 && dim.r < this.options.insertTableMaxSize.row) {
         $unhighlighted.css({
           height: dim.r + 1 + 'em'
         });
       }
-
       $dimensionDisplay.html(dim.c + ' x ' + dim.r);
     }
   }]);
-
-  return Buttons;
 }();
 
+;// CONCATENATED MODULE: ./src/js/module/Toolbar.js
+function Toolbar_typeof(o) { "@babel/helpers - typeof"; return Toolbar_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, Toolbar_typeof(o); }
+function Toolbar_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function Toolbar_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, Toolbar_toPropertyKey(o.key), o); } }
+function Toolbar_createClass(e, r, t) { return r && Toolbar_defineProperties(e.prototype, r), t && Toolbar_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function Toolbar_toPropertyKey(t) { var i = Toolbar_toPrimitive(t, "string"); return "symbol" == Toolbar_typeof(i) ? i : i + ""; }
+function Toolbar_toPrimitive(t, r) { if ("object" != Toolbar_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != Toolbar_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
-// CONCATENATED MODULE: ./src/js/base/module/Toolbar.js
-function Toolbar_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Toolbar_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Toolbar_createClass(Constructor, protoProps, staticProps) { if (protoProps) Toolbar_defineProperties(Constructor.prototype, protoProps); if (staticProps) Toolbar_defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
-var Toolbar_Toolbar = /*#__PURE__*/function () {
+var Toolbar = /*#__PURE__*/function () {
   function Toolbar(context) {
     Toolbar_classCallCheck(this, Toolbar);
-
     this.context = context;
-    this.$window = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(window);
-    this.$document = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(document);
-    this.ui = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui;
+    this.$window = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(window);
+    this.$document = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(document);
+    this.ui = (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.ui;
     this.$note = context.layoutInfo.note;
     this.$editor = context.layoutInfo.editor;
     this.$toolbar = context.layoutInfo.toolbar;
@@ -8180,8 +7430,7 @@ var Toolbar_Toolbar = /*#__PURE__*/function () {
     this.isFollowing = false;
     this.followScroll = this.followScroll.bind(this);
   }
-
-  Toolbar_createClass(Toolbar, [{
+  return Toolbar_createClass(Toolbar, [{
     key: "shouldInitialize",
     value: function shouldInitialize() {
       return !this.options.airMode;
@@ -8190,25 +7439,20 @@ var Toolbar_Toolbar = /*#__PURE__*/function () {
     key: "initialize",
     value: function initialize() {
       var _this = this;
-
       this.options.toolbar = this.options.toolbar || [];
-
       if (!this.options.toolbar.length) {
         this.$toolbar.hide();
       } else {
         this.context.invoke('buttons.build', this.$toolbar, this.options.toolbar);
       }
-
       if (this.options.toolbarContainer) {
         this.$toolbar.appendTo(this.options.toolbarContainer);
       }
-
       this.changeContainer(false);
       this.$note.on('summernote.keyup summernote.mouseup summernote.change', function () {
         _this.context.invoke('buttons.updateCurrentStyle');
       });
       this.context.invoke('buttons.updateCurrentStyle');
-
       if (this.options.followingToolbar) {
         this.$window.on('scroll resize', this.followScroll);
       }
@@ -8217,7 +7461,6 @@ var Toolbar_Toolbar = /*#__PURE__*/function () {
     key: "destroy",
     value: function destroy() {
       this.$toolbar.children().remove();
-
       if (this.options.followingToolbar) {
         this.$window.off('scroll resize', this.followScroll);
       }
@@ -8228,24 +7471,21 @@ var Toolbar_Toolbar = /*#__PURE__*/function () {
       if (this.$editor.hasClass('fullscreen')) {
         return false;
       }
-
       var editorHeight = this.$editor.outerHeight();
       var editorWidth = this.$editor.width();
       var toolbarHeight = this.$toolbar.height();
-      var statusbarHeight = this.$statusbar.height(); // check if the web app is currently using another static bar
+      var statusbarHeight = this.$statusbar.height();
 
+      // check if the web app is currently using another static bar
       var otherBarHeight = 0;
-
       if (this.options.otherStaticBar) {
-        otherBarHeight = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(this.options.otherStaticBar).outerHeight();
+        otherBarHeight = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(this.options.otherStaticBar).outerHeight();
       }
-
       var currentOffset = this.$document.scrollTop();
       var editorOffsetTop = this.$editor.offset().top;
       var editorOffsetBottom = editorOffsetTop + editorHeight;
       var activateOffset = editorOffsetTop - otherBarHeight;
       var deactivateOffsetBottom = editorOffsetBottom - otherBarHeight - toolbarHeight - statusbarHeight;
-
       if (!this.isFollowing && currentOffset > activateOffset && currentOffset < deactivateOffsetBottom - toolbarHeight) {
         this.isFollowing = true;
         this.$editable.css({
@@ -8280,7 +7520,6 @@ var Toolbar_Toolbar = /*#__PURE__*/function () {
           this.$toolbar.appendTo(this.options.toolbarContainer);
         }
       }
-
       if (this.options.followingToolbar) {
         this.followScroll();
       }
@@ -8295,7 +7534,6 @@ var Toolbar_Toolbar = /*#__PURE__*/function () {
     key: "updateCodeview",
     value: function updateCodeview(isCodeview) {
       this.ui.toggleBtnActive(this.$toolbar.find('.btn-codeview'), isCodeview);
-
       if (isCodeview) {
         this.deactivate();
       } else {
@@ -8306,68 +7544,57 @@ var Toolbar_Toolbar = /*#__PURE__*/function () {
     key: "activate",
     value: function activate(isIncludeCodeview) {
       var $btn = this.$toolbar.find('button');
-
       if (!isIncludeCodeview) {
         $btn = $btn.not('.note-codeview-keep');
       }
-
       this.ui.toggleBtn($btn, true);
     }
   }, {
     key: "deactivate",
     value: function deactivate(isIncludeCodeview) {
       var $btn = this.$toolbar.find('button');
-
       if (!isIncludeCodeview) {
         $btn = $btn.not('.note-codeview-keep');
       }
-
       this.ui.toggleBtn($btn, false);
     }
   }]);
-
-  return Toolbar;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/LinkDialog.js
-function LinkDialog_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function LinkDialog_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function LinkDialog_createClass(Constructor, protoProps, staticProps) { if (protoProps) LinkDialog_defineProperties(Constructor.prototype, protoProps); if (staticProps) LinkDialog_defineProperties(Constructor, staticProps); return Constructor; }
-
-
+;// CONCATENATED MODULE: ./src/js/module/LinkDialog.js
+function LinkDialog_typeof(o) { "@babel/helpers - typeof"; return LinkDialog_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, LinkDialog_typeof(o); }
+function LinkDialog_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function LinkDialog_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, LinkDialog_toPropertyKey(o.key), o); } }
+function LinkDialog_createClass(e, r, t) { return r && LinkDialog_defineProperties(e.prototype, r), t && LinkDialog_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function LinkDialog_toPropertyKey(t) { var i = LinkDialog_toPrimitive(t, "string"); return "symbol" == LinkDialog_typeof(i) ? i : i + ""; }
+function LinkDialog_toPrimitive(t, r) { if ("object" != LinkDialog_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != LinkDialog_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
 
-var LinkDialog_LinkDialog = /*#__PURE__*/function () {
+var LinkDialog_MAILTO_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+var LinkDialog_TEL_PATTERN = /^(\+?\d{1,3}[\s-]?)?(\d{1,4})[\s-]?(\d{1,4})[\s-]?(\d{1,4})$/;
+var LinkDialog_URL_SCHEME_PATTERN = /^([A-Za-z][A-Za-z0-9+-.]*\:|#|\/)/;
+var LinkDialog = /*#__PURE__*/function () {
   function LinkDialog(context) {
     LinkDialog_classCallCheck(this, LinkDialog);
-
     this.context = context;
-    this.ui = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui;
-    this.$body = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(document.body);
+    this.ui = (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.ui;
+    this.$body = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(document.body);
     this.$editor = context.layoutInfo.editor;
     this.options = context.options;
     this.lang = this.options.langInfo;
     context.memo('help.linkDialog.show', this.options.langInfo.help['linkDialog.show']);
   }
-
-  LinkDialog_createClass(LinkDialog, [{
+  return LinkDialog_createClass(LinkDialog, [{
     key: "initialize",
     value: function initialize() {
       var $container = this.options.dialogsInBody ? this.$body : this.options.container;
-      var body = ['<div class="form-group note-form-group">', "<label for=\"note-dialog-link-txt-".concat(this.options.id, "\" class=\"note-form-label\">").concat(this.lang.link.textToDisplay, "</label>"), "<input id=\"note-dialog-link-txt-".concat(this.options.id, "\" class=\"note-link-text form-control note-form-control note-input\" type=\"text\"/>"), '</div>', '<div class="form-group note-form-group">', "<label for=\"note-dialog-link-url-".concat(this.options.id, "\" class=\"note-form-label\">").concat(this.lang.link.url, "</label>"), "<input id=\"note-dialog-link-url-".concat(this.options.id, "\" class=\"note-link-url form-control note-form-control note-input\" type=\"text\" value=\"http://\"/>"), '</div>', !this.options.disableLinkTarget ? external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<div></div>').append(this.ui.checkbox({
+      var body = ['<div class="form-group note-form-group">', "<label for=\"note-dialog-link-txt-".concat(this.options.id, "\" class=\"note-form-label\">").concat(this.lang.link.textToDisplay, "</label>"), "<input id=\"note-dialog-link-txt-".concat(this.options.id, "\" class=\"note-link-text form-control note-form-control note-input\" type=\"text\"/>"), '</div>', '<div class="form-group note-form-group">', "<label for=\"note-dialog-link-url-".concat(this.options.id, "\" class=\"note-form-label\">").concat(this.lang.link.url, "</label>"), "<input id=\"note-dialog-link-url-".concat(this.options.id, "\" class=\"note-link-url form-control note-form-control note-input\" type=\"text\" value=\"http://\"/>"), '</div>', !this.options.disableLinkTarget ? external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<div></div>').append(this.ui.checkbox({
         className: 'sn-checkbox-open-in-new-window',
         text: this.lang.link.openInNewWindow,
         checked: true
-      }).render()).html() : '', external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<div></div>').append(this.ui.checkbox({
-        className: 'sn-checkbox-use-protocol',
-        text: this.lang.link.useProtocol,
-        checked: true
-      }).render()).html()].join('');
+      }).render()).html() : ''].join('');
       var buttonClass = 'btn btn-primary note-btn note-btn-primary note-link-btn';
       var footer = "<input type=\"button\" href=\"#\" class=\"".concat(buttonClass, "\" value=\"").concat(this.lang.link.insert, "\" disabled>");
       this.$dialog = this.ui.dialog({
@@ -8388,58 +7615,73 @@ var LinkDialog_LinkDialog = /*#__PURE__*/function () {
     key: "bindEnterKey",
     value: function bindEnterKey($input, $btn) {
       $input.on('keypress', function (event) {
-        if (event.keyCode === core_key.code.ENTER) {
+        if (event.keyCode === key.code.ENTER) {
           event.preventDefault();
           $btn.trigger('click');
         }
       });
     }
+  }, {
+    key: "checkLinkUrl",
+    value: function checkLinkUrl(linkUrl) {
+      if (LinkDialog_MAILTO_PATTERN.test(linkUrl)) {
+        return 'mailto://' + linkUrl;
+      } else if (LinkDialog_TEL_PATTERN.test(linkUrl)) {
+        return 'tel://' + linkUrl;
+      } else if (!LinkDialog_URL_SCHEME_PATTERN.test(linkUrl)) {
+        return 'http://' + linkUrl;
+      }
+      return linkUrl;
+    }
+  }, {
+    key: "onCheckLinkUrl",
+    value: function onCheckLinkUrl($input) {
+      var _this = this;
+      $input.on('blur', function (event) {
+        event.target.value = event.target.value == '' ? '' : _this.checkLinkUrl(event.target.value);
+      });
+    }
+
     /**
      * toggle update button
      */
-
   }, {
     key: "toggleLinkBtn",
     value: function toggleLinkBtn($linkBtn, $linkText, $linkUrl) {
       this.ui.toggleBtn($linkBtn, $linkText.val() && $linkUrl.val());
     }
+
     /**
      * Show link dialog and set event handlers on dialog controls.
      *
      * @param {Object} linkInfo
      * @return {Promise}
      */
-
   }, {
     key: "showLinkDialog",
     value: function showLinkDialog(linkInfo) {
-      var _this = this;
+      var _this2 = this;
+      return external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().Deferred(function (deferred) {
+        var $linkText = _this2.$dialog.find('.note-link-text');
+        var $linkUrl = _this2.$dialog.find('.note-link-url');
+        var $linkBtn = _this2.$dialog.find('.note-link-btn');
+        var $openInNewWindow = _this2.$dialog.find('.sn-checkbox-open-in-new-window input[type=checkbox]');
+        _this2.ui.onDialogShown(_this2.$dialog, function () {
+          _this2.context.triggerEvent('dialog.shown');
 
-      return external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.Deferred(function (deferred) {
-        var $linkText = _this.$dialog.find('.note-link-text');
-
-        var $linkUrl = _this.$dialog.find('.note-link-url');
-
-        var $linkBtn = _this.$dialog.find('.note-link-btn');
-
-        var $openInNewWindow = _this.$dialog.find('.sn-checkbox-open-in-new-window input[type=checkbox]');
-
-        var $useProtocol = _this.$dialog.find('.sn-checkbox-use-protocol input[type=checkbox]');
-
-        _this.ui.onDialogShown(_this.$dialog, function () {
-          _this.context.triggerEvent('dialog.shown'); // If no url was given and given text is valid URL then copy that into URL Field
-
-
+          // If no url was given and given text is valid URL then copy that into URL Field
           if (!linkInfo.url && func.isValidUrl(linkInfo.text)) {
-            linkInfo.url = linkInfo.text;
+            linkInfo.url = _this2.checkLinkUrl(linkInfo.text);
           }
-
           $linkText.on('input paste propertychange', function () {
             // If linktext was modified by input events,
             // cloning text from linkUrl will be stopped.
-            linkInfo.text = $linkText.val();
-
-            _this.toggleLinkBtn($linkBtn, $linkText, $linkUrl);
+            var text = $linkText.val();
+            var div = document.createElement('div');
+            div.innerText = text;
+            text = div.innerHTML;
+            linkInfo.text = text;
+            _this2.toggleLinkBtn($linkBtn, $linkText, $linkUrl);
           }).val(linkInfo.text);
           $linkUrl.on('input paste propertychange', function () {
             // Display same text on `Text to display` as default
@@ -8447,108 +7689,96 @@ var LinkDialog_LinkDialog = /*#__PURE__*/function () {
             if (!linkInfo.text) {
               $linkText.val($linkUrl.val());
             }
-
-            _this.toggleLinkBtn($linkBtn, $linkText, $linkUrl);
+            _this2.toggleLinkBtn($linkBtn, $linkText, $linkUrl);
           }).val(linkInfo.url);
-
           if (!env.isSupportTouch) {
             $linkUrl.trigger('focus');
           }
-
-          _this.toggleLinkBtn($linkBtn, $linkText, $linkUrl);
-
-          _this.bindEnterKey($linkUrl, $linkBtn);
-
-          _this.bindEnterKey($linkText, $linkBtn);
-
-          var isNewWindowChecked = linkInfo.isNewWindow !== undefined ? linkInfo.isNewWindow : _this.context.options.linkTargetBlank;
+          _this2.toggleLinkBtn($linkBtn, $linkText, $linkUrl);
+          _this2.bindEnterKey($linkUrl, $linkBtn);
+          _this2.bindEnterKey($linkText, $linkBtn);
+          _this2.onCheckLinkUrl($linkUrl);
+          var isNewWindowChecked = linkInfo.isNewWindow !== undefined ? linkInfo.isNewWindow : _this2.context.options.linkTargetBlank;
           $openInNewWindow.prop('checked', isNewWindowChecked);
-          var useProtocolChecked = linkInfo.url ? false : _this.context.options.useProtocol;
-          $useProtocol.prop('checked', useProtocolChecked);
           $linkBtn.one('click', function (event) {
             event.preventDefault();
             deferred.resolve({
               range: linkInfo.range,
               url: $linkUrl.val(),
               text: $linkText.val(),
-              isNewWindow: $openInNewWindow.is(':checked'),
-              checkProtocol: $useProtocol.is(':checked')
+              isNewWindow: $openInNewWindow.is(':checked')
             });
-
-            _this.ui.hideDialog(_this.$dialog);
+            _this2.ui.hideDialog(_this2.$dialog);
           });
         });
-
-        _this.ui.onDialogHidden(_this.$dialog, function () {
+        _this2.ui.onDialogHidden(_this2.$dialog, function () {
           // detach events
           $linkText.off();
           $linkUrl.off();
           $linkBtn.off();
-
           if (deferred.state() === 'pending') {
             deferred.reject();
           }
         });
-
-        _this.ui.showDialog(_this.$dialog);
+        _this2.ui.showDialog(_this2.$dialog);
       }).promise();
     }
+
     /**
      * @param {Object} layoutInfo
      */
-
   }, {
     key: "show",
     value: function show() {
-      var _this2 = this;
-
+      var _this3 = this;
       var linkInfo = this.context.invoke('editor.getLinkInfo');
       this.context.invoke('editor.saveRange');
       this.showLinkDialog(linkInfo).then(function (linkInfo) {
-        _this2.context.invoke('editor.restoreRange');
-
-        _this2.context.invoke('editor.createLink', linkInfo);
+        _this3.context.invoke('editor.restoreRange');
+        _this3.context.invoke('editor.createLink', linkInfo);
       }).fail(function () {
-        _this2.context.invoke('editor.restoreRange');
+        _this3.context.invoke('editor.restoreRange');
       });
     }
   }]);
-
-  return LinkDialog;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/LinkPopover.js
-function LinkPopover_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function LinkPopover_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function LinkPopover_createClass(Constructor, protoProps, staticProps) { if (protoProps) LinkPopover_defineProperties(Constructor.prototype, protoProps); if (staticProps) LinkPopover_defineProperties(Constructor, staticProps); return Constructor; }
-
-
+;// CONCATENATED MODULE: ./src/js/module/LinkPopover.js
+function LinkPopover_typeof(o) { "@babel/helpers - typeof"; return LinkPopover_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, LinkPopover_typeof(o); }
+function LinkPopover_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function LinkPopover_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, LinkPopover_toPropertyKey(o.key), o); } }
+function LinkPopover_createClass(e, r, t) { return r && LinkPopover_defineProperties(e.prototype, r), t && LinkPopover_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function LinkPopover_toPropertyKey(t) { var i = LinkPopover_toPrimitive(t, "string"); return "symbol" == LinkPopover_typeof(i) ? i : i + ""; }
+function LinkPopover_toPrimitive(t, r) { if ("object" != LinkPopover_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != LinkPopover_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
-var LinkPopover_LinkPopover = /*#__PURE__*/function () {
+var LinkPopover = /*#__PURE__*/function () {
   function LinkPopover(context) {
     var _this = this;
-
     LinkPopover_classCallCheck(this, LinkPopover);
-
     this.context = context;
-    this.ui = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui;
+    this.ui = (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.ui;
     this.options = context.options;
     this.events = {
       'summernote.keyup summernote.mouseup summernote.change summernote.scroll': function summernoteKeyupSummernoteMouseupSummernoteChangeSummernoteScroll() {
         _this.update();
       },
-      'summernote.disable summernote.dialog.shown summernote.blur': function summernoteDisableSummernoteDialogShownSummernoteBlur() {
+      'summernote.disable summernote.dialog.shown': function summernoteDisableSummernoteDialogShown() {
         _this.hide();
+      },
+      'summernote.blur': function summernoteBlur(we, event) {
+        if (event.originalEvent && event.originalEvent.relatedTarget) {
+          if (!_this.$popover[0].contains(event.originalEvent.relatedTarget)) {
+            _this.hide();
+          }
+        } else {
+          _this.hide();
+        }
       }
     };
   }
-
-  LinkPopover_createClass(LinkPopover, [{
+  return LinkPopover_createClass(LinkPopover, [{
     key: "shouldInitialize",
     value: function shouldInitialize() {
       return !lists.isEmpty(this.options.popover.link);
@@ -8565,8 +7795,8 @@ var LinkPopover_LinkPopover = /*#__PURE__*/function () {
       }).render().appendTo(this.options.container);
       var $content = this.$popover.find('.popover-content,.note-popover-content');
       this.context.invoke('buttons.build', $content, this.options.popover.link);
-      this.$popover.on('mousedown', function (e) {
-        e.preventDefault();
+      this.$popover.on('mousedown', function (event) {
+        event.preventDefault();
       });
     }
   }, {
@@ -8582,15 +7812,13 @@ var LinkPopover_LinkPopover = /*#__PURE__*/function () {
         this.hide();
         return;
       }
-
       var rng = this.context.invoke('editor.getLastRange');
-
       if (rng.isCollapsed() && rng.isOnAnchor()) {
         var anchor = dom.ancestor(rng.sc, dom.isAnchor);
-        var href = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(anchor).attr('href');
+        var href = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(anchor).attr('href');
         this.$popover.find('a').attr('href', href).text(href);
         var pos = dom.posFromPlaceholder(anchor);
-        var containerOffset = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(this.options.container).offset();
+        var containerOffset = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(this.options.container).offset();
         pos.top -= containerOffset.top;
         pos.left -= containerOffset.left;
         this.$popover.css({
@@ -8608,47 +7836,39 @@ var LinkPopover_LinkPopover = /*#__PURE__*/function () {
       this.$popover.hide();
     }
   }]);
-
-  return LinkPopover;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/ImageDialog.js
-function ImageDialog_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function ImageDialog_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function ImageDialog_createClass(Constructor, protoProps, staticProps) { if (protoProps) ImageDialog_defineProperties(Constructor.prototype, protoProps); if (staticProps) ImageDialog_defineProperties(Constructor, staticProps); return Constructor; }
-
-
+;// CONCATENATED MODULE: ./src/js/module/ImageDialog.js
+function ImageDialog_typeof(o) { "@babel/helpers - typeof"; return ImageDialog_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, ImageDialog_typeof(o); }
+function ImageDialog_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function ImageDialog_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, ImageDialog_toPropertyKey(o.key), o); } }
+function ImageDialog_createClass(e, r, t) { return r && ImageDialog_defineProperties(e.prototype, r), t && ImageDialog_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function ImageDialog_toPropertyKey(t) { var i = ImageDialog_toPrimitive(t, "string"); return "symbol" == ImageDialog_typeof(i) ? i : i + ""; }
+function ImageDialog_toPrimitive(t, r) { if ("object" != ImageDialog_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != ImageDialog_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
-var ImageDialog_ImageDialog = /*#__PURE__*/function () {
+var ImageDialog = /*#__PURE__*/function () {
   function ImageDialog(context) {
     ImageDialog_classCallCheck(this, ImageDialog);
-
     this.context = context;
-    this.ui = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui;
-    this.$body = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(document.body);
+    this.ui = (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.ui;
+    this.$body = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(document.body);
     this.$editor = context.layoutInfo.editor;
     this.options = context.options;
     this.lang = this.options.langInfo;
   }
-
-  ImageDialog_createClass(ImageDialog, [{
+  return ImageDialog_createClass(ImageDialog, [{
     key: "initialize",
     value: function initialize() {
       var imageLimitation = '';
-
       if (this.options.maximumImageFileSize) {
         var unit = Math.floor(Math.log(this.options.maximumImageFileSize) / Math.log(1024));
         var readableSize = (this.options.maximumImageFileSize / Math.pow(1024, unit)).toFixed(2) * 1 + ' ' + ' KMGTP'[unit] + 'B';
         imageLimitation = "<small>".concat(this.lang.image.maximumFileSize + ' : ' + readableSize, "</small>");
       }
-
       var $container = this.options.dialogsInBody ? this.$body : this.options.container;
-      var body = ['<div class="form-group note-form-group note-group-select-from-files">', '<label for="note-dialog-image-file-' + this.options.id + '" class="note-form-label">' + this.lang.image.selectFromFiles + '</label>', '<input id="note-dialog-image-file-' + this.options.id + '" class="note-image-input form-control-file note-form-control note-input" ', ' type="file" name="files" accept="image/*" multiple="multiple"/>', imageLimitation, '</div>', '<div class="form-group note-group-image-url">', '<label for="note-dialog-image-url-' + this.options.id + '" class="note-form-label">' + this.lang.image.url + '</label>', '<input id="note-dialog-image-url-' + this.options.id + '" class="note-image-url form-control note-form-control note-input" type="text"/>', '</div>'].join('');
+      var body = ['<div class="form-group note-form-group note-group-select-from-files">', '<label for="note-dialog-image-file-' + this.options.id + '" class="note-form-label">' + this.lang.image.selectFromFiles + '</label>', '<input id="note-dialog-image-file-' + this.options.id + '" class="note-image-input form-control-file note-form-control note-input" ', ' type="file" name="files" accept="' + this.options.acceptImageFileTypes + '" multiple="multiple"/>', imageLimitation, '</div>', '<div class="form-group note-group-image-url">', '<label for="note-dialog-image-url-' + this.options.id + '" class="note-form-label">' + this.lang.image.url + '</label>', '<input id="note-dialog-image-url-' + this.options.id + '" class="note-image-url form-control note-form-control note-input" type="text"/>', '</div>'].join('');
       var buttonClass = 'btn btn-primary note-btn note-btn-primary note-image-btn';
       var footer = "<input type=\"button\" href=\"#\" class=\"".concat(buttonClass, "\" value=\"").concat(this.lang.image.insert, "\" disabled>");
       this.$dialog = this.ui.dialog({
@@ -8668,7 +7888,7 @@ var ImageDialog_ImageDialog = /*#__PURE__*/function () {
     key: "bindEnterKey",
     value: function bindEnterKey($input, $btn) {
       $input.on('keypress', function (event) {
-        if (event.keyCode === core_key.code.ENTER) {
+        if (event.keyCode === key.code.ENTER) {
           event.preventDefault();
           $btn.trigger('click');
         }
@@ -8678,14 +7898,11 @@ var ImageDialog_ImageDialog = /*#__PURE__*/function () {
     key: "show",
     value: function show() {
       var _this = this;
-
       this.context.invoke('editor.saveRange');
       this.showImageDialog().then(function (data) {
         // [workaround] hide dialog before restore range for IE range focus
         _this.ui.hideDialog(_this.$dialog);
-
         _this.context.invoke('editor.restoreRange');
-
         if (typeof data === 'string') {
           // image url
           // If onImageLinkInsert set,
@@ -8702,73 +7919,61 @@ var ImageDialog_ImageDialog = /*#__PURE__*/function () {
         _this.context.invoke('editor.restoreRange');
       });
     }
+
     /**
      * show image dialog
      *
      * @param {jQuery} $dialog
      * @return {Promise}
      */
-
   }, {
     key: "showImageDialog",
     value: function showImageDialog() {
       var _this2 = this;
-
-      return external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.Deferred(function (deferred) {
+      return external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().Deferred(function (deferred) {
         var $imageInput = _this2.$dialog.find('.note-image-input');
-
         var $imageUrl = _this2.$dialog.find('.note-image-url');
-
         var $imageBtn = _this2.$dialog.find('.note-image-btn');
-
         _this2.ui.onDialogShown(_this2.$dialog, function () {
-          _this2.context.triggerEvent('dialog.shown'); // Cloning imageInput to clear element.
+          _this2.context.triggerEvent('dialog.shown');
 
-
+          // Cloning imageInput to clear element.
           $imageInput.replaceWith($imageInput.clone().on('change', function (event) {
             deferred.resolve(event.target.files || event.target.value);
           }).val(''));
           $imageUrl.on('input paste propertychange', function () {
             _this2.ui.toggleBtn($imageBtn, $imageUrl.val());
           }).val('');
-
           if (!env.isSupportTouch) {
             $imageUrl.trigger('focus');
           }
-
-          $imageBtn.click(function (event) {
+          $imageBtn.on('click', function (event) {
             event.preventDefault();
             deferred.resolve($imageUrl.val());
           });
-
           _this2.bindEnterKey($imageUrl, $imageBtn);
         });
-
         _this2.ui.onDialogHidden(_this2.$dialog, function () {
           $imageInput.off();
           $imageUrl.off();
           $imageBtn.off();
-
           if (deferred.state() === 'pending') {
             deferred.reject();
           }
         });
-
         _this2.ui.showDialog(_this2.$dialog);
       });
     }
   }]);
-
-  return ImageDialog;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/ImagePopover.js
-function ImagePopover_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function ImagePopover_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function ImagePopover_createClass(Constructor, protoProps, staticProps) { if (protoProps) ImagePopover_defineProperties(Constructor.prototype, protoProps); if (staticProps) ImagePopover_defineProperties(Constructor, staticProps); return Constructor; }
+;// CONCATENATED MODULE: ./src/js/module/ImagePopover.js
+function ImagePopover_typeof(o) { "@babel/helpers - typeof"; return ImagePopover_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, ImagePopover_typeof(o); }
+function ImagePopover_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function ImagePopover_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, ImagePopover_toPropertyKey(o.key), o); } }
+function ImagePopover_createClass(e, r, t) { return r && ImagePopover_defineProperties(e.prototype, r), t && ImagePopover_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function ImagePopover_toPropertyKey(t) { var i = ImagePopover_toPrimitive(t, "string"); return "symbol" == ImagePopover_typeof(i) ? i : i + ""; }
+function ImagePopover_toPrimitive(t, r) { if ("object" != ImagePopover_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != ImagePopover_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
@@ -8778,25 +7983,30 @@ function ImagePopover_createClass(Constructor, protoProps, staticProps) { if (pr
  *  mouse events that show/hide popover will be handled by Handle.js.
  *  Handle.js will receive the events and invoke 'imagePopover.update'.
  */
-
-var ImagePopover_ImagePopover = /*#__PURE__*/function () {
+var ImagePopover = /*#__PURE__*/function () {
   function ImagePopover(context) {
     var _this = this;
-
     ImagePopover_classCallCheck(this, ImagePopover);
-
     this.context = context;
-    this.ui = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui;
+    this.ui = (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.ui;
     this.editable = context.layoutInfo.editable[0];
     this.options = context.options;
     this.events = {
-      'summernote.disable summernote.blur': function summernoteDisableSummernoteBlur() {
+      'summernote.disable summernote.dialog.shown': function summernoteDisableSummernoteDialogShown() {
         _this.hide();
+      },
+      'summernote.blur': function summernoteBlur(we, event) {
+        if (event.originalEvent && event.originalEvent.relatedTarget) {
+          if (!_this.$popover[0].contains(event.originalEvent.relatedTarget)) {
+            _this.hide();
+          }
+        } else {
+          _this.hide();
+        }
       }
     };
   }
-
-  ImagePopover_createClass(ImagePopover, [{
+  return ImagePopover_createClass(ImagePopover, [{
     key: "shouldInitialize",
     value: function shouldInitialize() {
       return !lists.isEmpty(this.options.popover.image);
@@ -8809,8 +8019,8 @@ var ImagePopover_ImagePopover = /*#__PURE__*/function () {
       }).render().appendTo(this.options.container);
       var $content = this.$popover.find('.popover-content,.note-popover-content');
       this.context.invoke('buttons.build', $content, this.options.popover.image);
-      this.$popover.on('mousedown', function (e) {
-        e.preventDefault();
+      this.$popover.on('mousedown', function (event) {
+        event.preventDefault();
       });
     }
   }, {
@@ -8822,17 +8032,15 @@ var ImagePopover_ImagePopover = /*#__PURE__*/function () {
     key: "update",
     value: function update(target, event) {
       if (dom.isImg(target)) {
-        var position = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(target).offset();
-        var containerOffset = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(this.options.container).offset();
+        var position = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(target).offset();
+        var containerOffset = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(this.options.container).offset();
         var pos = {};
-
         if (this.options.popatmouse) {
           pos.left = event.pageX - 20;
           pos.top = event.pageY;
         } else {
           pos = position;
         }
-
         pos.top -= containerOffset.top;
         pos.left -= containerOffset.left;
         this.$popover.css({
@@ -8850,46 +8058,48 @@ var ImagePopover_ImagePopover = /*#__PURE__*/function () {
       this.$popover.hide();
     }
   }]);
-
-  return ImagePopover;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/TablePopover.js
-function TablePopover_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function TablePopover_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function TablePopover_createClass(Constructor, protoProps, staticProps) { if (protoProps) TablePopover_defineProperties(Constructor.prototype, protoProps); if (staticProps) TablePopover_defineProperties(Constructor, staticProps); return Constructor; }
-
-
+;// CONCATENATED MODULE: ./src/js/module/TablePopover.js
+function TablePopover_typeof(o) { "@babel/helpers - typeof"; return TablePopover_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, TablePopover_typeof(o); }
+function TablePopover_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function TablePopover_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, TablePopover_toPropertyKey(o.key), o); } }
+function TablePopover_createClass(e, r, t) { return r && TablePopover_defineProperties(e.prototype, r), t && TablePopover_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function TablePopover_toPropertyKey(t) { var i = TablePopover_toPrimitive(t, "string"); return "symbol" == TablePopover_typeof(i) ? i : i + ""; }
+function TablePopover_toPrimitive(t, r) { if ("object" != TablePopover_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != TablePopover_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
 
-var TablePopover_TablePopover = /*#__PURE__*/function () {
+var TablePopover = /*#__PURE__*/function () {
   function TablePopover(context) {
     var _this = this;
-
     TablePopover_classCallCheck(this, TablePopover);
-
     this.context = context;
-    this.ui = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui;
+    this.ui = (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.ui;
     this.options = context.options;
     this.events = {
-      'summernote.mousedown': function summernoteMousedown(we, e) {
-        _this.update(e.target);
+      'summernote.mousedown': function summernoteMousedown(we, event) {
+        _this.update(event.target);
       },
       'summernote.keyup summernote.scroll summernote.change': function summernoteKeyupSummernoteScrollSummernoteChange() {
         _this.update();
       },
-      'summernote.disable summernote.blur': function summernoteDisableSummernoteBlur() {
+      'summernote.disable summernote.dialog.shown': function summernoteDisableSummernoteDialogShown() {
         _this.hide();
+      },
+      'summernote.blur': function summernoteBlur(we, event) {
+        if (event.originalEvent && event.originalEvent.relatedTarget) {
+          if (!_this.$popover[0].contains(event.originalEvent.relatedTarget)) {
+            _this.hide();
+          }
+        } else {
+          _this.hide();
+        }
       }
     };
   }
-
-  TablePopover_createClass(TablePopover, [{
+  return TablePopover_createClass(TablePopover, [{
     key: "shouldInitialize",
     value: function shouldInitialize() {
       return !lists.isEmpty(this.options.popover.table);
@@ -8901,14 +8111,14 @@ var TablePopover_TablePopover = /*#__PURE__*/function () {
         className: 'note-table-popover'
       }).render().appendTo(this.options.container);
       var $content = this.$popover.find('.popover-content,.note-popover-content');
-      this.context.invoke('buttons.build', $content, this.options.popover.table); // [workaround] Disable Firefox's default table editor
+      this.context.invoke('buttons.build', $content, this.options.popover.table);
 
+      // [workaround] Disable Firefox's default table editor
       if (env.isFF) {
         document.execCommand('enableInlineTableEditing', false, false);
       }
-
-      this.$popover.on('mousedown', function (e) {
-        e.preventDefault();
+      this.$popover.on('mousedown', function (event) {
+        event.preventDefault();
       });
     }
   }, {
@@ -8922,12 +8132,10 @@ var TablePopover_TablePopover = /*#__PURE__*/function () {
       if (this.context.isDisabled()) {
         return false;
       }
-
-      var isCell = dom.isCell(target);
-
+      var isCell = dom.isCell(target) || dom.isCell(target === null || target === void 0 ? void 0 : target.parentElement);
       if (isCell) {
         var pos = dom.posFromPlaceholder(target);
-        var containerOffset = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(this.options.container).offset();
+        var containerOffset = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(this.options.container).offset();
         pos.top -= containerOffset.top;
         pos.left -= containerOffset.left;
         this.$popover.css({
@@ -8938,7 +8146,6 @@ var TablePopover_TablePopover = /*#__PURE__*/function () {
       } else {
         this.hide();
       }
-
       return isCell;
     }
   }, {
@@ -8947,35 +8154,29 @@ var TablePopover_TablePopover = /*#__PURE__*/function () {
       this.$popover.hide();
     }
   }]);
-
-  return TablePopover;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/VideoDialog.js
-function VideoDialog_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function VideoDialog_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function VideoDialog_createClass(Constructor, protoProps, staticProps) { if (protoProps) VideoDialog_defineProperties(Constructor.prototype, protoProps); if (staticProps) VideoDialog_defineProperties(Constructor, staticProps); return Constructor; }
-
-
+;// CONCATENATED MODULE: ./src/js/module/VideoDialog.js
+function VideoDialog_typeof(o) { "@babel/helpers - typeof"; return VideoDialog_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, VideoDialog_typeof(o); }
+function VideoDialog_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function VideoDialog_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, VideoDialog_toPropertyKey(o.key), o); } }
+function VideoDialog_createClass(e, r, t) { return r && VideoDialog_defineProperties(e.prototype, r), t && VideoDialog_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function VideoDialog_toPropertyKey(t) { var i = VideoDialog_toPrimitive(t, "string"); return "symbol" == VideoDialog_typeof(i) ? i : i + ""; }
+function VideoDialog_toPrimitive(t, r) { if ("object" != VideoDialog_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != VideoDialog_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
-var VideoDialog_VideoDialog = /*#__PURE__*/function () {
+var VideoDialog = /*#__PURE__*/function () {
   function VideoDialog(context) {
     VideoDialog_classCallCheck(this, VideoDialog);
-
     this.context = context;
-    this.ui = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui;
-    this.$body = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(document.body);
+    this.ui = (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.ui;
+    this.$body = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(document.body);
     this.$editor = context.layoutInfo.editor;
     this.options = context.options;
     this.lang = this.options.langInfo;
   }
-
-  VideoDialog_createClass(VideoDialog, [{
+  return VideoDialog_createClass(VideoDialog, [{
     key: "initialize",
     value: function initialize() {
       var $container = this.options.dialogsInBody ? this.$body : this.options.container;
@@ -8999,7 +8200,7 @@ var VideoDialog_VideoDialog = /*#__PURE__*/function () {
     key: "bindEnterKey",
     value: function bindEnterKey($input, $btn) {
       $input.on('keypress', function (event) {
-        if (event.keyCode === core_key.code.ENTER) {
+        if (event.keyCode === key.code.ENTER) {
           event.preventDefault();
           $btn.trigger('click');
         }
@@ -9008,11 +8209,13 @@ var VideoDialog_VideoDialog = /*#__PURE__*/function () {
   }, {
     key: "createVideoNode",
     value: function createVideoNode(url) {
-      // video url patterns(youtube, instagram, vimeo, dailymotion, youku, mp4, ogg, webm)
-      var ytRegExp = /\/\/(?:(?:www|m)\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w|-]{11})(?:(?:[\?&]t=)(\S+))?$/;
+      // video url patterns(youtube, instagram, vimeo, dailymotion, youku, peertube, mp4, ogg, webm)
+      var ytRegExp = /(?:youtu\.be\/|youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=|shorts\/|live\/))([^&\n?]+)(?:.*[?&]t=([^&\n]+))?.*/;
       var ytRegExpForStart = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/;
       var ytMatch = url.match(ytRegExp);
-      var igRegExp = /(?:www\.|\/\/)instagram\.com\/p\/(.[a-zA-Z0-9_-]*)/;
+      var gdRegExp = /(?:\.|\/\/)drive\.google\.com\/file\/d\/(.[a-zA-Z0-9_-]*)\/view/;
+      var gdMatch = url.match(gdRegExp);
+      var igRegExp = /(?:www\.|\/\/)instagram\.com\/(reel|p)\/(.[a-zA-Z0-9_-]*)/;
       var igMatch = url.match(igRegExp);
       var vRegExp = /\/\/vine\.co\/v\/([a-zA-Z0-9]+)/;
       var vMatch = url.match(vRegExp);
@@ -9022,6 +8225,8 @@ var VideoDialog_VideoDialog = /*#__PURE__*/function () {
       var dmMatch = url.match(dmRegExp);
       var youkuRegExp = /\/\/v\.youku\.com\/v_show\/id_(\w+)=*\.html/;
       var youkuMatch = url.match(youkuRegExp);
+      var peerTubeRegExp = /\/\/(.*)\/videos\/watch\/([^?]*)(?:\?(?:start=(\w*))?(?:&stop=(\w*))?(?:&loop=([10]))?(?:&autoplay=([10]))?(?:&muted=([10]))?)?/;
+      var peerTubeMatch = url.match(peerTubeRegExp);
       var qqRegExp = /\/\/v\.qq\.com.*?vid=(.+)/;
       var qqMatch = url.match(qqRegExp);
       var qqRegExp2 = /\/\/v\.qq\.com\/x?\/?(page|cover).*?\/([^\/]+)\.html\??.*/;
@@ -9035,44 +8240,55 @@ var VideoDialog_VideoDialog = /*#__PURE__*/function () {
       var fbRegExp = /(?:www\.|\/\/)facebook\.com\/([^\/]+)\/videos\/([0-9]+)/;
       var fbMatch = url.match(fbRegExp);
       var $video;
-
       if (ytMatch && ytMatch[1].length === 11) {
         var youtubeId = ytMatch[1];
         var start = 0;
-
         if (typeof ytMatch[2] !== 'undefined') {
           var ytMatchForStart = ytMatch[2].match(ytRegExpForStart);
-
           if (ytMatchForStart) {
             for (var n = [3600, 60, 1], i = 0, r = n.length; i < r; i++) {
               start += typeof ytMatchForStart[i + 1] !== 'undefined' ? n[i] * parseInt(ytMatchForStart[i + 1], 10) : 0;
             }
+          } else {
+            start = parseInt(ytMatch[2], 10);
           }
         }
-
-        $video = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<iframe>').attr('frameborder', 0).attr('src', '//www.youtube.com/embed/' + youtubeId + (start > 0 ? '?start=' + start : '')).attr('width', '640').attr('height', '360');
+        $video = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<iframe>').attr('frameborder', 0).attr('src', '//www.youtube.com/embed/' + youtubeId + (start > 0 ? '?start=' + start : '')).attr('width', '640').attr('height', '360');
+      } else if (gdMatch && gdMatch[0].length) {
+        $video = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<iframe>').attr('frameborder', 0).attr('src', 'https://drive.google.com/file/d/' + gdMatch[1] + '/preview').attr('width', '640').attr('height', '480');
       } else if (igMatch && igMatch[0].length) {
-        $video = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<iframe>').attr('frameborder', 0).attr('src', 'https://instagram.com/p/' + igMatch[1] + '/embed/').attr('width', '612').attr('height', '710').attr('scrolling', 'no').attr('allowtransparency', 'true');
+        $video = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<iframe>').attr('frameborder', 0).attr('src', 'https://instagram.com/p/' + igMatch[2] + '/embed/').attr('width', '612').attr('height', '710').attr('scrolling', 'no').attr('allowtransparency', 'true');
       } else if (vMatch && vMatch[0].length) {
-        $video = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<iframe>').attr('frameborder', 0).attr('src', vMatch[0] + '/embed/simple').attr('width', '600').attr('height', '600').attr('class', 'vine-embed');
+        $video = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<iframe>').attr('frameborder', 0).attr('src', vMatch[0] + '/embed/simple').attr('width', '600').attr('height', '600').attr('class', 'vine-embed');
       } else if (vimMatch && vimMatch[3].length) {
-        $video = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<iframe webkitallowfullscreen mozallowfullscreen allowfullscreen>').attr('frameborder', 0).attr('src', '//player.vimeo.com/video/' + vimMatch[3]).attr('width', '640').attr('height', '360');
+        $video = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<iframe webkitallowfullscreen mozallowfullscreen allowfullscreen>').attr('frameborder', 0).attr('src', '//player.vimeo.com/video/' + vimMatch[3]).attr('width', '640').attr('height', '360');
       } else if (dmMatch && dmMatch[2].length) {
-        $video = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<iframe>').attr('frameborder', 0).attr('src', '//www.dailymotion.com/embed/video/' + dmMatch[2]).attr('width', '640').attr('height', '360');
+        $video = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<iframe>').attr('frameborder', 0).attr('src', '//www.dailymotion.com/embed/video/' + dmMatch[2]).attr('width', '640').attr('height', '360');
       } else if (youkuMatch && youkuMatch[1].length) {
-        $video = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<iframe webkitallowfullscreen mozallowfullscreen allowfullscreen>').attr('frameborder', 0).attr('height', '498').attr('width', '510').attr('src', '//player.youku.com/embed/' + youkuMatch[1]);
+        $video = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<iframe webkitallowfullscreen mozallowfullscreen allowfullscreen>').attr('frameborder', 0).attr('height', '498').attr('width', '510').attr('src', '//player.youku.com/embed/' + youkuMatch[1]);
+      } else if (peerTubeMatch && peerTubeMatch[0].length) {
+        var begin = 0;
+        if (peerTubeMatch[2] !== 'undefined') begin = peerTubeMatch[2];
+        var end = 0;
+        if (peerTubeMatch[3] !== 'undefined') end = peerTubeMatch[3];
+        var loop = 0;
+        if (peerTubeMatch[4] !== 'undefined') loop = peerTubeMatch[4];
+        var autoplay = 0;
+        if (peerTubeMatch[5] !== 'undefined') autoplay = peerTubeMatch[5];
+        var muted = 0;
+        if (peerTubeMatch[6] !== 'undefined') muted = peerTubeMatch[6];
+        $video = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<iframe allowfullscreen sandbox="allow-same-origin allow-scripts allow-popups">').attr('frameborder', 0).attr('src', '//' + peerTubeMatch[1] + '/videos/embed/' + peerTubeMatch[2] + "?loop=" + loop + "&autoplay=" + autoplay + "&muted=" + muted + (begin > 0 ? '&start=' + begin : '') + (end > 0 ? '&end=' + start : '')).attr('width', '560').attr('height', '315');
       } else if (qqMatch && qqMatch[1].length || qqMatch2 && qqMatch2[2].length) {
         var vid = qqMatch && qqMatch[1].length ? qqMatch[1] : qqMatch2[2];
-        $video = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<iframe webkitallowfullscreen mozallowfullscreen allowfullscreen>').attr('frameborder', 0).attr('height', '310').attr('width', '500').attr('src', 'https://v.qq.com/txp/iframe/player.html?vid=' + vid + '&amp;auto=0');
+        $video = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<iframe webkitallowfullscreen mozallowfullscreen allowfullscreen>').attr('frameborder', 0).attr('height', '310').attr('width', '500').attr('src', 'https://v.qq.com/txp/iframe/player.html?vid=' + vid + '&amp;auto=0');
       } else if (mp4Match || oggMatch || webmMatch) {
-        $video = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<video controls>').attr('src', url).attr('width', '640').attr('height', '360');
+        $video = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<video controls>').attr('src', url).attr('width', '640').attr('height', '360');
       } else if (fbMatch && fbMatch[0].length) {
-        $video = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<iframe>').attr('frameborder', 0).attr('src', 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(fbMatch[0]) + '&show_text=0&width=560').attr('width', '560').attr('height', '301').attr('scrolling', 'no').attr('allowtransparency', 'true');
+        $video = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<iframe>').attr('frameborder', 0).attr('src', 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(fbMatch[0]) + '&show_text=0&width=560').attr('width', '560').attr('height', '301').attr('scrolling', 'no').attr('allowtransparency', 'true');
       } else {
         // this is not a known video link. Now what, Cat? Now what?
         return false;
       }
-
       $video.addClass('note-video-clip');
       return $video[0];
     }
@@ -9080,18 +8296,15 @@ var VideoDialog_VideoDialog = /*#__PURE__*/function () {
     key: "show",
     value: function show() {
       var _this = this;
-
       var text = this.context.invoke('editor.getSelectedText');
       this.context.invoke('editor.saveRange');
       this.showVideoDialog(text).then(function (url) {
         // [workaround] hide dialog before restore range for IE range focus
         _this.ui.hideDialog(_this.$dialog);
+        _this.context.invoke('editor.restoreRange');
 
-        _this.context.invoke('editor.restoreRange'); // build node
-
-
+        // build node
         var $node = _this.createVideoNode(url);
-
         if ($node) {
           // insert video node
           _this.context.invoke('editor.insertNode', $node);
@@ -9100,89 +8313,72 @@ var VideoDialog_VideoDialog = /*#__PURE__*/function () {
         _this.context.invoke('editor.restoreRange');
       });
     }
+
     /**
      * show video dialog
      *
      * @param {jQuery} $dialog
      * @return {Promise}
      */
-
   }, {
     key: "showVideoDialog",
-    value: function showVideoDialog()
-    /* text */
-    {
+    value: function showVideoDialog( /* text */
+    ) {
       var _this2 = this;
-
-      return external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.Deferred(function (deferred) {
+      return external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().Deferred(function (deferred) {
         var $videoUrl = _this2.$dialog.find('.note-video-url');
-
         var $videoBtn = _this2.$dialog.find('.note-video-btn');
-
         _this2.ui.onDialogShown(_this2.$dialog, function () {
           _this2.context.triggerEvent('dialog.shown');
-
           $videoUrl.on('input paste propertychange', function () {
             _this2.ui.toggleBtn($videoBtn, $videoUrl.val());
           });
-
           if (!env.isSupportTouch) {
             $videoUrl.trigger('focus');
           }
-
-          $videoBtn.click(function (event) {
+          $videoBtn.on('click', function (event) {
             event.preventDefault();
             deferred.resolve($videoUrl.val());
           });
-
           _this2.bindEnterKey($videoUrl, $videoBtn);
         });
-
         _this2.ui.onDialogHidden(_this2.$dialog, function () {
           $videoUrl.off();
           $videoBtn.off();
-
           if (deferred.state() === 'pending') {
             deferred.reject();
           }
         });
-
         _this2.ui.showDialog(_this2.$dialog);
       });
     }
   }]);
-
-  return VideoDialog;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/HelpDialog.js
-function HelpDialog_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function HelpDialog_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function HelpDialog_createClass(Constructor, protoProps, staticProps) { if (protoProps) HelpDialog_defineProperties(Constructor.prototype, protoProps); if (staticProps) HelpDialog_defineProperties(Constructor, staticProps); return Constructor; }
-
-
+;// CONCATENATED MODULE: ./src/js/module/HelpDialog.js
+function HelpDialog_typeof(o) { "@babel/helpers - typeof"; return HelpDialog_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, HelpDialog_typeof(o); }
+function HelpDialog_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function HelpDialog_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, HelpDialog_toPropertyKey(o.key), o); } }
+function HelpDialog_createClass(e, r, t) { return r && HelpDialog_defineProperties(e.prototype, r), t && HelpDialog_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function HelpDialog_toPropertyKey(t) { var i = HelpDialog_toPrimitive(t, "string"); return "symbol" == HelpDialog_typeof(i) ? i : i + ""; }
+function HelpDialog_toPrimitive(t, r) { if ("object" != HelpDialog_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != HelpDialog_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
-var HelpDialog_HelpDialog = /*#__PURE__*/function () {
+var HelpDialog = /*#__PURE__*/function () {
   function HelpDialog(context) {
     HelpDialog_classCallCheck(this, HelpDialog);
-
     this.context = context;
-    this.ui = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui;
-    this.$body = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(document.body);
+    this.ui = (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.ui;
+    this.$body = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(document.body);
     this.$editor = context.layoutInfo.editor;
     this.options = context.options;
     this.lang = this.options.langInfo;
   }
-
-  HelpDialog_createClass(HelpDialog, [{
+  return HelpDialog_createClass(HelpDialog, [{
     key: "initialize",
     value: function initialize() {
       var $container = this.options.dialogsInBody ? this.$body : this.options.container;
-      var body = ['<p class="text-center">', '<a href="http://summernote.org/" target="_blank">Summernote 0.8.18</a> · ', '<a href="https://github.com/summernote/summernote" target="_blank">Project</a> · ', '<a href="https://github.com/summernote/summernote/issues" target="_blank">Issues</a>', '</p>'].join('');
+      var body = ['<p class="text-center">', '<a href="http://summernote.org/" target="_blank" rel="noopener noreferrer">Summernote 0.9.1</a> · ', '<a href="https://github.com/summernote/summernote" target="_blank" rel="noopener noreferrer">Project</a> · ', '<a href="https://github.com/summernote/summernote/issues" target="_blank" rel="noopener noreferrer">Issues</a>', '</p>'].join('');
       this.$dialog = this.ui.dialog({
         title: this.lang.options.help,
         fade: this.options.dialogsFade,
@@ -9206,36 +8402,32 @@ var HelpDialog_HelpDialog = /*#__PURE__*/function () {
     key: "createShortcutList",
     value: function createShortcutList() {
       var _this = this;
-
       var keyMap = this.options.keyMap[env.isMac ? 'mac' : 'pc'];
       return Object.keys(keyMap).map(function (key) {
         var command = keyMap[key];
-        var $row = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<div><div class="help-list-item"></div></div>');
-        $row.append(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<label><kbd>' + key + '</kdb></label>').css({
+        var $row = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<div><div class="help-list-item"></div></div>');
+        $row.append(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<label><kbd>' + key + '</kdb></label>').css({
           'width': 180,
           'margin-right': 10
-        })).append(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<span></span>').html(_this.context.memo('help.' + command) || command));
+        })).append(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<span></span>').html(_this.context.memo('help.' + command) || command));
         return $row.html();
       }).join('');
     }
+
     /**
      * show help dialog
      *
      * @return {Promise}
      */
-
   }, {
     key: "showHelpDialog",
     value: function showHelpDialog() {
       var _this2 = this;
-
-      return external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.Deferred(function (deferred) {
+      return external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().Deferred(function (deferred) {
         _this2.ui.onDialogShown(_this2.$dialog, function () {
           _this2.context.triggerEvent('dialog.shown');
-
           deferred.resolve();
         });
-
         _this2.ui.showDialog(_this2.$dialog);
       }).promise();
     }
@@ -9243,65 +8435,64 @@ var HelpDialog_HelpDialog = /*#__PURE__*/function () {
     key: "show",
     value: function show() {
       var _this3 = this;
-
       this.context.invoke('editor.saveRange');
       this.showHelpDialog().then(function () {
         _this3.context.invoke('editor.restoreRange');
       });
     }
   }]);
-
-  return HelpDialog;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/AirPopover.js
-function AirPopover_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function AirPopover_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function AirPopover_createClass(Constructor, protoProps, staticProps) { if (protoProps) AirPopover_defineProperties(Constructor.prototype, protoProps); if (staticProps) AirPopover_defineProperties(Constructor, staticProps); return Constructor; }
+;// CONCATENATED MODULE: ./src/js/module/AirPopover.js
+function AirPopover_typeof(o) { "@babel/helpers - typeof"; return AirPopover_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, AirPopover_typeof(o); }
+function AirPopover_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function AirPopover_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, AirPopover_toPropertyKey(o.key), o); } }
+function AirPopover_createClass(e, r, t) { return r && AirPopover_defineProperties(e.prototype, r), t && AirPopover_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function AirPopover_toPropertyKey(t) { var i = AirPopover_toPrimitive(t, "string"); return "symbol" == AirPopover_typeof(i) ? i : i + ""; }
+function AirPopover_toPrimitive(t, r) { if ("object" != AirPopover_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != AirPopover_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
 var AIRMODE_POPOVER_X_OFFSET = -5;
 var AIRMODE_POPOVER_Y_OFFSET = 5;
-
-var AirPopover_AirPopover = /*#__PURE__*/function () {
+var AirPopover = /*#__PURE__*/function () {
   function AirPopover(context) {
     var _this = this;
-
     AirPopover_classCallCheck(this, AirPopover);
-
     this.context = context;
-    this.ui = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui;
+    this.ui = (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.ui;
     this.options = context.options;
     this.hidable = true;
     this.onContextmenu = false;
     this.pageX = null;
     this.pageY = null;
     this.events = {
-      'summernote.contextmenu': function summernoteContextmenu(e) {
+      'summernote.contextmenu': function summernoteContextmenu(event) {
         if (_this.options.editing) {
-          e.preventDefault();
-          e.stopPropagation();
+          event.preventDefault();
+          event.stopPropagation();
           _this.onContextmenu = true;
-
           _this.update(true);
         }
       },
-      'summernote.mousedown': function summernoteMousedown(we, e) {
-        _this.pageX = e.pageX;
-        _this.pageY = e.pageY;
+      'summernote.mousedown': function summernoteMousedown(we, event) {
+        _this.pageX = event.pageX;
+        _this.pageY = event.pageY;
       },
-      'summernote.keyup summernote.mouseup summernote.scroll': function summernoteKeyupSummernoteMouseupSummernoteScroll(we, e) {
+      'summernote.keyup summernote.mouseup summernote.scroll': function summernoteKeyupSummernoteMouseupSummernoteScroll(we, event) {
         if (_this.options.editing && !_this.onContextmenu) {
-          _this.pageX = e.pageX;
-          _this.pageY = e.pageY;
-
+          if (event.type == 'keyup') {
+            var range = _this.context.invoke('editor.getLastRange');
+            var wordRange = range.getWordRange();
+            var bnd = func.rect2bnd(lists.last(wordRange.getClientRects()));
+            _this.pageX = bnd.left;
+            _this.pageY = bnd.top;
+          } else {
+            _this.pageX = event.pageX;
+            _this.pageY = event.pageY;
+          }
           _this.update();
         }
-
         _this.onContextmenu = false;
       },
       'summernote.disable summernote.change summernote.dialog.shown summernote.blur': function summernoteDisableSummernoteChangeSummernoteDialogShownSummernoteBlur() {
@@ -9314,8 +8505,7 @@ var AirPopover_AirPopover = /*#__PURE__*/function () {
       }
     };
   }
-
-  AirPopover_createClass(AirPopover, [{
+  return AirPopover_createClass(AirPopover, [{
     key: "shouldInitialize",
     value: function shouldInitialize() {
       return this.options.airMode && !lists.isEmpty(this.options.popover.air);
@@ -9324,17 +8514,17 @@ var AirPopover_AirPopover = /*#__PURE__*/function () {
     key: "initialize",
     value: function initialize() {
       var _this2 = this;
-
       this.$popover = this.ui.popover({
         className: 'note-air-popover'
       }).render().appendTo(this.options.container);
       var $content = this.$popover.find('.popover-content');
-      this.context.invoke('buttons.build', $content, this.options.popover.air); // disable hiding this popover preemptively by 'summernote.blur' event.
+      this.context.invoke('buttons.build', $content, this.options.popover.air);
 
+      // disable hiding this popover preemptively by 'summernote.blur' event.
       this.$popover.on('mousedown', function () {
         _this2.hidable = false;
-      }); // (re-)enable hiding after 'summernote.blur' has been handled (aka. ignored).
-
+      });
+      // (re-)enable hiding after 'summernote.blur' has been handled (aka. ignored).
       this.$popover.on('mouseup', function () {
         _this2.hidable = true;
       });
@@ -9348,13 +8538,12 @@ var AirPopover_AirPopover = /*#__PURE__*/function () {
     key: "update",
     value: function update(forcelyOpen) {
       var styleInfo = this.context.invoke('editor.currentStyle');
-
       if (styleInfo.range && (!styleInfo.range.isCollapsed() || forcelyOpen)) {
         var rect = {
           left: this.pageX,
           top: this.pageY
         };
-        var containerOffset = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(this.options.container).offset();
+        var containerOffset = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(this.options.container).offset();
         rect.top -= containerOffset.top;
         rect.left -= containerOffset.left;
         this.$popover.css({
@@ -9371,7 +8560,6 @@ var AirPopover_AirPopover = /*#__PURE__*/function () {
     key: "updateCodeview",
     value: function updateCodeview(isCodeview) {
       this.ui.toggleBtnActive(this.$popover.find('.btn-codeview'), isCodeview);
-
       if (isCodeview) {
         this.hide();
       }
@@ -9384,18 +8572,15 @@ var AirPopover_AirPopover = /*#__PURE__*/function () {
       }
     }
   }]);
-
-  return AirPopover;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/module/HintPopover.js
-function HintPopover_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function HintPopover_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function HintPopover_createClass(Constructor, protoProps, staticProps) { if (protoProps) HintPopover_defineProperties(Constructor.prototype, protoProps); if (staticProps) HintPopover_defineProperties(Constructor, staticProps); return Constructor; }
-
+;// CONCATENATED MODULE: ./src/js/module/HintPopover.js
+function HintPopover_typeof(o) { "@babel/helpers - typeof"; return HintPopover_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, HintPopover_typeof(o); }
+function HintPopover_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function HintPopover_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, HintPopover_toPropertyKey(o.key), o); } }
+function HintPopover_createClass(e, r, t) { return r && HintPopover_defineProperties(e.prototype, r), t && HintPopover_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function HintPopover_toPropertyKey(t) { var i = HintPopover_toPrimitive(t, "string"); return "symbol" == HintPopover_typeof(i) ? i : i + ""; }
+function HintPopover_toPrimitive(t, r) { if ("object" != HintPopover_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != HintPopover_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
@@ -9403,36 +8588,32 @@ function HintPopover_createClass(Constructor, protoProps, staticProps) { if (pro
 
 
 var POPOVER_DIST = 5;
-
-var HintPopover_HintPopover = /*#__PURE__*/function () {
+var HintPopover = /*#__PURE__*/function () {
   function HintPopover(context) {
     var _this = this;
-
     HintPopover_classCallCheck(this, HintPopover);
-
     this.context = context;
-    this.ui = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.ui;
+    this.ui = (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.ui;
     this.$editable = context.layoutInfo.editable;
     this.options = context.options;
     this.hint = this.options.hint || [];
     this.direction = this.options.hintDirection || 'bottom';
     this.hints = Array.isArray(this.hint) ? this.hint : [this.hint];
     this.events = {
-      'summernote.keyup': function summernoteKeyup(we, e) {
-        if (!e.isDefaultPrevented()) {
-          _this.handleKeyup(e);
+      'summernote.keyup': function summernoteKeyup(we, event) {
+        if (!event.isDefaultPrevented()) {
+          _this.handleKeyup(event);
         }
       },
-      'summernote.keydown': function summernoteKeydown(we, e) {
-        _this.handleKeydown(e);
+      'summernote.keydown': function summernoteKeydown(we, event) {
+        _this.handleKeydown(event);
       },
       'summernote.disable summernote.dialog.shown summernote.blur': function summernoteDisableSummernoteDialogShownSummernoteBlur() {
         _this.hide();
       }
     };
   }
-
-  HintPopover_createClass(HintPopover, [{
+  return HintPopover_createClass(HintPopover, [{
     key: "shouldInitialize",
     value: function shouldInitialize() {
       return this.hints.length > 0;
@@ -9441,7 +8622,6 @@ var HintPopover_HintPopover = /*#__PURE__*/function () {
     key: "initialize",
     value: function initialize() {
       var _this2 = this;
-
       this.lastWordRange = null;
       this.matchingWord = null;
       this.$popover = this.ui.popover({
@@ -9451,15 +8631,13 @@ var HintPopover_HintPopover = /*#__PURE__*/function () {
       }).render().appendTo(this.options.container);
       this.$popover.hide();
       this.$content = this.$popover.find('.popover-content,.note-popover-content');
-      this.$content.on('click', '.note-hint-item', function (e) {
+      this.$content.on('click', '.note-hint-item', function (event) {
         _this2.$content.find('.active').removeClass('active');
-
-        external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(e.currentTarget).addClass('active');
-
+        external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(event.currentTarget).addClass('active');
         _this2.replace();
       });
-      this.$popover.on('mousedown', function (e) {
-        e.preventDefault();
+      this.$popover.on('mousedown', function (event) {
+        event.preventDefault();
       });
     }
   }, {
@@ -9479,16 +8657,13 @@ var HintPopover_HintPopover = /*#__PURE__*/function () {
     value: function moveDown() {
       var $current = this.$content.find('.note-hint-item.active');
       var $next = $current.next();
-
       if ($next.length) {
         this.selectItem($next);
       } else {
         var $nextGroup = $current.parent().next();
-
         if (!$nextGroup.length) {
           $nextGroup = this.$content.find('.note-hint-group').first();
         }
-
         this.selectItem($nextGroup.find('.note-hint-item').first());
       }
     }
@@ -9497,16 +8672,13 @@ var HintPopover_HintPopover = /*#__PURE__*/function () {
     value: function moveUp() {
       var $current = this.$content.find('.note-hint-item.active');
       var $prev = $current.prev();
-
       if ($prev.length) {
         this.selectItem($prev);
       } else {
         var $prevGroup = $current.parent().prev();
-
         if (!$prevGroup.length) {
           $prevGroup = this.$content.find('.note-hint-group').last();
         }
-
         this.selectItem($prevGroup.find('.note-hint-item').last());
       }
     }
@@ -9514,33 +8686,30 @@ var HintPopover_HintPopover = /*#__PURE__*/function () {
     key: "replace",
     value: function replace() {
       var $item = this.$content.find('.note-hint-item.active');
-
       if ($item.length) {
-        var node = this.nodeFromItem($item); // If matchingWord length = 0 -> capture OK / open hint / but as mention capture "" (\w*)
-
+        var node = this.nodeFromItem($item);
+        // If matchingWord length = 0 -> capture OK / open hint / but as mention capture "" (\w*)
         if (this.matchingWord !== null && this.matchingWord.length === 0) {
-          this.lastWordRange.so = this.lastWordRange.eo; // Else si > 0 and normal case -> adjust range "before" for correct position of insertion
+          this.lastWordRange.so = this.lastWordRange.eo;
+          // Else si > 0 and normal case -> adjust range "before" for correct position of insertion
         } else if (this.matchingWord !== null && this.matchingWord.length > 0 && !this.lastWordRange.isCollapsed()) {
           var rangeCompute = this.lastWordRange.eo - this.lastWordRange.so - this.matchingWord.length;
-
           if (rangeCompute > 0) {
             this.lastWordRange.so += rangeCompute;
           }
         }
-
         this.lastWordRange.insertNode(node);
-
         if (this.options.hintSelect === 'next') {
           var blank = document.createTextNode('');
-          external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(node).after(blank);
+          external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(node).after(blank);
           range.createFromNodeBefore(blank).select();
         } else {
           range.createFromNodeAfter(node).select();
         }
-
         this.lastWordRange = null;
         this.hide();
         this.context.invoke('editor.focus');
+        this.context.triggerEvent('change', this.$editable.html(), this.$editable);
       }
     }
   }, {
@@ -9549,44 +8718,42 @@ var HintPopover_HintPopover = /*#__PURE__*/function () {
       var hint = this.hints[$item.data('index')];
       var item = $item.data('item');
       var node = hint.content ? hint.content(item) : item;
-
       if (typeof node === 'string') {
         node = dom.createText(node);
       }
-
       return node;
     }
   }, {
     key: "createItemTemplates",
     value: function createItemTemplates(hintIdx, items) {
       var hint = this.hints[hintIdx];
-      return items.map(function (item
-      /*, idx */
-      ) {
-        var $item = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<div class="note-hint-item"></div>');
+      return items.map(function (item, idx) {
+        var $item = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<div class="note-hint-item"></div>');
         $item.append(hint.template ? hint.template(item) : item + '');
         $item.data({
           'index': hintIdx,
           'item': item
         });
+        if (hintIdx === 0 && idx === 0) {
+          $item.addClass('active');
+        }
         return $item;
       });
     }
   }, {
     key: "handleKeydown",
-    value: function handleKeydown(e) {
+    value: function handleKeydown(event) {
       if (!this.$popover.is(':visible')) {
         return;
       }
-
-      if (e.keyCode === core_key.code.ENTER) {
-        e.preventDefault();
+      if (event.keyCode === key.code.ENTER) {
+        event.preventDefault();
         this.replace();
-      } else if (e.keyCode === core_key.code.UP) {
-        e.preventDefault();
+      } else if (event.keyCode === key.code.UP) {
+        event.preventDefault();
         this.moveUp();
-      } else if (e.keyCode === core_key.code.DOWN) {
-        e.preventDefault();
+      } else if (event.keyCode === key.code.DOWN) {
+        event.preventDefault();
         this.moveDown();
       }
     }
@@ -9594,7 +8761,6 @@ var HintPopover_HintPopover = /*#__PURE__*/function () {
     key: "searchKeyword",
     value: function searchKeyword(index, keyword, callback) {
       var hint = this.hints[index];
-
       if (hint && hint.match.test(keyword) && hint.search) {
         var matches = hint.match.exec(keyword);
         this.matchingWord = matches[0];
@@ -9607,14 +8773,11 @@ var HintPopover_HintPopover = /*#__PURE__*/function () {
     key: "createGroup",
     value: function createGroup(idx, keyword) {
       var _this3 = this;
-
-      var $group = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()('<div class="note-hint-group note-hint-group-' + idx + '"></div>');
+      var $group = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()('<div class="note-hint-group note-hint-group-' + idx + '"></div>');
       this.searchKeyword(idx, keyword, function (items) {
         items = items || [];
-
         if (items.length) {
           $group.html(_this3.createItemTemplates(idx, items));
-
           _this3.show();
         }
       });
@@ -9622,14 +8785,11 @@ var HintPopover_HintPopover = /*#__PURE__*/function () {
     }
   }, {
     key: "handleKeyup",
-    value: function handleKeyup(e) {
+    value: function handleKeyup(event) {
       var _this4 = this;
-
-      if (!lists.contains([core_key.code.ENTER, core_key.code.UP, core_key.code.DOWN], e.keyCode)) {
+      if (!lists.contains([key.code.ENTER, key.code.UP, key.code.DOWN], event.keyCode)) {
         var _range = this.context.invoke('editor.getLastRange');
-
         var wordRange, keyword;
-
         if (this.options.hintMode === 'words') {
           wordRange = _range.getWordsRange(_range);
           keyword = wordRange.toString();
@@ -9639,23 +8799,19 @@ var HintPopover_HintPopover = /*#__PURE__*/function () {
               return false;
             }
           });
-
           if (!wordRange) {
             this.hide();
             return;
           }
-
           keyword = wordRange.toString();
         } else {
           wordRange = _range.getWordRange();
           keyword = wordRange.toString();
         }
-
         if (this.hints.length && keyword) {
           this.$content.empty();
           var bnd = func.rect2bnd(lists.last(wordRange.getClientRects()));
-          var containerOffset = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(this.options.container).offset();
-
+          var containerOffset = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(this.options.container).offset();
           if (bnd) {
             bnd.top -= containerOffset.top;
             bnd.left -= containerOffset.left;
@@ -9665,10 +8821,11 @@ var HintPopover_HintPopover = /*#__PURE__*/function () {
               if (hint.match.test(keyword)) {
                 _this4.createGroup(idx, keyword).appendTo(_this4.$content);
               }
-            }); // select first .note-hint-item
+            });
+            // select first .note-hint-item
+            this.$content.find('.note-hint-item').first().addClass('active');
 
-            this.$content.find('.note-hint-item:first').addClass('active'); // set position for popover after group is created
-
+            // set position for popover after group is created
             if (this.direction === 'top') {
               this.$popover.css({
                 left: bnd.left,
@@ -9697,13 +8854,9 @@ var HintPopover_HintPopover = /*#__PURE__*/function () {
       this.$popover.hide();
     }
   }]);
-
-  return HintPopover;
 }();
 
-
-// CONCATENATED MODULE: ./src/js/base/settings.js
-
+;// CONCATENATED MODULE: ./src/js/settings.js
 
 
 
@@ -9731,40 +8884,41 @@ var HintPopover_HintPopover = /*#__PURE__*/function () {
 
 
 
-external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.extend(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote, {
-  version: '0.8.18',
+
+(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().extend((external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote, {
+  version: '0.9.1',
   plugins: {},
   dom: dom,
   range: range,
   lists: lists,
   options: {
-    langInfo: external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.lang['en-US'],
+    langInfo: (external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.lang['en-US'],
     editing: true,
     modules: {
-      'editor': Editor_Editor,
-      'clipboard': Clipboard_Clipboard,
-      'dropzone': Dropzone_Dropzone,
-      'codeview': Codeview_CodeView,
-      'statusbar': Statusbar_Statusbar,
-      'fullscreen': Fullscreen_Fullscreen,
-      'handle': Handle_Handle,
+      'editor': Editor,
+      'clipboard': Clipboard,
+      'dropzone': Dropzone,
+      'codeview': CodeView,
+      'statusbar': Statusbar,
+      'fullscreen': Fullscreen,
+      'handle': Handle,
       // FIXME: HintPopover must be front of autolink
       //  - Script error about range when Enter key is pressed on hint popover
-      'hintPopover': HintPopover_HintPopover,
-      'autoLink': AutoLink_AutoLink,
-      'autoSync': AutoSync_AutoSync,
-      'autoReplace': AutoReplace_AutoReplace,
-      'placeholder': Placeholder_Placeholder,
-      'buttons': Buttons_Buttons,
-      'toolbar': Toolbar_Toolbar,
-      'linkDialog': LinkDialog_LinkDialog,
-      'linkPopover': LinkPopover_LinkPopover,
-      'imageDialog': ImageDialog_ImageDialog,
-      'imagePopover': ImagePopover_ImagePopover,
-      'tablePopover': TablePopover_TablePopover,
-      'videoDialog': VideoDialog_VideoDialog,
-      'helpDialog': HelpDialog_HelpDialog,
-      'airPopover': AirPopover_AirPopover
+      'hintPopover': HintPopover,
+      'autoLink': AutoLink,
+      'autoSync': AutoSync,
+      'autoReplace': AutoReplace,
+      'placeholder': Placeholder,
+      'buttons': Buttons,
+      'toolbar': Toolbar,
+      'linkDialog': LinkDialog,
+      'linkPopover': LinkPopover,
+      'imageDialog': ImageDialog,
+      'imagePopover': ImagePopover,
+      'tablePopover': TablePopover,
+      'videoDialog': VideoDialog,
+      'helpDialog': HelpDialog,
+      'airPopover': AirPopover
     },
     buttons: {},
     lang: 'en-US',
@@ -9782,17 +8936,19 @@ external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summe
       table: [['add', ['addRowDown', 'addRowUp', 'addColLeft', 'addColRight']], ['delete', ['deleteRow', 'deleteCol', 'deleteTable']]],
       air: [['color', ['color']], ['font', ['bold', 'underline', 'clear']], ['para', ['ul', 'paragraph']], ['table', ['table']], ['insert', ['link', 'picture']], ['view', ['fullscreen', 'codeview']]]
     },
+    // link options
+    linkAddNoReferrer: false,
+    addLinkNoOpener: false,
     // air mode: inline editor
     airMode: false,
     overrideContextMenu: false,
     // TBD
+
     width: null,
     height: null,
     linkTargetBlank: true,
-    useProtocol: true,
-    defaultProtocol: 'http://',
     focus: false,
-    tabDisabled: false,
+    tabDisable: false,
     tabSize: 4,
     styleWithCSS: false,
     shortcuts: true,
@@ -9838,6 +8994,8 @@ external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summe
     dialogsInBody: false,
     dialogsFade: false,
     maximumImageFileSize: null,
+    acceptImageFileTypes: "image/*",
+    allowClipboardImagePasting: true,
     callbacks: {
       onBeforeCommand: null,
       onBlur: null,
@@ -9863,11 +9021,11 @@ external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summe
       htmlMode: true,
       lineNumbers: true
     },
-    codeviewFilter: false,
+    codeviewFilter: true,
     codeviewFilterRegex: /<\/*(?:applet|b(?:ase|gsound|link)|embed|frame(?:set)?|ilayer|l(?:ayer|ink)|meta|object|s(?:cript|tyle)|t(?:itle|extarea)|xml)[^>]*?>/gi,
     codeviewIframeFilter: true,
     codeviewIframeWhitelistSrc: [],
-    codeviewIframeWhitelistSrcBase: ['www.youtube.com', 'www.youtube-nocookie.com', 'www.facebook.com', 'vine.co', 'instagram.com', 'player.vimeo.com', 'www.dailymotion.com', 'player.youku.com', 'v.qq.com'],
+    codeviewIframeWhitelistSrcBase: ['www.youtube.com', 'www.youtube-nocookie.com', 'www.facebook.com', 'vine.co', 'instagram.com', 'player.vimeo.com', 'www.dailymotion.com', 'player.youku.com', 'jumpingbean.tv', 'v.qq.com'],
     keyMap: {
       pc: {
         'ESC': 'escape',
@@ -9981,49 +9139,91 @@ external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summe
     }
   }
 });
+;// CONCATENATED MODULE: ./src/js/renderer.js
+function renderer_typeof(o) { "@babel/helpers - typeof"; return renderer_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, renderer_typeof(o); }
+function renderer_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function renderer_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, renderer_toPropertyKey(o.key), o); } }
+function renderer_createClass(e, r, t) { return r && renderer_defineProperties(e.prototype, r), t && renderer_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function renderer_toPropertyKey(t) { var i = renderer_toPrimitive(t, "string"); return "symbol" == renderer_typeof(i) ? i : i + ""; }
+function renderer_toPrimitive(t, r) { if ("object" != renderer_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != renderer_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
-/***/ }),
+var Renderer = /*#__PURE__*/function () {
+  function Renderer(markup, children, options, callback) {
+    renderer_classCallCheck(this, Renderer);
+    this.markup = markup;
+    this.children = children;
+    this.options = options;
+    this.callback = callback;
+  }
+  return renderer_createClass(Renderer, [{
+    key: "render",
+    value: function render($parent) {
+      var $node = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(this.markup);
+      if (this.options && this.options.contents) {
+        $node.html(this.options.contents);
+      }
+      if (this.options && this.options.className) {
+        $node.addClass(this.options.className);
+      }
+      if (this.options && this.options.data) {
+        external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().each(this.options.data, function (k, v) {
+          $node.attr('data-' + k, v);
+        });
+      }
+      if (this.options && this.options.click) {
+        $node.on('click', this.options.click);
+      }
+      if (this.children) {
+        var $container = $node.find('.note-children-container');
+        this.children.forEach(function (child) {
+          child.render($container.length ? $container : $node);
+        });
+      }
+      if (this.callback) {
+        this.callback($node, this.options);
+      }
+      if (this.options && this.options.callback) {
+        this.options.callback($node);
+      }
+      if ($parent) {
+        $parent.append($node);
+      }
+      return $node;
+    }
+  }]);
+}();
+/* harmony default export */ const renderer = ({
+  create: function create(markup, callback) {
+    return function () {
+      var options = renderer_typeof(arguments[1]) === 'object' ? arguments[1] : arguments[0];
+      var children = Array.isArray(arguments[0]) ? arguments[0] : [];
+      if (options && options.children) {
+        children = options.children;
+      }
+      return new Renderer(markup, children, options, callback);
+    };
+  }
+});
+;// CONCATENATED MODULE: ./src/styles/bs5/summernote-bs5.js
+function summernote_bs5_typeof(o) { "@babel/helpers - typeof"; return summernote_bs5_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, summernote_bs5_typeof(o); }
 
-/***/ 5:
-/***/ (function(module, exports, __webpack_require__) {
-
-// extracted by mini-css-extract-plugin
-
-/***/ }),
-
-/***/ 53:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-// ESM COMPAT FLAG
-__webpack_require__.r(__webpack_exports__);
-
-// EXTERNAL MODULE: external {"root":"jQuery","commonjs2":"jquery","commonjs":"jquery","amd":"jquery"}
-var external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_ = __webpack_require__(0);
-var external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default = /*#__PURE__*/__webpack_require__.n(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_);
-
-// EXTERNAL MODULE: ./src/js/base/renderer.js
-var renderer = __webpack_require__(1);
-
-// CONCATENATED MODULE: ./src/js/bs4/ui.js
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 
 
-var editor = renderer["a" /* default */].create('<div class="note-editor note-frame card"></div>');
-var toolbar = renderer["a" /* default */].create('<div class="note-toolbar card-header" role="toolbar"></div>');
-var editingArea = renderer["a" /* default */].create('<div class="note-editing-area"></div>');
-var codable = renderer["a" /* default */].create('<textarea class="note-codable" aria-multiline="true"></textarea>');
-var editable = renderer["a" /* default */].create('<div class="note-editable card-block" contentEditable="true" role="textbox" aria-multiline="true"></div>');
-var statusbar = renderer["a" /* default */].create(['<output class="note-status-output" role="status" aria-live="polite"></output>', '<div class="note-statusbar" role="status">', '<div class="note-resizebar" aria-label="Resize">', '<div class="note-icon-bar"></div>', '<div class="note-icon-bar"></div>', '<div class="note-icon-bar"></div>', '</div>', '</div>'].join(''));
-var airEditor = renderer["a" /* default */].create('<div class="note-editor note-airframe"></div>');
-var airEditable = renderer["a" /* default */].create(['<div class="note-editable" contentEditable="true" role="textbox" aria-multiline="true"></div>', '<output class="note-status-output" role="status" aria-live="polite"></output>'].join(''));
-var buttonGroup = renderer["a" /* default */].create('<div class="note-btn-group btn-group">');
-var dropdown = renderer["a" /* default */].create('<div class="note-dropdown-menu dropdown-menu" role="list">', function ($node, options) {
+var editor = renderer.create('<div class="note-editor note-frame card"></div>');
+var toolbar = renderer.create('<div class="note-toolbar card-header" role="toolbar"></div>');
+var editingArea = renderer.create('<div class="note-editing-area"></div>');
+var codable = renderer.create('<textarea class="note-codable" aria-multiline="true"></textarea>');
+var editable = renderer.create('<div class="note-editable card-block" contentEditable="true" role="textbox" aria-multiline="true"/>');
+var statusbar = renderer.create(['<output class="note-status-output" role="status" aria-live="polite"></output>', '<div class="note-statusbar" role="status">', '<div class="note-resizebar" aria-label="Resize">', '<div class="note-icon-bar"></div>', '<div class="note-icon-bar"></div>', '<div class="note-icon-bar"></div>', '</div>', '</div>'].join(''));
+var airEditor = renderer.create('<div class="note-editor note-airframe"></div>');
+var airEditable = renderer.create(['<div class="note-editable" contentEditable="true" role="textbox" aria-multiline="true"></div>', '<output class="note-status-output" role="status" aria-live="polite"></output>'].join(''));
+var buttonGroup = renderer.create('<div class="note-btn-group btn-group">');
+var dropdown = renderer.create('<div class="note-dropdown-menu dropdown-menu" role="list">', function ($node, options) {
   var markup = Array.isArray(options.items) ? options.items.map(function (item) {
     var value = typeof item === 'string' ? item : item.value || '';
     var content = options.template ? options.template(item) : item;
-    var option = _typeof(item) === 'object' ? item.option : undefined;
+    var option = summernote_bs5_typeof(item) === 'object' ? item.option : undefined;
     var dataValue = 'data-value="' + value + '"';
     var dataOption = option !== undefined ? ' data-option="' + option + '"' : '';
     return '<a class="dropdown-item" href="#" ' + (dataValue + dataOption) + ' role="listitem" aria-label="' + value + '">' + content + '</a>';
@@ -10031,17 +9231,14 @@ var dropdown = renderer["a" /* default */].create('<div class="note-dropdown-men
   $node.html(markup).attr({
     'aria-label': options.title
   });
-
   if (options && options.codeviewKeepButton) {
     $node.addClass('note-codeview-keep');
   }
 });
-
 var dropdownButtonContents = function dropdownButtonContents(contents) {
   return contents;
 };
-
-var dropdownCheck = renderer["a" /* default */].create('<div class="note-dropdown-menu dropdown-menu note-check" role="list">', function ($node, options) {
+var dropdownCheck = renderer.create('<div class="note-dropdown-menu dropdown-menu note-check" role="list">', function ($node, options) {
   var markup = Array.isArray(options.items) ? options.items.map(function (item) {
     var value = typeof item === 'string' ? item : item.value || '';
     var content = options.template ? options.template(item) : item;
@@ -10050,39 +9247,37 @@ var dropdownCheck = renderer["a" /* default */].create('<div class="note-dropdow
   $node.html(markup).attr({
     'aria-label': options.title
   });
-
   if (options && options.codeviewKeepButton) {
     $node.addClass('note-codeview-keep');
   }
 });
-var dialog = renderer["a" /* default */].create('<div class="modal note-modal" aria-hidden="false" tabindex="-1" role="dialog"></div>', function ($node, options) {
+var dialog = renderer.create('<div class="modal note-modal" aria-hidden="false" tabindex="-1" role="dialog"></div>', function ($node, options) {
   if (options.fade) {
     $node.addClass('fade');
   }
-
   $node.attr({
     'aria-label': options.title
   });
-    $node.html(['<div class="modal-dialog">', '<div class="modal-content">', options.title ? '<div class="modal-header">' + '<h4 class="modal-title">' + options.title + '</h4>' + '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" aria-hidden="true"><svg role="img" class="icon icon-close" viewBox="0 0 16 16"><path d="M9.38526 8.08753L15.5498 1.85558C15.9653 1.43545 15.9653 0.805252 15.5498 0.385121C15.1342 -0.0350102 14.5108 -0.0350102 14.0952 0.385121L7.93072 6.61707L1.76623 0.315098C1.35065 -0.105033 0.727273 -0.105033 0.311688 0.315098C-0.103896 0.73523 -0.103896 1.36543 0.311688 1.78556L6.47618 8.0175L0.311688 14.2495C-0.103896 14.6696 -0.103896 15.2998 0.311688 15.7199C0.519481 15.93 0.796499 16 1.07355 16C1.35061 16 1.62769 15.93 1.83548 15.7199L7.99997 9.48797L14.1645 15.7199C14.3722 15.93 14.6493 16 14.9264 16C15.2034 16 15.4805 15.93 15.6883 15.7199C16.1039 15.2998 16.1039 14.6696 15.6883 14.2495L9.38526 8.08753Z" fill="currentColor"/></svg></button>' + '</div>' : '', '<div class="modal-body">' + options.body + '</div>', options.footer ? '<div class="modal-footer">' + options.footer + '</div>' : '', '</div>', '</div>'].join(''));
+  $node.html(['<div class="modal-dialog">', '<div class="modal-content">', options.title ? '<div class="modal-header">' + '<h4 class="modal-title">' + options.title + '</h4>' + '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" aria-hidden="true"></button>' + '</div>' : '', '<div class="modal-body">' + options.body + '</div>', options.footer ? '<div class="modal-footer">' + options.footer + '</div>' : '', '</div>', '</div>'].join(''));
 });
-var popover = renderer["a" /* default */].create(['<div class="note-popover popover in">', '<div class="arrow"></div>', '<div class="popover-content note-children-container"></div>', '</div>'].join(''), function ($node, options) {
+var popover = renderer.create(['<div class="note-popover popover bs-popover-auto show">', '<div class="popover-arrow"></div>', '<div class="popover-body note-popover-content note-children-container"></div>', '</div>'].join(''), function ($node, options) {
   var direction = typeof options.direction !== 'undefined' ? options.direction : 'bottom';
-  $node.addClass(direction);
-
+  $node.attr('data-popper-placement', direction);
   if (options.hideArrow) {
-    $node.find('.arrow').hide();
+    $node.find('.popover-arrow').hide();
   }
 });
-var ui_checkbox = renderer["a" /* default */].create('<div class="form-check"></div>', function ($node, options) {
+var summernote_bs5_checkbox = renderer.create('<div class="form-check"></div>', function ($node, options) {
   $node.html(['<label class="form-check-label"' + (options.id ? ' for="note-' + options.id + '"' : '') + '>', '<input type="checkbox" class="form-check-input"' + (options.id ? ' id="note-' + options.id + '"' : ''), options.checked ? ' checked' : '', ' aria-label="' + (options.text ? options.text : '') + '"', ' aria-checked="' + (options.checked ? 'true' : 'false') + '"/>', ' ' + (options.text ? options.text : '') + '</label>'].join(''));
 });
-
 var icon = function icon(iconClassName, tagName) {
+  if (iconClassName.match(/^</)) {
+    return iconClassName;
+  }
   tagName = tagName || 'i';
   return '<' + tagName + ' class="' + iconClassName + '"></' + tagName + '>';
 };
-
-var ui_ui = function ui(editorOptions) {
+var ui = function ui(editorOptions) {
   return {
     editor: editor,
     toolbar: toolbar,
@@ -10099,29 +9294,24 @@ var ui_ui = function ui(editorOptions) {
     dialog: dialog,
     popover: popover,
     icon: icon,
-    checkbox: ui_checkbox,
+    checkbox: summernote_bs5_checkbox,
     options: editorOptions,
     palette: function palette($node, options) {
-      return renderer["a" /* default */].create('<div class="note-color-palette"></div>', function ($node, options) {
+      return renderer.create('<div class="note-color-palette"></div>', function ($node, options) {
         var contents = [];
-
         for (var row = 0, rowSize = options.colors.length; row < rowSize; row++) {
           var eventName = options.eventName;
           var colors = options.colors[row];
           var colorsName = options.colorsName[row];
           var buttons = [];
-
           for (var col = 0, colSize = colors.length; col < colSize; col++) {
             var color = colors[col];
             var colorName = colorsName[col];
-            buttons.push(['<button type="button" class="note-color-btn"', 'style="background-color:', color, '" ', 'data-event="', eventName, '" ', 'data-value="', color, '" ', 'title="', colorName, '" ', 'aria-label="', colorName, '" ', 'data-bs-toggle="button" tabindex="-1"></button>'].join(''));
+            buttons.push(['<button type="button" class="note-color-btn"', 'style="background-color:', color, '" ', 'data-event="', eventName, '" ', 'data-value="', color, '" ', 'title="', colorName, '" ', 'aria-label="', colorName, '" ', 'data-toggle="button" tabindex="-1"></button>'].join(''));
           }
-
           contents.push('<div class="note-color-row">' + buttons.join('') + '</div>');
         }
-
         $node.html(contents.join(''));
-
         if (options.tooltip) {
           $node.find('.note-color-btn').tooltip({
             container: options.container || editorOptions.container,
@@ -10132,8 +9322,17 @@ var ui_ui = function ui(editorOptions) {
       })($node, options);
     },
     button: function button($node, options) {
-      return renderer["a" /* default */].create('<button type="button" class="note-btn btn btn-light btn-sm" tabindex="-1">', function ($node, options) {
-        if (options && options.tooltip) {
+      return renderer.create('<button type="button" class="note-btn btn btn-outline-secondary btn-sm" tabindex="-1">', function ($node, options) {
+        if (options && options.data && options.data.toggle === 'dropdown') {
+          $node.removeAttr('data-toggle');
+          $node.attr('data-bs-toggle', 'dropdown');
+          if (options && options.tooltip) {
+            $node.attr({
+              title: options.tooltip,
+              'aria-label': options.tooltip
+            });
+          }
+        } else if (options && options.tooltip) {
           $node.attr({
             title: options.tooltip,
             'aria-label': options.tooltip
@@ -10142,10 +9341,9 @@ var ui_ui = function ui(editorOptions) {
             trigger: 'hover',
             placement: 'bottom'
           }).on('click', function (e) {
-            external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default()(e.currentTarget).tooltip('hide');
+            external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()(e.currentTarget).tooltip('hide');
           });
         }
-
         if (options && options.codeviewButton) {
           $node.addClass('note-codeview-keep');
         }
@@ -10190,32 +9388,18 @@ var ui_ui = function ui(editorOptions) {
     }
   };
 };
-
-/* harmony default export */ var bs4_ui = (ui_ui);
-// EXTERNAL MODULE: ./src/js/base/settings.js + 37 modules
-var settings = __webpack_require__(3);
-
-// EXTERNAL MODULE: ./src/styles/summernote-bs4.scss
-var summernote_bs4 = __webpack_require__(5);
-
-// CONCATENATED MODULE: ./src/js/bs4/settings.js
-
-
-
-
-external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote = external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.extend(external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote, {
-  ui_template: bs4_ui,
-  "interface": 'bs4'
+(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote = external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default().extend((external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote, {
+  ui_template: ui,
+  "interface": 'bs5'
 });
-external_root_jQuery_commonjs2_jquery_commonjs_jquery_amd_jquery_default.a.summernote.options.styleTags = ['p', {
+(external_root_jQuery_commonjs_jquery_commonjs2_jquery_amd_jquery_default()).summernote.options.styleTags = ['p', {
   title: 'Blockquote',
   tag: 'blockquote',
   className: 'blockquote',
   value: 'blockquote'
 }, 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
-
-/***/ })
-
-/******/ });
+/******/ 	return __webpack_exports__;
+/******/ })()
+;
 });
 //# sourceMappingURL=summernote-bs5.js.map

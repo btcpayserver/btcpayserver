@@ -1,5 +1,209 @@
 # Changelog
 
+## 2.4.7
+
+This bug-fix release addresses security, reliability, and payment-accounting issues. Updating is highly recommended, especially for servers shared by multiple merchants.
+
+Thank you to **Anthropic** and its [OSS Scanner program](https://github.com/anthropics/oss-scanner) for reporting these findings and providing reproducers and proposed fixes.
+
+This release fixes **85 security findings** from the scan, using the report's original severity ratings:
+
+| Severity | Fixed findings |
+|---|---:|
+| Critical | 1 |
+| High | 13 |
+| Medium | 52 |
+| Low | 19 |
+
+These counts exclude findings already fixed in earlier releases, incomplete fixes, by-design or out-of-scope closures, and ordinary bugs. They include six Medium findings from the report's separately indexed already-public-upstream category. Details of Critical and High findings are intentionally omitted below.
+
+### Security fixes
+
+* **Payouts**: Prevent cancelled payouts from being reopened through state changes that bypass pull-payment limits (#7756) @NicolasDorier
+* **Checkout forms**: Restrict payment-request, Point of Sale, and Crowdfund form selection to the owning store, while preserving built-in forms @Kukks
+* **Invoice metadata**: Ignore JSON reference metadata that could interrupt payment detection (#7761) @NicolasDorier
+* **BitPay API**: Apply the store's confirmation policy and expiry limits to anonymously created invoices (#7766 #7768) @NicolasDorier
+* **BitPay API**: Limit invoice `posData` to 64 KiB before parsing to prevent excessive memory use @Kukks
+* **BitPay API**: Require authentication when reading individual invoices instead of exposing buyer information through anonymous access @Kukks
+* **Two-factor authentication**: Enforce authenticator attempt limits under concurrent login requests (#7770) @NicolasDorier
+* **BitPay API**: Validate supplied tokens against the authenticated identity, including tokens in signed request bodies @NicolasDorier
+* **App settings**: Prevent invalid Crowdfund and Point of Sale submissions from revealing another store's forms (#7754) @NicolasDorier
+* **Crowdfund**: Reject invalid reset periods and oversized intervals; safely treat malformed saved reset settings as non-recurring and display that fallback consistently (#7764) @NicolasDorier
+* **Global search**: Check invoice access against the store owning each search result @NicolasDorier
+* **Wallet setup**: Avoid excessive processing when parsing derivation schemes containing many labels @NicolasDorier
+* **Email Rules**: Restrict template placeholders to property and index paths of at most 256 characters, preventing expensive JSONPath expressions (#7770) @NicolasDorier
+* **Public forms**: Prevent submitted values from changing the targets of read-only mirrored fields (#7757) @NicolasDorier
+* **Greenfield**: Limit app listings to the stores permitted by the API key and the user's store roles (#7754) @NicolasDorier
+* **Notifications**: Send invoice notifications only to store roles allowed to view invoices (#7762) @NicolasDorier
+* **Invoices**: Avoid excessive database work when loading invoices with many payments and addresses (#7769) @NicolasDorier
+* **Invoice monitoring**: Stop retaining complete invoice data for the full monitoring period, reducing memory use for large orders (#7761) @NicolasDorier
+* **Reports**: Limit invoice reports to 500 additional metadata columns to prevent excessive memory use; further metadata columns are omitted @Kukks
+* **LNURL-auth**: Expire registration and login challenges after five minutes and invalidate them when account security credentials change (#7762) @NicolasDorier
+* **LNURL**: Use the configured public server address for saved payment callbacks rather than untrusted request headers (#7759) @NicolasDorier
+* **Lightning**: Verify payment hashes before recording node-reported payments, preventing one store's node from interfering with another store's payment (#7758) @NicolasDorier
+* **Lightning Addresses**: Stop indefinitely caching lookups for nonexistent usernames (#7762) @NicolasDorier
+* **Monetization**: Preserve failed-login lockout protection for active subscribers by separating billing restrictions from password lockouts @NicolasDorier
+* **On-chain payments**: Avoid repeatedly broadcasting the same transaction for every payment output during payment-state updates (#7761) @NicolasDorier
+* **Private forms**: Require invoice-creation permission when submitting a store's private form (#7759) @NicolasDorier
+* **LNURL payouts**: Limit downloaded LNURL responses to prevent excessive memory use during payout claims (#7761) @NicolasDorier
+* **Greenfield**: Apply password-attempt lockouts when changing account credentials through the profile API (#7761) @NicolasDorier
+* **Payment Requests**: Keep cloning within the authorized store so customer form answers cannot be read through another store's clone page (#7756) @NicolasDorier
+* **Crowdfund and Payment Requests**: Render invoice-creation errors as text instead of interpreting them as HTML (#7759) @NicolasDorier
+* **BitPay pairing**: Prevent pending pairing codes from being reassigned to another identity or store, including during concurrent requests (#7770) @NicolasDorier
+* **Subscriptions**: Clear the previous plan's paid state during period-end changes so an unpaid Lifetime plan cannot remain active (#7756 #7763) @NicolasDorier
+* **Point of Sale**: Keep uncharged top-up cart values out of receipts, tax metadata, sales totals, and item counts (#7772) @NicolasDorier
+* **Point of Sale**: Apply configured forms and price adjustments to JSON orders; disable direct LNURL orders and the LNURL print view when a form is configured (#7770) @NicolasDorier
+* **Point of Sale**: Prevent a cart containing an any-amount item from turning other items into an unpaid top-up (#7756 #7772) @NicolasDorier
+* **Lightning configuration**: Avoid excessive processing of malformed legacy connection strings (#7742) @NicolasDorier
+* **Payment processing**: Avoid repeatedly copying complete invoice data when many outputs pay the same invoice (#7759) @NicolasDorier
+* **Templates**: Avoid excessive processing of malformed brace sequences in placeholders @NicolasDorier
+* **Wallet setup**: Prevent excessive regular-expression processing when detecting output descriptors @NicolasDorier
+* **Exchange rates**: Bound expanded rate-rule expressions to prevent excessive processing (#7762) @NicolasDorier
+* **SSRF protection**: Validate onion hostnames strictly so malformed IPv6 addresses cannot bypass private-network restrictions (#7759) @NicolasDorier
+* **Store branding**: Keep merchant-provided custom CSS off signed-in backend pages when applying store brand colors (#7754) @NicolasDorier
+* **Subscriptions**: Round credited payments down to the currency's precision instead of over-crediting fractional amounts (#7762) @NicolasDorier
+* **Subscriptions**: Bound credit and charge amounts and reject overflowing balances before they interrupt subscription processing (#7761) @NicolasDorier
+* **Exchange rates**: Limit rate-rule input size, nesting, and complexity to prevent parser stack exhaustion (#7758) @NicolasDorier
+* **Browser rendering**: Quote and encode shortened-text tooltips to prevent HTML attribute injection @NicolasDorier
+* **Subscriptions**: Keep merchant-only plan listings and subscriber counts out of anonymous checkout responses (#7755) @NicolasDorier
+* **Crowdfund**: Limit public email and redirect URL inputs before loading campaign history or creating invoices (#7772) @NicolasDorier
+* **Payment accounting**: Safely bound extreme currency conversions before multiplication, preventing overflow from interrupting payment detection and reports (#7772) @NicolasDorier
+* **Payment Request emails**: Keep internal notification recipients in BCC when emailing a buyer @Kukks
+* **Wallet**: Avoid repeated PSBT finalization work on large transactions and update NBitcoin to 10.0.19 (#7765) @NicolasDorier
+* **Subscriber portal**: Bound dashboard credit descriptions and avoid excessive regular-expression processing when displaying invoice links, including in existing descriptions (#7772) @NicolasDorier
+* **Internal-node payouts**: Require an eligible, unrestricted administrator in the store before authorizing automated internal-node payments @Kukks
+* **Stores**: Refresh invoicing eligibility when removing a store user, so stores with no active users stop creating invoices (#7757) @NicolasDorier
+* **On-chain payouts**: Treat payments merely sending funds into the store wallet as external payments requiring merchant confirmation (#7764) @NicolasDorier
+* **Plan checkout**: Recheck checkout state before creating an invoice to prevent duplicate invoices from concurrent submissions (#7756) @NicolasDorier
+* **Boltcards**: Authenticate payment requests before updating replay counters @NicolasDorier
+* **Registration emails**: Stop sending account-approval requests to disabled or otherwise access-restricted administrators @Kukks
+* **Invoice creation**: Use only the authorized store when displaying the form or redisplaying invalid submissions (#7764) @NicolasDorier
+* **Payment Requests**: Load contributing invoices only from the request's own store, avoiding work on unrelated stores' invoices (#7764) @NicolasDorier
+* **LNURL**: Reject disabled Point of Sale items and Crowdfund perks (#7756) @NicolasDorier
+* **LNURL-withdraw**: Stop polling the database when the requesting client disconnects (#7754) @NicolasDorier
+* **Lightning connection tests**: Apply SSRF protection to the node-advertised destination used by the port check @Kukks
+* **Invoice reports**: Handle malformed or non-numeric cart prices without failing the report (#7757) @NicolasDorier
+* **On-chain payouts**: Restore the previous payout state and proof after an explicitly rejected broadcast so the payout can be retried @Kukks
+* **Payment Requests**: Require an antiforgery-protected POST when archiving a request @Kukks
+* **Sales reports**: Reject overflowing cart-line totals when reading stored invoice data, and bound newly submitted POS unit prices (#7764) @NicolasDorier
+* **SMTP settings**: Reuse saved email passwords only when the SMTP hostname is unchanged, including dashboard Save/Test and API updates (#7768) @NicolasDorier
+* **Payment Requests**: Save edits without overwriting concurrent changes to the owning store's settings (#7754) @NicolasDorier
+* **Wallet receive addresses**: Invalidate cached addresses after wallet replacement, removal, or multisig setup, and check that cached addresses belong to the current wallet (#7768) @NicolasDorier
+* **Stores**: Update active-user restrictions even when a store has no saved settings blob @Kukks
+
+### Other fixes
+
+* **Greenfield**: Honor the server policy restricting non-administrators to cold wallets when generating wallets (#7754) @NicolasDorier
+* **Store settings**: Reject unsafe custom CSS URL schemes and suppress unsafe existing links (#7757) @NicolasDorier
+* **Subscriptions**: Return subscriber information correctly while a plan change is scheduled (#7761) @NicolasDorier
+* **Subscriptions**: Show the credit balance for the requested currency (#7747) @NicolasDorier
+* **Subscriptions**: Do not refund already-used grace days after a renewal followed by a plan change (#7763) @NicolasDorier
+* **Payout processors**: Prevent duplicate processor configurations from concurrent updates (#7763) @NicolasDorier
+* **Registration**: Apply the registration rate limit to web registration and Monetization signup submissions (#7771) @NicolasDorier @Kukks
+* **Payouts**: Render only HTTP/HTTPS source and proof links, and tolerate non-string source metadata (#7771) @NicolasDorier
+* **Point of Sale**: Deduct the correct inventory quantity for multi-unit orders @Kukks
+* **Forms**: Reject empty or disabled dropdown choices that are not valid options (#7758) @NicolasDorier
+* **Subscriptions**: Load the new-subscriber modal correctly @NicolasDorier
+* **Payment Requests**: Restore label selection for roles without store-settings access and correct expiry-date formatting @NicolasDorier
+* **LNURL-auth**: Handle polling responses without submitting the login form or completing registration on an error @NicolasDorier
+* **Greenfield documentation**: Correct subscription-credit currency references, update the API documentation viewer, and fix nullable enum and payment-method schemas (#7737 #7764) @maydalabs @NicolasDorier
+
+### Miscellaneous
+
+* **Invoice creation**: Remove the legacy `/invoices/create` GET and POST routes; use `/stores/{storeId}/invoices/create` instead (#7764) @NicolasDorier
+* **Plugins**: Deprecate `GetInvoicesForPaymentRequest(string, ...)` in favor of the overload accepting the payment request; the old overload remains available (#7764) @NicolasDorier
+* **Translations**: Update translations @NicolasDorier
+
+## 2.4.6
+
+This release includes broad security hardening for API permissions, untrusted input, generated links, and browser actions.
+
+### Breaking changes
+
+* **Invoice email notifications**: Remove the legacy per-invoice `notificationEmail` option; use merchant-controlled email rules instead (#7672) @NicolasDorier
+
+### New features
+
+* **Maintenance**: Show live output, progress, and failure details while changing domains, restarting services, cleaning Docker images, or updating BTCPay Server (#7720) @NicolasDorier
+* **Plugins**: Show persistent diagnostics for plugins automatically disabled after startup or runtime failures (#7708) @NicolasDorier
+
+### Improvements
+
+* **Wallet**: Clarify transaction filters, import and export actions, responsive layout, and fee-bump actions (#7470) @dstrukt
+* **QR codes**: Add a white margin to improve scanning in dark mode (#7735) @NicolasDorier
+* **Checkout settings**: Show readable payment method names instead of internal IDs (#7676) @Psycarlo
+* **Invoices**: Load recent invoice lists significantly faster on large servers (#7707) @NicolasDorier
+* **Bitcoin fees**: Prefer fee estimates from the connected Bitcoin Core node (#7682) @NicolasDorier
+* **Generated links**: Consistently use the configured public server URL (#7661 #7662 #7663) @NicolasDorier
+
+### Fixes
+
+* **Runtime security**: Update .NET and the Ubuntu container trust store to fix the [Brotli decoder vulnerability (CVE-2026-111497)](https://github.com/dotnet/announcements/issues/494) and distrust certificates affected by the [eMudhra CA key compromise](https://ubuntu.com/blog/emudhra-ca-compromise-fixes-available) @NicolasDorier
+* **API Keys**: Prevent server errors when API key permission forms are incomplete (#7733) @NicolasDorier
+* **Basic authentication**: Allow Greenfield API access when account passwords contain colons (#7736) @NicolasDorier
+* **Public forms**: Keep Crowdfund, Point of Sale, and Payment Request forms on their original route when validation fails (#7716) @NicolasDorier
+* **Lightning payouts**: Complete LNDHub-on-LNbits payouts correctly, retain pending payment proofs when lookups return no result, and round LNURL payouts down to whole satoshis (#7653 #7679 #7703) @NicolasDorier @shin4141
+* **LNURL**: Preserve URI casing in payment and authentication QR codes, and require settled payments during verification (#7681) @NicolasDorier
+* **Email Rules**: Limit rendered messages to 100 recipients and handle empty recipient placeholders without interrupting other rules (#7690 #7718) @Kukks @comwanga
+* **Subscriptions**: Prevent new subscriptions from taking control of existing accounts, protect administrators from subscriber lockouts, and make concurrent credit updates atomic (#7654 #7660 #7700) @NicolasDorier @Kukks
+* **Templates**: Preserve unsupported placeholders in configured URLs, descriptions, and labels (#7717) @NicolasDorier
+* **Security hardening**: Strengthen store permissions, browser actions, external URLs, Payjoin requests, and untrusted input across APIs, wallets, forms, subscriptions, webhooks, and apps (#7658 #7659 #7664 #7665 #7666 #7667 #7669 #7686 #7687 #7688 #7689 #7692 #7693 #7694 #7695 #7696 #7701 #7713 #7722 #7723) @NicolasDorier @Kukks
+* **HTML customization**: Apply stricter sanitization to custom HTML and CSS, while preserving rich media for merchant-authored public app and payment descriptions (#7726) @NicolasDorier
+* **Authentication**: Require protected POST requests for logout; direct links and bookmarks to `/logout` no longer sign users out (#7704) @NicolasDorier
+* **Redirect URLs**: Accept only absolute HTTP or HTTPS redirect URLs in API key authorization and Greenfield or BitPay-compatible invoice requests (#7714 #7721 #7729) @NicolasDorier @tumutech
+* **API Keys**: Keep restricted API keys within their granted store and user permission scope, including when the key owner is a server administrator (#7684) @Kukks
+
+Thanks to @iaohkut, bitcoinbazar21 and Nikhil Agrawal for responsibly disclosing security issues fixed in this release.
+
+## 2.4.5
+
+### Breaking changes
+
+* **Outbound HTTP requests**: Block private-network destinations for Lightning connections, LNURL requests, invoice notification URLs, and webhooks by default to prevent SSRF. Operators using private services must [allow them with `ssrfexceptions`](https://docs.btcpayserver.org/Operators/#allow-private-outbound-destinations) (#7581 #7626 #7627 #7635 #7636 #7637 #7638 #7644 #7646) @NicolasDorier
+* **Refunds**: Employees without permission to create approved pull payments can no longer auto-approve invoice overpayment refunds; another user must approve the payout (#7649) @NicolasDorier
+* **Invoices**: Hide checkout, status, and receipt information from public endpoints one month after monitoring ends; users with invoice-view permission retain access (#7651) @NicolasDorier
+
+### New features
+
+* **Greenfield**: Add APIs for discovering and running store reports (#7608) @NicolasDorier
+* **Plugins**: Simplify registering and migrating plugin-owned EF Core database contexts (#7611) @NicolasDorier
+* **Invoices**: Add the `btcpay.store.canmanageinvoicestatus` permission for marking invoices as settled or invalid (#7643) @NicolasDorier
+* **Access Tokens**: Add the `btcpay.store.canmanagelegacyaccesstokens` permission for managing legacy BitPay-compatible tokens and pairing requests (#7502 #7612 #7631) @okjodom @NicolasDorier
+
+### Fixes
+
+* **Invoices**: Avoid invoice creation crashes when a payment method reuses another invoice's destination ([btcpayserver-monero-plugin#57](https://github.com/btcpay-monero/btcpayserver-monero-plugin/issues/57), #7483) @CaMoPeZzz
+* **Invoices**: Keep invoice searches scoped to the current store (#7599) @NicolasDorier
+* **Invoices**: Require antiforgery validation when changing invoice status in the browser (#7643) @NicolasDorier
+* **Payouts**: Complete payouts and send update webhooks when an RBF replacement confirms (#7625 #7641) @NicolasDorier
+* **Payouts**: Scope payout payment actions to the current store (#7642) @NicolasDorier
+* **Refunds**: Calculate refundable and overpaid amounts only from settled payments (#7600) @NicolasDorier
+* **Refunds**: Require permission to create approved pull payments before auto-approving invoice overpayment refunds (#7649) @NicolasDorier
+* **Reports**: Correct All Time and rolling date ranges (#7608) @NicolasDorier
+* **Lightning**: Persist replacement invoices before canceling previous invoices to keep payments available when replacement fails (#7630) @NicolasDorier
+* **Lightning**: Use LND's WebSocket invoice subscription instead of long polling (#7621) @NicolasDorier
+* **Lightning**: Use only the authorized store when redisplaying setup and settings forms (#7618) @Team1-dev
+* **Generated links**: Use the configured server Base URL for account, password-reset, and store-invitation links, and reject non-HTTP(S) Base URLs (#7590 #7628) @NicolasDorier
+* **Store settings**: Accept only absolute HTTP or HTTPS Store Website URLs in the UI and Greenfield API (#7604) @NicolasDorier, reported by @gn00295120
+* **API Keys**: Show an error instead of a server error when confirming a removed API key (#7568 #7570) @monasco
+* **Access Tokens**: Keep failed token revocations scoped to the authorized store (#7629) @NicolasDorier
+* **Server users**: Return Not Found instead of a server error when sending a verification email to a deleted user (#7571 #7572) @monasco
+* **Plugins**: Run registered plugin database migrations reliably during startup (#7588) @NicolasDorier
+
+### Improvements
+
+* **Invoices**: Create invoices noticeably faster by avoiding unnecessary Lightning node and on-chain fee lookups (#7632 #7633 #7634) @NicolasDorier, reported by @bigg-bb
+* **Access Tokens**: Warn against using legacy BitPay-compatible tokens for new integrations (#7624) @NicolasDorier
+* **Server settings**: Organize administration pages into clearer labeled sections (#7501) @dstrukt
+* **Server administration**: Refresh `btcpay-host` deployment capabilities on `SIGHUP` without restarting BTCPay Server (#7576) @NicolasDorier
+* **LND**: Warn administrators when Docker's LND REST or gRPC endpoint is available but its reverse-proxy route is disabled (#7593) @NicolasDorier
+* **Receipts**: Show the original invoice amount alongside the amount paid on overpaid receipts (#7595 #7597) @NicolasDorier
+* **Documentation**: Rewrite the plugin development guides to make plugins easier to build with coding agents (#7598) @NicolasDorier
+
+### Miscellaneous
+
+* **Invoices**: Deprecate invoice notification URLs in favor of webhooks and remove the notification URL from manual invoice creation (#7647) @NicolasDorier
+
 ## 2.4.4
 
 ### Breaking changes

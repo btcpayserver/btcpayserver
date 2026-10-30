@@ -39,7 +39,7 @@ else
         }
         else
         {
-            <button type="submit" id="@Html.IdFor(o => o.ShowScripting)_submit" class="btcpay-toggle me-3" value="scripting-toggle-@(Model.IsFallback ? "fallback" : "primary")" name="command" data-bs-toggle="modal" permission="@Policies.CanModifyStoreSettings" text-translate="true">Enable advanced rate rule scripting</button>
+            <button type="submit" id="@Html.IdFor(o => o.ShowScripting)_submit" class="btcpay-toggle me-3" value="scripting-toggle-@(Model.IsFallback ? "fallback" : "primary")" name="command" permission="@Policies.CanModifyStoreSettings" text-translate="true">Enable advanced rate rule scripting</button>
         }
 
         <div>
@@ -55,5 +55,4 @@ else
         </div>
     </label>
 </div>
-
 

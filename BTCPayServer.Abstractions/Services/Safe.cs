@@ -13,12 +13,15 @@ namespace BTCPayServer.Abstractions.Services
         private readonly IHtmlHelper _htmlHelper;
         private readonly IJsonHelper _jsonHelper;
         private readonly HtmlSanitizer _htmlSanitizer;
+        private readonly RichTextHtmlSanitizer _richTextHtmlSanitizer;
 
-        public Safe(IHtmlHelper htmlHelper, IJsonHelper jsonHelper, HtmlSanitizer htmlSanitizer)
+        public Safe(IHtmlHelper htmlHelper, IJsonHelper jsonHelper, HtmlSanitizer htmlSanitizer,
+            RichTextHtmlSanitizer richTextHtmlSanitizer)
         {
             _htmlHelper = htmlHelper;
             _jsonHelper = jsonHelper;
             _htmlSanitizer = htmlSanitizer;
+            _richTextHtmlSanitizer = richTextHtmlSanitizer;
         }
 
         public IHtmlContent Raw(string value)
@@ -31,6 +34,9 @@ namespace BTCPayServer.Abstractions.Services
             value.WriteTo(sw, HtmlEncoder.Default);
             return Raw(sw.ToString());
         }
+
+        public IHtmlContent RawRichText(string value) =>
+            _htmlHelper.Raw(_richTextHtmlSanitizer.Sanitize(value));
 
         public IHtmlContent RawEncode(string value)
         {

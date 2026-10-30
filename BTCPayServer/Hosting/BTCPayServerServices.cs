@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
@@ -61,12 +62,10 @@ using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.WalletFileParsing;
 using BTCPayServer.Payments.LNURLPay;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Lightning.LNDhub;
 using BTCPayServer.Payouts;
-using BTCPayServer.Plugins.Bitcoin;
 using ExchangeSharp;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -132,8 +131,19 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
                 new LndHubConnectionStringHandler(client));
             services.TryAddSingleton<LightningClientFactoryService>();
+            services.AddHttpClient(LightningClientFactoryService.NamedClient)
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+            services.AddHttpClient(LightningClientFactoryService.SafeNamedClient)
+                .UseSSRFProtection()
+                .ConfigurePrimaryHttpMessageHandler((handler, _) =>
+                    ((SocketsHttpHandler)handler).AllowAutoRedirect = false);
             services.AddHttpClient(LightningClientFactoryService.OnionNamedClient)
-                .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
+                .ConfigurePrimaryHttpMessageHandler(sp =>
+                {
+                    var handler = ActivatorUtilities.CreateInstance<Socks5HttpClientHandler>(sp);
+                    handler.AllowAutoRedirect = false;
+                    return handler;
+                });
 
 
             services.TryAddSingleton<InvoicePaymentNotification>();
@@ -291,47 +301,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IPluginHookService, PluginHookService>(provider => provider.GetService<PluginHookService>());
             services.TryAddTransient<Safe>();
             services.TryAddTransient<DisplayFormatter>();
-            services.TryAddSingleton<Ganss.Xss.HtmlSanitizer>(o =>
-            {
-                var htmlSanitizer = new Ganss.Xss.HtmlSanitizer();
-
-                htmlSanitizer.RemovingAtRule += (sender, args) =>
-                {
-                };
-                htmlSanitizer.RemovingTag += (sender, args) =>
-                {
-                    if (args.Tag.TagName.Equals("img", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        if (!args.Tag.ClassList.Contains("img-fluid"))
-                        {
-                            args.Tag.ClassList.Add("img-fluid");
-                        }
-
-                        args.Cancel = true;
-                    }
-                };
-
-                htmlSanitizer.RemovingAttribute += (sender, args) =>
-                {
-                    if (args.Tag.TagName.Equals("img", StringComparison.InvariantCultureIgnoreCase) &&
-                        args.Attribute.Name.Equals("src", StringComparison.InvariantCultureIgnoreCase) &&
-                        args.Reason == Ganss.Xss.RemoveReason.NotAllowedUrlValue)
-                    {
-                        args.Cancel = true;
-                    }
-                };
-                htmlSanitizer.RemovingStyle += (sender, args) => { args.Cancel = true; };
-                htmlSanitizer.AllowedAttributes.Add("class");
-                htmlSanitizer.AllowedTags.Add("iframe");
-                htmlSanitizer.AllowedTags.Add("style");
-                htmlSanitizer.AllowedTags.Remove("img");
-                htmlSanitizer.AllowedAttributes.Add("webkitallowfullscreen");
-                htmlSanitizer.AllowedAttributes.Add("allowfullscreen");
-                htmlSanitizer.AllowedSchemes.Add("mailto");
-                htmlSanitizer.AllowedSchemes.Add("bitcoin");
-                htmlSanitizer.AllowedSchemes.Add("lightning");
-                return htmlSanitizer;
-            });
+            services.TryAddSingleton<Ganss.Xss.HtmlSanitizer>(_ => HtmlSanitizerFactory.Create());
+            services.TryAddSingleton<RichTextHtmlSanitizer>(_ => new RichTextHtmlSanitizer(HtmlSanitizerFactory.CreateRichText()));
 
             services.AddSingleton<TransactionLinkProviders>();
             services.TryAddSingleton<LightningConfigurationProvider>();
@@ -386,8 +357,12 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<Dictionary<PaymentMethodId, ICheckoutModelExtension>>(o =>
                 o.GetRequiredService<IEnumerable<ICheckoutModelExtension>>().ToDictionary(o => o.PaymentMethodId, o => o));
 
-            services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient)
+            services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient,
+                    httpClient => httpClient.MaxResponseContentBufferSize = LightningLikePayoutHandler.MaxLNURLResponseSize)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
+            services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerClearnetNamedClient,
+                    httpClient => httpClient.MaxResponseContentBufferSize = LightningLikePayoutHandler.MaxLNURLResponseSize)
+                .UseSSRFProtection();
             services.AddSingleton<HostedServices.PullPaymentHostedService>();
             services.AddSingleton<IHostedService, HostedServices.PullPaymentHostedService>(o => o.GetRequiredService<PullPaymentHostedService>());
 
@@ -542,10 +517,15 @@ namespace BTCPayServer.Hosting
                     new PermissionDisplay("Create an invoice", "Allows creating new invoices."),
                     new PermissionDisplay("Create an invoice", "Allows creating new invoices on the selected stores.")),
                 new PolicyDefinition(
+                    Policies.CanManageInvoiceStatus,
+                    new PermissionDisplay("Manage invoice status", "Allows viewing invoices and marking them as settled or invalid."),
+                    new PermissionDisplay("Manage invoice status", "Allows viewing invoices and marking them as settled or invalid on the selected stores."),
+                    new[] { Policies.CanViewInvoices }),
+                new PolicyDefinition(
                     Policies.CanModifyInvoices,
                     new PermissionDisplay("Modify invoices", "Allows viewing and modifying invoices."),
                     new PermissionDisplay("Modify invoices", "Allows viewing and modifying invoices on the selected stores."),
-                    new[] { Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanCreateLightningInvoiceInStore }),
+                    new[] { Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanManageInvoiceStatus, Policies.CanCreateLightningInvoiceInStore }),
                 new PolicyDefinition(
                     Policies.CanModifyWebhooks,
                     new PermissionDisplay("Modify stores webhooks", "Allows modifying the webhooks of all your stores."),
@@ -554,11 +534,6 @@ namespace BTCPayServer.Hosting
                     Policies.CanSendStoreEmail,
                     new PermissionDisplay("Send store emails", "Allows sending emails on behalf of all your stores."),
                     new PermissionDisplay("Send selected stores' emails", "Allows sending emails on behalf of the selected stores.")),
-                new PolicyDefinition(
-                    Policies.CanManageStoreCredentials,
-                    new PermissionDisplay("Manage access tokens", "Allows managing the access tokens of all your stores."),
-                    new PermissionDisplay("Manage selected stores' access tokens", "Allows managing the access tokens of the selected stores."),
-                    includedByPermissions: new[] { Policies.CanModifyStoreSettings }),
                 new PolicyDefinition(
                     Policies.CanModifyServerSettings,
                     new PermissionDisplay("Manage your server", "Grants total control on the server settings of your server."),
@@ -924,7 +899,7 @@ namespace BTCPayServer.Hosting
                 opt.LoginPath = "/login";
                 opt.AccessDeniedPath = "/errors/403";
                 opt.LogoutPath = "/logout";
-                ConfigureAccessDeniedRedirect(opt);
+                ConfigureCookieRedirects(opt);
             });
             services.AddAuthentication()
                 .AddCookie(AuthenticationSchemes.LimitedLogin, options =>
@@ -937,16 +912,25 @@ namespace BTCPayServer.Hosting
                     options.LoginPath = "/login";
                     options.AccessDeniedPath = "/errors/403";
                     options.LogoutPath = "/logout";
-                    ConfigureAccessDeniedRedirect(options);
+                    ConfigureCookieRedirects(options);
                 })
                 .AddAPIKeyAuthentication();
         }
 
-        private static void ConfigureAccessDeniedRedirect(CookieAuthenticationOptions options)
+        private static void ConfigureCookieRedirects(CookieAuthenticationOptions options)
         {
+            var onRedirectToLogin = options.Events.OnRedirectToLogin;
+            options.Events.OnRedirectToLogin = context => context.Response.HasStarted
+                ? Task.CompletedTask
+                : onRedirectToLogin(context);
+
             var onRedirectToAccessDenied = options.Events.OnRedirectToAccessDenied;
             options.Events.OnRedirectToAccessDenied = context =>
             {
+                if (context.Response.HasStarted)
+                {
+                    return Task.CompletedTask;
+                }
                 if (context.HttpContext.Items.TryGetValue(PermissionAuthorizationHandler.PolicyRequirementKey, out var p) &&
                     p is PolicyRequirement policyRequirement)
                 {

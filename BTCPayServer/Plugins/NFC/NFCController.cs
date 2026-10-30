@@ -1,7 +1,6 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Payouts.LightningLike;
@@ -27,18 +26,21 @@ namespace BTCPayServer.Plugins.NFC
         private readonly InvoiceActivator _invoiceActivator;
         private readonly StoreRepository _storeRepository;
         private readonly ILogger<NFCController> _logger;
+        private readonly UILNURLController _lnurlController;
 
         public NFCController(IHttpClientFactory httpClientFactory,
             InvoiceRepository invoiceRepository,
             InvoiceActivator invoiceActivator,
             StoreRepository storeRepository,
-            ILogger<NFCController> logger)
+            ILogger<NFCController> logger,
+            UILNURLController lnurlController)
         {
             _httpClientFactory = httpClientFactory;
             _invoiceRepository = invoiceRepository;
             _invoiceActivator = invoiceActivator;
             _storeRepository = storeRepository;
             _logger = logger;
+            _lnurlController = lnurlController;
         }
 
         public class SubmitRequest
@@ -63,6 +65,22 @@ namespace BTCPayServer.Plugins.NFC
             if (store?.GetStoreBlob().NfcEnabled is not true)
             {
                 return NotFound();
+            }
+
+            LightMoney topUpAmount = null;
+            if (invoice.Type == InvoiceType.TopUp)
+            {
+                if (request.Amount is null)
+                {
+                    return BadRequest("This is a top-up invoice and you need to provide the amount in sats to pay.");
+                }
+
+                if (request.Amount <= 0 || request.Amount > long.MaxValue / 1000)
+                {
+                    return BadRequest("The top-up amount must be a positive number of sats.");
+                }
+
+                topUpAmount = new LightMoney(request.Amount.Value, LightMoneyUnit.Satoshi);
             }
 
             var methods = invoice.GetPaymentPrompts();
@@ -122,13 +140,9 @@ namespace BTCPayServer.Plugins.NFC
                     await _invoiceActivator.ActivateInvoicePaymentMethod(invoice.Id, lnPaymentMethod.PaymentMethodId);
                 }
                 LightMoney due;
-                if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
+                if (topUpAmount is not null)
                 {
-                    due = new LightMoney(request.Amount.Value, LightMoneyUnit.Satoshi);
-                }
-                else if (invoice.Type == InvoiceType.TopUp)
-                {
-                    return BadRequest("This is a top-up invoice and you need to provide the amount in sats to pay.");
+                    due = topUpAmount;
                 }
                 else
                 {
@@ -149,13 +163,9 @@ namespace BTCPayServer.Plugins.NFC
             if (lnurlPaymentMethod is not null)
             {
                 decimal due;
-                if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
+                if (topUpAmount is not null)
                 {
-                    due = new Money(request.Amount.Value, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC);
-                }
-                else if (invoice.Type == InvoiceType.TopUp)
-                {
-                    return BadRequest("This is a top-up invoice and you need to provide the amount in sats to pay.");
+                    due = topUpAmount.ToDecimal(LightMoneyUnit.BTC);
                 }
                 else
                 {
@@ -164,24 +174,24 @@ namespace BTCPayServer.Plugins.NFC
 
                 try
                 {
-                    httpClient = CreateHttpClient(info.Callback);
                     var amount = LightMoney.Coins(due);
-                    var actionPath = Url.Action(nameof(UILNURLController.GetLNURLForInvoice), "UILNURL",
-                        new { invoiceId = request.InvoiceId, cryptoCode = "BTC", amount = amount.MilliSatoshi });
-                    var url = Request.GetAbsoluteUri(actionPath);
-                    var resp = await httpClient.GetAsync(url);
-                    var response = await resp.Content.ReadAsStringAsync();
-
-                    if (resp.IsSuccessStatusCode)
+                    if (info.MinWithdrawable > amount || amount > info.MaxWithdrawable)
                     {
-                        var res = JObject.Parse(response).ToObject<LNURLPayRequest.LNURLPayRequestCallbackResponse>();
-                        bolt11 = res.Pr;
+                        return BadRequest("Invoice amount is not payable with the LNURL allowed amounts.");
+                    }
+
+                    _lnurlController.ControllerContext = ControllerContext;
+                    var response = await _lnurlController.GetLNURLForInvoice(request.InvoiceId, "BTC", amount.MilliSatoshi);
+                    if (response is OkObjectResult { Value: JObject callbackResponse })
+                    {
+                        bolt11 = callbackResponse.Value<string>("pr");
                     }
                     else
                     {
-                        var res = JObject.Parse(response).ToObject<LNUrlStatusResponse>();
-                        return BadRequest($"Could not fetch BOLT11 invoice to pay to: {res.Reason}");
-
+                        var reason = (response as ObjectResult)?.Value is LNUrlStatusResponse status
+                            ? status.Reason
+                            : "Unknown error";
+                        return BadRequest($"Could not fetch BOLT11 invoice to pay to: {reason}");
                     }
                 }
                 catch (Exception ex)
@@ -197,6 +207,7 @@ namespace BTCPayServer.Plugins.NFC
 
             try
             {
+                httpClient = CreateHttpClient(info.Callback);
                 var result = await info.SendRequest(bolt11, httpClient, null, null);
                 if (!string.IsNullOrEmpty(result.Status) && result.Status.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
                 {

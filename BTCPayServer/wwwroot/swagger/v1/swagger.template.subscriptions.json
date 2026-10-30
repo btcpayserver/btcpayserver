@@ -431,7 +431,7 @@
                         "$ref": "#/components/parameters/CustomerSelector"
                     },
                     {
-                        "$ref": "#/components/parameters/Subscriptions/Currency"
+                        "$ref": "#/components/parameters/SubscriptionsCurrency"
                     }
                 ],
                 "responses": {
@@ -471,7 +471,7 @@
                         "$ref": "#/components/parameters/CustomerSelector"
                     },
                     {
-                        "$ref": "#/components/parameters/Subscriptions/Currency"
+                        "$ref": "#/components/parameters/SubscriptionsCurrency"
                     }
                 ],
                 "requestBody": {
@@ -493,12 +493,20 @@
                         }
                     },
                     "400": {
-                        "description": "Error code: `overdraft`. The subscriber's balance would be overdrawn. Use `allowOverdraft` to allow this.",
+                        "description": "Error codes: `overdraft`, `balance-limit`. The balance update would exceed the permitted overdraft or balance limits.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ProblemDetails"
                                 }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid credit, charge, or description.",
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/ValidationProblemDetails" }
                             }
                         }
                     }
@@ -656,9 +664,18 @@
         "/api/v1/plan-checkout/{checkoutId}": {
             "get": {
                 "summary": "Get a plan checkout",
-                "description": "Retrieves the details of a plan checkout session.",
+                "description": "Retrieves the details of a plan checkout session. Authentication is optional. Before the plan starts, callers without the `btcpay.store.canmanagesubscribers` permission for the checkout's store receive `null` for `successRedirectUrl`, `redirectUrl`, and `subscriber.offering.successRedirectUrl`. After the plan starts, these values are returned to all callers. Regardless of whether the plan has started, callers without this permission receive `null` for every `metadata` field (including `invoiceMetadata` and `newSubscriberMetadata`), `0` for every `memberCount`, and only the checkout's plan and the subscriber's current and next plans, with their features, in `subscriber.offering`.",
                 "operationId": "GetPlanCheckout",
                 "tags": ["Subscriptions"],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagesubscribers"
+                        ],
+                        "Basic": []
+                    },
+                    {}
+                ],
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/PlanCheckoutId"
@@ -680,9 +697,18 @@
             },
             "post": {
                 "summary": "Proceed with a plan checkout",
-                "description": "Continues a plan checkout session.\n\n**Behavior:**\n- If payment is required, the checkout assigns a BTCPay Server invoice and `invoiceId` will be set.\n- If no payment is required (for example, the subscriber already has enough credit or no credit purchase is needed), the plan will start immediately and `planStarted` will be `true`.",
+                "description": "Continues a plan checkout session.\n\n**Behavior:**\n- If payment is required, the checkout assigns a BTCPay Server invoice and `invoiceId` will be set. Repeated or concurrent requests reuse the existing invoice unless it is expired or invalid.\n- If no payment is required (for example, the subscriber already has enough credit or no credit purchase is needed), the plan will start immediately and `planStarted` will be `true`.\n- Before the plan starts, callers without the `btcpay.store.canmanagesubscribers` permission for the checkout's store receive `null` for `successRedirectUrl`, `redirectUrl`, and `subscriber.offering.successRedirectUrl`.\n- Regardless of whether the plan has started, callers without this permission receive `null` for every `metadata` field (including `invoiceMetadata` and `newSubscriberMetadata`), `0` for every `memberCount`, and only the checkout's plan and the subscriber's current and next plans, with their features, in `subscriber.offering`.",
                 "operationId": "ProceedPlanCheckout",
                 "tags": ["Subscriptions"],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagesubscribers"
+                        ],
+                        "Basic": []
+                    },
+                    {}
+                ],
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/PlanCheckoutId"
@@ -800,9 +826,18 @@
         "/api/v1/subscriber-portal/{portalSessionId}": {
             "get": {
                 "summary": "Get a subscriber portal session",
-                "description": "Retrieves the details of an existing subscriber portal session.",
+                "description": "Retrieves the details of an existing subscriber portal session. Authentication is optional. Callers without the `btcpay.store.canmanagesubscribers` permission for the subscriber's store receive `null` for every `metadata` field, `0` for every `memberCount`, and only the subscriber's current and next plans and the plans they can change to, with their features, in `subscriber.offering`.",
                 "operationId": "GetPortalSession",
                 "tags": ["Subscriptions"],
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmanagesubscribers"
+                        ],
+                        "Basic": []
+                    },
+                    {}
+                ],
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/PortalSessionId"
@@ -840,7 +875,7 @@
                 "description": "Unique identifier of the plan checkout session.",
                 "schema": { "$ref": "#/components/schemas/PlanCheckoutId" }
             },
-            "Subscriptions/Currency": {
+            "SubscriptionsCurrency": {
                 "name": "currency",
                 "in": "path",
                 "required": true,
@@ -925,7 +960,8 @@
                     },
                     "successRedirectUrl": {
                         "type": "string",
-                        "description": "URL to redirect the user after checkout success. (The `checkoutPlanId` query parameter will be added to the URL.)",
+                        "nullable": true,
+                        "description": "Configured URL to redirect the user after checkout success. Before the plan starts, this is `null` for callers without permission to manage subscribers for the checkout's store.",
                         "example": "https://example.com/success"
                     },
                     "expiration": {
@@ -936,17 +972,20 @@
                     },
                     "redirectUrl": {
                         "type": "string",
-                        "description": "URL where the user is redirected to proceed with payment.",
-                        "example": "https://pay.example.com/plancheckout_Hpm59L1NPCMUj477Q5"
+                        "nullable": true,
+                        "description": "Checkout success redirect URL with the `checkoutPlanId` query parameter added. Before the plan starts, this is `null` for callers without permission to manage subscribers for the checkout's store.",
+                        "example": "https://example.com/success?checkoutPlanId=plancheckout_Hpm59L1NPCMUj477Q5"
                     },
                     "invoiceMetadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Custom metadata that will be attached to the invoice when it is created.",
                         "additionalProperties": true,
                         "example": { "segment": "gold" }
                     },
                     "metadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Custom metadata for the checkout.",
                         "additionalProperties": true,
                         "example": { "flow": "upgrade" }
@@ -974,6 +1013,7 @@
                     },
                     "newSubscriberMetadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Metadata for creating a new subscriber.",
                         "additionalProperties": true,
                         "example": { "welcomeTier": "starter" }
@@ -986,7 +1026,7 @@
                     },
                     "creditedByInvoice": {
                         "type": "string",
-                        "description": "Amount credited due to invoice settlement.",
+                        "description": "Amount credited from invoice payments.",
                         "example": "12.00"
                     },
                     "onPayBehavior": {
@@ -1137,6 +1177,7 @@
                     "appName": {
                         "type": "string",
                         "nullable": true,
+                        "maxLength": 100,
                         "description": "Display name of the related [application](#tag/Apps).",
                         "example": "Example App"
                     },
@@ -1148,6 +1189,7 @@
                     },
                     "metadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Custom metadata for the offering.",
                         "additionalProperties": true,
                         "example": {
@@ -1158,6 +1200,7 @@
                     "features": {
                         "type": "array",
                         "nullable": true,
+                        "maxItems": 100,
                         "description": "List of features included in this offering.",
                         "items": {
                             "$ref": "#/components/schemas/FeatureModel"
@@ -1195,6 +1238,7 @@
                     },
                     "metadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Custom metadata associated with the customer.",
                         "additionalProperties": true,
                         "example": {
@@ -1270,6 +1314,7 @@
                     },
                     "metadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Custom metadata for the subscription.",
                         "additionalProperties": true,
                         "example": {
@@ -1355,6 +1400,7 @@
                     },
                     "description": {
                         "type": "string",
+                        "maxLength": 500,
                         "description": "Short description explaining the credit change.",
                         "example": "Monthly reward bonus"
                     },
@@ -1392,6 +1438,7 @@
                     },
                     "description": {
                         "type": "string",
+                        "maxLength": 1000,
                         "description": "Short description of the plan.",
                         "example": "Standard monthly subscription."
                     },
@@ -1537,11 +1584,13 @@
                 "properties": {
                     "id": {
                         "type": "string",
+                        "maxLength": 50,
                         "description": "Unique identifier of the feature.",
                         "example": "feature-analytics"
                     },
                     "description": {
                         "type": "string",
+                        "maxLength": 500,
                         "description": "Short description of the feature.",
                         "example": "Access to analytics dashboard."
                     }
@@ -1607,7 +1656,7 @@
                     },
                     "memberCount": {
                         "type": "integer",
-                        "description": "Maximum number of members allowed under this plan.",
+                        "description": "Number of active subscribers of this plan. Returned as 0 in public checkout and portal responses for callers without permission to manage subscribers for the store.",
                         "example": 10
                     },
                     "optimisticActivation": {
@@ -1630,6 +1679,7 @@
                     },
                     "metadata": {
                         "type": "object",
+                        "nullable": true,
                         "description": "Custom metadata for the plan.",
                         "additionalProperties": true,
                         "example": {

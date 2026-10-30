@@ -58,4 +58,17 @@ public static class BoltcardDataExtensions
         var data = new BoltcardPICCData(uid, int.MaxValue);
         return GetBoltcardRegistration(dbContextFactory, issuerKey, data, false);
     }
+
+    public static async Task<bool> TryUpdateBoltcardCounter(this ApplicationDbContextFactory dbContextFactory, BoltcardRegistration registration, int counter)
+    {
+        using var ctx = dbContextFactory.CreateContext();
+        var conn = ctx.Database.GetDbConnection();
+        return await conn.ExecuteAsync("UPDATE boltcards SET counter=@counter WHERE id=@id AND version=@version AND ppid=@ppid AND counter < @counter", new
+        {
+            id = registration.Id,
+            version = registration.Version,
+            ppid = registration.PullPaymentId,
+            counter
+        }) == 1;
+    }
 }

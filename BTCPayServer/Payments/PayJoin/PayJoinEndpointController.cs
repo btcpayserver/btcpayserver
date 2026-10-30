@@ -198,7 +198,6 @@ namespace BTCPayServer.Payments.PayJoin
                 ctx.OriginalTransaction = tx.Clone();
                 tx.RemoveSignatures();
                 psbt = PSBT.FromTransaction(tx, network.NBitcoinNetwork);
-                psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest() { PSBT = psbt })).PSBT;
                 for (int i = 0; i < tx.Inputs.Count; i++)
                 {
                     psbt.Inputs[i].FinalScriptSig = tx.Inputs[i].ScriptSig;
@@ -206,10 +205,11 @@ namespace BTCPayServer.Payments.PayJoin
                 }
             }
 
+            psbt = await UpdateUTXOsFromNBXplorer(psbt, explorer);
+
             FeeRate? senderMinFeeRate = minfeerate >= 0.0m ? new FeeRate(minfeerate) : null;
             Money allowedSenderFeeContribution = Money.Satoshis(maxadditionalfeecontribution is long t && t >= 0 ? t : 0);
 
-            var sendersInputType = psbt.GetInputsScriptPubKeyType();
             if (psbt.CheckSanity() is var errors && errors.Count != 0)
             {
                 return BadRequest(CreatePayjoinError("original-psbt-rejected", $"This PSBT is insane ({errors[0]})"));
@@ -217,8 +217,9 @@ namespace BTCPayServer.Payments.PayJoin
             if (!psbt.TryGetEstimatedFeeRate(out originalFeeRate))
             {
                 return BadRequest(CreatePayjoinError("original-psbt-rejected",
-                    "You need to provide Witness UTXO information to the PSBT."));
+                    "Unable to retrieve UTXO information for all transaction inputs."));
             }
+            var sendersInputType = psbt.GetInputsScriptPubKeyType();
 
             // This is actually not a mandatory check, but we don't want implementers
             // to leak global xpubs
@@ -318,15 +319,20 @@ namespace BTCPayServer.Payments.PayJoin
                         break;
                     }
 
-                    paymentAddress = BitcoinAddress.Create(paymentMethod.Destination, network.NBitcoinNetwork);
-                    paymentAddressIndex = (paymentDetails.KeyPath, paymentDetails.KeyIndex);
-
-                    if (invoice.GetAllBitcoinPaymentData(handler, false).Any())
+                    var lockedInvoice = ctx.TryLockInvoice(invoice.Id);
+                    if (lockedInvoice)
+                        // Recheck after taking the lock in case another request just completed.
+                        invoice = await _invoiceRepository.GetInvoice(invoice.Id);
+                    if (!lockedInvoice || invoice is null || invoice.GetAllBitcoinPaymentData(handler, false).Any())
                     {
                         ctx.DoNotBroadcast();
                         return UnprocessableEntity(CreatePayjoinError("already-paid",
                             $"The invoice this PSBT is paying has already been partially or completely paid"));
                     }
+                    ctx.Invoice = invoice;
+
+                    paymentAddress = BitcoinAddress.Create(paymentMethod.Destination, network.NBitcoinNetwork);
+                    paymentAddressIndex = (paymentDetails.KeyPath, paymentDetails.KeyIndex);
                 }
                 else if (walletReceiveMatch is not null)
                 {
@@ -583,6 +589,25 @@ namespace BTCPayServer.Payments.PayJoin
             if (!psbt.TryGetFinalizedHash(out var hash))
                 throw new InvalidOperationException("Unable to get the finalized hash");
             return hash;
+        }
+
+        private static async Task<PSBT> UpdateUTXOsFromNBXplorer(PSBT psbt, ExplorerClient explorer)
+        {
+            var authoritativePsbt = psbt.Clone();
+            foreach (var input in authoritativePsbt.Inputs)
+            {
+                input.WitnessUtxo = null;
+                input.NonWitnessUtxo = null;
+                input.FinalScriptSig = null;
+                input.FinalScriptWitness = null;
+            }
+            authoritativePsbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest { PSBT = authoritativePsbt })).PSBT;
+            for (var i = 0; i < psbt.Inputs.Count; i++)
+            {
+                psbt.Inputs[i].WitnessUtxo = authoritativePsbt.Inputs[i].WitnessUtxo;
+                psbt.Inputs[i].NonWitnessUtxo = authoritativePsbt.Inputs[i].NonWitnessUtxo;
+            }
+            return psbt;
         }
 
         private JObject CreatePayjoinError(string errorCode, string friendlyMessage)

@@ -25,7 +25,11 @@ public class BitpayAuthorizationHandler(
         if (context.User.Identity is { AuthenticationType: BitpayAuthenticationTypes.SinAuthentication })
         {
             var sin = context.User.Claims.Where(c => c.Type == BitpayClaims.SIN).Select(c => c.Value).First();
-            var bitToken = (await tokenRepository.GetTokens(sin)).FirstOrDefault();
+            var token = context.User.Claims.Where(c => c.Type == BitpayClaims.Token).Select(c => c.Value).FirstOrDefault();
+            var tokens = await tokenRepository.GetTokens(sin);
+            var bitToken = token is null && HttpMethods.IsGet(httpContext.Request.Method)
+                ? tokens.FirstOrDefault()
+                : tokens.FirstOrDefault(t => t.Value == token);
             storeId = bitToken?.StoreId;
         }
         else if (context.User.Identity is { AuthenticationType: BitpayAuthenticationTypes.Anonymous })

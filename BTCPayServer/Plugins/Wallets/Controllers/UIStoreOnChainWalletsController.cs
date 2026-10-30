@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -210,7 +209,7 @@ public class UIStoreOnChainWalletsController(
         {
             try
             {
-                strategy = handler.ParsePaymentMethodConfig(JToken.Parse(_dataProtector.UnprotectString(vm.Config)));
+                strategy = handler.ParsePaymentMethodConfig(JsonParser.ParseToken(_dataProtector.UnprotectString(vm.Config)));
             }
             catch
             {
@@ -604,7 +603,7 @@ public class UIStoreOnChainWalletsController(
                 var successMessage = "Wallet settings successfully updated.";
                 if (enabledChanged)
                 {
-                    eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
+                    eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, network.CryptoCode) });
                     successMessage += $" {vm.CryptoCode} on-chain payments are now {(vm.Enabled ? "enabled" : "disabled")} for this store.";
                 }
 
@@ -739,7 +738,7 @@ public class UIStoreOnChainWalletsController(
         store.SetPaymentMethodConfig(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), null);
 
         await storeRepo.UpdateStore(store);
-        eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(storeId, cryptoCode) });
+        eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(store.Id, network.CryptoCode) });
 
         TempData[WellKnownTempData.SuccessMessage] =
             $"On-Chain payment for {network.CryptoCode} has been removed.";
@@ -816,8 +815,7 @@ public class UIStoreOnChainWalletsController(
     public static DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, BTCPayNetwork network)
     {
         var parser = new DerivationSchemeParser(network);
-        var isOD = Regex.Match(derivationScheme, @"\(.*?\)");
-        if (isOD.Success)
+        if (DerivationSchemeParser.MaybeOD(derivationScheme))
         {
             return parser.ParseOD(derivationScheme);
         }

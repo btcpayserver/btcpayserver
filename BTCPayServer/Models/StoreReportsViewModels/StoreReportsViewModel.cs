@@ -2,14 +2,19 @@ using System.Collections.Generic;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Payments;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace BTCPayServer.Models.StoreReportsViewModels;
 
 public class StoreReportsViewModel : BasePagingViewModel
 {
+    [BindNever]
     public string InvoiceTemplateUrl { get; set; } = "";
+    [BindNever]
     public Dictionary<PaymentMethodId,string> ExplorerTemplateUrls { get; set; } = [];
+    [BindNever]
     public List<string> AvailableViews { get; set; } = [];
+    [BindNever]
     public StoreReportResponse Result { get; set; }
     public string ViewName { get; set; }
     public override int CurrentPageCount => Result?.Data?.Count ?? 0;

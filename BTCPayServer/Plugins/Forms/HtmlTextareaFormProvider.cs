@@ -16,8 +16,8 @@ public class HtmlTextareaFormProvider : FormComponentProviderBase
     public override void Validate(Form form, Field field)
     {
         if (field.Required)
-        {
             ValidateField<RequiredAttribute>(field);
-        }
+        if (field.Value?.Length > MaxValueLength)
+            field.ValidationErrors.Add($"The value must be at most {MaxValueLength} characters.");
     }
 }

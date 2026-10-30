@@ -92,8 +92,9 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> CreateStore(CreateStoreRequest request)
         {
             var store = await _storeRepository.GetDefaultStoreTemplate();
-            request = await MergeStoreRequestWithTemplate(request, store);
-            var validationResult = Validate(request);
+            var template = await FromModel(store);
+            request = MergeStoreRequestWithTemplate(request, template);
+            var validationResult = Validate(request, template);
             if (validationResult != null) return validationResult;
             ToModel(request, store);
 
@@ -106,11 +107,11 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(await FromModel(store));
         }
 
-        private async Task<T> MergeStoreRequestWithTemplate<T>(T request, StoreData store) where T: StoreBaseData
+        private T MergeStoreRequestWithTemplate<T>(T request, Client.Models.StoreData template) where T: StoreBaseData
         {
             var serializer = JsonSerializer.Create(_serializedSettings);
             var requestRaw = JObject.FromObject(request, serializer);
-            var templateRaw = JObject.FromObject(await FromModel(store), serializer);
+            var templateRaw = JObject.FromObject(template, serializer);
             templateRaw.Merge(requestRaw,
                 new()
                 {
@@ -125,8 +126,9 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UpdateStore(string storeId, UpdateStoreRequest request)
         {
             var store = HttpContext.GetStoreData();
-            request = await MergeStoreRequestWithTemplate(request, store);
-            var validationResult = Validate(request);
+            var template = await FromModel(store);
+            request = MergeStoreRequestWithTemplate(request, template);
+            var validationResult = Validate(request, template);
             if (validationResult != null) return validationResult;
             ToModel(request, store);
             await _storeRepository.UpdateStore(store);
@@ -316,7 +318,7 @@ namespace BTCPayServer.Controllers.Greenfield
             model.SetStoreBlob(blob);
         }
 
-        private IActionResult Validate(StoreBaseData request)
+        private IActionResult Validate(StoreBaseData request, StoreBaseData existing)
         {
             if (request is null)
             {
@@ -337,15 +339,20 @@ namespace BTCPayServer.Controllers.Greenfield
             else if (request.Name.Length < 1 || request.Name.Length > 50)
                 ModelState.AddModelError(nameof(request.Name), "Name can only be between 1 and 50 characters");
             if (!string.IsNullOrEmpty(request.Website) &&
-                (!Uri.TryCreate(request.Website, UriKind.Absolute, out var websiteUri) || websiteUri.Scheme is not ("http" or "https")))
+                ((request.Website != existing.Website && request.Website.Length > 500) ||
+                 !Uri.TryCreate(request.Website, UriKind.Absolute, out var websiteUri) || websiteUri.Scheme is not ("http" or "https")))
             {
                 ModelState.AddModelError(nameof(request.Website), "Website is not a valid url");
             }
-            if (!string.IsNullOrEmpty(request.LogoUrl) && !Uri.TryCreate(request.LogoUrl, UriKind.Absolute, out _))
+            if (!string.IsNullOrEmpty(request.LogoUrl) &&
+                ((request.LogoUrl != existing.LogoUrl && request.LogoUrl.Length > LengthLimits.MaxUrlLength) ||
+                 !Uri.TryCreate(request.LogoUrl, UriKind.Absolute, out _)))
             {
                 ModelState.AddModelError(nameof(request.LogoUrl), "Logo is not a valid url");
             }
-            if (!string.IsNullOrEmpty(request.CssUrl) && !Uri.TryCreate(request.CssUrl, UriKind.Absolute, out _))
+            if (!string.IsNullOrEmpty(request.CssUrl) &&
+                ((request.CssUrl != existing.CssUrl && request.CssUrl.Length > 500) ||
+                 !Uri.TryCreate(request.CssUrl, UriKind.Absolute, out var cssUri) || cssUri.Scheme is not ("http" or "https" or "fileid")))
             {
                 ModelState.AddModelError(nameof(request.CssUrl), "CSS is not a valid url");
             }
@@ -358,11 +365,11 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.SupportUrl), "Support URL is not a valid url");
             }
-            if (request.InvoiceExpiration < TimeSpan.FromMinutes(1) && request.InvoiceExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
+            if (request.InvoiceExpiration < TimeSpan.FromMinutes(1) || request.InvoiceExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.InvoiceExpiration), "InvoiceExpiration can only be between 1 and 34560 mins");
-            if (request.DisplayExpirationTimer < TimeSpan.FromMinutes(1) && request.DisplayExpirationTimer > TimeSpan.FromMinutes(60 * 24 * 24))
+            if (request.DisplayExpirationTimer < TimeSpan.FromMinutes(1) || request.DisplayExpirationTimer > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.DisplayExpirationTimer), "DisplayExpirationTimer can only be between 1 and 34560 mins");
-            if (request.MonitoringExpiration < TimeSpan.FromMinutes(10) && request.MonitoringExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
+            if (request.MonitoringExpiration < TimeSpan.FromMinutes(10) || request.MonitoringExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.MonitoringExpiration), "MonitoringExpiration can only be between 10 and 34560 mins");
             if (request.PaymentTolerance < 0 || request.PaymentTolerance > 100)
                 ModelState.AddModelError(nameof(request.PaymentTolerance), "PaymentTolerance can only be between 0 and 100 percent");

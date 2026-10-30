@@ -86,6 +86,7 @@ namespace BTCPayServer.Controllers
         TransactionLinkProviders transactionLinkProviders,
         InvoiceRepository invoiceRepository,
         DisplayFormatter displayFormatter,
+        CallbackGenerator callbackGenerator,
         HotwalletSafe hotwalletSafe)
         : Controller
     {
@@ -418,7 +419,7 @@ namespace BTCPayServer.Controllers
                 switch (model.Command)
                 {
                     case "createpending":
-                        await pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
+                        await pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, callbackGenerator.GetRequestBaseUrl());
                         return RedirectToWalletList(walletId);
                     case "sign":
                         if (!(await authorizationService.AuthorizeAsync(User, walletId.StoreId, WalletPolicies.CanSignWalletTransactions)).Succeeded)
@@ -1502,7 +1503,7 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "createpending":
-                    await pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, Request.GetRequestBaseUrl());
+                    await pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt, callbackGenerator.GetRequestBaseUrl());
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     return await WalletSign(walletId, new WalletPSBTViewModel
@@ -1718,8 +1719,15 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{walletId}/psbt/seed")]
         [Authorize(Policy = WalletPolicies.CanSignWalletTransactions, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        public async Task<IActionResult> SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
+        public IActionResult SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             SigningContextModel signingContext, string? returnUrl, string? backUrl)
+        {
+            signingContext.PendingTransactionId = null;
+            signingContext.OriginalPSBT = null;
+            return ViewSignWithSeed(signingContext, returnUrl, backUrl);
+        }
+
+        private IActionResult ViewSignWithSeed(SigningContextModel signingContext, string? returnUrl, string? backUrl)
         {
             return View(nameof(SignWithSeed), new SignWithSeedViewModel
             {

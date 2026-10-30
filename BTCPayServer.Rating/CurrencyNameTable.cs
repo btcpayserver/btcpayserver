@@ -63,6 +63,8 @@ namespace BTCPayServer.Services.Rates
     }
     public class CurrencyNameTable
     {
+        public const int MaxCurrencyCodeLength = 10;
+
         public CurrencyNameTable(IEnumerable<CurrencyDataProvider> currencyDataProviders, ILogger<CurrencyNameTable> logger)
         {
             _currencyDataProviders = currencyDataProviders;

@@ -41,6 +41,10 @@ public class PaymentRequestTriggerProvider(LinkGenerator linkGenerator)
             context.MatchedRule.GetBTCPayAdditionalData()?.CustomerEmail is true &&
             MailboxAddressValidator.TryParse(email, out var mb))
         {
+            context.BCC.AddRange(context.To);
+            context.BCC.AddRange(context.CC);
+            context.To.Clear();
+            context.CC.Clear();
             context.To.Insert(0, mb);
         }
         return Task.CompletedTask;

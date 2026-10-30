@@ -16,6 +16,8 @@ public interface IFormComponentProvider
 
 public abstract class FormComponentProviderBase : IFormComponentProvider
 {
+    protected const int MaxValueLength = 10_000;
+
     public abstract string View { get; }
     public abstract void Register(Dictionary<string, IFormComponentProvider> typeToComponentProvider);
     public virtual string GetValue(Form form, Field field)

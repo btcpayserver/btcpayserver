@@ -1,13 +1,16 @@
 #nullable enable
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.AuthenticationSchemes;
 using LightningAddressData = BTCPayServer.Client.Models.LightningAddressData;
 
@@ -18,6 +21,7 @@ namespace BTCPayServer.Controllers.Greenfield
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldStoreLightningAddressesController : ControllerBase
     {
+        private const int MaxInvoiceMetadataLength = 64 * 1024;
         private readonly LightningAddressService _lightningAddressService;
 
         public GreenfieldStoreLightningAddressesController(
@@ -80,10 +84,24 @@ namespace BTCPayServer.Controllers.Greenfield
             string storeId, string username, LightningAddressData data)
         {
             if (data.Min <= 0)
-            {
                 ModelState.AddModelError(nameof(data.Min), "Minimum must be greater than 0 if provided.");
+
+            if (data.Max <= 0)
+                ModelState.AddModelError(nameof(data.Max), "Maximum must be greater than 0 if provided.");
+
+            if (data.Min is { } min && data.Max is { } max && min > max)
+                ModelState.AddModelError(nameof(data.Max), "Maximum must be greater than or equal to minimum.");
+
+            if (data.CurrencyCode?.Length > CurrencyNameTable.MaxCurrencyCodeLength)
+                ModelState.AddModelError(nameof(data.CurrencyCode), "Currency code is too long.");
+
+            if (data.InvoiceMetadata is not null &&
+                Encoding.UTF8.GetByteCount(JsonConvert.SerializeObject(data.InvoiceMetadata, Formatting.None)) >
+                MaxInvoiceMetadataLength)
+                ModelState.AddModelError(nameof(data.InvoiceMetadata), "Invoice metadata is too large.");
+
+            if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            }
             
             if (await _lightningAddressService.Set(new Data.LightningAddressData
             {

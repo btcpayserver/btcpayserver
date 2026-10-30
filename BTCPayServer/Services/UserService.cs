@@ -9,6 +9,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Storage.Services;
+using Dapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Localization;
@@ -51,7 +52,7 @@ namespace BTCPayServer.Services
             _logger = logger;
         }
 
-        public record ApplicationUserWithRoles(ApplicationUser User, string[] Roles);
+        public record ApplicationUserWithRoles(ApplicationUser User, string[] Roles, bool Disabled);
         public async Task<List<ApplicationUserWithRoles>> GetUsersWithRoles()
         {
             await using var context = _applicationDbContextFactory.CreateContext();
@@ -60,10 +61,11 @@ namespace BTCPayServer.Services
                         {
                             User = p,
                             Roles = p.UserRoles.Join(context.Roles, userRole => userRole.RoleId,
-                            role => role.Id, (userRole, role) => role.Name).ToArray()
+                            role => role.Id, (userRole, role) => role.Name).ToArray(),
+                            Disabled = p.AccessRestrictions.Any(r => r.Type == UserAccessRestrictionConstants.Administrative)
                         })
                 .ToListAsync();
-            return res.Select(p => new ApplicationUserWithRoles(p.User, (p.Roles ?? [])!)).ToList();
+            return res.Select(p => new ApplicationUserWithRoles(p.User, (p.Roles ?? [])!, p.Disabled)).ToList();
         }
 
         public static async Task<T> ForAPI<T>(
@@ -72,7 +74,8 @@ namespace BTCPayServer.Services
             CallbackGenerator callbackGenerator,
             UriResolver uriResolver,
             HttpRequest request,
-            bool includeInvitationUrl) where T : ApplicationUserData, new()
+            bool includeInvitationUrl,
+            bool disabled) where T : ApplicationUserData, new()
         {
             var blob = data.GetBlob() ?? new UserBlob();
             return new T
@@ -86,7 +89,7 @@ namespace BTCPayServer.Services
                 Created = data.Created,
                 Name = blob.Name,
                 Roles = roles,
-                Disabled = data.IsDisabled,
+                Disabled = disabled,
                 StoreQuota = blob.StoreQuota,
                 AllowGreenfieldBasicAuth = blob.AllowGreenfieldBasicAuth,
                 ImageUrl = string.IsNullOrEmpty(blob.ImageUrl)
@@ -124,7 +127,6 @@ namespace BTCPayServer.Services
             IViewLocalizer? viewLocalizer = null,
             RequestBaseUrl? baseUrl = null)
         {
-            public CanLoginContext Clone(ApplicationUser? user) => new(user, stringLocalizer, viewLocalizer, BaseUrl);
             public IStringLocalizer StringLocalizer { get; } = stringLocalizer ?? NullStringLocalizer.Instance;
             public IViewLocalizer ViewLocalizer { get; } = viewLocalizer ?? NullViewLocalizer.Instance;
             public RequestBaseUrl? BaseUrl { get; } = baseUrl;
@@ -145,6 +147,14 @@ namespace BTCPayServer.Services
                 return false;
             }
 
+            if (context.User.AccessRestrictions is null)
+            {
+                await using var dbContext = _applicationDbContextFactory.CreateContext();
+                context.User.AccessRestrictions = await dbContext.UserAccessRestrictions
+                    .Where(restriction => restriction.ApplicationUserId == context.User.Id)
+                    .ToListAsync();
+            }
+
             foreach (var loginExtension in _loginExtensions)
             {
                 await loginExtension.Check(context);
@@ -163,8 +173,17 @@ namespace BTCPayServer.Services
 
                 if (context.User is { Approved: false, RequiresApproval: true })
                     context.Failures.Add(new(context.StringLocalizer["Your user account requires approval by an admin before you can log in."]));
-                if (context.User is { IsDisabled: true })
-                    context.Failures.Add(new(context.StringLocalizer["Your user account is currently disabled."]));
+
+                foreach (var restriction in context.User.AccessRestrictions)
+                {
+                    var failure = restriction.Type switch
+                    {
+                        UserAccessRestrictionConstants.Administrative => context.StringLocalizer["Your user account is currently disabled."],
+                        UserAccessRestrictionConstants.Monetization => context.StringLocalizer["Your subscription does not currently allow access."],
+                        _ => context.StringLocalizer["Your user account is currently restricted."]
+                    };
+                    context.Failures.Add(new(failure));
+                }
                 return Task.CompletedTask;
             }
         }
@@ -203,39 +222,78 @@ namespace BTCPayServer.Services
         public record SetDisabledResult
         {
             public record Unchanged : SetDisabledResult;
-            public record Success : SetDisabledResult;
+            public record Success : SetDisabledResult
+            {
+                internal ApplicationUser? User { get; init; }
+            }
             public record Error(IdentityError[] Errors) : SetDisabledResult;
+        }
+
+        public async Task<bool> IsRestricted(string userId, string type)
+        {
+            await using var ctx = _applicationDbContextFactory.CreateContext();
+            return await ctx.UserAccessRestrictions.AnyAsync(r =>
+                r.ApplicationUserId == userId &&
+                r.Type == type);
         }
 
         public Task<SetDisabledResult> SetDisabled(string userId, bool disabled)
         => SetDisabled(userId, disabled, null);
         public async Task<SetDisabledResult> SetDisabled(string userId, bool disabled, string? source)
         {
+            var result = await SetAccessRestriction(userId, UserAccessRestrictionConstants.Administrative, disabled);
+            if (result is SetDisabledResult.Success { User: { } user })
+                _eventAggregator.Publish(new UserEvent.DisabledChanged(user, disabled, source));
+            return result;
+        }
+
+        public async Task<SetDisabledResult> SetAccessRestriction(
+            string userId,
+            string type,
+            bool restricted)
+        {
             using var scope = _serviceProvider.CreateScope();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var user = await userManager.FindByIdAsync(userId);
-            if (user is null || disabled == user.IsDisabled)
+            if (user is null)
                 return new SetDisabledResult.Unchanged();
-            if (!user.LockoutEnabled)
-                await userManager.SetLockoutEnabledAsync(user, true);
 
-            var lockedOutDeadline = disabled ? DateTimeOffset.MaxValue : (DateTimeOffset?)null;
-            var res = await userManager.SetLockoutEndDateAsync(user, lockedOutDeadline);
+            await using var ctx = _applicationDbContextFactory.CreateContext();
+            var existing = await ctx.UserAccessRestrictions.FindAsync(userId, type);
+            if (restricted == (existing is not null))
+                return new SetDisabledResult.Unchanged();
 
-            if (res.Succeeded)
+            try
             {
-                if (disabled)
+                if (restricted)
+                {
+                    ctx.UserAccessRestrictions.Add(new UserAccessRestriction
+                    {
+                        ApplicationUserId = userId,
+                        Type = type,
+                        CreatedAt = DateTimeOffset.UtcNow
+                    });
+                }
+                else
+                {
+                    ctx.UserAccessRestrictions.Remove(existing!);
+                }
+
+                await ctx.SaveChangesAsync();
+
+                if (restricted)
                 {
                     await userManager.UpdateSecurityStampAsync(user);
                     // Force immediate cookie revalidation instead of waiting for the stamp validation interval.
                     _securityStampInvalidator.Invalidate(user.Id);
                 }
-                await using var ctx = _applicationDbContextFactory.CreateContext();
                 await ctx.Users.UpdateStoreNoActiveUserForUsers([userId]);
-                _eventAggregator.Publish(new UserEvent.DisabledChanged(user, disabled, source));
+                return new SetDisabledResult.Success { User = user };
             }
-
-            return res.Succeeded ? new SetDisabledResult.Success() : new SetDisabledResult.Error(res.Errors.ToArray());
+            catch (DbUpdateException ex)
+            {
+                return new SetDisabledResult.Error([new IdentityError { Description = ex.Message }]);
+            }
         }
 
         [Obsolete("Use SetDisabled instead")]
@@ -306,23 +364,24 @@ namespace BTCPayServer.Services
 
         public async Task<bool> IsUserTheOnlyOneAdmin(CanLoginContext canLoginContext)
         {
-            using var scope = _serviceProvider.CreateScope();
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            var roles = await userManager.GetRolesAsync(canLoginContext.User);
-            if (!Roles.HasServerAdmin(roles))
+            await using var ctx = _applicationDbContextFactory.CreateContext();
+            return await ctx.Database.GetDbConnection().QuerySingleAsync<bool>("""
+                SELECT COUNT(*) = 1
+                   AND COALESCE(BOOL_OR(users."Id" = @userId), false)
+                FROM "AspNetUsers" users
+                JOIN "AspNetUserRoles" user_roles ON user_roles."UserId" = users."Id"
+                JOIN "AspNetRoles" roles ON roles."Id" = user_roles."RoleId"
+                LEFT JOIN user_access_restrictions restrictions ON restrictions.user_id = users."Id"
+                WHERE roles."Name" = @adminRole
+                  AND users."PasswordHash" IS NOT NULL
+                  AND (users."EmailConfirmed" OR NOT users."RequiresEmailConfirmation")
+                  AND (users."Approved" OR NOT users."RequiresApproval")
+                  AND restrictions.user_id IS NULL;
+                """, new
             {
-                return false;
-            }
-            var adminUsers = await userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-            var enabledAdminUsers = new List<string>();
-            foreach (var admin in adminUsers)
-            {
-                var loginContext = canLoginContext.Clone(admin);
-                if (await CanLogin(loginContext))
-                    enabledAdminUsers.Add(admin.Id);
-            }
-
-            return enabledAdminUsers.Count == 1 && enabledAdminUsers.Contains(canLoginContext.User.Id);
+                userId = canLoginContext.User.Id,
+                adminRole = Roles.ServerAdmin
+            });
         }
     }
 }

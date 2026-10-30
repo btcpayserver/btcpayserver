@@ -21,7 +21,7 @@
         <partial name="_StatusMessage" />
         @if (!string.IsNullOrEmpty(Model.Description))
         {
-            <div class="lead">@Safe.Raw(Model.Description)</div>
+            <div class="lead">@Safe.RawRichText(Model.Description)</div>
         }
         <div class="row row-cols row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="PosItems">
             @for (var x = 0; x < Model.Items.Length; x++)
@@ -38,7 +38,7 @@
                     <div class="tile card" data-id="@x">
                         @if (!string.IsNullOrWhiteSpace(item.Image))
                         {
-                            <img class="card-img-top" src="@item.Image" alt="@Safe.Raw(item.Title)" asp-append-version="true">
+                            <img class="card-img-top" src="@item.Image" alt="@item.Title" asp-append-version="true">
                         }
                         <div class="card-body d-flex flex-column gap-2 mb-auto">
                             <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
@@ -67,7 +67,7 @@
                             </div>
                             @if (!string.IsNullOrWhiteSpace(item.Description))
                             {
-                                <p class="card-text">@Safe.Raw(item.Description)</p>
+                                <p class="card-text">@Safe.RawRichText(item.Description)</p>
                             }
                         </div>
                         <div class="card-footer">

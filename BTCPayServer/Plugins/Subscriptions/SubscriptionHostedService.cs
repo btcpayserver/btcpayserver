@@ -86,6 +86,8 @@ public class SubscriptionHostedService(
             var checkout = await ctx.PlanCheckouts.GetCheckout(subscribeRequest.CheckoutId);
             if (checkout?.IsExpired is not false)
                 throw new InvalidOperationException("Checkout not found or expired");
+            if (checkout.Invoice is { Status: not (Data.InvoiceData.Expired or Data.InvoiceData.Invalid) })
+                return;
             if (checkout.SuccessRedirectUrl is null)
             {
                 var redirectLink = checkout.Plan.Offering.SuccessRedirectUrl ??
@@ -181,7 +183,7 @@ public class SubscriptionHostedService(
 
     private async Task CreateInvoiceForCheckout(SubscriptionContext subCtx, PlanCheckoutData checkout)
     {
-        var invoiceMetadata = JObject.Parse(checkout.InvoiceMetadata);
+        var invoiceMetadata = JsonParser.ParseObject(checkout.InvoiceMetadata);
         if (checkout.NewSubscriber)
         {
             invoiceMetadata["planId"] = checkout.PlanId;
@@ -192,7 +194,7 @@ public class SubscriptionHostedService(
 
         var plan = checkout.Plan;
         var existingCredit = checkout.Subscriber?.GetCredit() ?? 0m;
-        var amount = checkout.CreditPurchase ?? (plan.Price - existingCredit);
+        var amount = checkout.CreditPurchase ?? (subCtx.RoundAmount(plan.Price, plan.Currency) - existingCredit);
         if (checkout.OnPay == PlanCheckoutData.OnPayBehavior.HardMigration &&
             checkout.Subscriber?.GetUnusedPeriodAmount(subCtx.Now) is decimal unusedAmount)
             amount -= subCtx.RoundAmount(unusedAmount, plan.Currency);
@@ -309,6 +311,8 @@ public class SubscriptionHostedService(
                     var prevPlan = m.Plan;
                     (m.PlanId, m.Plan) = (m.NewPlanId, m.NewPlan);
                     (m.NewPlanId, m.NewPlan) = (null, null);
+                    m.PaidAmount = null;
+                    newPhase = m.GetExpectedPhase(now);
                     subCtx.AddEvent(new SubscriptionEvent.PlanStarted(m, prevPlan)
                     {
                         AutoRenew = false
@@ -615,7 +619,7 @@ public class SubscriptionHostedService(
         var cust = await ctx.Customers.GetOrUpdate(checkout.Plan.Offering.App.StoreDataId, CustomerSelector.ByEmail(email));
         var (sub, created) =
             await ctx.Subscribers.GetOrCreateByCustomerId(cust.Id, plan.OfferingId, plan.Id, optimisticActivation, checkout.TestAccount,
-                JObject.Parse(checkout.NewSubscriberMetadata));
+                JsonParser.ParseObject(checkout.NewSubscriberMetadata));
         if (!created || sub is null)
             return null;
         checkout.Subscriber = sub;
@@ -695,6 +699,11 @@ public class SubscriptionHostedService(
         var ctx = subCtx.Context;
         var portal = await ctx.PortalSessions.GetActiveById(portalSessionId);
         if (portal is null)
+            return null;
+
+        if (value is not null)
+            value = subCtx.RoundAmount(value.Value, portal.Subscriber.Plan.Currency);
+        if (value is <= 0.0m)
             return null;
 
         var checkout = new PlanCheckoutData(portal.Subscriber)

@@ -12,6 +12,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -25,7 +26,7 @@ namespace BTCPayServer.Payments.Bitcoin
     /// <summary>
     /// This class listener NBXplorer instances to detect incoming on-chain, bitcoin like payment
     /// </summary>
-    public class NBXplorerListener : IHostedService
+    public class NBXplorerListener : IHostedService, IDisposable
     {
         readonly EventAggregator _Aggregator;
         private readonly UTXOLocker _utxoLocker;
@@ -36,6 +37,7 @@ namespace BTCPayServer.Payments.Bitcoin
         private TaskCompletionSource<bool> _RunningTask;
         private CancellationTokenSource _Cts;
         readonly BTCPayWalletProvider _Wallets;
+        private readonly MemoryCache _broadcastResults = new(new MemoryCacheOptions { SizeLimit = 10_000 });
         public NBXplorerListener(ExplorerClientProvider explorerClients,
                                 BTCPayWalletProvider wallets,
                                 InvoiceRepository invoiceRepository,
@@ -148,10 +150,13 @@ namespace BTCPayServer.Payments.Bitcoin
                         switch (newEvent)
                         {
                             case NBXplorer.Models.NewBlockEvent evt:
+                                _broadcastResults.Clear();
                                 await UpdatePaymentStates(wallet);
                                 _Aggregator.Publish(new Events.NewBlockEvent() { PaymentMethodId = pmi, AdditionalInfo = evt });
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
+                                if (evt.Replacing is { Count: > 0 })
+                                    _broadcastResults.Clear();
                                 if (evt.DerivationStrategy != null)
                                 {
                                     wallet.InvalidateCache(evt.DerivationStrategy);
@@ -267,7 +272,16 @@ namespace BTCPayServer.Payments.Bitcoin
                     var explorerClient = _ExplorerClients.GetExplorerClient(wallet.Network);
                     try
                     {
-                        var result = await explorerClient.BroadcastAsync(tx.Transaction, testMempoolAccept: tx.Confirmations == -1, _Cts.Token);
+                        var key = (wallet.Network.CryptoCode, tx.TransactionHash, tx.Confirmations);
+                        if (!_broadcastResults.TryGetValue(key, out BroadcastResult result))
+                        {
+                            result = await explorerClient.BroadcastAsync(tx.Transaction, testMempoolAccept: tx.Confirmations == -1, _Cts.Token);
+                            _broadcastResults.Set(key, result, new MemoryCacheEntryOptions
+                            {
+                                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1),
+                                Size = 1
+                            });
+                        }
                         accounted = result.Success ||
                                     result.RPCCode == RPCErrorCode.RPC_TRANSACTION_ALREADY_IN_CHAIN ||
                                     !(
@@ -317,8 +331,10 @@ namespace BTCPayServer.Payments.Bitcoin
                         if (paymentEntitiesByPrevOut.TryGetValue(prevout, out var replaced) && !replaced.Accounted)
                         {
                             payment.PaymentMethodFee = replaced.PaymentMethodFee;
-                            if (payjoinInformation is PayjoinInformation pj &&
-                                pj.CoinjoinTransactionHash == tx.TransactionHash)
+                            var replacedPaymentData = handler.ParsePaymentDetails(replaced.Details);
+                            if (replacedPaymentData.PayjoinInformation is PayjoinInformation pj &&
+                                pj.CoinjoinTransactionHash == tx.TransactionHash &&
+                                replacedPaymentData.Outpoint.N == paymentData.Outpoint.N)
                             {
                                 // This payment is a coinjoin, so the value of
                                 // the payment output is different from the real value of the payment
@@ -454,6 +470,8 @@ namespace BTCPayServer.Payments.Bitcoin
             _Aggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
             return invoice;
         }
+        public void Dispose() => _broadcastResults.Dispose();
+
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             if (_Cts != null)

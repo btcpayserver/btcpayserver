@@ -86,13 +86,8 @@ namespace BTCPayServer.Tests
                     "test" + isTestnet,
                     prov.GetService<IHttpClientFactory>(),
                     isTestnet);
-                mempoolSpaceFeeProvider.CachedOnly = true;
-                await Assert.ThrowsAsync<InvalidOperationException>(() => mempoolSpaceFeeProvider.GetFeeRateAsync());
-                mempoolSpaceFeeProvider.CachedOnly = false;
                 var rates = await mempoolSpaceFeeProvider.GetFeeRatesAsync();
-                mempoolSpaceFeeProvider.CachedOnly = true;
                 await mempoolSpaceFeeProvider.GetFeeRateAsync();
-                mempoolSpaceFeeProvider.CachedOnly = false;
                 Assert.NotEmpty(rates);
 
 
@@ -484,6 +479,11 @@ retry:
             var actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bootstrap", "bootstrap.bundle.min.js").Trim();
             var version = Regex.Match(actual, "Bootstrap v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
             var expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/bootstrap@{version}/dist/js/bootstrap.bundle.min.js")).Content.ReadAsStringAsync()).Trim();
+            EqualJsContent(expected, actual);
+
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "summernote", "summernote-bs5.js").Trim();
+            version = Regex.Match(actual, @"WYSIWYG editor v([0-9]+\.[0-9]+\.[0-9]+)").Groups[1].Value;
+            expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/summernote@{version}/dist/summernote-bs5.js")).Content.ReadAsStringAsync()).Trim();
             EqualJsContent(expected, actual);
 
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "clipboard.js", "clipboard.js");

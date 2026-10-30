@@ -574,7 +574,6 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var storeRepo = scope.ServiceProvider.GetRequiredService<StoreRepository>();
         var multisigService = scope.ServiceProvider.GetRequiredService<MultisigService>();
-
         var signerAUser = await userManager.FindByEmailAsync(signerA);
         var signerBUser = await userManager.FindByEmailAsync(signerB);
         var walletManagerUser = await userManager.FindByEmailAsync(walletManager);
@@ -838,7 +837,7 @@ public class MultisigTests(ITestOutputHelper helper) : UnitTestBase(helper)
                 const fingerprint = {{System.Text.Json.JsonSerializer.Serialize(fingerprint)}};
                 window.__vaultRequests = [];
                 window.fetch = async (input, init) => {
-                    const url = typeof input === 'string' ? input : input.url;
+                    const url = input instanceof Request ? input.url : String(input);
                     if (!url.startsWith('http://127.0.0.1:65092/hwi-bridge/v1')) {
                         return originalFetch(input, init);
                     }

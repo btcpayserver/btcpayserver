@@ -48,6 +48,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.SavePrivateKeys),
                     "This instance forbids non-admins from having a hot wallet for your store.");
             }
+            if (!request.SavePrivateKeys && !canUseHotWallet.CanCreateColdWallet)
+            {
+                ModelState.AddModelError(nameof(request.SavePrivateKeys),
+                    "This instance forbids non-admins from creating a cold wallet for your store.");
+            }
 
             if (!ModelState.IsValid)
             {

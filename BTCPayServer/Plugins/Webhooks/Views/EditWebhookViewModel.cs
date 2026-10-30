@@ -62,7 +62,7 @@ namespace BTCPayServer.Plugins.Webhooks.Views
         [Uri]
         [Required]
         public string PayloadUrl { get; set; }
-        [MaxLength(64)]
+        [MaxLength(WebhookBlob.MaxSecretLength)]
         public string Secret { get; set; }
 
         public List<DeliveryViewModel> Deliveries { get; set; } = new List<DeliveryViewModel>();

@@ -10,6 +10,8 @@ namespace BTCPayServer.Data.Subscriptions;
 [Table("subs_offerings")]
 public class OfferingData : BaseEntityData
 {
+    public const int MaxSuccessRedirectUrlLength = 500;
+
     [Key]
     [Required]
     [Column("id")]

@@ -15,6 +15,7 @@
     <div class="badge badge-@badgeClass" data-invoice-state-badge="@Model.InvoiceId">
         @if (canMark)
         {
+            @Html.AntiForgeryToken()
             <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 @state
             </span>

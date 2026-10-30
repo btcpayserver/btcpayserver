@@ -23,6 +23,7 @@ namespace BTCPayServer.Rating
         PreprocessError,
         RateUnavailable,
         InvalidExchangeName,
+        ScriptTooLong,
     }
 
     public record RateRulesCollection(RateRules Primary, RateRules? Fallback)
@@ -143,10 +144,14 @@ namespace BTCPayServer.Rating
             str = ImplicitSatsRule + str;
             rules = null;
             errors = null;
-            var expression = CSharpSyntaxTree.ParseText(str, new CSharpParseOptions(LanguageVersion.Default).WithKind(SourceCodeKind.Script));
+            if (!TryParseSyntax(str, out var expression, out var error))
+            {
+                errors = new List<RateRulesErrors>() { error };
+                return false;
+            }
             var rewriter = new NormalizeCurrencyPairsRewritter();
             // Rename BTC_usd to BTC_USD and verify structure
-            var root = rewriter.Visit(expression.GetRoot());
+            var root = rewriter.Visit(expression);
             if (rewriter.Errors.Count > 0)
             {
                 errors = rewriter.Errors;
@@ -158,6 +163,8 @@ namespace BTCPayServer.Rating
 
         public RateRule GetRuleFor(CurrencyPair currencyPair)
         {
+            if (!SyntaxFacts.IsValidIdentifier(currencyPair.Left) || !SyntaxFacts.IsValidIdentifier(currencyPair.Right))
+                return new RateRule(this, currencyPair, CreateExpression("ERR_INVALID_CURRENCY_PAIR()"));
             if (currencyPair.Left == "X" || currencyPair.Right == "X")
                 return new RateRule(this, currencyPair, CreateExpression($"ERR_INVALID_CURRENCY_PAIR({currencyPair})"));
             if (currencyPair.Left == currencyPair.Right)
@@ -201,9 +208,88 @@ namespace BTCPayServer.Rating
                    : best.Expression;
         }
 
+        static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Default, DocumentationMode.None, SourceCodeKind.Script);
+        const int MaxScriptLength = 20_000;
+        const int MaxSyntaxDepth = 100;
+
+        internal static bool TryParseSyntax(string str, [MaybeNullWhen(false)] out SyntaxNode root, out RateRulesErrors error)
+        {
+            root = null;
+            error = CheckTokens(str);
+            if (error != RateRulesErrors.Ok)
+                return false;
+            root = CSharpSyntaxTree.ParseText(str, ParseOptions).GetRoot();
+            if (root.GetDiagnostics().Any(d => d.Id == "CS8078") || IsTooDeep(root))
+                error = RateRulesErrors.TooMuchNestedCalls;
+            return error == RateRulesErrors.Ok;
+        }
+
+        internal static bool IsTooDeep(SyntaxNode root)
+        {
+            var nodes = new Stack<(SyntaxNode Node, int Depth)>();
+            nodes.Push((root, 0));
+            while (nodes.TryPop(out var n))
+            {
+                if (n.Depth > MaxSyntaxDepth)
+                    return true;
+                foreach (var child in n.Node.ChildNodes())
+                    nodes.Push((child, n.Depth + 1));
+            }
+            return false;
+        }
+
+        static RateRulesErrors CheckTokens(string str)
+        {
+            if (str.Length > MaxScriptLength)
+                return RateRulesErrors.ScriptTooLong;
+            var parentheses = 0;
+            for (int i = 0; i < str.Length; i++)
+            {
+                var c = str[i];
+                var next = i + 1 < str.Length ? str[i + 1] : '\0';
+                if (c == '/' && next == '/')
+                {
+                    while (i + 1 < str.Length && !SyntaxFacts.IsNewLine(str[i + 1]))
+                        i++;
+                }
+                else if (c == '/' && next == '*')
+                {
+                    i = str.IndexOf("*/", i + 2, StringComparison.Ordinal) + 1;
+                    if (i == 0)
+                        break;
+                }
+                else if (char.IsLetterOrDigit(c) || c == '_')
+                {
+                    var start = i;
+                    while (i + 1 < str.Length && (char.IsLetterOrDigit(str[i + 1]) || str[i + 1] == '_'))
+                        i++;
+                    var word = str.Substring(start, i + 1 - start);
+                    if (!word.All(char.IsAsciiDigit) &&
+                        (!SyntaxFacts.IsValidIdentifier(word) ||
+                         SyntaxFacts.GetKeywordKind(word) != SyntaxKind.None ||
+                         SyntaxFacts.GetContextualKeywordKind(word) != SyntaxKind.None))
+                        return RateRulesErrors.UnsupportedOperator;
+                }
+                else if (c == '(')
+                {
+                    if (++parentheses > MaxSyntaxDepth)
+                        return RateRulesErrors.TooMuchNestedCalls;
+                }
+                else if (c == ')')
+                {
+                    parentheses = Math.Max(0, parentheses - 1);
+                }
+                else if ((c == '=' && next == '=') || !(char.IsWhiteSpace(c) || "=+-*/.,;".Contains(c)))
+                {
+                    return RateRulesErrors.UnsupportedOperator;
+                }
+            }
+            return RateRulesErrors.Ok;
+        }
+
         internal static ExpressionSyntax CreateExpression(string str)
         {
-            return (ExpressionSyntax)CSharpSyntaxTree.ParseText(str, new CSharpParseOptions(LanguageVersion.Default).WithKind(SourceCodeKind.Script)).GetRoot().ChildNodes().First().ChildNodes().First().ChildNodes().First();
+            return (ExpressionSyntax)CSharpSyntaxTree.ParseText(str, ParseOptions).GetRoot().ChildNodes().First().ChildNodes().First().ChildNodes().First();
         }
 
         public static RateRules Combine(IEnumerable<RateRules> rateRules)
@@ -217,6 +303,7 @@ namespace BTCPayServer.Rating
             return root.NormalizeWhitespace("", "\n")
                 .ToFullString()
                 .Replace(ImplicitSatsRule, string.Empty, StringComparison.OrdinalIgnoreCase)
+                .Replace("{\n}", string.Empty, StringComparison.OrdinalIgnoreCase)
                 .Replace("{\n", string.Empty, StringComparison.OrdinalIgnoreCase)
                             .Replace("\n}", string.Empty, StringComparison.OrdinalIgnoreCase);
         }
@@ -457,6 +544,8 @@ namespace BTCPayServer.Rating
 
             public List<RateRulesErrors> Errors = new List<RateRulesErrors>();
             const int MaxNestedCount = 8;
+            const int MaxFlattenedLength = 20_000;
+            int flattenedLength;
             public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
             {
                 if (
@@ -473,13 +562,15 @@ namespace BTCPayServer.Rating
                     else // eg. replace BTC_X to BTC_USD, then replace by the expression for BTC_USD
                     {
                         var bestCandidate = parent.FindBestCandidate(replacedPair);
-                        if (nested > MaxNestedCount)
+                        flattenedLength += bestCandidate.FullSpan.Length;
+                        if (nested > MaxNestedCount || flattenedLength > MaxFlattenedLength || Errors.Contains(RateRulesErrors.TooMuchNestedCalls))
                         {
                             Errors.Add(RateRulesErrors.TooMuchNestedCalls);
                             return RateRules.CreateExpression($"ERR_TOO_MUCH_NESTED_CALLS({replacedPair})");
                         }
                         var innerFlatten = CreateNewContext(replacedPair);
                         var replaced = innerFlatten.Visit(bestCandidate);
+                        flattenedLength = innerFlatten.flattenedLength;
                         if (replaced is ExpressionSyntax expression)
                         {
                             var hasBinaryOps = new HasBinaryOperations();
@@ -505,6 +596,7 @@ namespace BTCPayServer.Rating
                 {
                     Errors = Errors,
                     nested = nested + 1,
+                    flattenedLength = flattenedLength,
                     ExchangeRates = ExchangeRates,
                 };
             }
@@ -514,6 +606,8 @@ namespace BTCPayServer.Rating
 
         public static RateRule CreateFromExpression(string expression, CurrencyPair currencyPair)
         {
+            if (!RateRules.TryParseSyntax(expression, out _, out var error))
+                throw new FormatException(error.ToString());
             var ex = RateRules.CreateExpression(expression);
             var rules = RateRules.Parse("");
             return new RateRule(rules, currencyPair, ex);
@@ -523,6 +617,8 @@ namespace BTCPayServer.Rating
             _CurrencyPair = currencyPair;
             flatten = new FlattenExpressionRewriter(parent, currencyPair);
             this.expression = flatten.Visit(candidate);
+            if (RateRules.IsTooDeep(this.expression))
+                this.expression = RateRules.CreateExpression($"ERR_TOO_MUCH_NESTED_CALLS({currencyPair})");
         }
 
 

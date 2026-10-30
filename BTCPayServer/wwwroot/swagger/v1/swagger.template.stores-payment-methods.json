@@ -177,6 +177,16 @@
                             }
                         }
                     },
+                    "422": {
+                        "description": "Unable to validate the request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
                     "401": {
                         "description": "Missing authorization",
                         "content": {
@@ -293,7 +303,6 @@
                         "example": true
                     },
                     "config": {
-                        "type": "object",
                         "description": "The new payment method config, leave null or unspecified to not change current setting",
                         "default": null,
                         "nullable": true,

@@ -174,7 +174,7 @@
                         "properties": {
                             "password": {
                                 "type": "string",
-                                "description": "SMTP password. Keep null or empty to not update it.",
+                                "description": "SMTP password. Null or empty preserves the saved password only when login is provided and server is unchanged.",
                                 "nullable": true,
                                 "example": "MyS3cr3t"
                             }

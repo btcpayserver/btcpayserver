@@ -15,7 +15,8 @@ namespace BTCPayServer.Data
             DefaultSerializerSettings = new JsonSerializerSettings()
             {
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
-                Formatting = Formatting.None
+                Formatting = Formatting.None,
+                MetadataPropertyHandling = MetadataPropertyHandling.Ignore
             };
             NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(DefaultSerializerSettings);
             DefaultSerializer = JsonSerializer.CreateDefault(DefaultSerializerSettings);
@@ -58,7 +59,7 @@ namespace BTCPayServer.Data
         public static B? GetBlob<B>(this IHasBlob<B> data, JsonSerializerSettings? settings = null)
         {
             if (data.Blob2 is not null)
-                return JObject.Parse(data.Blob2).ToObject<B>(JsonSerializer.CreateDefault(settings ?? DefaultSerializerSettings));
+                return JsonParser.ParseObject(data.Blob2).ToObject<B>(JsonSerializer.CreateDefault(settings ?? DefaultSerializerSettings));
 #pragma warning disable CS0618 // Type or member is obsolete
             if (data.Blob is not null && data.Blob.Length != 0)
             {
@@ -67,7 +68,7 @@ namespace BTCPayServer.Data
                     str = Encoding.UTF8.GetString(data.Blob);
                 else
                     str = ZipUtils.Unzip(data.Blob);
-                return JObject.Parse(str).ToObject<B>(JsonSerializer.CreateDefault(settings ?? DefaultSerializerSettings));
+                return JsonParser.ParseObject(str).ToObject<B>(JsonSerializer.CreateDefault(settings ?? DefaultSerializerSettings));
             }
 #pragma warning restore CS0618 // Type or member is obsolete
             return default;
@@ -76,10 +77,10 @@ namespace BTCPayServer.Data
         public static object? GetBlob(this IHasBlob data, JsonSerializerSettings? settings = null)
         {
             if (data.Blob2 is not null)
-                return JObject.Parse(data.Blob2).ToObject(data.Type, JsonSerializer.CreateDefault(settings ?? DefaultSerializerSettings));
+                return JsonParser.ParseObject(data.Blob2).ToObject(data.Type, JsonSerializer.CreateDefault(settings ?? DefaultSerializerSettings));
 #pragma warning disable CS0618 // Type or member is obsolete
             if (data.Blob is not null && data.Blob.Length != 0)
-                return JObject.Parse(ZipUtils.Unzip(data.Blob)).ToObject(data.Type, JsonSerializer.CreateDefault(settings ?? DefaultSerializerSettings));
+                return JsonParser.ParseObject(ZipUtils.Unzip(data.Blob)).ToObject(data.Type, JsonSerializer.CreateDefault(settings ?? DefaultSerializerSettings));
 #pragma warning restore CS0618 // Type or member is obsolete
             return default;
         }
@@ -97,7 +98,11 @@ namespace BTCPayServer.Data
             if (blob is null)
                 data.Blob2 = null;
             else
-                data.Blob2 = JObject.FromObject(blob, settings ?? DefaultSerializer).ToString(Formatting.None);
+            {
+                var json = JObject.FromObject(blob, settings ?? DefaultSerializer).ToString(Formatting.None);
+                JsonParser.ParseObject(json);
+                data.Blob2 = json;
+            }
 #pragma warning disable CS0618 // Type or member is obsolete
             data.Blob = new byte[0];
 #pragma warning restore CS0618 // Type or member is obsolete

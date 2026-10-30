@@ -54,6 +54,7 @@ namespace BTCPayServer.Controllers
         private readonly UriResolver _uriResolver;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly StoreLabelRepository _storeLabelRepository;
+        private readonly IRateLimitService _rateLimitService;
 
 
         public FormDataService FormDataService { get; }
@@ -75,7 +76,8 @@ namespace BTCPayServer.Controllers
             ViewLocalizer viewLocalizer,
             ApplicationDbContextFactory dbContextFactory,
             BTCPayNetworkProvider networkProvider,
-            StoreLabelRepository storeLabelRepository)
+            StoreLabelRepository storeLabelRepository,
+            IRateLimitService rateLimitService)
         {
             _InvoiceController = invoiceController;
             _handlers = handlers;
@@ -92,6 +94,7 @@ namespace BTCPayServer.Controllers
             ViewLocalizer = viewLocalizer;
             _networkProvider = networkProvider;
             _storeLabelRepository = storeLabelRepository;
+            _rateLimitService = rateLimitService;
         }
 
         [HttpGet("/stores/{storeId}/payment-requests")]
@@ -173,7 +176,7 @@ namespace BTCPayServer.Controllers
             if ((clonedPayReqId, payReqId) is (not null, null))
             {
                 paymentRequest = await _PaymentRequestRepository.FindPaymentRequest(clonedPayReqId, User.GetId());
-                if (paymentRequest is null)
+                if (paymentRequest is null || paymentRequest.StoreDataId != store.Id)
                     return NotFound();
             }
             else if ((clonedPayReqId, payReqId) is (null, not null))
@@ -363,7 +366,7 @@ namespace BTCPayServer.Controllers
             }
 
             var prFormId = prBlob.FormId;
-            var formData = await FormDataService.GetForm(prFormId);
+            var formData = await FormDataService.GetCheckoutForm(result.StoreDataId, prFormId);
             if (formData is null)
             {
                 return RedirectToAction("PayPaymentRequest", new { payReqId });
@@ -400,6 +403,9 @@ namespace BTCPayServer.Controllers
 
             viewModel.FormName = formData.Name;
             viewModel.Form = form;
+            viewModel.AspController = nameof(UIPaymentRequestController).TrimEnd("Controller", StringComparison.InvariantCulture);
+            viewModel.AspAction = nameof(ViewPaymentRequestForm);
+            viewModel.RouteParameters = new Dictionary<string, string> { { "payReqId", payReqId } };
 
             var storeBlob = result.StoreData.GetStoreBlob();
             viewModel.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
@@ -409,10 +415,13 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}/pay")]
         [AllowAnonymous]
-        [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> PayPaymentRequest(string payReqId, bool redirectToInvoice = true,
             decimal? amount = null, CancellationToken cancellationToken = default)
         {
+            // Throttled here rather than with a filter, as PaymentRequestHub.Pay calls this action directly
+            if (await Throttle(cancellationToken))
+                return new TooManyRequestsResult(ZoneLimits.PublicInvoices);
+
             if (amount.HasValue && amount.Value <= 0)
             {
                 return BadRequest(StringLocalizer["Please provide an amount greater than 0"]);
@@ -436,7 +445,7 @@ namespace BTCPayServer.Controllers
 
             if (!result.FormSubmitted && !string.IsNullOrEmpty(result.FormId))
             {
-                var formData = await FormDataService.GetForm(result.FormId);
+                var formData = await FormDataService.GetCheckoutForm(result.StoreId, result.FormId);
                 if (formData is not null)
                 {
                     return RedirectToAction("ViewPaymentRequestForm", new { payReqId });
@@ -531,7 +540,7 @@ namespace BTCPayServer.Controllers
             return Ok(StringLocalizer["Payment cancelled"]);
         }
 
-        [HttpGet("{payReqId}/archive")]
+        [HttpPost("{payReqId}/archive")]
         [Authorize(Policy = Policies.CanModifyPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> TogglePaymentRequestArchival(string payReqId)
         {
@@ -565,6 +574,20 @@ namespace BTCPayServer.Controllers
             await _PaymentRequestRepository.UpdatePaymentRequestStatus(payReqId, PaymentRequestStatus.Completed);
 
             return RedirectToAction("GetPaymentRequests", new { storeId = HttpContext.GetStoreData().Id });
+        }
+
+        [HttpGet("/stores/{storeId}/payment-requests/labels.json")]
+        public async Task<IActionResult> PaymentRequestLabelsJson(string storeId, bool excludeTypes = true)
+        {
+            var labels = await _storeLabelRepository.GetStoreLabels(storeId, WalletObjectData.Types.PaymentRequest);
+            return Ok(labels
+                .Where(l => !excludeTypes || !WalletObjectData.Types.AllTypes.Contains(l.Label))
+                .Select(l => new WalletLabelModel
+                {
+                    Label = l.Label,
+                    Color = l.Color,
+                    TextColor = ColorPalette.Default.TextColor(l.Color)
+                }));
         }
 
         [HttpGet("/stores/{storeId}/payment-requests/labels")]
@@ -645,6 +668,10 @@ namespace BTCPayServer.Controllers
         }
 
         private string GetUserId() => User.GetIdOrNull();
+
+        private async Task<bool> Throttle(CancellationToken cancellationToken) =>
+            HttpContext.Connection is { RemoteIpAddress: { } addr } &&
+            !await _rateLimitService.Throttle(ZoneLimits.PublicInvoices, addr.ToString(), cancellationToken);
 
         private PaymentRequestData GetCurrentPaymentRequest(string payReqId = null) =>
             HttpContext.GetPaymentRequestDataOrNull() is {} res

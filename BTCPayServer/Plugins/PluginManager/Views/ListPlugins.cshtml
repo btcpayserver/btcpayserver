@@ -72,6 +72,47 @@
                             }
                         </div>
                     </div>
+                    @if (plugin.Failure is { } failure)
+                    {
+                        <details class="plugin-failure mt-3">
+                            <summary class="plugin-failure__summary" text-translate="true">Failure details</summary>
+                            <dl class="plugin-failure__metadata row mt-3 mb-2">
+                                <dt class="col-sm-4" text-translate="true">Occurred</dt>
+                                <dd class="col-sm-8">@failure.Timestamp.ToString("u")</dd>
+                                <dt class="col-sm-4" text-translate="true">Plugin</dt>
+                                <dd class="col-sm-8">@failure.PluginIdentifier @(failure.PluginVersion is null ? null : $"({failure.PluginVersion})")</dd>
+                                <dt class="col-sm-4" text-translate="true">BTCPay Server version</dt>
+                                <dd class="col-sm-8">@failure.BTCPayVersion</dd>
+                                <dt class="col-sm-4" text-translate="true">Failure phase</dt>
+                                <dd class="col-sm-8">
+                                    @switch (failure.Phase)
+                                    {
+                                        case PluginLifecyclePhase.AssemblyLoad: <span text-translate="true">Assembly load</span> break;
+                                        case PluginLifecyclePhase.PluginDiscovery: <span text-translate="true">Plugin discovery</span> break;
+                                        case PluginLifecyclePhase.PluginActivation: <span text-translate="true">Plugin activation</span> break;
+                                        case PluginLifecyclePhase.PluginValidation: <span text-translate="true">Plugin validation</span> break;
+                                        case PluginLifecyclePhase.PluginExecution: <span text-translate="true">Plugin execution</span> break;
+                                        case PluginLifecyclePhase.Startup: <span text-translate="true">Startup</span> break;
+                                        case PluginLifecyclePhase.RuntimeRequest: <span text-translate="true">Runtime request</span> break;
+                                        case PluginLifecyclePhase.Running: <span text-translate="true">Running</span> break;
+                                    }
+                                </dd>
+                                <dt class="col-sm-4" text-translate="true">Attribution</dt>
+                                <dd class="col-sm-8">
+                                    @if (failure.Attribution == PluginFailureAttribution.PossiblyInvolvedCulpritUnknown)
+                                    {
+                                        <span text-translate="true">Possibly involved; culprit unknown</span>
+                                    }
+                                    else
+                                    {
+                                        <span text-translate="true">Confirmed</span>
+                                    }
+                                </dd>
+                            </dl>
+                            <button type="button" class="plugin-failure__copy btn btn-sm btn-outline-secondary mb-2" text-translate="true">Copy</button>
+                            <pre class="plugin-failure__details bg-light p-3 mb-0 text-wrap">@failure.Details</pre>
+                        </details>
+                    }
                 </li>
             }
         </ul>
@@ -237,6 +278,17 @@
     </section>
 }
 </div>
+
+@section PageFootContent {
+    <script>
+        document.querySelectorAll('.plugin-failure__copy').forEach(button => {
+            button.addEventListener('click', event => {
+                const details = button.closest('.plugin-failure')?.querySelector('.plugin-failure__details')
+                if (details) window.copyToClipboard(event, details.textContent)
+            })
+        })
+    </script>
+}
 
 <div class="mb-4">
     <h3 class="mb-4" text-translate="true">Upload Plugin</h3>

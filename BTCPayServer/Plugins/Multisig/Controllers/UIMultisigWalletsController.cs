@@ -8,10 +8,12 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Payments;
 using BTCPayServer.Plugins.Multisig.Models;
 using BTCPayServer.Plugins.Multisig.Services;
 using BTCPayServer.Plugins.Wallets;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -33,7 +35,9 @@ public class UIMultisigWalletsController(
     BTCPayWalletProvider walletProvider,
     MultisigService multisigService,
     MultisigNotificationService multisigNotificationService,
+    CallbackGenerator callbackGenerator,
     PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
+    EventAggregator eventAggregator,
     IStringLocalizer stringLocalizer) : Controller
 {
     public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
@@ -143,7 +147,7 @@ public class UIMultisigWalletsController(
                         UserId = selectedId
                     })
                 .ToList(),
-            RequestBaseUrl = HttpContext.Request.GetRequestBaseUrl()
+            RequestBaseUrl = callbackGenerator.GetRequestBaseUrl()
         };
 
         await multisigService.SavePendingMultisigSetup(pending);
@@ -195,7 +199,7 @@ public class UIMultisigWalletsController(
             return View("MultisigConfirm", vm);
         }
 
-        var strategy = pending.GetDiredivationSchemeSettings(network);
+        var strategy = pending.GetDerivationSchemeSettings(network);
         var wallet = walletProvider.GetWallet(network);
         if (wallet is null)
         {
@@ -210,6 +214,7 @@ public class UIMultisigWalletsController(
         storeBlob.SetExcluded(paymentMethodId, false);
         store.SetStoreBlob(storeBlob);
         await storeRepository.UpdateStore(store);
+        eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(store.Id, network.CryptoCode) });
 
         var finalizedPendingSetting = await multisigService.GetPendingMultisigSetupContext(vm.StoreId, vm.MultisigRequestId);
         if (finalizedPendingSetting is not null)
@@ -237,7 +242,7 @@ public class UIMultisigWalletsController(
             return RedirectToMultisigSetup(pending.RequestId);
         }
 
-        var strategy = pending.GetDiredivationSchemeSettings(network);
+        var strategy = pending.GetDerivationSchemeSettings(network);
         var vm = new MultisigSetupViewModel
         {
             MultisigRequestId = pending.RequestId,

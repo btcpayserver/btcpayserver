@@ -44,15 +44,15 @@
     // https://web.dev/async-clipboard/#permissions-policy-integration
     iframe.setAttribute('allow', 'clipboard-read; clipboard-write')
 
-    var origin = 'http://chat.btcpayserver.org join us there, and initialize this with your origin url through setApiUrlPrefix';
+    var apiUrlPrefix = 'http://chat.btcpayserver.org join us there, and initialize this with your origin url through setApiUrlPrefix';
     var scriptMatch = thisScript.match(scriptSrcRegex)
     if (scriptMatch) {
         // We can't just take the domain as btcpay can run under a sub path with RootPath
-        origin = thisScript.slice(0, thisScript.length - scriptMatch[0].length);
+        apiUrlPrefix = thisScript.slice(0, thisScript.length - scriptMatch[0].length);
     }
     // urlPrefix should be site root without trailing slash
     function setApiUrlPrefix(urlPrefix) {
-        origin = stripTrailingSlashes(urlPrefix);
+        apiUrlPrefix = stripTrailingSlashes(urlPrefix);
     }
     function stripTrailingSlashes(site) {
         return site.replace(/\/+$/, "");
@@ -118,7 +118,13 @@
     }
 
     function receiveMessage(event) {
-        if (!origin.startsWith(event.origin) || !showingInvoice) {
+        var expectedOrigin;
+        try {
+            expectedOrigin = new URL(apiUrlPrefix).origin;
+        } catch (e) {
+            return;
+        }
+        if (event.origin !== expectedOrigin || event.source !== iframe.contentWindow || !showingInvoice) {
             return;
         }
         if (event.data === 'close') {
@@ -159,14 +165,14 @@
         var invoiceUrl;
         if (paymentMethodId) {
             invoiceUrl =
-                origin +
+                apiUrlPrefix +
                 '/i/' +
                 invoiceId +
                 '/' +
                 encodeURIComponent(paymentMethodId) +
                 '?view=modal';
         } else {
-            invoiceUrl = origin + '/invoice?id=' + invoiceId + '&view=modal';
+            invoiceUrl = apiUrlPrefix + '/invoice?id=' + invoiceId + '&view=modal';
         }
 
         if (animateEntrance === false) {

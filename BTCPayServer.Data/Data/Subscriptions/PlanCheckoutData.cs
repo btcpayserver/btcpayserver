@@ -111,11 +111,17 @@ public class PlanCheckoutData : BaseEntityData
 
     public string? GetRedirectUrl()
     {
-        if (SuccessRedirectUrl is null)
+        if (!IsSafeRedirectUrl(SuccessRedirectUrl))
             return null;
         // Add ?checkoutPlanId=... to the redirect URL
-        try { return QueryHelpers.AddQueryString(SuccessRedirectUrl, "checkoutPlanId", Id); }
+        try { return QueryHelpers.AddQueryString(SuccessRedirectUrl!, "checkoutPlanId", Id); }
         catch (UriFormatException) { return null; }
+    }
+
+    public static bool IsSafeRedirectUrl(string? url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
+               uri.Scheme is "http" or "https";
     }
 
     public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)

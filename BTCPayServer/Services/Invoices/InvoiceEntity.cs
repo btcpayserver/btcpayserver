@@ -34,12 +34,15 @@ namespace BTCPayServer.Services.Invoices
     }
     public class InvoiceMetadata : IHasAdditionalData
     {
+        public const int MaxPosDataLength = 65_536;
+
         public static readonly JsonSerializer MetadataSerializer;
         static InvoiceMetadata()
         {
             var seria = new JsonSerializer();
             seria.DefaultValueHandling = DefaultValueHandling.Ignore;
             seria.FloatParseHandling = FloatParseHandling.Decimal;
+            seria.MetadataPropertyHandling = MetadataPropertyHandling.Ignore;
             seria.ContractResolver = new CamelCasePropertyNamesContractResolver();
             MetadataSerializer = seria;
         }
@@ -173,7 +176,7 @@ namespace BTCPayServer.Services.Invoices
                 if (jt.Type == JTokenType.String)
                     try
                     {
-                        return JObject.Parse(jt.Value<string>());
+                        return JsonParser.ParseObject(jt.Value<string>());
                     }
                     catch
                     {
@@ -207,7 +210,7 @@ namespace BTCPayServer.Services.Invoices
                 {
                     try
                     {
-                        PosData = JObject.Parse(value);
+                        PosData = JsonParser.ParseObject(value);
                         return;
                     }
                     catch
@@ -495,10 +498,14 @@ namespace BTCPayServer.Services.Invoices
 
         private Uri FillPlaceholdersUri(string v)
         {
-            var uriStr = (v ?? string.Empty).Replace("{OrderId}", System.Web.HttpUtility.UrlEncode(Metadata.OrderId) ?? "", StringComparison.OrdinalIgnoreCase)
-                                     .Replace("{InvoiceId}", System.Web.HttpUtility.UrlEncode(Id) ?? "", StringComparison.OrdinalIgnoreCase)
-                                     // NOTE: Not recommended to depend on the status on client side, rather fetch invoice status via API instead
-                                     .Replace("{Status}", System.Web.HttpUtility.UrlEncode(Status.ToString()) ?? "", StringComparison.OrdinalIgnoreCase);
+            var template = TextTemplate.CreateUrlTemplate(v ?? string.Empty);
+            var uriStr = template.Render(new JObject
+            {
+                ["OrderId"] = Metadata.OrderId ?? string.Empty,
+                ["InvoiceId"] = Id,
+                // NOTE: Not recommended to depend on the status on client side, rather fetch invoice status via API instead
+                ["Status"] = Status.ToString()
+            });
             if (Uri.TryCreate(uriStr, UriKind.Absolute, out var uri) && (uri.Scheme == "http" || uri.Scheme == "https"))
                 return uri;
             return null;
@@ -507,8 +514,6 @@ namespace BTCPayServer.Services.Invoices
         [JsonProperty]
         public bool RedirectAutomatically { get; set; }
         public bool FullNotifications { get; set; }
-        [JsonProperty]
-        public string NotificationEmail { get; set; }
 
         [JsonProperty("notificationURL")]
         public string NotificationURLTemplate { get; set; }
@@ -971,23 +976,23 @@ namespace BTCPayServer.Services.Invoices
             if (i.MinimumNetDue > 0.0m)
             {
                 accounting.TxRequired++;
-                grossDue += rate * PaymentMethodFee;
+                grossDue += ToInvoiceCurrency(PaymentMethodFee, rate);
             }
-            accounting.TotalDue = Coins(grossDue / rate, divisibility);
-            accounting.TotalDueSettled = Coins((i.Price + i.GrossSettled - i.NetSettled) / rate, divisibility);
-            accounting.Paid = Coins(i.PaidAmount.Gross / rate, divisibility);
-            accounting.PaidSettled = Coins(i.GrossSettled / rate, divisibility);
+            accounting.TotalDue = Coins(grossDue, rate, divisibility);
+            accounting.TotalDueSettled = Coins(i.Price + i.GrossSettled - i.NetSettled, rate, divisibility);
+            accounting.Paid = Coins(i.PaidAmount.Gross, rate, divisibility);
+            accounting.PaidSettled = Coins(i.GrossSettled, rate, divisibility);
             accounting.PaymentMethodPaid = Coins(thisPaymentMethodPayments.Sum(p => p.PaidAmount.Gross), divisibility);
 
             // This one deal with the fact where it might looks like a slight over payment due to the dust of another payment method.
             // So if we detect the NetDue is zero, just cap dueUncapped to 0
             var dueUncapped = i.NetDue == 0.0m ? 0.0m : grossDue - i.PaidAmount.Gross;
-            accounting.DueUncapped = Coins(dueUncapped / rate, divisibility);
+            accounting.DueUncapped = Coins(dueUncapped, rate, divisibility);
             accounting.Due = Max(accounting.DueUncapped, 0.0m);
 
-            accounting.PaymentMethodFee = Coins((grossDue - i.Price) / rate, divisibility);
+            accounting.PaymentMethodFee = Coins(grossDue - i.Price, rate, divisibility);
 
-            accounting.MinimumTotalDue = Max(Smallest(divisibility), Coins((grossDue * (1.0m - ((decimal)i.PaymentTolerance / 100.0m))) / rate, divisibility));
+            accounting.MinimumTotalDue = Max(Smallest(divisibility), Coins(grossDue * (1.0m - ((decimal)i.PaymentTolerance / 100.0m)), rate, divisibility));
             return accounting;
         }
 
@@ -1016,6 +1021,15 @@ namespace BTCPayServer.Services.Invoices
         decimal Max(decimal a, decimal b) => a > b ? a : b;
 
         const decimal MaxCoinValue = decimal.MaxValue / 1_0000_0000m;
+        private static decimal Coins(decimal v, decimal rate, int precision)
+        {
+            if (rate is > 0m and < 1m)
+            {
+                var maxValueBeforeConversion = MaxCoinValue * rate;
+                v = Math.Clamp(v, -maxValueBeforeConversion, maxValueBeforeConversion);
+            }
+            return Coins(v / rate, precision);
+        }
         internal static decimal Coins(decimal v, int precision)
         {
             v = Extensions.RoundUp(v, precision);
@@ -1023,6 +1037,14 @@ namespace BTCPayServer.Services.Invoices
             if (v > MaxCoinValue)
                 v = MaxCoinValue;
             return v;
+        }
+
+        internal static decimal ToInvoiceCurrency(decimal value, decimal rate)
+        {
+            var absoluteRate = Math.Abs(rate);
+            if (absoluteRate > 1m && Math.Abs(value) > MaxCoinValue / absoluteRate)
+                return (value < 0m) != (rate < 0m) ? -MaxCoinValue : MaxCoinValue;
+            return Math.Clamp(value * rate, -MaxCoinValue, MaxCoinValue);
         }
     }
 
@@ -1079,8 +1101,8 @@ namespace BTCPayServer.Services.Invoices
             InvoicePaidAmount = new Amounts()
             {
                 Currency = InvoiceCurrency,
-                Gross = PaidAmount.Gross * Rate,
-                Net = PaidAmount.Net * Rate
+                Gross = PaymentPrompt.ToInvoiceCurrency(PaidAmount.Gross, Rate),
+                Net = PaymentPrompt.ToInvoiceCurrency(PaidAmount.Net, Rate)
             };
         }
     }

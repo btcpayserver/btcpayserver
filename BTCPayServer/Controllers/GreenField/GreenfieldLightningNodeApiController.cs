@@ -14,6 +14,7 @@ using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using NBitcoin;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -29,6 +30,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
     public abstract class GreenfieldLightningNodeApiController : ControllerBase
     {
+        private const int MaxBolt11Length = 7089;
         private readonly PoliciesSettings _policiesSettings;
         private readonly IAuthorizationService _authorizationService;
         private readonly PaymentMethodHandlerDictionary _handlers;
@@ -234,10 +236,26 @@ namespace BTCPayServer.Controllers.Greenfield
             var network =  GetNetwork(cryptoCode);
             BOLT11PaymentRequest bolt11 = null;
 
-            if (string.IsNullOrEmpty(lightningInvoice.BOLT11) ||
+            if (lightningInvoice.BOLT11?.Length > MaxBolt11Length)
+            {
+                ModelState.AddModelError(nameof(lightningInvoice.BOLT11), "The BOLT11 invoice is too large.");
+            }
+            else if (string.IsNullOrEmpty(lightningInvoice.BOLT11) ||
                 !BOLT11PaymentRequest.TryParse(lightningInvoice.BOLT11, out bolt11, network.NBitcoinNetwork))
             {
                 ModelState.AddModelError(nameof(lightningInvoice.BOLT11), "The BOLT11 invoice was invalid.");
+            }
+            if (lightningInvoice.Amount is not null && lightningInvoice.Amount < LightMoney.Zero)
+            {
+                ModelState.AddModelError(nameof(lightningInvoice.Amount), "Amount must be greater than or equal to 0");
+            }
+            if (lightningInvoice.MaxFeePercent is < 0)
+            {
+                ModelState.AddModelError(nameof(lightningInvoice.MaxFeePercent), "Maximum fee percentage must be greater than or equal to 0");
+            }
+            if (lightningInvoice.MaxFeeFlat is not null && lightningInvoice.MaxFeeFlat < Money.Zero)
+            {
+                ModelState.AddModelError(nameof(lightningInvoice.MaxFeeFlat), "Maximum flat fee must be greater than or equal to 0");
             }
 
             if (!ModelState.IsValid)
@@ -264,17 +282,28 @@ namespace BTCPayServer.Controllers.Greenfield
 
                 var paymentHash = bolt11.PaymentHash.ToString();
                 var payment = await lightningClient.GetPayment(paymentHash, cancellationToken);
-                var data = new LightningPaymentData
-                {
-                    Id = payment.Id,
-                    PaymentHash = paymentHash,
-                    Status = payment.Status,
-                    BOLT11 = payment.BOLT11,
-                    Preimage = payment.Preimage,
-                    CreatedAt = payment.CreatedAt,
-                    TotalAmount = payment.AmountSent,
-                    FeeAmount = payment.Fee,
-                };
+                // The node may not list the payment yet: answer with what Pay returned
+                var data = payment is null
+                    ? new LightningPaymentData
+                    {
+                        PaymentHash = paymentHash,
+                        Status = result.Result is PayResult.Ok ? LightningPaymentStatus.Complete : LightningPaymentStatus.Unknown,
+                        BOLT11 = lightningInvoice.BOLT11,
+                        Preimage = result.Details?.Preimage?.ToString(),
+                        TotalAmount = result.Details?.TotalAmount,
+                        FeeAmount = result.Details?.FeeAmount,
+                    }
+                    : new LightningPaymentData
+                    {
+                        Id = payment.Id,
+                        PaymentHash = paymentHash,
+                        Status = payment.Status,
+                        BOLT11 = payment.BOLT11,
+                        Preimage = payment.Preimage,
+                        CreatedAt = payment.CreatedAt,
+                        TotalAmount = payment.AmountSent,
+                        FeeAmount = payment.Fee,
+                    };
                 return result.Result is PayResult.Ok ? Ok(data) : Accepted(data);
             }
 

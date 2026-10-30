@@ -5,6 +5,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -14,6 +15,7 @@ using BTCPayServer.Abstractions.Extensions;
 using StoreData = BTCPayServer.Data.StoreData;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Stores;
 using System;
 
@@ -25,6 +27,7 @@ namespace BTCPayServer.Controllers.Greenfield
     public class GreenfieldStorePaymentMethodsController(
         PaymentMethodHandlerDictionary handlers,
         StoreRepository storeRepository,
+        EventAggregator eventAggregator,
         IAuthorizationService authorizationService)
         : ControllerBase
     {
@@ -55,11 +58,12 @@ namespace BTCPayServer.Controllers.Greenfield
             [ModelBinder(typeof(PaymentMethodIdModelBinder))]
             PaymentMethodId paymentMethodId)
         {
-            AssertHasHandler(paymentMethodId);
+            var handler = AssertHasHandler(paymentMethodId);
             if (Store.GetPaymentMethodConfig(paymentMethodId) is null)
                 return Ok();
             Store.SetPaymentMethodConfig(paymentMethodId, null);
             await storeRepository.UpdateStore(Store);
+            PublishWalletChanged(handler);
             return Ok();
         }
 
@@ -111,7 +115,15 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             await storeRepository.UpdateStore(Store);
+            if (request?.Config is not null)
+                PublishWalletChanged(handler);
             return await GetStorePaymentMethod(storeId, paymentMethodId, request?.Config is not null);
+        }
+
+        private void PublishWalletChanged(IPaymentMethodHandler handler)
+        {
+            if (handler is BitcoinLikePaymentHandler { Network: var network })
+                eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(Store.Id, network.CryptoCode) });
         }
 
         private IPaymentMethodHandler AssertHasHandler(PaymentMethodId paymentMethodId)

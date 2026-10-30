@@ -9,6 +9,9 @@ namespace BTCPayServer.Data.Subscriptions;
 [Table("subs_features")]
 public class FeatureData
 {
+    public const int MaxCustomIdLength = 50;
+    public const int MaxDescriptionLength = 500;
+
     /// <summary>
     /// The internal ID of the feature, we only really use it in
     /// SQL queries. This should not be exposed.

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Security;
@@ -17,6 +18,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.JsonConverters;
@@ -27,10 +29,13 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Services.Wallets.Import;
+using BTCPayServer.Services.WalletFileParsing;
 using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,12 +60,79 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void RoundDownRejectsOverflow()
+        {
+            Assert.Equal(0.00014729m, BTCPayServer.Extensions.RoundDown(0.00014729443m, 8));
+            Assert.Throws<OverflowException>(() => BTCPayServer.Extensions.RoundDown(decimal.MaxValue, 1));
+        }
+
+        [Fact]
         public void BTCPayServerClientEscapesPathIdentifiers()
         {
             var client = new RequestInspectingClient(new Uri("https://example.com/root/"));
             var request = client.CreateRequest($"api/v1/stores/{"../users/me"}/webhooks/{"delivery/../x"}?email={"a+b@example.com"}");
 
             Assert.Equal("https://example.com/root/api/v1/stores/..%2Fusers%2Fme/webhooks/delivery%2F..%2Fx?email=a%2Bb%40example.com", request.RequestUri!.AbsoluteUri);
+        }
+
+        [Theory]
+        [InlineData(HttpStatusCode.BadRequest, "{")]
+        [InlineData(HttpStatusCode.Forbidden, "{")]
+        [InlineData(HttpStatusCode.UnprocessableEntity, "{")]
+        [InlineData(HttpStatusCode.UnprocessableEntity, "[null]")]
+        public async Task BTCPayServerClientFallsBackToHttpExceptionForMalformedJsonErrors(HttpStatusCode statusCode, string content)
+        {
+            using var httpClient = new HttpClient(new TestHttpMessageHandler(_ => new HttpResponseMessage(statusCode)
+            {
+                Content = new StringContent(content, Encoding.UTF8, "application/json")
+            }));
+            var client = new BTCPayServerClient(new Uri("https://example.com/"), httpClient);
+
+            var exception = await Assert.ThrowsAsync<HttpRequestException>(() =>
+                client.SendHttpRequest($"api/v1/test", queryPayload: null, method: HttpMethod.Get));
+
+            Assert.Equal(statusCode, exception.StatusCode);
+        }
+
+        [Fact]
+        public void CreateTransactionTagModelsIgnoresInvalidCpfpOutpoints()
+        {
+            const string txId = "aecb52b892f5e12454b3ee1ad554ffe28c1cca35ffdfaa441c74a30cf7a279f0";
+            var transactionInfo = new WalletTransactionInfo(new WalletId("store", "BTC"));
+            transactionInfo.LabelColors.Add(WalletObjectData.Types.CPFP, "#000000");
+            transactionInfo.Attachments.Add(new Attachment(WalletObjectData.Types.CPFP, linkData: new JObject
+            {
+                ["outpoints"] = new JArray($"{txId}-1", "invalid")
+            }));
+
+            var model = Assert.Single(new LabelService(null!).CreateTransactionTagModels(
+                transactionInfo, new DefaultHttpContext().Request));
+
+            Assert.Contains(txId, model.Tooltip);
+            Assert.DoesNotContain("invalid", model.Tooltip);
+        }
+
+        [Theory]
+        [InlineData("https://example.com/details", "https://example.com/details")]
+        [InlineData("/wallet/transactions", null)]
+        [InlineData("#", "#")]
+        [InlineData("javascript:alert(1)", null)]
+        [InlineData("data:text/html,<script>alert(1)</script>", null)]
+        [InlineData("//example.com/details", null)]
+        public void CreateTransactionTagModelsOnlyAllowsSafeCustomAttachmentLinks(string link, string expected)
+        {
+            const string type = "custom";
+            var transactionInfo = new WalletTransactionInfo(new WalletId("store", "BTC"));
+            transactionInfo.LabelColors.Add(type, "#000000");
+            transactionInfo.Attachments.Add(new Attachment(type, data: new JObject
+            {
+                ["link"] = link
+            }));
+
+            var model = Assert.Single(new LabelService(null!).CreateTransactionTagModels(
+                transactionInfo, new DefaultHttpContext().Request));
+
+            Assert.Equal(expected, model.Link);
         }
 
         private class RequestInspectingClient : BTCPayServerClient
@@ -405,10 +477,29 @@ namespace BTCPayServer.Tests
             Assert.False(attribute.IsValid(2));
             Assert.False(attribute.IsValid("http://"));
             Assert.False(attribute.IsValid("httpdsadsa.com"));
+            Assert.False(attribute.IsValid(" "));
+            Assert.False(attribute.IsValid("javascript:document.body.dataset.pwned=1"));
+            Assert.False(attribute.IsValid("data:text/html,<script>alert(1)</script>"));
 
             var webUriAttribute = new UriAttribute("http", "https");
             Assert.True(webUriAttribute.IsValid("https://example.com"));
             Assert.False(webUriAttribute.IsValid("javascript:document.body.dataset.pwned=1"));
+            Assert.True(new UriAttribute("ftp").IsValid("ftp://example.com/file"));
+        }
+
+        [Fact]
+        public void PlanCheckoutRedirectOnlyAllowsHttpUrls()
+        {
+            var checkout = new PlanCheckoutData { Id = "checkout-id" };
+
+            checkout.SuccessRedirectUrl = "javascript:alert(1)";
+            Assert.Null(checkout.GetRedirectUrl());
+            checkout.SuccessRedirectUrl = "data:text/html,<script>alert(1)</script>";
+            Assert.Null(checkout.GetRedirectUrl());
+            checkout.SuccessRedirectUrl = "/subscriptions/success";
+            Assert.Null(checkout.GetRedirectUrl());
+            checkout.SuccessRedirectUrl = "https://example.com/success?source=test";
+            Assert.Equal("https://example.com/success?source=test&checkoutPlanId=checkout-id", checkout.GetRedirectUrl());
         }
 
         [Fact]
@@ -488,6 +579,23 @@ namespace BTCPayServer.Tests
             Assert.Equal("ddd", items[0].Id);
             Assert.Equal(1, items[0].Count);
             Assert.Equal(8.49m, items[0].Price);
+
+            static JObject CartItem(int count, JToken price) => new()
+            {
+                { "cart", new JArray(new JObject
+                    {
+                        { "id", "ddd" },
+                        { "price", price },
+                        { "count", count }
+                    })
+                }
+            };
+
+            Assert.False(AppService.TryParsePosCartItems(CartItem(0, 1), out items));
+            Assert.False(AppService.TryParsePosCartItems(CartItem(-1, 1), out items));
+            Assert.False(AppService.TryParsePosCartItems(CartItem(1, -1), out items));
+            Assert.False(AppService.TryParsePosCartItems(CartItem(1, new JObject { { "value", -1 } }), out items));
+            Assert.True(AppService.TryParsePosCartItems(CartItem(1, 0), out items));
 
             Assert.False(AppService.TryParsePosCartItems(new JObject()
             {
@@ -617,6 +725,24 @@ namespace BTCPayServer.Tests
                 Identifier = "Test",
                 Condition = parsed
             }.ToString());
+        }
+
+        [Fact]
+        public void CanRenderInvoiceUriTemplates()
+        {
+            var entity = new InvoiceEntity
+            {
+                Id = "invoice/id",
+                Metadata = new InvoiceMetadata { OrderId = "order id" },
+                Status = InvoiceStatus.Settled,
+                RedirectURLTemplate = "https://example.com/{unknown}/{orderid}/{InvoiceId}?status={STATUS}",
+                NotificationURLTemplate = "https://example.com/{invalid[}?orderId={OrderId}"
+            };
+
+            Assert.Equal("https://example.com/{unknown}/order%20id/invoice%2Fid?status=Settled", entity.RedirectURL.OriginalString);
+
+            entity.Metadata.OrderId = null;
+            Assert.Equal("https://example.com/{invalid[}?orderId=", entity.NotificationURL.OriginalString);
         }
 
         [Fact]
@@ -1239,6 +1365,27 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 
             Assert.Equal("BSMS", nunchuk.Source);
             Assert.Null(error);
+
+            var bsmsParser = new BSMSWalletFileParser();
+            Assert.False(bsmsParser.TryParse(mainnet, """
+                BSMS 1.0
+                invalid descriptor
+                /0/*
+                invalid address
+                """, out var invalidBsms));
+            Assert.Null(invalidBsms);
+            Assert.False(bsmsParser.TryParse(mainnet, """
+                BSMS 1.0
+                invalid descriptor
+                /0/*
+                bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
+                """, out invalidBsms));
+            Assert.Null(invalidBsms);
+            var mismatchedAddress = new Key().PubKey.WitHash.GetAddress(Network.Main).ToString();
+            Assert.False(bsmsParser.TryParse(mainnet,
+                bsms.Replace("bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku", mismatchedAddress),
+                out invalidBsms));
+            Assert.Null(invalidBsms);
 
 
             // Failure case
@@ -2654,6 +2801,40 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             }
 
             return result;
+        }
+
+        [Fact]
+        public void CanSafelyRoundTripJsonBlobs()
+        {
+            JObject Nested(int levels) => levels == 1 ? new JObject() : new JObject { ["a"] = Nested(levels - 1) };
+
+            const string date = "/Date(99999999999999999)/";
+            var entity = new InvoiceEntity
+            {
+                Currency = "USD",
+                Metadata = new InvoiceMetadata { OrderId = date, PosData = Nested(62) }
+            };
+            var data = new Data.InvoiceData { Status = "New" };
+
+            data.SetBlob(entity);
+
+            Assert.Equal(date, data.GetBlob().Metadata.OrderId);
+            var row = JsonParser.ParseObject($"{{\"Id\":\"a\",\"Blob2\":{data.Blob2}}}", 128);
+            Assert.Equal(data.Blob2, row["Blob2"]!.ToString(Formatting.None));
+
+            entity.Metadata.PosData = Nested(63);
+            Assert.Throws<JsonReaderException>(() => data.SetBlob(entity));
+
+            var payment = new Data.PaymentData
+            {
+                Id = "a",
+                Status = PaymentStatus.Settled,
+                Currency = "BTC",
+                Amount = 1.0m,
+                Created = DateTimeOffset.UtcNow
+            };
+            payment.SetBlob(PaymentMethodId.Parse("BTC-LN"), new PaymentBlob { Destination = date });
+            Assert.Equal(date, payment.GetBlob().Destination);
         }
 
         [Fact]

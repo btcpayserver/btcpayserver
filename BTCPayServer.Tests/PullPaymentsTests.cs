@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -13,12 +14,16 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Views.Stores;
 using Dapper;
 using LNURL;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Playwright;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using Newtonsoft.Json;
 using Xunit;
 using static Microsoft.Playwright.Assertions;
 using PayoutData = BTCPayServer.Data.PayoutData;
@@ -28,6 +33,113 @@ namespace BTCPayServer.Tests;
 [Collection(nameof(NonParallelizableCollectionDefinition))]
 public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
 {
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanCompletePullPaymentsAfterRBF()
+    {
+        await using var s = CreatePlaywrightTester();
+        s.Server.PayTester.DisableSSRFProtection = true;
+        await s.StartAsync();
+        await s.RegisterNewUser(true);
+        await s.CreateNewStore();
+        await s.GenerateWallet("BTC", "", true);
+        var account = s.AsTestAccount();
+        await account.SetupWebhook();
+        var client = await account.CreateClient();
+        await s.Server.ExplorerNode.GenerateAsync(1);
+        await s.FundStoreWallet(denomination: 50.0m);
+
+        var pullPayment = await client.CreatePullPayment(s.StoreId, new()
+        {
+            Name = "RBF payouts",
+            Amount = 100m,
+            Currency = "USD",
+            PayoutMethods = ["BTC"]
+        });
+        foreach (var amount in new[] { 15m, 20m })
+        {
+            await client.CreatePayout(pullPayment.Id, new CreatePayoutRequest
+            {
+                Amount = amount,
+                Destination = (await s.Server.ExplorerNode.GetNewAddressAsync()).ToString(),
+                PayoutMethodId = "BTC"
+            });
+        }
+
+        uint256 originalTxId = null;
+        uint256 replacementTxId = null;
+        await s.Page.Context.Tracing.StartAsync(new() { Screenshots = true, Snapshots = true, Sources = true });
+        s.Page.PageError += (_, error) => TestLogs.LogInformation($"Browser error: {error}");
+        try
+        {
+            await s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
+            await s.Page.Locator(".pp-payout").ClickAsync();
+            await Expect(s.Page.Locator(".payout")).ToHaveCountAsync(2);
+            await s.Page.CheckAsync(".mass-action-select-all");
+            await s.Page.ClickAsync($"#{PayoutState.AwaitingApproval}-approve-pay");
+            await s.Page.GetByRole(AriaRole.Button, new() { Name = "Sign transaction", Exact = true }).ClickAsync();
+            await s.Page.Locator(".wallet-psbt__broadcast").ClickAsync();
+            await s.FindAlertMessage(partialText: "Transaction broadcasted successfully");
+
+            originalTxId = Assert.Single(await client.ShowOnChainWalletTransactions(s.StoreId, "BTC"),
+                transaction => transaction.Confirmations == 0).TransactionHash;
+            TestLogs.LogInformation($"Original transaction: {originalTxId}");
+            var wallet = await s.GoToWalletTransactions();
+            await wallet.BumpFee(originalTxId);
+            await Expect(s.Page.Locator(".wallet-bump-fee__method option:checked")).ToHaveTextAsync("RBF");
+            TestLogs.LogInformation($"Suggested replacement fee rate: {await s.Page.GetByLabel("New effective fee rate").InputValueAsync()}");
+            await s.ClickPagePrimary();
+
+            var psbt = PSBT.Parse(await s.Page.Locator(".signing-context__psbt").InputValueAsync(), Network.RegTest);
+            var replacement = psbt.Finalize().ExtractTransaction();
+            replacementTxId = replacement.GetHash();
+            TestLogs.LogInformation($"Replacement transaction: {replacementTxId}\n{replacement.ToHex()}");
+            TestLogs.LogInformation($"Mempool acceptance: {JsonConvert.SerializeObject(await s.Server.ExplorerNode.TestMempoolAcceptAsync(replacement))}");
+            await s.Page.Locator(".wallet-psbt__broadcast").ClickAsync();
+            await s.FindAlertMessage(partialText: "Transaction broadcasted successfully");
+
+            var mempool = await s.Server.ExplorerNode.GetRawMempoolAsync();
+            Assert.Contains(replacementTxId, mempool);
+            Assert.DoesNotContain(originalTxId, mempool);
+            await s.Server.ExplorerNode.GenerateAsync(1);
+            var payouts = await client.GetPayouts(pullPayment.Id);
+            Assert.Equal(2, payouts.Length);
+            foreach (var payout in payouts)
+            {
+                await account.AssertHasWebhookEvent(WebhookEventType.PayoutUpdated, (WebhookPayoutEvent e) =>
+                {
+                    Assert.Equal(payout.Id, e.PayoutId);
+                    Assert.Equal(PayoutState.Completed, e.PayoutState);
+                });
+                var completed = await client.GetPullPaymentPayout(pullPayment.Id, payout.Id);
+                Assert.Equal(PayoutState.Completed, completed.State);
+                Assert.Equal(replacementTxId, completed.PaymentProof.ToObject<PayoutTransactionOnChainBlob>().TransactionId);
+            }
+        }
+        catch
+        {
+            // Diagnostics must not replace the original failure (or retry the broadcast).
+            try
+            {
+                TestLogs.LogInformation($"Failure URL: {s.Page.Url}\nOriginal: {originalTxId}\nReplacement: {replacementTxId}");
+                TestLogs.LogInformation(await s.Page.Locator("body").InnerTextAsync());
+                var directory = Path.Combine(Environment.GetEnvironmentVariable("TESTS_ARTIFACTS_DIR") ?? "Screenshots", s.Server.Scope);
+                Directory.CreateDirectory(directory);
+                await File.WriteAllTextAsync(Path.Combine(directory, "rbf-failure.html"), await s.Page.ContentAsync());
+                await s.TakeScreenshot("rbf-failure.png");
+                await s.Page.Context.Tracing.StopAsync(new() { Path = Path.Combine(directory, "rbf-trace.zip") });
+                TestLogs.LogInformation($"Mempool: {string.Join(", ", await s.Server.ExplorerNode.GetRawMempoolAsync())}");
+                TestLogs.LogInformation($"Payouts: {JsonConvert.SerializeObject(await client.GetPayouts(pullPayment.Id))}");
+            }
+            catch (Exception diagnosticsError)
+            {
+                TestLogs.LogInformation($"Unable to capture RBF diagnostics: {diagnosticsError}");
+            }
+            throw;
+        }
+        await s.Page.Context.Tracing.StopAsync();
+    }
+
     [Fact]
     [Trait("Playwright", "Playwright-2")]
     [Trait("Lightning", "Lightning")]
@@ -42,6 +154,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             }, e => e.Type == PayoutEvent.PayoutEventType.Created)).Payout;
         }
         s.Server.DeleteStore = false;
+        s.Server.PayTester.DisableSSRFProtection = true;
         s.Server.ActivateLightning(LightningTestImplementation.LND);
         await s.StartAsync();
         await s.Server.EnsureChannelsSetup();
@@ -515,6 +628,46 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
 
     [Fact]
     [Trait("Integration", "Integration")]
+    public async Task PayingPayoutsIsScopedToStore()
+    {
+        using var tester = CreateServerTester();
+        await tester.StartAsync();
+
+        var victim = tester.NewAccount();
+        await victim.GrantAccessAsync();
+        var victimStoreId = (await victim.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
+        var victimClient = await victim.CreateClient();
+        var victimPayout = await victimClient.CreatePayout(victimStoreId, new CreatePayoutThroughStoreRequest
+        {
+            Approved = true,
+            PayoutMethodId = "BTC",
+            Amount = 0.0001m,
+            Destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString()
+        });
+        Assert.Equal(PayoutState.AwaitingPayment, victimPayout.State);
+
+        var attacker = tester.NewAccount();
+        await attacker.GrantAccessAsync();
+        await attacker.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true);
+        var controller = attacker.GetController<UIStorePullPaymentsController>();
+
+        var result = await controller.PayoutsPost(new PayoutsModel
+        {
+            Command = $"{PayoutState.AwaitingPayment}-pay",
+            PayoutMethodId = "BTC-CHAIN",
+            Payouts =
+            [
+                new() { PayoutId = victimPayout.Id, Selected = true }
+            ]
+        }, CancellationToken.None);
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal(nameof(UIStorePullPaymentsController.Payouts), redirect.ActionName);
+        Assert.Equal(attacker.StoreId, redirect.RouteValues["storeId"]);
+    }
+
+    [Fact]
+    [Trait("Integration", "Integration")]
     public async Task CanTopUpPullPayment()
     {
         using var tester = CreateServerTester();
@@ -530,6 +683,13 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             PayoutMethods = ["BTC-CHAIN"]
         });
         var controller = user.GetController<UIInvoiceController>();
+        var orphanedInvoice = await controller.CreateInvoiceCoreRaw(new()
+        {
+            Amount = 0.5m,
+            Currency = "BTC",
+        }, controller.HttpContext.GetStoreData(), controller.Url.Link(null, null)!, [PullPaymentHostedService.GetInternalTag("missing")]);
+        await client.MarkInvoiceStatus(orphanedInvoice.Id, new() { Status = InvoiceStatus.Settled });
+
         var invoice = await controller.CreateInvoiceCoreRaw(new()
         {
             Amount = 0.5m,
@@ -976,6 +1136,20 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         //permission test around auto approved pps and payouts
         var nonApproved = await acc.CreateClient(Policies.CanCreateNonApprovedPullPayments);
         var approved = await acc.CreateClient(Policies.CanCreatePullPayments);
+        var payoutAddress = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString();
+        await AssertEx.AssertValidationError(["Amount"], () =>
+            nonApproved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest
+            {
+                Amount = -1,
+                PayoutMethodId = "BTC",
+                Destination = payoutAddress
+            }));
+        await AssertEx.AssertValidationError(["Destination"], () =>
+            nonApproved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest
+            {
+                PayoutMethodId = "BTC",
+                Destination = $"bitcoin:{payoutAddress}?amount=-1"
+            }));
         await AssertEx.AssertPermissionError(Policies.CanCreatePullPayments, async () =>
         {
             await nonApproved.CreatePullPayment(acc.StoreId, new CreatePullPaymentRequest()
@@ -994,7 +1168,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
                 Amount = 100,
                 PayoutMethodId = "BTC",
                 Approved = true,
-                Destination = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString()
+                Destination = payoutAddress
             });
         });
 
@@ -1012,7 +1186,7 @@ public class PullPaymentsTests(ITestOutputHelper helper) : UnitTestBase(helper)
             Amount = 100,
             PayoutMethodId = "BTC",
             Approved = true,
-            Destination = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString()
+            Destination = payoutAddress
         });
     }
 

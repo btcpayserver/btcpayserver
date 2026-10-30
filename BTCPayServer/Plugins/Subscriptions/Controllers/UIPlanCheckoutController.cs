@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
+using BTCPayServer.Plugins.Monetization;
 using BTCPayServer.Services;
 using BTCPayServer.Views.UIStoreMembership;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
+using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
@@ -23,7 +25,8 @@ public class UIPlanCheckoutController(
     LinkGenerator linkGenerator,
     UriResolver uriResolver,
     IStringLocalizer stringLocalizer,
-    SubscriptionHostedService subsService)
+    SubscriptionHostedService subsService,
+    CallbackGenerator callbackGenerator)
     : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
     [HttpGet]
@@ -42,6 +45,7 @@ public class UIPlanCheckoutController(
         var vm = new PlanCheckoutViewModel()
         {
             CheckoutId = checkoutId,
+            BaseUrl = callbackGenerator.GetRequestBaseUrl(),
             StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, plan.Offering.App.StoreData.GetStoreBlob()),
             StoreName = plan.Offering.App.StoreData.StoreName,
             Title = plan.Name,
@@ -72,6 +76,8 @@ public class UIPlanCheckoutController(
 
     [HttpPost]
     public async Task<IActionResult> PlanCheckout(string checkoutId, PlanCheckoutViewModel vm,
+        [FromServices] MonetizationSettings monetizationSettings,
+        [FromServices] IRateLimitService rateLimitService,
         CancellationToken cancellationToken = default)
     {
         await using var ctx = DbContextFactory.CreateContext();
@@ -99,6 +105,10 @@ public class UIPlanCheckoutController(
                     ModelState.AddModelError(nameof(vm.Email), "Invalid email format");
                 if (!ModelState.IsValid)
                     return await PlanCheckout(checkoutId);
+
+                if (checkout.NewSubscriber && checkout.Plan.OfferingId == monetizationSettings.OfferingId &&
+                    !await rateLimitService.Throttle(ZoneLimits.Register, HttpContext.Connection.RemoteIpAddress, cancellationToken))
+                    return new TooManyRequestsResult(ZoneLimits.Register);
 
                 checkout.NewSubscriberEmail = vm.Email;
                 await ctx.SaveChangesAsync();

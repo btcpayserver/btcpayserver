@@ -22,6 +22,7 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Tests.Mocks;
+using Fido2NetLib;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
@@ -119,6 +120,8 @@ namespace BTCPayServer.Tests
         public bool UseLightning { get; set; }
         public bool CheatMode { get; set; } = true;
         public bool DisableRegistration { get; set; } = false;
+        public bool DisableSSRFProtection { get; set; }
+        public string PluginDir { get; set; }
         public async Task StartAsync()
         {
             _lifetimeToken.ThrowIfCancellationRequested();
@@ -177,6 +180,9 @@ namespace BTCPayServer.Tests
             config.AppendLine($"socksendpoint={SocksEndpoint}");
             config.AppendLine($"debuglog=debug.log");
             config.AppendLine($"nocsp={NoCSP.ToString().ToLowerInvariant()}");
+            config.AppendLine($"disablessrfprotection={DisableSSRFProtection.ToString().ToLowerInvariant()}");
+            if (!string.IsNullOrEmpty(PluginDir))
+                config.AppendLine($"plugindir={PluginDir}");
             if (btcpayHostExecutable is not null)
             {
                 config.AppendLine($"btcpayhostexecutable={btcpayHostExecutable}");
@@ -247,6 +253,8 @@ namespace BTCPayServer.Tests
                         .UseStartup<Startup>()
                         .ConfigureServices(services =>
                         {
+                            // Keep test hosts independent of FIDO Metadata Service availability and rate limits.
+                            services.RemoveAll<IMetadataService>();
                             if (RuntimeCompilation)
                                 services.AddMvcCore().AddRazorRuntimeCompilation();
 
@@ -331,6 +339,17 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation("Waiting site is operational...");
             await WaitSiteIsOperational();
             TestLogs.LogInformation("Site is now operational");
+        }
+
+        public async Task RestartAsync()
+        {
+            var host = Interlocked.Exchange(ref _Host, null);
+            if (host is not null)
+            {
+                await host.ForceStop();
+                host.Dispose();
+            }
+            await StartAsync();
         }
         MockRateProvider coinAverageMock;
         public string btcpayHostExecutable;

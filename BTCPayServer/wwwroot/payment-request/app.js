@@ -157,7 +157,9 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 } else {
                     msg = JSON.stringify(error);
                 }
-                Vue.toasted.error("Error creating invoice: " + msg, Object.assign({}, toastOptions), {
+                var message = document.createElement("span");
+                message.textContent = "Error creating invoice: " + msg;
+                Vue.toasted.error(message, Object.assign({}, toastOptions), {
                     icon: "exclamation-triangle"
                 });
             });
@@ -165,7 +167,8 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 var onChain = pmi.endsWith('-CHAIN');
                 var amountFormatted = parseFloat(amount).noExponents();
                 var icon = onChain ? "plus" : "bolt";
-                var title = "New payment of " + amountFormatted + " " + currency + " " + prettyPMI;
+                var title = document.createElement("span");
+                title.textContent = "New payment of " + amountFormatted + " " + currency + " " + prettyPMI;
                 Vue.toasted.success(title, Object.assign({}, toastOptions), { icon });
             });
             eventAggregator.$on("info-updated", function (model) {

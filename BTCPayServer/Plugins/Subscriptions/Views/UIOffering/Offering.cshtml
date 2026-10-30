@@ -5,13 +5,11 @@
 @using BTCPayServer.Services
 @model SubscriptionsViewModel
 @inject DisplayFormatter DisplayFormatter
-@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 
 @{
     string storeId = (string)this.Context.GetRouteValue("storeId");
     string offeringId = (string)this.Context.GetRouteValue("offeringId");
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(SubscriptionsPlugin)}-{offeringId}", StringLocalizer["Subscriptions"]));
-    Csp.UnsafeEval();
 }
 
 @section PageHeadContent {
@@ -22,8 +20,10 @@
             color: var(--btcpay-body-text-muted);
         }
     </style>
-    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+}
 
+@section PageFootContent {
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
 }
 
 <div class="sticky-header">
@@ -505,23 +505,3 @@
     <partial name="ChangeCreditModal" />
     <partial name="EditDatesModal" />
 </div>
-
-@section PageFootContent {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            $('.richtext2').summernote({
-                minHeight: 200,
-                tableClassName: 'table table-sm',
-                insertTableMaxSize: {
-                    col: 5,
-                    row: 10
-                },
-                codeviewFilter: true,
-                codeviewFilterRegex: new RegExp($.summernote.options.codeviewFilterRegex.source + '|<.*?( on\\w+?=.*?)>', 'gi'),
-                codeviewIframeWhitelistSrc: ['twitter.com', 'syndication.twitter.com']
-            });
-        });
-    </script>
-    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
-}

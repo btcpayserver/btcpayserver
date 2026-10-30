@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Validation;
 
@@ -32,20 +33,20 @@ public class ConfigureOfferingViewModel
     public OfferingData Data { get; set; }
     public class FeatureViewModel
     {
-        [StringLength(50)]
+        [StringLength(FeatureData.MaxCustomIdLength)]
         [Required]
         public string Id { get; set; }
-        [StringLength(500)]
+        [StringLength(FeatureData.MaxDescriptionLength)]
         public string ShortDescription { get; set; }
     }
 
     public string OriginalName { get; set; }
     [Required]
-    [StringLength(50)]
+    [StringLength(AppData.MaxNameLength, MinimumLength = AppData.MinNameLength)]
     public string Name { get; set; } = null!;
 
     [Uri]
-    [StringLength(500)]
+    [StringLength(OfferingData.MaxSuccessRedirectUrlLength)]
     [Display(Name = "Success redirect url")]
     public string SuccessRedirectUrl { get; set; }
 

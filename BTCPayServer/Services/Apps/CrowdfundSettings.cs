@@ -44,6 +44,30 @@ namespace BTCPayServer.Services.Apps
         public bool AnimationsEnabled { get; set; }
         public int ResetEveryAmount { get; set; } = 1;
         public CrowdfundResetEvery ResetEvery { get; set; } = CrowdfundResetEvery.Never;
+
+        internal static bool TryGetNextResetDate(DateTime date, CrowdfundResetEvery resetEvery, int amount, out DateTime nextResetDate)
+        {
+            nextResetDate = default;
+            if (amount <= 0)
+                return false;
+            try
+            {
+                nextResetDate = resetEvery switch
+                {
+                    CrowdfundResetEvery.Hour => date.AddHours(amount),
+                    CrowdfundResetEvery.Day => date.AddDays(amount),
+                    CrowdfundResetEvery.Month => date.AddMonths(amount),
+                    CrowdfundResetEvery.Year => date.AddYears(amount),
+                    _ => date
+                };
+                return nextResetDate > date;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return false;
+            }
+        }
+
         public bool DisplayPerksRanking { get; set; }
         public bool DisplayPerksValue { get; set; }
         public bool SortPerksByPopularity { get; set; }

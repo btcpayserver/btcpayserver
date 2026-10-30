@@ -138,6 +138,10 @@ public class InvoiceTriggerProvider(LinkGenerator linkGenerator, ApplicationDbCo
         if (GetMailboxAddress(evt.Invoice.Metadata) is {} mb &&
             context.MatchedRule.GetBTCPayAdditionalData()?.CustomerEmail is true)
         {
+            context.BCC.AddRange(context.To);
+            context.BCC.AddRange(context.CC);
+            context.To.Clear();
+            context.CC.Clear();
             context.To.Insert(0, mb);
         }
         return Task.CompletedTask;

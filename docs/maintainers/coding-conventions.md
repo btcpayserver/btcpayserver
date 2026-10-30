@@ -4,8 +4,47 @@
 
 - Follow the repository `.editorconfig`; it is the source of truth for
   formatting and C# style.
+- Prefer expression-bodied methods when the implementation fits on one line.
 - Prefer `Newtonsoft.Json` over `System.Text.Json` when adding or changing JSON
   serialization.
+- Use `JsonParser` instead of `JObject.Parse`, `JToken.Parse`, or `JArray.Parse`.
+  It preserves date-like strings and enforces an explicit maximum depth. Pass a
+  different depth only when the JSON envelope is intentionally deeper than the
+  default limit.
+- Do not use `ConfigureAwait(false)`; BTCPay Server does not rely on a
+  synchronization context.
+
+## Logging and Exceptions
+
+- Use `ILogger` only for messages that are relevant to server administrators.
+  As a rule of thumb, a malicious actor should not be able to spam the logs by
+  repeatedly triggering application behavior.
+- Treat internal exception messages as safe to expose to end users for
+  diagnostic purposes unless there is a specific reason to believe they contain
+  sensitive data.
+
+## PostgreSQL Schema Naming
+
+Use PostgreSQL-style physical names for new tables while keeping normal .NET
+naming in the entity classes:
+
+- Use lowercase, plural `snake_case` table names, such as `email_rules`.
+- Use lowercase `snake_case` column names, including foreign keys and timestamps,
+  such as `store_id` and `created_at`.
+- Map CLR names explicitly with `[Table]`, `[Column]`, and related attributes
+  whenever possible. Use fluent configuration only for mappings that attributes
+  cannot express. Do not rely on EF's default PascalCase names for new schema
+  objects.
+- Use lowercase PostgreSQL type names such as `text`, `jsonb`, `text[]`, and
+  `timestamptz` when specifying a database type explicitly.
+- Let EF derive primary key, foreign key, and index names from the physical
+  table and column names unless a stable custom name is required.
+- Use unquoted lowercase identifiers in raw SQL for new schema objects. Quote
+  existing mixed-case identifiers when referencing legacy tables or columns.
+
+These rules apply to new schema objects. Do not rename established tables or
+columns solely for consistency; preserve compatibility with existing databases
+and integrations.
 
 ## Pull Requests
 

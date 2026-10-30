@@ -1,0 +1,319 @@
+@namespace BTCPayServer.Plugins.Maintenance
+@using System.Collections.Concurrent
+@using System.Net
+@using System.Text
+@using BTCPayServer.Abstractions
+@using BTCPayServer.Blazor
+@using BTCPayServer.Client
+@using BTCPayServer.Logging
+@using BTCPayServer.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Http
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Logging
+@using Microsoft.JSInterop
+@implements IDisposable
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAuthorizationService AuthorizationService
+@inject HostIntegrationState HostIntegrationState
+@inject ProcessRunner ProcessRunner
+@inject SettingsRepository SettingsRepository
+@inject Logs Logs
+@inject IStringLocalizer StringLocalizer
+@inject IJSRuntime JSRuntime
+
+<div class="maintenance-commands">
+    <h3 class="settings-section__heading">@StringLocalizer["Domain"]</h3>
+    <div class="settings-section">
+        <div class="form-group">
+            <label for="MaintenanceDomain" class="form-label">@StringLocalizer["Domain name"]</label>
+            <input id="MaintenanceDomain" class="form-control maintenance-commands__domain" @bind="_dnsDomain" @bind:event="oninput" disabled="@(!CanRun(HostCommands.ChangeDomain))" />
+            <div class="form-text">
+                @StringLocalizer["You can change the domain name of your server by following"]
+                <a href="https://docs.btcpayserver.org/FAQ/Deployment/#how-to-change-your-btcpay-server-domain-name" target="_blank" rel="noreferrer noopener">@StringLocalizer["this guide"]</a>.
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary maintenance-commands__action" disabled="@(!CanRun(HostCommands.ChangeDomain))" @onclick="() => RunCommand(HostCommands.ChangeDomain)">@StringLocalizer["Change domain"]</button>
+    </div>
+
+    <h3 class="settings-section__heading">@StringLocalizer["Restart"]</h3>
+    <div class="settings-section">
+        <p>@StringLocalizer["Restart BTCPay Server and related services."]</p>
+        <button type="button" class="btn btn-secondary maintenance-commands__action" disabled="@(!CanRun(HostCommands.Restart))" @onclick="() => RunCommand(HostCommands.Restart)">@StringLocalizer["Restart"]</button>
+    </div>
+
+    <h3 class="settings-section__heading">@StringLocalizer["Clean"]</h3>
+    <div class="settings-section">
+        <p>@StringLocalizer["Delete unused Docker images present on your system."]</p>
+        <button type="button" class="btn btn-secondary maintenance-commands__action" disabled="@(!CanRun(HostCommands.Clean))" @onclick="() => RunCommand(HostCommands.Clean)">@StringLocalizer["Clean"]</button>
+    </div>
+
+    <h3 class="settings-section__heading">@StringLocalizer["Update"]</h3>
+    <div class="settings-section">
+        <p>@StringLocalizer["Update to the latest version of BTCPay Server."]</p>
+        <button type="button" class="btn btn-primary maintenance-commands__action" disabled="@(!CanRun(HostCommands.Update))" @onclick="() => RunCommand(HostCommands.Update)">@StringLocalizer["Update"]</button>
+    </div>
+
+    @if (_showDialog)
+    {
+        <div class="modal fade show d-block maintenance-commands__dialog" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="MaintenanceCommandTitle">
+            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="MaintenanceCommandTitle">@_commandTitle</h5>
+                        <button type="button" class="btn-close" aria-label="@StringLocalizer["Close"]" disabled="@_isRunning" @onclick="CloseDialog"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning" role="alert">
+                            @StringLocalizer["The server might restart while this command is running, interrupting the connection. If that happens, please refresh the page."]
+                        </div>
+                        <pre class="maintenance-commands__log bg-dark text-light rounded p-3 mb-3" aria-live="polite" @ref="_logElement"></pre>
+                        <div class="alert @(_commandSucceeded ? "alert-success" : _isRunning ? "alert-info" : "alert-danger") mb-0" role="status">
+                            @if (_isRunning)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"><span class="visually-hidden">@StringLocalizer["Processing..."]</span></span>
+                            }
+                            <span>@_statusMessage</span>
+                            @if (_newDomainUrl is not null && _commandSucceeded)
+                            {
+                                <a class="alert-link ms-1" href="@_newDomainUrl">@StringLocalizer["Open the new domain"]</a>
+                            }
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" disabled="@_isRunning" @onclick="CloseDialog">@StringLocalizer["Close"]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show maintenance-commands__backdrop"></div>
+    }
+</div>
+
+@code {
+    private static readonly TimeSpan LongOperation = TimeSpan.FromMinutes(20);
+    private readonly ConcurrentQueue<string> _pendingOutput = new();
+    private ElementReference _logElement;
+    private string _dnsDomain;
+    private string _commandTitle;
+    private string _statusMessage;
+    private string _newDomainUrl;
+    private bool _showDialog;
+    private bool _isRunning;
+    private bool _commandSucceeded;
+    private bool _disposed;
+    private bool _dialogRendered;
+
+    [Parameter]
+    public string CurrentDomain { get; set; }
+
+    [Parameter]
+    public string BaseUrl { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _dnsDomain = CurrentDomain;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_showDialog || _dialogRendered || JSRuntime.IsPreRendering())
+            return;
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("btcpayMaintenance.resetLog", _logElement, StringLocalizer["Waiting for output..."].Value);
+            _dialogRendered = true;
+            await FlushOutput();
+        }
+        catch (JSException)
+        {
+            // Retry on the next render if the helper was not ready yet.
+        }
+    }
+
+    private bool CanRun(string command)
+    {
+        return !_isRunning && HostIntegrationState.Current?.Commands?.Contains(command) is true;
+    }
+
+    private async Task RunCommand(string command)
+    {
+        if (_isRunning)
+            return;
+
+        _showDialog = true;
+        _isRunning = true;
+        _commandSucceeded = false;
+        _newDomainUrl = null;
+        _commandTitle = GetCommandTitle(command);
+        _statusMessage = StringLocalizer["Starting {0}...", _commandTitle].Value;
+        _dialogRendered = false;
+        while (_pendingOutput.TryDequeue(out _))
+        {
+        }
+        StateHasChanged();
+
+        try
+        {
+            var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var authorization = await AuthorizationService.AuthorizeAsync(authenticationState.User, Policies.CanModifyServerSettings);
+            if (!authorization.Succeeded)
+                throw new InvalidOperationException(StringLocalizer["You are not authorized to run maintenance commands."].Value);
+
+            if (HostIntegrationState.Current?.Commands?.Contains(command) is not true)
+                throw new InvalidOperationException(StringLocalizer["This maintenance command is not supported by the host."].Value);
+
+            IReadOnlyList<string> arguments = null;
+            DomainChangeContext domainChange = null;
+            if (command == HostCommands.ChangeDomain)
+            {
+                domainChange = await PrepareDomainChange();
+                arguments = [domainChange.Domain];
+            }
+            else if (command == HostCommands.Restart)
+                Logs.PayServer.LogInformation("A hard restart has been requested");
+
+            _statusMessage = StringLocalizer["Running {0}...", _commandTitle].Value;
+            var commandTask = ProcessRunner.RunHostCommand(command, arguments, LongOperation, AppendOutput);
+            while (!commandTask.IsCompleted)
+            {
+                await Task.WhenAny(commandTask, Task.Delay(200));
+                await FlushOutput();
+                if (!_disposed)
+                    StateHasChanged();
+            }
+
+            var result = await commandTask;
+            await FlushOutput();
+            _commandSucceeded = result.ExitCode is 0;
+            if (!_commandSucceeded && domainChange is not null)
+                await RestoreBaseUrl(domainChange.PreviousBaseUrl);
+            _statusMessage = _commandSucceeded
+                ? StringLocalizer["Command completed successfully."].Value
+                : StringLocalizer["Command failed with exit code {0}.", result.ExitCode].Value;
+        }
+        catch (Exception ex)
+        {
+            _commandSucceeded = false;
+            _statusMessage = ex.Message;
+        }
+        finally
+        {
+            _isRunning = false;
+            if (!_disposed)
+                StateHasChanged();
+        }
+    }
+
+    private async Task<DomainChangeContext> PrepareDomainChange()
+    {
+        var domain = _dnsDomain?.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(domain))
+            throw new InvalidOperationException(StringLocalizer["The domain name is required."].Value);
+        if (IPAddress.TryParse(domain, out _))
+            throw new InvalidOperationException(StringLocalizer["The domain name cannot be an IP address."].Value);
+        if (Uri.CheckHostName(domain) != UriHostNameType.Dns)
+            throw new InvalidOperationException(StringLocalizer["Invalid domain name."].Value);
+
+        var requestBaseUrl = RequestBaseUrl.FromUrl(BaseUrl);
+        if (domain.Equals(requestBaseUrl.Host.Host, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(StringLocalizer["The server is already using this domain."].Value);
+
+        try
+        {
+            var currentAddresses = GetAddressesAsync(requestBaseUrl.Host.Host);
+            var newAddresses = GetAddressesAsync(domain);
+            await Task.WhenAll(currentAddresses, newAddresses);
+            var currentAddressSet = (await currentAddresses).Select(address => address.ToString()).ToHashSet();
+            if (!(await newAddresses).Any(address => currentAddressSet.Contains(address.ToString())))
+                throw new InvalidOperationException(StringLocalizer["The domain {0} is not pointing to this BTCPay Server.", domain].Value);
+        }
+        catch (InvalidOperationException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(StringLocalizer["Could not validate the domain {0}: {1}", domain, ex.Message].Value, ex);
+        }
+
+        _dnsDomain = domain;
+        var serverSettings = await SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+        var previousBaseUrl = serverSettings.BaseUrl;
+        serverSettings.UpdateBaseUrl(requestBaseUrl with { Host = new HostString(domain) });
+        await SettingsRepository.UpdateSetting(serverSettings);
+
+        _newDomainUrl = new UriBuilder(requestBaseUrl.Scheme, domain).Uri.AbsoluteUri;
+        return new DomainChangeContext(domain, previousBaseUrl);
+    }
+
+    private async Task RestoreBaseUrl(string previousBaseUrl)
+    {
+        var serverSettings = await SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+        serverSettings.BaseUrl = previousBaseUrl;
+        await SettingsRepository.UpdateSetting(serverSettings);
+    }
+
+    private void AppendOutput(string line)
+    {
+        if (!_disposed)
+            _pendingOutput.Enqueue(line + Environment.NewLine);
+    }
+
+    private async Task FlushOutput()
+    {
+        if (_disposed || !_dialogRendered || _pendingOutput.IsEmpty)
+            return;
+
+        var output = new StringBuilder();
+        while (_pendingOutput.TryDequeue(out var line))
+            output.Append(line);
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("btcpayMaintenance.appendLog", _logElement, output.ToString());
+        }
+        catch (JSException)
+        {
+            // The host command must keep running if the Blazor circuit disconnects.
+        }
+    }
+
+    private string GetCommandTitle(string command)
+    {
+        return command switch
+        {
+            HostCommands.ChangeDomain => StringLocalizer["Change domain"].Value,
+            HostCommands.Restart => StringLocalizer["Restart"].Value,
+            HostCommands.Clean => StringLocalizer["Clean"].Value,
+            HostCommands.Update => StringLocalizer["Update"].Value,
+            _ => StringLocalizer["Maintenance"].Value
+        };
+    }
+
+    private void CloseDialog()
+    {
+        if (!_isRunning)
+        {
+            _showDialog = false;
+            _dialogRendered = false;
+        }
+    }
+
+    private static Task<IPAddress[]> GetAddressesAsync(string domainOrIp)
+    {
+        return IPAddress.TryParse(domainOrIp, out var ip)
+            ? Task.FromResult(new[] { ip })
+            : Dns.GetHostAddressesAsync(domainOrIp);
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+    }
+
+    private sealed record DomainChangeContext(string Domain, string PreviousBaseUrl);
+}

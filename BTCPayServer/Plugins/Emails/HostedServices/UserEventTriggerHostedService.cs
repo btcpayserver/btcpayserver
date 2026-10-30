@@ -10,6 +10,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using QRCoder;
@@ -121,7 +122,13 @@ public class UserEventHostedService(
         using var scope = serviceScopeFactory.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var admins = await userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-        var adminMailboxes = string.Join(", ", admins.Select(a => a.GetMailboxAddress().ToString()).ToArray());
+        var adminIds = admins.Select(a => a.Id).ToArray();
+        await using var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContextFactory>().CreateContext();
+        var restricted = await ctx.UserAccessRestrictions
+            .Where(restriction => adminIds.Contains(restriction.ApplicationUserId))
+            .Select(restriction => restriction.ApplicationUserId)
+            .ToArrayAsync();
+        var adminMailboxes = string.Join(", ", admins.Where(a => !restricted.Contains(a.Id)).Select(a => a.GetMailboxAddress().ToString()).ToArray());
         model["Admins"] = new JObject()
         {
             ["MailboxAddresses"] = adminMailboxes,

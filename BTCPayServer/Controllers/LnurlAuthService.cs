@@ -18,12 +18,21 @@ namespace BTCPayServer
 
     public class LnurlAuthService
     {
-        public readonly ConcurrentDictionary<string, byte[]> CreationStore =
-            new ConcurrentDictionary<string, byte[]>();
-        public readonly ConcurrentDictionary<string, byte[]> LoginStore =
-            new ConcurrentDictionary<string, byte[]>();
-        public readonly ConcurrentDictionary<string, byte[]> FinalLoginStore =
-            new ConcurrentDictionary<string, byte[]>();
+        public record Challenge(byte[] K1, string SecurityStamp, DateTimeOffset Expiration)
+        {
+            public Challenge(ApplicationUser user) : this(RandomUtils.GetBytes(32), user.SecurityStamp, DateTimeOffset.UtcNow.AddMinutes(5))
+            {
+            }
+
+            public bool IsValid(ApplicationUser user) => DateTimeOffset.UtcNow < Expiration && SecurityStamp == user.SecurityStamp;
+        }
+
+        public readonly ConcurrentDictionary<string, Challenge> CreationStore =
+            new ConcurrentDictionary<string, Challenge>();
+        public readonly ConcurrentDictionary<string, Challenge> LoginStore =
+            new ConcurrentDictionary<string, Challenge>();
+        public readonly ConcurrentDictionary<string, Challenge> FinalLoginStore =
+            new ConcurrentDictionary<string, Challenge>();
         private readonly ApplicationDbContextFactory _contextFactory;
         private readonly ILogger<LnurlAuthService> _logger;
 
@@ -42,9 +51,9 @@ namespace BTCPayServer
             {
                 return null;
             }
-            var k1 = RandomUtils.GetBytes(32);
-            CreationStore.AddOrReplace(userId, k1);
-            return k1;
+            var challenge = new Challenge(user);
+            CreationStore.AddOrReplace(userId, challenge);
+            return challenge.K1;
         }
 
         public async Task<bool> CompleteCreation(string name, string userId, ECDSASignature sig, PubKey pubKey)
@@ -55,12 +64,12 @@ namespace BTCPayServer
                 var user = await dbContext.Users.Include(applicationUser => applicationUser.Fido2Credentials)
                     .FirstOrDefaultAsync(applicationUser => applicationUser.Id == userId);
                 var pubkeyBytes = pubKey.ToBytes();
-                if (!CreationStore.TryGetValue(userId.ToLowerInvariant(), out var k1) || user == null || await dbContext.Fido2Credentials.AnyAsync(credential => credential.Type == Fido2Credential.CredentialType.LNURLAuth && credential.Blob == pubkeyBytes))
+                if (!CreationStore.TryGetValue(userId.ToLowerInvariant(), out var challenge) || user == null || !challenge.IsValid(user) || await dbContext.Fido2Credentials.AnyAsync(credential => credential.Type == Fido2Credential.CredentialType.LNURLAuth && credential.Blob == pubkeyBytes))
                 {
                     return false;
                 }
 
-                if (!LNURL.LNAuthRequest.VerifyChallenge(sig, pubKey, k1))
+                if (!LNURL.LNAuthRequest.VerifyChallenge(sig, pubKey, challenge.K1))
                 {
                     return false;
                 }
@@ -102,11 +111,11 @@ namespace BTCPayServer
                 return null;
             }
 
-            var k1 = RandomUtils.GetBytes(32);
+            var challenge = new Challenge(user);
 
             FinalLoginStore.TryRemove(userId, out _);
-            LoginStore.AddOrReplace(userId, k1);
-            return k1;
+            LoginStore.AddOrReplace(userId, challenge);
+            return challenge.K1;
         }
 
         public async Task<bool> CompleteLogin(string userId, ECDSASignature sig, PubKey pubKey)
@@ -115,7 +124,7 @@ namespace BTCPayServer
             userId = userId.ToLowerInvariant();
             var user = await dbContext.Users.Include(applicationUser => applicationUser.Fido2Credentials)
                 .FirstOrDefaultAsync(applicationUser => applicationUser.Id == userId);
-            if (user == null || !LoginStore.TryGetValue(userId, out var k1))
+            if (user == null || !LoginStore.TryGetValue(userId, out var challenge) || !challenge.IsValid(user))
             {
                 return false;
             }
@@ -128,7 +137,7 @@ namespace BTCPayServer
             {
                 return false;
             }
-            if (!LNURL.LNAuthRequest.VerifyChallenge(sig, pubKey, k1))
+            if (!LNURL.LNAuthRequest.VerifyChallenge(sig, pubKey, challenge.K1))
             {
                 return false;
             }
@@ -137,7 +146,7 @@ namespace BTCPayServer
             await dbContext.SaveChangesAsync();
             LoginStore.Remove(userId, out _);
 
-            FinalLoginStore.AddOrReplace(userId, k1);
+            FinalLoginStore.AddOrReplace(userId, challenge);
             // 7. return OK to client
             return true;
         }

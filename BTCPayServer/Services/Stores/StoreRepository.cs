@@ -447,6 +447,7 @@ namespace BTCPayServer.Services.Stores
             ctx.UserStore.Add(userStore);
             ctx.Entry(userStore).State = EntityState.Deleted;
             await ctx.SaveChangesAsync();
+            await ctx.Users.UpdateStoreNoActiveUserForStores([storeId]);
             _eventAggregator.Publish(new StoreUserEvent.Removed(storeId, userId));
             return true;
         }
@@ -806,12 +807,18 @@ retry:
                 SELECT TRUE
                 FROM "UserStore" us
                 JOIN "StoreRoles" sr ON sr."Id" = us."Role"
+                JOIN "AspNetUsers" u ON u."Id" = us."ApplicationUserId"
                 JOIN "AspNetUserRoles" ur ON us."ApplicationUserId" = ur."UserId"
                 JOIN "AspNetRoles" r ON ur."RoleId" = r."Id"
+                LEFT JOIN user_access_restrictions restrictions ON restrictions.user_id = us."ApplicationUserId"
                 WHERE
                       us."StoreDataId"=@storeId AND
                       r."NormalizedName"='SERVERADMIN' AND
-                      'btcpay.store.canmodifystoresettings' = ANY(sr."Permissions")
+                      'btcpay.store.canmodifystoresettings' = ANY(sr."Permissions") AND
+                      u."PasswordHash" IS NOT NULL AND
+                      (u."EmailConfirmed" OR NOT u."RequiresEmailConfirmation") AND
+                      (u."Approved" OR NOT u."RequiresApproval") AND
+                      restrictions.user_id IS NULL
                 LIMIT 1;
                 """, new { storeId })) is true;
         }
@@ -838,6 +845,7 @@ retry:
                 return data;
             var serializer = new NBXplorer.Serializer(null);
             serializer.Settings.DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate;
+            serializer.Settings.MetadataPropertyHandling = MetadataPropertyHandling.Ignore;
             var r = serializer.ToObject<RestrictedStoreData>(policies.DefaultStoreTemplate);
             if (!string.IsNullOrWhiteSpace(r.StoreName))
                 data.StoreName = r.StoreName;
@@ -880,7 +888,7 @@ retry:
                 DefaultPaymentMethodId = store.GetDefaultPaymentId()?.ToString(),
                 Blob = store.GetStoreBlob()
             };
-            policies.DefaultStoreTemplate = JObject.Parse(serializer.ToString(r));
+            policies.DefaultStoreTemplate = JsonParser.ParseObject(serializer.ToString(r));
             await _settingsRepository.UpdateSetting(policies);
         }
 

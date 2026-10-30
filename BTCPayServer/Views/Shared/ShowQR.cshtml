@@ -1,4 +1,6 @@
-<div id="scan-qr-modal-app">
+
+
+<div id="scan-qr-modal-app" class="scan-qr-modal">
     <div class="modal" tabindex="-1" role="dialog" :id="modalId">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -11,7 +13,7 @@
                 <div class="modal-body pt-0">
                     <div class="payment-box">
                         <div class="qr-container">
-                            <component v-if="currentFragment" :is="currentMode.href ? 'a': 'div'" class="qr-container d-inline-block" :href="currentMode.href">
+                            <component v-if="currentFragment" :is="currentMode.href ? 'a': 'div'" class="qr-container scan-qr-modal__qr d-inline-block" :href="currentMode.href">
                                 <qrcode :value="currentFragment" :options="qrOptions"></qrcode>
                             </component>
                         </div>
@@ -33,7 +35,7 @@
                             <vc:icon symbol="actions-copy" />
                         </button>
                     </div>
-                    <div v-if="note" v-html="note" class="text-muted mt-3" id="scan-qr-modal-note"></div>
+                    <div v-if="note" v-html="note" class="scan-qr-modal__note text-muted mt-3" id="scan-qr-modal-note"></div>
                 </div>
                 <div class="mb-4 text-center" v-if="continueCallback">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" v-on:click="continueCallback()">{{ continueTitle || 'Continue' }}</button>
@@ -43,7 +45,13 @@
     </div>
 </div>
 <style>
-    #scan-qr-modal-note :last-child { margin-bottom: 0; }
+    .scan-qr-modal__qr {
+        padding: var(--btcpay-space-m);
+        background: var(--btcpay-white);
+        border-radius: var(--btcpay-border-radius);
+    }
+    .scan-qr-modal__qr canvas { display: block; }
+    .scan-qr-modal__note :last-child { margin-bottom: 0; }
 </style>
 <script>
 function initQRShow(data) {
@@ -73,15 +81,15 @@ function initQRShow(data) {
                      }
                  }
              }, data || {});
-             
+
              if (!Object.values(res.modes || {}).length) {
                  res.modes = { default: { title: 'Default', fragments: [res.data] } };
              }
-             
+
              if (!res.mode) {
                 res.mode = Object.keys(res.modes)[0];
              }
-   
+
              return res;
  		},
  		computed: {
@@ -108,7 +116,7 @@ function initQRShow(data) {
  			},
  			playNext() {
                  if (!this.active) return;
-                 
+
                  this.index++;
                  if (this.index > (this.fragments.length - 1)) {
                      this.index = 0;

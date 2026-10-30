@@ -28,7 +28,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string PaymentSoundUrl { get; set; }
         public string NfcReadSoundUrl { get; set; }
         public string ErrorSoundUrl { get; set; }
-        public string BrandColor { get; set; }
         public string HtmlTitle { get; set; }
         public string DefaultLang { get; set; }
         public bool ShowPayInWalletButton { get; set; }
@@ -43,17 +42,14 @@ namespace BTCPayServer.Models.InvoicingModels
         public string InvoiceId { get; set; }
         public string Address { get; set; }
         public string Due { get; set; }
-        public string CustomerEmail { get; set; }
         public bool ShowRecommendedFee { get; set; }
         public decimal FeeRate { get; set; }
         public int ExpirationSeconds { get; set; }
         public int DisplayExpirationTimer { get; set; }
         public string Status { get; set; }
         public string MerchantRefLink { get; set; }
-        public int MaxTimeSeconds { get; set; }
         public string StoreName { get; set; }
         public string ItemDesc { get; set; }
-        public string TimeLeft { get; set; }
         public string Rate { get; set; }
         public string OrderAmount { get; set; }
         public string OrderAmountFiat { get; set; }
@@ -73,7 +69,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string PaymentMethodName { get; set; }
         public string CryptoImage { get; set; }
         public string StoreId { get; set; }
-        public string PeerInfo { get; set; }
         public string RootPath { get; set; }
         public bool RedirectAutomatically { get; set; }
         public bool Activated { get; set; }

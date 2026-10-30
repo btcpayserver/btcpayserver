@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -53,26 +52,24 @@ namespace BTCPayServer.Payments.Lightning
 
         public BTCPayNetwork Network => _network;
 
-        public async Task ConfigurePrompt(PaymentMethodContext context)
+        public Task ConfigurePrompt(PaymentMethodContext context)
         {
-            var handlers = _serviceProvider.GetRequiredService<PaymentMethodHandlerDictionary>();
-            var lightningHandler = (LightningLikePaymentHandler)handlers[PaymentTypes.LN.GetPaymentMethodId(_network.CryptoCode)];
             var store = context.Store;
             var lnPmi = PaymentTypes.LN.GetPaymentMethodId(_network.CryptoCode);
+            var handlers = _serviceProvider.GetRequiredService<PaymentMethodHandlerDictionary>();
+            var lightningHandler = (LightningLikePaymentHandler)handlers[lnPmi];
             var lnConfig = lightningHandler.ParsePaymentMethodConfig(store.GetPaymentMethodConfigs()[lnPmi]);
             if (lnConfig is null)
             {
                 throw new PaymentMethodUnavailableException("LNURL requires a lightning node to be configured for the store.");
             }
-            var preferOnion = Uri.TryCreate(context.InvoiceEntity.ServerUrl, UriKind.Absolute, out var u) && u.IsOnion();
-            var nodeInfo = (await lightningHandler.GetNodeInfo(lnConfig, context.Logs, preferOnion)).FirstOrDefault();
 
             var lnUrlConfig = ParsePaymentMethodConfig(store.GetPaymentMethodConfigs()[PaymentMethodId]);
             context.Prompt.Details = JObject.FromObject(new LNURLPayPaymentMethodDetails()
             {
-                Bech32Mode = lnUrlConfig.UseBech32Scheme,
-                NodeInfo = nodeInfo?.ToString()
+                Bech32Mode = lnUrlConfig.UseBech32Scheme
             }, Serializer);
+            return Task.CompletedTask;
         }
 
         public LNURLPaymentMethodConfig ParsePaymentMethodConfig(JToken config)

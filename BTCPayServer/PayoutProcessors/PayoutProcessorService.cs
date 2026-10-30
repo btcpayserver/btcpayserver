@@ -54,6 +54,7 @@ public class PayoutProcessorService : EventHostedServiceBase
             Stores = new[] { storeId };
             PayoutMethods = new[] { payoutMethodId };
         }
+        public string[] Ids { get; set; }
         public string[] Stores { get; set; }
         public string[] Processors { get; set; }
         public PayoutMethodId[] PayoutMethods { get; set; }
@@ -64,6 +65,18 @@ public class PayoutProcessorService : EventHostedServiceBase
 
         await using var context = _applicationDbContextFactory.CreateContext();
         var queryable = context.PayoutProcessors.AsQueryable();
+        if (query.Ids is not null)
+        {
+            if (query.Ids.Length == 1)
+            {
+                var id = query.Ids[0];
+                queryable = queryable.Where(data => data.Id == id);
+            }
+            else
+            {
+                queryable = queryable.Where(data => query.Ids.Contains(data.Id));
+            }
+        }
         if (query.Processors is not null)
         {
             queryable = queryable.Where(data => query.Processors.Contains(data.Processor));
@@ -95,6 +108,10 @@ public class PayoutProcessorService : EventHostedServiceBase
     {
 
         await using var context = _applicationDbContextFactory.CreateContext();
+        data.Id = await context.PayoutProcessors
+            .Where(p => p.StoreId == data.StoreId && p.Processor == data.Processor && p.PayoutMethodId == data.PayoutMethodId)
+            .Select(p => p.Id)
+            .FirstOrDefaultAsync();
         if (string.IsNullOrEmpty(data.Id))
         {
             await context.AddAsync(data);

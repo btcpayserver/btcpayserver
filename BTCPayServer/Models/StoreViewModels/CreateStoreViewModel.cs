@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.StoreViewModels
@@ -14,7 +15,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string Name { get; set; }
 
         [Required]
-        [MaxLength(10)]
+        [MaxLength(CurrencyNameTable.MaxCurrencyCodeLength)]
         [Display(Name = "Default currency")]
         public string DefaultCurrency { get; set; }
 

@@ -87,6 +87,11 @@ public class FormDataService
         await using var context = _applicationDbContextFactory.CreateContext();
         return await context.Forms.Where(data => data.Id == id && data.StoreId == storeId).FirstOrDefaultAsync();
     }
+    // A form attached to a payment request or an app is either hardcoded (those have no store) or owned by that object's store.
+    public Task<FormData?> GetCheckoutForm(string storeId, string? id)
+    {
+        return id is not null && _hardcodedOptions.ContainsKey(id) ? GetForm(id) : GetForm(storeId, id);
+    }
     public async Task<FormData?> GetForm(string? id)
     {
         if (id is null)
@@ -127,7 +132,22 @@ public class FormDataService
 
     public bool Validate(Form form, ModelStateDictionary modelState)
     {
-        return _formProviders.Validate(form, modelState);
+        _formProviders.Validate(form, modelState);
+        var amountFields = $"{InvoiceParameterPrefix}amount";
+        var addAdjustment = $"{InvoiceParameterPrefix}amount_adjustment";
+        var multiplyAdjustment = $"{InvoiceParameterPrefix}amount_multiply_adjustment";
+        foreach (var field in form.GetAllFields())
+        {
+            if (field.FullName != amountFields &&
+                !field.FullName.StartsWith(addAdjustment) &&
+                !field.FullName.StartsWith(multiplyAdjustment))
+                continue;
+            var value = GetValue(form, field.Field);
+            if (!string.IsNullOrEmpty(value) &&
+                !decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out _))
+                modelState.AddModelError(field.Field.Name, "Invalid numeric value");
+        }
+        return modelState.IsValid;
     }
 
     public bool IsFormSchemaValid(string schema, [MaybeNullWhen(false)] out Form form, [MaybeNullWhen(false)] out string error)
@@ -155,22 +175,32 @@ public class FormDataService
         var amt = string.IsNullOrEmpty(amtRaw) ? (decimal?) null : decimal.Parse(amtRaw, CultureInfo.InvariantCulture);
         foreach (var f in form.GetAllFields())
         {
-            if (f.FullName.StartsWith($"{InvoiceParameterPrefix}amount_adjustment") && decimal.TryParse(GetValue(form, f.Field), out var adjustment))
+            if (f.FullName.StartsWith($"{InvoiceParameterPrefix}amount_adjustment"))
             {
-                if (amt is null)
+                var adjustmentRaw = GetValue(form, f.Field);
+                if (!string.IsNullOrEmpty(adjustmentRaw))
                 {
-                    amt = adjustment;
+                    var adjustment = decimal.Parse(adjustmentRaw, CultureInfo.InvariantCulture);
+                    if (amt is null)
+                    {
+                        amt = adjustment;
+                    }
+                    else
+                    {
+                        amt += adjustment;
+                    }
                 }
-                else
-                {
-                    amt += adjustment;
-                }
-            } 
-            if (f.FullName.StartsWith($"{InvoiceParameterPrefix}amount_multiply_adjustment") && decimal.TryParse(GetValue(form, f.Field), out var adjustmentM))
+            }
+            if (f.FullName.StartsWith($"{InvoiceParameterPrefix}amount_multiply_adjustment"))
             {
-                if (amt is not null)
+                var adjustmentRaw = GetValue(form, f.Field);
+                if (!string.IsNullOrEmpty(adjustmentRaw))
                 {
-                    amt *= adjustmentM;
+                    var adjustmentM = decimal.Parse(adjustmentRaw, CultureInfo.InvariantCulture);
+                    if (amt is not null)
+                    {
+                        amt *= adjustmentM;
+                    }
                 }
             }
         }
@@ -220,7 +250,7 @@ public class FormDataService
                 node = child;
             }
 
-            node[f.Field.Name] = GetValue(form, f.FullName);
+            node[f.Field.Name] = GetValue(form, f.Field);
         }
         return r;
     }

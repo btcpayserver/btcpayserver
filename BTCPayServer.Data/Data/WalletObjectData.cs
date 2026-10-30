@@ -38,7 +38,7 @@ namespace BTCPayServer.Data
         public string Id { get; set; }
         public string Data { get; set; }
 #nullable enable
-        public JObject? GetData() => Data is null ? null : JObject.Parse(Data);
+        public JObject? GetData() => Data is null ? null : JsonParser.ParseObject(Data);
 #nullable restore
         public List<WalletObjectLinkData> Bs { get; set; }
         public List<WalletObjectLinkData> As { get; set; }
@@ -49,7 +49,7 @@ namespace BTCPayServer.Data
 
         public IEnumerable<(string type, string id, JObject? linkdata, JObject? objectdata)> GetLinks()
         {
-            static JObject? AsJObj(string? data) => data is null ? null : JObject.Parse(data);
+            static JObject? AsJObj(string? data) => data is null ? null : JsonParser.ParseObject(data);
             if (Bs is not null)
                 foreach (var c in Bs)
                 {

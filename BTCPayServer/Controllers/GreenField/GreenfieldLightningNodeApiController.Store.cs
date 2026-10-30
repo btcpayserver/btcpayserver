@@ -159,7 +159,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 throw ErrorLightningNodeNotConfiguredForStore();
             if (existing.GetExternalLightningUrl() is {} connectionString)
             {
-                return Task.FromResult(_lightningClientFactory.Create(connectionString, network));
+                return Task.FromResult(_lightningClientFactory.Create(connectionString, network,
+                    existing.IsUnsafeConnectionAllowed()));
             }
             else if (existing.IsInternalNode &&
             _lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,

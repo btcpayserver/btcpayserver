@@ -10,6 +10,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Fido2;
 using BTCPayServer.Models.ManageViewModels;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
@@ -42,6 +43,7 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _eventAggregator;
         private readonly PermissionService _permissionService;
         readonly StoreRepository _StoreRepository;
+        private readonly LocalizerService _localizer;
         public IStringLocalizer StringLocalizer { get; }
 
         public UIManageController(
@@ -61,7 +63,8 @@ namespace BTCPayServer.Controllers
           IStringLocalizer stringLocalizer,
           IHtmlHelper htmlHelper,
           EventAggregator eventAggregator,
-          PermissionService permissionService)
+          PermissionService permissionService,
+          LocalizerService localizer)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -77,6 +80,7 @@ namespace BTCPayServer.Controllers
             _userService = userService;
             _uriResolver = uriResolver;
             _fileService = fileService;
+            _localizer = localizer;
             _StoreRepository = storeRepository;
             StringLocalizer = stringLocalizer;
             _permissionService = permissionService;
@@ -142,6 +146,12 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
 
+            var langTranslation = string.IsNullOrEmpty(model.LangTranslation) ? null : model.LangTranslation;
+            if (langTranslation is not null && !LocalizerService.IsInstalledTranslation(langTranslation, await _localizer.GetTranslations()))
+            {
+                ModelState.AddModelError(nameof(model.LangTranslation), StringLocalizer["The selected language is not installed on this server."].Value);
+                return View(await GetIndexViewModel(user, model));
+            }
             bool needUpdate = false;
             var email = user.Email;
             var setNewEmail = model.Email != email && ModelState.IsValid;
@@ -184,6 +194,12 @@ namespace BTCPayServer.Controllers
                 needUpdate = true;
             }
 
+            if (blob.LangTranslation != langTranslation)
+            {
+                blob.LangTranslation = langTranslation;
+                needUpdate = true;
+            }
+
             if (model.ImageFile != null)
             {
                 var imageUpload = await _fileService.UploadImage(model.ImageFile, user.Id);
@@ -212,12 +228,13 @@ namespace BTCPayServer.Controllers
             user.SetBlob(blob);
             if (!ModelState.IsValid)
             {
-                return View(model);
+                return View(await GetIndexViewModel(user, model));
             }
 
             if (needUpdate && await _userManager.UpdateAsync(user) is { Succeeded: true })
             {
                 _eventAggregator.Publish(new UserEvent.Updated(user));
+                _localizer.SetUserLanguage(user.Id, blob.LangTranslation);
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Your profile has been updated"].Value;
             }
             else
@@ -232,14 +249,14 @@ namespace BTCPayServer.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendVerificationEmail(IndexViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(nameof(Index), model);
-            }
-
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return NotFound();
+
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(Index), await GetIndexViewModel(user, model));
+            }
 
             var callbackUrl = await _callbackGenerator.ForEmailConfirmation(user);
             _eventAggregator.Publish(new UserEvent.ConfirmationEmailRequested(user, callbackUrl));
@@ -365,8 +382,17 @@ namespace BTCPayServer.Controllers
             {
                 Email = user.Email,
                 Name = blob.Name,
-                AllowGreenfieldBasicAuth = blob.AllowGreenfieldBasicAuth
+                AllowGreenfieldBasicAuth = blob.AllowGreenfieldBasicAuth,
+                LangTranslation = blob.LangTranslation
             };
+
+            var translations = (await _localizer.GetTranslationsSelectList()).ToList();
+            translations.Insert(0, new SelectListItem(
+                StringLocalizer["Server default ({0})", _localizer.ServerLanguage].Value, ""));
+            model.LangTranslations = translations;
+            if (string.IsNullOrEmpty(model.LangTranslation) || !translations.Any(l => l.Value == model.LangTranslation))
+                model.LangTranslation = "";
+
             model.ImageUrl = string.IsNullOrEmpty(blob.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl));
             model.EmailConfirmed = user.EmailConfirmed;
             model.RequiresEmailConfirmation = user.RequiresEmailConfirmation;

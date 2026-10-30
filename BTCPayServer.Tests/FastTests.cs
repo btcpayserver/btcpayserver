@@ -1097,6 +1097,9 @@ namespace BTCPayServer.Tests
                 actual = actual.Replace("￥", "¥"); // Hack so JPY test pass on linux as well
                 Assert.Equal(test.Item2, actual);
             }
+            // Negative amounts keep the same significant digits as positive ones
+            Assert.Equal(-0.0005m, (-0.0005m).RoundToSignificant(2));
+            Assert.Equal(-1000.00m, (-1000.0001m).RoundToSignificant(2));
             Assert.Equal(0, GetCurrencyNameTable().GetNumberFormatInfo("ARS").CurrencyDecimalDigits);
             Assert.Equal(0, GetCurrencyNameTable().GetNumberFormatInfo("COP").CurrencyDecimalDigits);
         }

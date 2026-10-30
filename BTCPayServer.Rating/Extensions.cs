@@ -38,7 +38,7 @@ namespace BTCPayServer.Rating
                 while (true)
                 {
                     var rounded = decimal.Round(value, divisibility, MidpointRounding.AwayFromZero);
-                    if ((Math.Abs(rounded - value) / value) < 0.01m)
+                    if ((Math.Abs(rounded - value) / Math.Abs(value)) < 0.01m)
                     {
                         value = rounded;
                         break;

@@ -246,15 +246,16 @@
                     <button type="button" class="btn-close" v-on:click="closeOptions" aria-label="@StringLocalizer["Close"]"></button>
                 </header>
                 <div class="modal-body d-flex flex-column gap-4">
-                    <div v-for="group in optionsItem.groups" class="d-flex flex-column gap-2">
+                    <div v-for="(group, groupIndex) in optionsItem.groups" class="d-flex flex-column gap-2">
                         <h6 class="mb-0" v-text="group.title"></h6>
                         <div class="btcpay-pills d-flex flex-wrap align-items-center gap-2">
-                            <template v-for="choice in group.choices">
-                                <input :id="`Option-${optionsItem.id}-${group.title}-${choice.title}`"
+                            <template v-for="(choice, choiceIndex) in group.choices">
+                                <input :id="`Option-${optionsItem.id}-${groupIndex}-${choiceIndex}`"
+                                       class="btcpay-pill__checkbox"
                                        type="checkbox" name="options"
                                        v-model="choice.selected">
-                                <label :for="`Option-${optionsItem.id}-${group.title}-${choice.title}`"
-                                       class="btcpay-pill px-3">
+                                <label :for="`Option-${optionsItem.id}-${groupIndex}-${choiceIndex}`"
+                                       class="btcpay-pill__label btcpay-pill px-3">
                                     {{ choice.title }}<template v-if="choice.price > 0"> <span class="badge text-bg-info">+{{ formatCurrency(choice.price, false) }}</span></template>
                                 </label>
                             </template>

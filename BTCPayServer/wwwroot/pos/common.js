@@ -376,6 +376,7 @@ const posCommon = {
             }
             this.optionsItem = {
                 ...item,
+                index,
                 price: Number(basePrice) || 0,
                 groups: item.optionGroups.map(group => ({
                     ...group,

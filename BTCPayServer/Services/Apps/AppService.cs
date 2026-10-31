@@ -362,7 +362,32 @@ namespace BTCPayServer.Services.Apps
             // find items with duplicate IDs
             var duplicateIds = allItems.GroupBy(i => i.Id).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
             if (duplicateIds.Any() && throws) throw new ArgumentException($"Duplicate ID \"{duplicateIds.First()}\".");
+            // Reject option configurations that declare the same effective option label more than once
+            // (e.g. two groups both titled "Size" offering a "Large" choice). Labels are compared
+            // case-insensitively, mirroring the matching rules used by ResolveCartItemOptions.
+            var duplicateOptionLabels = new List<string>();
+            foreach (var item in allItems)
+            {
+                var seenOptionLabels = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var group in item.OptionGroups ?? [])
+                {
+                    foreach (var choice in group.Choices ?? [])
+                    {
+                        var label = GetEffectiveOptionLabel(group, choice);
+                        if (string.IsNullOrWhiteSpace(label)) continue;
+                        if (!seenOptionLabels.Add(label)) duplicateOptionLabels.Add(label);
+                    }
+                }
+            }
+            if (duplicateOptionLabels.Any() && throws) throw new ArgumentException($"Duplicate option label \"{duplicateOptionLabels.First()}\".");
             return allItems.Where(item => (includeDisabled || !item.Disabled) && !itemsWithoutId.Contains(item) && !duplicateIds.Contains(item.Id)).ToArray();
+        }
+
+        private static string? GetEffectiveOptionLabel(AppItemOptionGroup? group, AppItemOption? choice)
+        {
+            if (group?.Title is null) return choice?.Title;
+            if (choice?.Title is null) return null;
+            return $"{group.Title}: {choice.Title}";
         }
 #nullable restore
 #nullable enable

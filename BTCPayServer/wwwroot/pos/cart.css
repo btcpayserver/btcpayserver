@@ -138,7 +138,7 @@ header .cart-toggle-btn {
 
 /* Option picker: keep the checkbox focusable for keyboard users
    while preserving the pill visual (input is rendered hidden but not display:none) */
-#PosOptions .btcpay-pills input {
+.btcpay-pill__checkbox {
     display: inline-block;
     position: absolute;
     width: 1px;
@@ -151,7 +151,7 @@ header .cart-toggle-btn {
     border: 0;
     appearance: none;
 }
-#PosOptions .btcpay-pills input:focus-visible + label {
+.btcpay-pill__checkbox:focus-visible + .btcpay-pill__label {
     outline: var(--btcpay-focus-ring-outline, 2px solid var(--btcpay-primary, #51b13b));
     outline-offset: 2px;
 }

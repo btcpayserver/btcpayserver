@@ -51,6 +51,7 @@ using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Storage.ViewModels;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -2007,6 +2008,52 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task PasswordResetRequiresTwoFactorAuthentication()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var account = tester.NewAccount();
+            await account.RegisterAsync();
+
+            string resetToken;
+            using (var scope = tester.PayTester.ServiceProvider.CreateScope())
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var user = await userManager.FindByIdAsync(account.UserId);
+                await userManager.ResetAuthenticatorKeyAsync(user);
+                user.AuthenticatorEnabled = true;
+                await userManager.UpdateAsync(user);
+                resetToken = await userManager.GeneratePasswordResetTokenAsync(user);
+            }
+
+            var controller = tester.PayTester.GetController<UIAccountController>();
+            var newPassword = "Password@1!";
+            var result = await controller.SetPassword(new Models.AccountViewModels.SetPasswordViewModel
+            {
+                Email = account.Email,
+                Password = newPassword,
+                ConfirmPassword = newPassword,
+                Code = resetToken,
+                EmailSetInternally = true
+            });
+
+            Assert.IsType<ViewResult>(result);
+            Assert.False(controller.ModelState.IsValid);
+            using (var scope = tester.PayTester.ServiceProvider.CreateScope())
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var user = await userManager.FindByIdAsync(account.UserId);
+                Assert.True(await userManager.CheckPasswordAsync(user, account.Password));
+                Assert.False(await userManager.CheckPasswordAsync(user, newPassword));
+            }
+
+            var redirect = Assert.IsType<RedirectToActionResult>(
+                await controller.SetPassword(resetToken, account.UserId));
+            Assert.Equal(nameof(UIAccountController.SecondaryLogin), redirect.ActionName);
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Playwright", "Playwright")]
         public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
         {
@@ -2035,6 +2082,26 @@ namespace BTCPayServer.Tests
 
             await s.Logout();
             await s.LogIn(s.CreatedUser);
+            await s.WaitLoggedIn();
+
+            const string newPassword = "Password@1!";
+            string resetToken;
+            string userId;
+            using (var scope = s.Server.PayTester.ServiceProvider.CreateScope())
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var appUser = await userManager.FindByEmailAsync(s.CreatedUser);
+                userId = appUser.Id;
+                resetToken = await userManager.GeneratePasswordResetTokenAsync(appUser);
+            }
+
+            await s.Logout();
+            await s.GoToUrl($"/login/set-password?userId={Uri.EscapeDataString(userId)}&code={Uri.EscapeDataString(resetToken)}");
+            await s.Page.Locator("#Password").WaitForAsync();
+            await s.Page.FillAsync("#Password", newPassword);
+            await s.Page.FillAsync("#ConfirmPassword", newPassword);
+            await s.ClickPagePrimary();
+            await s.LogIn(s.CreatedUser, newPassword);
             await s.WaitLoggedIn();
 
             await RemoveFIDO2(cdp, authenticatorId);
@@ -2066,7 +2133,7 @@ namespace BTCPayServer.Tests
             await s.FindAlertMessage();
             await s.Logout();
 
-            await s.LogIn(s.CreatedUser);
+            await s.LogIn(s.CreatedUser, newPassword);
             await s.WaitLoggedIn();
         }
 

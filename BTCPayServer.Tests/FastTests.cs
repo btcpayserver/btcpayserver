@@ -34,6 +34,7 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Services.Wallets.Import;
 using BTCPayServer.Services.WalletFileParsing;
+using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -613,6 +614,95 @@ namespace BTCPayServer.Tests
                     }
                 }}
             }, out items));
+
+            // Options are optional
+            Assert.True(AppService.TryParsePosCartItems(CartItem(1, 1), out items));
+            Assert.Null(items[0].Options);
+
+            Assert.True(AppService.TryParsePosCartItems(new JObject()
+            {
+                {"cart", new JArray()
+                {
+                    new JObject()
+                    {
+                        { "id", "ddd"},
+                        {"price", 4},
+                        {"count", 1},
+                        { "options", new JArray { "  Size: Large  ", "", "Extras: Extra cheese" } }
+                    }
+                }}
+            }, out items));
+            Assert.Equal(new[] { "Size: Large", "Extras: Extra cheese" }, items[0].Options);
+
+            // More options than allowed are capped
+            Assert.True(AppService.TryParsePosCartItems(new JObject()
+            {
+                {"cart", new JArray()
+                {
+                    new JObject()
+                    {
+                        { "id", "ddd"},
+                        {"price", 4},
+                        {"count", 1},
+                        { "options", new JArray(Enumerable.Range(0, PosAppCartItem.MaxOptions + 5).Select(i => $"Option {i}").ToArray()) }
+                    }
+                }}
+            }, out items));
+            Assert.Equal(PosAppCartItem.MaxOptions, items[0].Options.Length);
+
+            // Option labels are capped
+            var longOption = new string('x', PosAppCartItem.MaxOptionLength + 10);
+            Assert.True(AppService.TryParsePosCartItems(new JObject()
+            {
+                {"cart", new JArray()
+                {
+                    new JObject()
+                    {
+                        { "id", "ddd"},
+                        {"price", 4},
+                        {"count", 1},
+                        { "options", new JArray { longOption } }
+                    }
+                }}
+            }, out items));
+            Assert.Equal(PosAppCartItem.MaxOptionLength, items[0].Options[0].Length);
+        }
+
+        [Fact]
+        public void CanCreatePosReceiptWithCartItemOptions()
+        {
+            var appItems = new[]
+            {
+                new AppItem { Id = "pizza", Title = "Pizza", PriceType = AppItemPriceType.Fixed, Price = 10m },
+                new AppItem { Id = "coffee", Title = "Coffee", PriceType = AppItemPriceType.Fixed, Price = 3m }
+            };
+            var jposData = new PosAppData
+            {
+                Cart =
+                [
+                    new PosAppCartItem { Id = "pizza", Count = 1, Price = 12.5m, Options = new[] { "Size: Large", "Extras: Extra cheese" } },
+                    new PosAppCartItem { Id = "pizza", Count = 2, Price = 10m },
+                    new PosAppCartItem { Id = "coffee", Count = 1, Price = 3m, Options = new[] { "", "   " } }
+                ]
+            };
+            jposData.NormalizeCartItemOptions();
+            // Optionless duplicates share the same receipt key; only the first line is kept.
+            var cart = new PosAppCartItem { Id = "pizza", Count = 3, Price = 10m };
+            jposData.Cart = jposData.Cart.Concat(new[] { cart }).ToArray();
+
+            var order = new PoSOrder(2);
+            var lines = jposData.Cart.ToArray();
+            order.AddLine(new PoSOrder.ItemLine(lines[0].Id, 1, 12.5m, 0m));
+            order.AddLine(new PoSOrder.ItemLine(lines[1].Id, 2, 10m, 0m));
+            order.AddLine(new PoSOrder.ItemLine(lines[2].Id, 1, 3m, 0m));
+            order.AddLine(new PoSOrder.ItemLine(cart.Id, 3, 10m, 0m));
+            var summary = order.Calculate();
+
+            var receipt = PosReceiptData.Create(false, appItems, jposData, order, summary, "USD", new DisplayFormatter(GetCurrencyNameTable()));
+
+            Assert.Equal("2 x $10.00 = $20.00", receipt.Cart["Pizza"]);
+            Assert.Equal("1 x $12.50 = $12.50\nOptions: Size: Large, Extras: Extra cheese", receipt.Cart["Pizza (Size: Large, Extras: Extra cheese)"]);
+            Assert.Equal("1 x $3.00 = $3.00", receipt.Cart["Coffee"]);
         }
         PaymentMethodId BTC = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
         PaymentMethodId LTC = PaymentTypes.CHAIN.GetPaymentMethodId("LTC");

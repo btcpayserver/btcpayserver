@@ -115,10 +115,13 @@
                     <input type="hidden" name="posdata" :value="posdata">
                     <table class="table table-borderless mt-0 mb-4">
                         <tbody id="CartItems">
-                        <tr v-for="item in cart" :key="item.id">
+                        <tr v-for="(item, index) in cart" :key="item._key">
                             <td class="align-middle">
                                 <h6 class="fw-semibold mb-1">{{ item.title }}</h6>
-                                <button type="button" v-on:click="removeFromCart(item.id)" class="btn btn-sm btn-link p-0 text-danger fw-semibold" text-translate="true">Remove</button>
+                                <div class="small text-muted" v-if="item.options && item.options.length">
+                                    {{ item.options.join(', ') }}
+                                </div>
+                                <button type="button" v-on:click="removeFromCart(item)" class="btn btn-sm btn-link p-0 text-danger fw-semibold" text-translate="true">Remove</button>
                             </td>
                             <td class="align-middle">
                                 <div class="d-flex align-items-center gap-2 justify-content-end quantity">
@@ -126,11 +129,11 @@
                                         {{ item.inventoryText }}
                                     </span>
                                     <div class="d-flex align-items-center gap-2 quantities">
-                                        <button type="button" v-on:click="updateQuantity(item.id, -1)" class="btn btn-minus">
+                                        <button type="button" v-on:click="updateQuantity(item, -1)" class="btn btn-minus">
                                             <span><vc:icon symbol="minus" css-class="ms-0" /></span>
                                         </button>
                                         <input class="form-control hide-number-spin w-50px text-center" type="number" inputmode="decimal" placeholder="@StringLocalizer["Qty"]" min="1" step="1" :max="item.inventory" v-model.number="item.count">
-                                        <button type="button" v-on:click="updateQuantity(item.id, +1)" class="btn btn-plus">
+                                        <button type="button" v-on:click="updateQuantity(item, +1)" class="btn btn-plus">
                                             <span><vc:icon symbol="plus" css-class="ms-0" /></span>
                                         </button>
                                     </div>
@@ -235,5 +238,39 @@
             </div>
         </div>
     </aside>
+    <div id="PosOptions" class="modal fade" ref="OptionsModal" tabindex="-1" v-cloak>
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" v-if="optionsItem">
+            <div class="modal-content">
+                <header class="modal-header">
+                    <h5 class="modal-title" v-text="optionsItem.title"></h5>
+                    <button type="button" class="btn-close" v-on:click="closeOptions" aria-label="@StringLocalizer["Close"]"></button>
+                </header>
+                <div class="modal-body d-flex flex-column gap-4">
+                    <div v-for="group in optionsItem.groups" class="d-flex flex-column gap-2">
+                        <h6 class="mb-0" v-text="group.title"></h6>
+                        <div class="btcpay-pills d-flex flex-wrap align-items-center gap-2">
+                            <template v-for="choice in group.choices">
+                                <input :id="`Option-${optionsItem.id}-${group.title}-${choice.title}`" type="checkbox" class="btcpay-pill">
+                                <label :for="`Option-${optionsItem.id}-${group.title}-${choice.title}`"
+                                       class="btcpay-pill px-3"
+                                       :class="{ active: choice.selected }"
+                                       v-on:click.prevent="choice.selected = !choice.selected">
+                                    {{ choice.title }}<template v-if="choice.price > 0"> <span class="badge text-bg-info">+{{ formatCurrency(choice.price, false) }}</span></template>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                <footer class="modal-footer p-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="fw-semibold">{{ formatCurrency(+(optionsItem.price||0) + optionsTotalDelta(optionsItem), true) }}</span>
+                        <button id="OptionsConfirm" type="button" class="btn btn-primary me-2" :disabled="!hasSelectedOptions(optionsItem)" v-on:click="confirmOptions" text-translate="true">
+                            Add to order
+                        </button>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
     <partial name="/Plugins/PointOfSale/Views/Public/RecentTransactions.cshtml" model="Model"/>
 </div>

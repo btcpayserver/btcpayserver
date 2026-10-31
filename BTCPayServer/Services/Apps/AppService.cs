@@ -508,6 +508,9 @@ retry:
                     if (id == null)
                         continue;
                     var title = o.GetValue("title", StringComparison.InvariantCulture)?.ToString();
+                    var options = o.GetValue("options", StringComparison.InvariantCulture) is JArray opts
+                        ? opts.Select(t => t?.ToString()).ToList()
+                        : null;
                     var countStr = o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty;
                     var price = o.GetValue("price") switch
                     {
@@ -519,7 +522,14 @@ retry:
                     if (!int.TryParse(countStr, out var count) || count <= 0 || price < 0)
                         return false;
                     _ = price * count;
-                    cartItems.Add(new AppCartItem { Id = id, Title = title, Count = count, Price = price });
+                    cartItems.Add(new AppCartItem
+                    {
+                        Id = id,
+                        Title = title,
+                        Options = PosAppCartItem.NormalizeOptionsList(options),
+                        Count = count,
+                        Price = price
+                    });
                 }
                 return true;
             }

@@ -173,6 +173,7 @@ const posCommon = {
             searchTerm: null,
             cart: [],
             amounts: [null],
+            optionsItem: null,
             recentTransactions: [],
             recentTransactionsLoading: false,
             dateFormatter: getDateFormatter(),
@@ -205,7 +206,7 @@ const posCommon = {
             const data = { subTotal: this.summary.priceTaxExcluded, total: this.summary.priceTaxIncludedWithTips }
             const amounts = this.amounts.filter(e => e) // clear empty or zero values
             if (amounts) data.amounts = amounts.map(parseFloat)
-            if (this.cart) data.cart = this.cart
+            if (this.cart) data.cart = this.cart.map(this.prepareCartItem)
             if (this.summary.discount > 0) data.discountAmount = this.summary.discount
             if (this.discountPercentNumeric > 0) data.discountPercentage = this.discountPercentNumeric
             if (this.summary.tip > 0) data.tip = this.summary.tip
@@ -324,38 +325,123 @@ const posCommon = {
                 item.price = parseFloat($amount.value);
             }
 
-            let itemInCart = this.cart.find(lineItem => lineItem.id === item.id && lineItem.price === item.price);
+            // Items with option groups need the guest to pick options first
+            if (Array.isArray(item.optionGroups) && item.optionGroups.length > 0) {
+                this.openOptions(index);
+                return null;
+            }
 
+            let itemInCart = this.cart.find(lineItem => lineItem.id === item.id && lineItem.price === item.price);
+            itemInCart = this.addCartLine(itemInCart, item, count);
+            return itemInCart;
+        },
+        addCartLine(itemInCart, item, count, options, priceDelta) {
+            const $posItem = this.$refs.posItems.querySelector(`#card_${item.id}`);
             // Add new item because it doesn't exist yet
             if (!itemInCart) {
                 itemInCart = {
                     ...item,
                     count
                 }
+                if (options && options.length) {
+                    const decimals = srvModel.currencyInfo.divisibility;
+                    itemInCart.price = +((item.price ?? 0) + (priceDelta || 0)).toFixed(decimals);
+                    itemInCart.options = options;
+                }
+                itemInCart._key = ++this._lineSeq;
                 this.cart.push(itemInCart);
             } else {
                 itemInCart.count += count;
             }
 
             // Animate
-            if (!$posItem.classList.contains(POS_ITEM_ADDED_CLASS)) $posItem.classList.add(POS_ITEM_ADDED_CLASS);
+            if ($posItem && !$posItem.classList.contains(POS_ITEM_ADDED_CLASS)) $posItem.classList.add(POS_ITEM_ADDED_CLASS);
 
             this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate, this.taxIncludedInPrice);
             return itemInCart;
         },
-        removeFromCart(id) {
-            const index = this.cart.findIndex(lineItem => lineItem.id === id);
+        openOptions(index) {
+            const item = this.items[index];
+            const isFixedPrice = item.priceType.toLowerCase() === 'fixed';
+            let basePrice = item.price;
+            if (!isFixedPrice) {
+                const $posItem = this.$refs.posItems.querySelectorAll('.posItem')[index];
+                const $amount = $posItem.querySelector('input[name="amount"]');
+                if (!$amount.reportValidity()) return false;
+                basePrice = parseFloat($amount.value);
+            }
+            this.optionsItem = {
+                ...item,
+                price: basePrice,
+                groups: item.optionGroups.map(group => ({
+                    ...group,
+                    choices: (group.choices || []).map(choice => ({ ...choice, selected: false }))
+                }))
+            };
+            this.$nextTick(() => {
+                bootstrap.Modal.getOrCreateInstance(this.$refs.OptionsModal).show();
+            });
+        },
+        closeOptions() {
+            if (this.$refs.OptionsModal) bootstrap.Modal.getInstance(this.$refs.OptionsModal)?.hide();
+            this.optionsItem = null;
+        },
+        confirmOptions() {
+            if (!this.optionsItem) return null;
+            const options = [];
+            let priceDelta = 0;
+            for (const group of this.optionsItem.groups) {
+                for (const choice of group.choices) {
+                    if (!choice.selected) continue;
+                    const label = group.title ? `${group.title}: ${choice.title}` : choice.title;
+                    options.push(label);
+                    const choicePrice = +(choice.price || 0);
+                    if (choicePrice > 0) priceDelta += choicePrice;
+                }
+            }
+            const itemInCart = this.cart.find(lineItem =>
+                lineItem.id === this.optionsItem.id &&
+                lineItem.price === +(this.optionsItem.price + priceDelta).toFixed(this.currencyInfo.divisibility) &&
+                lineItem.options && lineItem.options.length == options.length &&
+                lineItem.options.every((o, i) => o === options[i]));
+            const added = this.optionsItem.id && this.addCartLine(
+                itemInCart,
+                this.optionsItem,
+                1,
+                options,
+                priceDelta);
+            this.closeOptions();
+            return added;
+        },
+        hasSelectedOptions(item) {
+            return (item.groups || []).some(group => (group.choices || []).some(choice => choice.selected));
+        },
+        optionsTotalDelta(item) {
+            if (!item) return 0;
+            return (item.groups || [])
+                .flatMap(group => group.choices || [])
+                .filter(choice => choice.selected)
+                .reduce((sum, choice) => sum + (+(choice.price || 0)), 0);
+        },
+        removeFromCart(item) {
+            const index = typeof item === 'object'
+                ? this.cart.indexOf(item)
+                : this.cart.findIndex(lineItem => lineItem.id === item);
             this.cart.splice(index, 1);
             this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate, this.taxIncludedInPrice);
         },
-        getQuantity(id) {
-            const itemInCart = this.cart.find(lineItem => lineItem.id === id);
+        getQuantity(item) {
+            const itemInCart = typeof item === 'object'
+                ? this.cart.find(lineItem => lineItem === item)
+                : this.cart.find(lineItem => lineItem.id === item);
             return itemInCart ? itemInCart.count : 0;
         },
-        updateQuantity(id, count, addOrRemove) {
-            let itemInCart = this.cart.find(lineItem => lineItem.id === id);
+        updateQuantity(item, count, addOrRemove) {
+            let itemInCart = typeof item === 'object'
+                ? this.cart.find(lineItem => lineItem === item)
+                : this.cart.find(lineItem => lineItem.id === item);
             if (!itemInCart && addOrRemove && count > 0) {
-                const index = this.items.findIndex(lineItem => lineItem.id === id);
+                const index = this.items.findIndex(lineItem => lineItem.id === (typeof item === 'object' ? item.id : item));
                 itemInCart = this.addToCart(index, 0);
             }
             const applyable = addOrRemove || (count < 0 && itemInCart.count + count > 0) ||
@@ -372,6 +458,14 @@ const posCommon = {
             this.cart = [];
             this.amounts = [null];
             this.tip = this.discount = this.tipPercent = this.discountPercent = null;
+        },
+        prepareCartItem(item) {
+            // Strip display-only keys; the item definition helpers don't belong in the order
+            const cartItem = { ...item };
+            delete cartItem._key;
+            delete cartItem.groups;
+            delete cartItem.optionGroups;
+            return cartItem;
         },
         forEachItem(callback) {
             if (this.$refs.posItems) {
@@ -424,6 +518,7 @@ const posCommon = {
         }
     },
     beforeMount() {
+        this._lineSeq = 0;
         if (this.persistState) {
             this.cart = loadState('cart');
         }

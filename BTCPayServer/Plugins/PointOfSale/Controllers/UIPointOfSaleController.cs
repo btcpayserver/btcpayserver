@@ -286,6 +286,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
 
             jposData.Cart ??= [];
+            jposData.NormalizeCartItemOptions();
             if (jposData.Cart.Length + (jposData.Amounts?.Length ?? 0) > MaxOrderLines)
                 return Error(StringLocalizer["An order can't have more than {0} lines", MaxOrderLines]);
             if (jposData.Amounts is not null)

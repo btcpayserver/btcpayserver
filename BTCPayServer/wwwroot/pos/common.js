@@ -307,9 +307,12 @@ const posCommon = {
         },
         inStock(index) {
             const item = this.items[index]
-            const itemInCart = this.cart.find(lineItem => lineItem.id === item.id)
+            // Count quantities across every cart line of this item (option combinations create multiple lines)
+            const inCart = this.cart
+                .filter(lineItem => lineItem.id === item.id)
+                .reduce((res, lineItem) => res + (+lineItem.count || 0), 0)
 
-            return item.inventory == null || item.inventory > (itemInCart ? itemInCart.count : 0)
+            return item.inventory == null || item.inventory > inCart
         },
         addToCart(index, count) {
             if (!this.inStock(index)) return null;
@@ -336,7 +339,8 @@ const posCommon = {
             return itemInCart;
         },
         addCartLine(itemInCart, item, count, options, priceDelta) {
-            const $posItem = this.$refs.posItems.querySelector(`#card_${item.id}`);
+            // item.id is user-defined; getElementById avoids CSS-selector escaping issues
+            const $posItem = document.getElementById(`card_${item.id}`);
             // Add new item because it doesn't exist yet
             if (!itemInCart) {
                 itemInCart = {
@@ -372,7 +376,7 @@ const posCommon = {
             }
             this.optionsItem = {
                 ...item,
-                price: basePrice,
+                price: Number(basePrice) || 0,
                 groups: item.optionGroups.map(group => ({
                     ...group,
                     choices: (group.choices || []).map(choice => ({ ...choice, selected: false }))
@@ -404,6 +408,14 @@ const posCommon = {
                 lineItem.price === +(this.optionsItem.price + priceDelta).toFixed(this.currencyInfo.divisibility) &&
                 lineItem.options && lineItem.options.length == options.length &&
                 lineItem.options.every((o, i) => o === options[i]));
+            // Inventory is shared across all lines of the item; cap additions accordingly
+            const stockItem = this.items[this.optionsItem.index];
+            if (stockItem && stockItem.inventory != null) {
+                const inCartForItem = this.cart
+                    .filter(lineItem => lineItem.id === this.optionsItem.id)
+                    .reduce((res, lineItem) => res + (+lineItem.count || 0), 0);
+                if (inCartForItem + 1 > stockItem.inventory) return null;
+            }
             const added = this.optionsItem.id && this.addCartLine(
                 itemInCart,
                 this.optionsItem,
@@ -444,8 +456,12 @@ const posCommon = {
                 const index = this.items.findIndex(lineItem => lineItem.id === (typeof item === 'object' ? item.id : item));
                 itemInCart = this.addToCart(index, 0);
             }
+            // Respect inventory across all lines of this item (option combinations create multiple lines)
+            const itemCount = this.cart
+                .filter(lineItem => lineItem.id === itemInCart.id)
+                .reduce((res, lineItem) => res + (+lineItem.count || 0), 0);
             const applyable = addOrRemove || (count < 0 && itemInCart.count + count > 0) ||
-                (count > 0 && (itemInCart.inventory == null || itemInCart.count + count <= itemInCart.inventory));
+                (count > 0 && (itemInCart.inventory == null || itemCount + count <= itemInCart.inventory));
             if (applyable) {
                 itemInCart.count += count;
             }
@@ -522,6 +538,10 @@ const posCommon = {
         if (this.persistState) {
             this.cart = loadState('cart');
         }
+        // Persisted lines may carry stale or missing line keys; reassign to guarantee Vue row keys stay unique
+        this.cart.forEach(line => {
+            line._key = ++this._lineSeq;
+        });
         this.posOrder.setTipTaxRate(this.tipTaxRate);
         this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate, this.taxIncludedInPrice);
 

@@ -250,11 +250,11 @@
                         <h6 class="mb-0" v-text="group.title"></h6>
                         <div class="btcpay-pills d-flex flex-wrap align-items-center gap-2">
                             <template v-for="choice in group.choices">
-                                <input :id="`Option-${optionsItem.id}-${group.title}-${choice.title}`" type="checkbox" class="btcpay-pill">
+                                <input :id="`Option-${optionsItem.id}-${group.title}-${choice.title}`"
+                                       type="checkbox" name="options"
+                                       v-model="choice.selected">
                                 <label :for="`Option-${optionsItem.id}-${group.title}-${choice.title}`"
-                                       class="btcpay-pill px-3"
-                                       :class="{ active: choice.selected }"
-                                       v-on:click.prevent="choice.selected = !choice.selected">
+                                       class="btcpay-pill px-3">
                                     {{ choice.title }}<template v-if="choice.price > 0"> <span class="badge text-bg-info">+{{ formatCurrency(choice.price, false) }}</span></template>
                                 </label>
                             </template>

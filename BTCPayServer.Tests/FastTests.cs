@@ -701,8 +701,62 @@ namespace BTCPayServer.Tests
             var receipt = PosReceiptData.Create(false, appItems, jposData, order, summary, "USD", new DisplayFormatter(GetCurrencyNameTable()));
 
             Assert.Equal("2 x $10.00 = $20.00", receipt.Cart["Pizza"]);
-            Assert.Equal("1 x $12.50 = $12.50\nOptions: Size: Large, Extras: Extra cheese", receipt.Cart["Pizza (Size: Large, Extras: Extra cheese)"]);
+            Assert.Equal("1 x $12.50 = $12.50\nOptions: Size: Large, Extras: Extra cheese", receipt.Cart["Pizza (\"Size: Large\" \"Extras: Extra cheese\")"]);
             Assert.Equal("1 x $3.00 = $3.00", receipt.Cart["Coffee"]);
+        }
+
+        [Fact]
+        public void CanResolveCartItemOptions()
+        {
+            var pizza = new AppItem
+            {
+                Id = "pizza",
+                Title = "Pizza",
+                PriceType = AppItemPriceType.Fixed,
+                Price = 10m,
+                OptionGroups =
+                [
+                    new AppItemOptionGroup
+                    {
+                        Title = "Size",
+                        Choices = [new AppItemOption { Title = "Large", Price = 2m }]
+                    },
+                    new AppItemOptionGroup
+                    {
+                        Title = "Extras",
+                        Choices = [new AppItemOption { Title = "Extra cheese", Price = 1.5m }]
+                    }
+                ]
+            };
+            var coffee = new AppItem { Id = "coffee", Title = "Coffee", PriceType = AppItemPriceType.Fixed, Price = 3m };
+
+            var cartItem = new PosAppCartItem { Id = "pizza", Price = 10m, Options = new[] { "Size: Large", "bogus", "extra cheese" } };
+            var cost = AppService.ResolveCartItemOptions(pizza, cartItem);
+            Assert.Equal(3.5m, cost);
+            Assert.Equal(new[] { "Size: Large", "Extras: Extra cheese" }, cartItem.Options);
+
+            // Options on an item without configured groups are dropped entirely
+            var plainCartItem = new PosAppCartItem { Id = "coffee", Price = 3m, Options = new[] { "Size: Large" } };
+            Assert.Equal(0m, AppService.ResolveCartItemOptions(coffee, plainCartItem));
+            Assert.Null(plainCartItem.Options);
+
+            // No submitted options is a no-op
+            var noOptionsCartItem = new PosAppCartItem { Id = "pizza", Price = 10m, Options = null };
+            Assert.Equal(0m, AppService.ResolveCartItemOptions(pizza, noOptionsCartItem));
+            Assert.Null(noOptionsCartItem.Options);
+
+            // Configured choices without a price are allowed (informational/allergy markers)
+            var markers = new AppItem
+            {
+                Id = "cake",
+                Title = "Cake",
+                PriceType = AppItemPriceType.Fixed,
+                Price = 5m,
+                OptionGroups = [new AppItemOptionGroup { Title = "Allergies", Choices = [new AppItemOption { Title = "Gluten" }] }]
+            };
+            var markerCartItem = new PosAppCartItem { Id = "cake", Price = 5m, Options = new[] { "gluten" } };
+            Assert.Equal(0m, AppService.ResolveCartItemOptions(markers, markerCartItem));
+            Assert.Equal(new[] { "Allergies: Gluten" }, markerCartItem.Options);
         }
         PaymentMethodId BTC = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
         PaymentMethodId LTC = PaymentTypes.CHAIN.GetPaymentMethodId("LTC");

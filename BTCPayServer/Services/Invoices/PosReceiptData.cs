@@ -88,7 +88,11 @@ public class PosReceiptData
             var ident = selectedChoice.Title ?? selectedChoice.Id;
             var key = selectedChoice.PriceType == AppItemPriceType.Fixed ? ident : $"{ident} ({singlePrice})";
             if (cartItem.Options is { Length: > 0 })
-                key = $"{key} ({string.Join(", ", cartItem.Options)})";
+            {
+                // Quote each option so distinct arrays (e.g. ["A, B"] vs ["A", "B"]) yield distinct keys,
+                // while identical arrays still share a key (duplicate entries are intentionally ignored).
+                key = $"{key} ({string.Join(" ", cartItem.Options.Select(o => $"\"{o}\""))})";
+            }
             var value = $"{cartItem.Count} x {singlePrice} = {totalPrice}";
             if (cartItem.Options is { Length: > 0 })
                 value += $"\nOptions: {string.Join(", ", cartItem.Options)}";

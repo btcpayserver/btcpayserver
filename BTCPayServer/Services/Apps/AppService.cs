@@ -493,8 +493,7 @@ retry:
 #nullable enable
 
         public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out List<AppCartItem> cartItems)
-        {
-            cartItems = null;
+        {            cartItems = null;
             if (posData is null)
                 return false;
             if (!posData.TryGetValue("cart", out var cartObject) || cartObject is null)
@@ -536,6 +535,60 @@ retry:
             catch (Exception ex) when (ex is InvalidCastException or FormatException or OverflowException)
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Resolves the submitted option labels of a cart item against the option groups configured on the item.
+        /// Unresolvable labels are dropped (they were never priced) and kept labels are normalized to
+        /// "Group: Choice". Returns the total option cost so callers can enforce the correct line price.
+        /// </summary>
+        public static decimal ResolveCartItemOptions(AppItem? itemChoice, PosAppCartItem cartItem)
+        {
+            if (cartItem.Options is not { Length: > 0 })
+                return 0m;
+
+            var groups = itemChoice?.OptionGroups ?? [];
+            var kept = new List<string>();
+            decimal cost = 0m;
+
+            foreach (var option in cartItem.Options)
+            {
+                (string Label, decimal Price)? match = null;
+                foreach (var group in groups)
+                {
+                    foreach (var choice in group.Choices ?? [])
+                    {
+                        if (MatchesOption(option, group.Title, choice.Title))
+                        {
+                            // Normalize to the canonical "Group: Choice" label for display
+                            var label = group.Title is not null && choice.Title is not null
+                                ? $"{group.Title}: {choice.Title}"
+                                : choice.Title ?? option;
+                            match = (label, Math.Max(0m, choice.Price ?? 0m));
+                            break;
+                        }
+                    }
+                    if (match is not null)
+                        break;
+                }
+                if (match is null)
+                    continue;
+                kept.Add(match.Value.Label);
+                cost += match.Value.Price;
+            }
+
+            cartItem.Options = kept.Count > 0 ? [.. kept] : null;
+            return cost;
+
+            static bool MatchesOption(string option, string? groupTitle, string? title)
+            {
+                if (title is null)
+                    return false;
+                if (string.Equals(option, title, StringComparison.OrdinalIgnoreCase))
+                    return true;
+                return groupTitle is not null &&
+                       string.Equals(option, $"{groupTitle}: {title}", StringComparison.OrdinalIgnoreCase);
             }
         }
 

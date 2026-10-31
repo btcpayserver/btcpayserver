@@ -36,6 +36,18 @@ namespace BTCPayServer.Controllers
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [HttpGet("{appId}/dashboard/app-crowdfund")]
+        public IActionResult AppCrowdfund(string appId)
+        {
+            var app = HttpContext.GetAppDataOrNull();
+            if (app == null)
+                return NotFound();
+
+            app.StoreData = HttpContext.GetStoreData();
+            return ViewComponent("AppCrowdfund", new { appId = app.Id, appType = app.AppType });
+        }
+
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/dashboard/app-sales/{period}")]
         public async Task<IActionResult> AppSales(string appId, AppSalesPeriod period)
         {

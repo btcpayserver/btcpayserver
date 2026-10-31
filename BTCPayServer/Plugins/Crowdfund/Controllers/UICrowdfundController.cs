@@ -19,6 +19,7 @@ using BTCPayServer.Forms;
 using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.Crowdfund.Models;
+using BTCPayServer.Plugins.Tax;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -49,6 +50,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         UIInvoiceController invoiceController,
         FormDataService formDataService,
         IStringLocalizer stringLocalizer,
+        TaxRateResolver taxRateResolver, 
         CrowdfundAppType appType,
         Safe safe,
         IRateLimitService rateLimitService)
@@ -214,6 +216,15 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             {
                 var appPath = await appService.ViewLink(app);
                 var appUrl = HttpContext.Request.GetAbsoluteUri(appPath);
+                decimal? taxAmount = null;
+                var storeRate = taxRateResolver.Resolve(store.GetStoreBlob(), settings.TaxRateId);
+                if (storeRate != null && price is decimal p)
+                {
+                    var decimals = currencies.GetCurrencyData(settings.TargetCurrency, false)?.Divisibility ?? 2;
+                    var result = TaxCalculator.Calculate(p, storeRate.Rate, taxIncluded: false, decimals);
+                    price = result.PriceTaxIncluded;
+                    taxAmount = result.Tax;
+                }
                 var invoice = await invoiceController.CreateInvoiceCoreRaw(new CreateInvoiceRequest()
                 {
                     Amount = price,
@@ -222,6 +233,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                     {
                         OrderId = AppService.GetRandomOrderId(),
                         ItemCode = request.ChoiceKey ?? string.Empty,
+                        TaxIncluded = taxAmount,
                         ItemDesc = title,
                         BuyerEmail = request.Email
                     }.ToJObject(),
@@ -375,6 +387,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return NotFound();
 
             var settings = app.GetSettings<CrowdfundSettings>();
+            var store = await storeRepository.FindStore(app.StoreDataId);
             var resetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery);
 
             var vm = new UpdateCrowdfundViewModel
@@ -411,7 +424,9 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 SortPerksByPopularity = settings.SortPerksByPopularity,
                 Sounds = string.Join(Environment.NewLine, settings.Sounds),
                 AnimationColors = string.Join(Environment.NewLine, settings.AnimationColors),
-                FormId = settings.FormId
+                FormId = settings.FormId,
+                TaxRateId = settings.TaxRateId, 
+                TaxRates = store?.GetStoreBlob().TaxRates ?? new()
             };
             return View("UpdateCrowdfund", vm);
         }
@@ -549,7 +564,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 SortPerksByPopularity = vm.SortPerksByPopularity,
                 Sounds = parsedSounds,
                 AnimationColors = parsedAnimationColors,
-                FormId = vm.FormId
+                FormId = vm.FormId,
+                TaxRateId = vm.TaxRateId
             };
 
             if (imageUpload?.Success is true)

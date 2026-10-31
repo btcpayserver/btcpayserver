@@ -20,6 +20,8 @@ namespace BTCPayServer.Plugins.PayButton.Models
         [MaxLength(LengthLimits.MaxOrderIdLength)]
         public string OrderId { get; set; }
         public int ButtonSize { get; set; }
+        public string? TaxRateId { get; set; } 
+        public List<StoreTaxRate>? TaxRates { get; set; }
         public int ButtonType { get; set; }
 
         // Slider properties (ButtonType = 2)

@@ -16,6 +16,7 @@ namespace BTCPayServer.Views.Stores
         Tokens,
         Users,
         PayButton,
+        TaxRates,
         [Obsolete("Use custom categories for your plugin/integration instead")]
         Plugins,
         Webhooks,

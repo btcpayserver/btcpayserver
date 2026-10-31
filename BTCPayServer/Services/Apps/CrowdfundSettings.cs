@@ -14,6 +14,7 @@ namespace BTCPayServer.Services.Apps
         public string Description { get; set; }
         public string HtmlLang { get; set; }
         public string HtmlMetaTags{ get; set; }
+        public string? TaxRateId { get; set; }
         public bool Enabled { get; set; } = true;
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

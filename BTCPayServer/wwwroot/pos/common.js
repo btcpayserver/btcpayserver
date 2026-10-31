@@ -155,6 +155,34 @@ function loadState(name) {
             }
         }
     }
+
+    // Reconcile aggregate inventory across cart lines that share an item id
+    // (option combinations create multiple lines for the same item; shared stock is one capacity).
+    const totalsByItem = new Map();
+    const itemIds = new Set();
+    for (const line of cart) {
+        if (!line) continue;
+        itemIds.add(line.id);
+        totalsByItem.set(line.id, (totalsByItem.get(line.id) || 0) + (+line.count || 0));
+    }
+    for (const id of itemIds) {
+        const item = srvModel.items.find(i => i.id === id);
+        const total = totalsByItem.get(id);
+        if (!item || item.inventory == null) continue;
+        const cap = Math.min(total, item.inventory);
+        if (cap >= total) continue;
+        let remaining = cap;
+        for (let i = cart.length - 1; i >= 0; i--) {
+            const line = cart[i];
+            if (!line || line.id !== id) continue;
+            const lineCount = (+line.count || 0);
+            if (lineCount <= 0) { cart.splice(i, 1); continue; }
+            const take = Math.min(lineCount, remaining);
+            line.count = lineCount - take;
+            remaining -= take;
+            if ((+line.count || 0) <= 0) cart.splice(i, 1);
+        }
+    }
     return cart;
 }
 
@@ -330,7 +358,10 @@ const posCommon = {
 
             // Items with option groups need the guest to pick options first
             if (Array.isArray(item.optionGroups) && item.optionGroups.length > 0) {
-                this.openOptions(index);
+                // The options modal is rendered in the Cart view; views without it (e.g. keypad) cannot pick options
+                if (this.$refs?.OptionsModal) {
+                    this.openOptions(index);
+                }
                 return null;
             }
 
@@ -434,7 +465,7 @@ const posCommon = {
             return (item.groups || [])
                 .flatMap(group => group.choices || [])
                 .filter(choice => choice.selected)
-                .reduce((sum, choice) => sum + (+(choice.price || 0)), 0);
+                .reduce((sum, choice) => sum + Math.max(0, +(choice.price || 0)), 0);
         },
         removeFromCart(item) {
             const index = typeof item === 'object'

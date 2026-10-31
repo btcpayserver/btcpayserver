@@ -362,7 +362,32 @@ namespace BTCPayServer.Services.Apps
             // find items with duplicate IDs
             var duplicateIds = allItems.GroupBy(i => i.Id).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
             if (duplicateIds.Any() && throws) throw new ArgumentException($"Duplicate ID \"{duplicateIds.First()}\".");
+            // Reject option configurations that declare the same effective option label more than once
+            // (e.g. two groups both titled "Size" offering a "Large" choice). Labels are compared
+            // case-insensitively, mirroring the matching rules used by ResolveCartItemOptions.
+            var duplicateOptionLabels = new List<string>();
+            foreach (var item in allItems)
+            {
+                var seenOptionLabels = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var group in item.OptionGroups ?? [])
+                {
+                    foreach (var choice in group.Choices ?? [])
+                    {
+                        var label = GetEffectiveOptionLabel(group, choice);
+                        if (string.IsNullOrWhiteSpace(label)) continue;
+                        if (!seenOptionLabels.Add(label)) duplicateOptionLabels.Add(label);
+                    }
+                }
+            }
+            if (duplicateOptionLabels.Any() && throws) throw new ArgumentException($"Duplicate option label \"{duplicateOptionLabels.First()}\".");
             return allItems.Where(item => (includeDisabled || !item.Disabled) && !itemsWithoutId.Contains(item) && !duplicateIds.Contains(item.Id)).ToArray();
+        }
+
+        private static string? GetEffectiveOptionLabel(AppItemOptionGroup? group, AppItemOption? choice)
+        {
+            if (group?.Title is null) return choice?.Title;
+            if (choice?.Title is null) return null;
+            return $"{group.Title}: {choice.Title}";
         }
 #nullable restore
 #nullable enable
@@ -493,8 +518,7 @@ retry:
 #nullable enable
 
         public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out List<AppCartItem> cartItems)
-        {
-            cartItems = null;
+        {            cartItems = null;
             if (posData is null)
                 return false;
             if (!posData.TryGetValue("cart", out var cartObject) || cartObject is null)
@@ -508,6 +532,9 @@ retry:
                     if (id == null)
                         continue;
                     var title = o.GetValue("title", StringComparison.InvariantCulture)?.ToString();
+                    var options = o.GetValue("options", StringComparison.InvariantCulture) is JArray opts
+                        ? opts.Select(t => t?.ToString()).ToList()
+                        : null;
                     var countStr = o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty;
                     var price = o.GetValue("price") switch
                     {
@@ -519,13 +546,74 @@ retry:
                     if (!int.TryParse(countStr, out var count) || count <= 0 || price < 0)
                         return false;
                     _ = price * count;
-                    cartItems.Add(new AppCartItem { Id = id, Title = title, Count = count, Price = price });
+                    cartItems.Add(new AppCartItem
+                    {
+                        Id = id,
+                        Title = title,
+                        Options = PosAppCartItem.NormalizeOptionsList(options),
+                        Count = count,
+                        Price = price
+                    });
                 }
                 return true;
             }
             catch (Exception ex) when (ex is InvalidCastException or FormatException or OverflowException)
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Resolves the submitted option labels of a cart item against the option groups configured on the item.
+        /// Unresolvable labels are dropped (they were never priced) and kept labels are normalized to
+        /// "Group: Choice". Returns the total option cost so callers can enforce the correct line price.
+        /// </summary>
+        public static decimal ResolveCartItemOptions(AppItem? itemChoice, PosAppCartItem cartItem)
+        {
+            if (cartItem.Options is not { Length: > 0 })
+                return 0m;
+
+            var groups = itemChoice?.OptionGroups ?? [];
+            var kept = new List<string>();
+            decimal cost = 0m;
+
+            foreach (var option in cartItem.Options)
+            {
+                (string Label, decimal Price)? match = null;
+                foreach (var group in groups)
+                {
+                    foreach (var choice in group.Choices ?? [])
+                    {
+                        if (MatchesOption(option, group.Title, choice.Title))
+                        {
+                            // Normalize to the canonical "Group: Choice" label for display
+                            var label = group.Title is not null && choice.Title is not null
+                                ? $"{group.Title}: {choice.Title}"
+                                : choice.Title ?? option;
+                            match = (label, Math.Max(0m, choice.Price ?? 0m));
+                            break;
+                        }
+                    }
+                    if (match is not null)
+                        break;
+                }
+                if (match is null)
+                    continue;
+                kept.Add(match.Value.Label);
+                cost += match.Value.Price;
+            }
+
+            cartItem.Options = kept.Count > 0 ? [.. kept] : null;
+            return cost;
+
+            static bool MatchesOption(string option, string? groupTitle, string? title)
+            {
+                if (title is null)
+                    return false;
+                if (string.Equals(option, title, StringComparison.OrdinalIgnoreCase))
+                    return true;
+                return groupTitle is not null &&
+                       string.Equals(option, $"{groupTitle}: {title}", StringComparison.OrdinalIgnoreCase);
             }
         }
 

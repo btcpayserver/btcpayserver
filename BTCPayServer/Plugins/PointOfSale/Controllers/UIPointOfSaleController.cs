@@ -286,6 +286,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
 
             jposData.Cart ??= [];
+            jposData.NormalizeCartItemOptions();
             if (jposData.Cart.Length + (jposData.Amounts?.Length ?? 0) > MaxOrderLines)
                 return Error(StringLocalizer["An order can't have more than {0} lines", MaxOrderLines]);
             if (jposData.Amounts is not null)
@@ -325,9 +326,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     return Error(StringLocalizer["Inventory for {0} exhausted: {1} available", itemChoice.Title, itemChoice.Inventory]);
                 selectedChoices.Add(itemChoice);
 
+                // Only configured, priced options survive; the line price must cover them
+                var optionsCost = AppService.ResolveCartItemOptions(itemChoice, cartItem);
+
                 if (itemChoice.PriceType is not AppItemPriceType.Topup)
                 {
-                    var expectedCartItemPrice = itemChoice.Price ?? 0;
+                    var expectedCartItemPrice = (itemChoice.Price ?? 0) + optionsCost;
                     if (cartItem.Price < expectedCartItemPrice)
                         cartItem.Price = expectedCartItemPrice;
                 }

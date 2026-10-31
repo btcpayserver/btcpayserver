@@ -171,7 +171,7 @@ function loadState(name) {
         if (!item || item.inventory == null) continue;
         const cap = Math.min(total, item.inventory);
         if (cap >= total) continue;
-        let remaining = cap;
+        let remaining = total - cap;
         for (let i = cart.length - 1; i >= 0; i--) {
             const line = cart[i];
             if (!line || line.id !== id) continue;
@@ -282,10 +282,37 @@ const posCommon = {
         },
         cart: {
             handler(newCart) {
+                // Enforce the shared inventory limit across lines that share an item id
+                // (option combinations create multiple lines for the same item; shared stock is one capacity).
+                const totalsByItem = new Map();
+                const itemIds = new Set();
+                for (const line of newCart) {
+                    if (!line) continue;
+                    itemIds.add(line.id);
+                    totalsByItem.set(line.id, (totalsByItem.get(line.id) || 0) + (+line.count || 0));
+                }
+                for (const id of itemIds) {
+                    const item = this.items.find(i => i.id === id);
+                    const total = totalsByItem.get(id);
+                    if (!item || item.inventory == null) continue;
+                    const cap = Math.min(total, item.inventory);
+                    const excess = total - cap;
+                    if (excess <= 0) continue;
+                    let remaining = excess;
+                    for (let i = newCart.length - 1; i >= 0; i--) {
+                        const line = newCart[i];
+                        if (!line || line.id !== id) continue;
+                        const lineCount = (+line.count || 0);
+                        if (lineCount <= 0) { newCart.splice(i, 1); continue; }
+                        const take = Math.min(lineCount, remaining);
+                        line.count = lineCount - take;
+                        remaining -= take;
+                        if ((+line.count || 0) <= 0) newCart.splice(i, 1);
+                    }
+                }
                 newCart.forEach(item => {
                     if (!item.count) item.count = 1
-                    if (item.inventory && item.inventory < item.count) item.count = item.inventory
-                })
+                });
                 if (this.persistState) {
                     saveState('cart', newCart)
                 }
@@ -361,8 +388,8 @@ const posCommon = {
                 // The options modal is rendered in the Cart view; views without it (e.g. keypad) cannot pick options
                 if (this.$refs?.OptionsModal) {
                     this.openOptions(index);
+                    return null;
                 }
-                return null;
             }
 
             let itemInCart = this.cart.find(lineItem => lineItem.id === item.id && lineItem.price === item.price);
@@ -484,10 +511,22 @@ const posCommon = {
             let itemInCart = typeof item === 'object'
                 ? this.cart.find(lineItem => lineItem === item)
                 : this.cart.find(lineItem => lineItem.id === item);
+            let added = false;
             if (!itemInCart && addOrRemove && count > 0) {
                 const index = this.items.findIndex(lineItem => lineItem.id === (typeof item === 'object' ? item.id : item));
-                itemInCart = this.addToCart(index, 0);
-                if (!itemInCart) return;
+                const target = this.items[index];
+                const optionBearing = Array.isArray(target?.optionGroups) && target.optionGroups.length > 0;
+                if (optionBearing && this.$refs?.OptionsModal) {
+                    // Option-bearing items open the options modal; wait for the guest's selection.
+                    itemInCart = this.addToCart(index, 0);
+                    if (!itemInCart) return;
+                } else if (optionBearing) {
+                    // No options modal available (e.g. keypad view): add directly with base behavior.
+                    itemInCart = this.addToCart(index, count);
+                    added = true;
+                } else {
+                    itemInCart = this.addToCart(index, 0);
+                }
             }
             // Respect inventory across all lines of this item (option combinations create multiple lines)
             const itemCount = this.cart
@@ -495,7 +534,7 @@ const posCommon = {
                 .reduce((res, lineItem) => res + (+lineItem.count || 0), 0);
             const applyable = addOrRemove || (count < 0 && itemInCart.count + count > 0) ||
                 (count > 0 && (itemInCart.inventory == null || itemCount + count <= itemInCart.inventory));
-            if (applyable) {
+            if (!added && applyable) {
                 itemInCart.count += count;
             }
             if (itemInCart && itemInCart.count <= 0 && addOrRemove) {

@@ -456,6 +456,7 @@ const posCommon = {
             if (!itemInCart && addOrRemove && count > 0) {
                 const index = this.items.findIndex(lineItem => lineItem.id === (typeof item === 'object' ? item.id : item));
                 itemInCart = this.addToCart(index, 0);
+                if (!itemInCart) return;
             }
             // Respect inventory across all lines of this item (option combinations create multiple lines)
             const itemCount = this.cart

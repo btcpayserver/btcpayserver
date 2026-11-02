@@ -215,7 +215,7 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
 
-            var command = viewModel.Command.ToLowerInvariant();
+            var command = viewModel.Command?.ToLowerInvariant();
             switch (command)
             {
                 case "cancel":

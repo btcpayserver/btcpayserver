@@ -94,7 +94,8 @@ public class StoreEmailRuleProcessorSender(
                         // This only happens when a plural placeholder expands to a pathological number of recipients.
                         continue;
                     }
-                    sender.SendEmail(matchedContext.To.ToArray(), matchedContext.CC.ToArray(), matchedContext.BCC.ToArray(), subject.Render(triggEvent.Model), body.Render(triggEvent.Model));
+                    sender.SendEmail(matchedContext.To.ToArray(), matchedContext.CC.ToArray(), matchedContext.BCC.ToArray(), subject.Render(triggEvent.Model),
+                       body.Render(triggEvent.Model), triggEvent.StoreId, triggEvent.Trigger);
                 }
             }
         }

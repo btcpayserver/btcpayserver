@@ -1,2 +1,7 @@
 paths-ignore:
   - 'BTCPayServer/wwwroot/vendor/**/*.js'
+
+query-filters:
+  # CSRF validation is enforced globally by UIControllerAntiforgeryTokenAttribute.
+  - exclude:
+      id: cs/web/missing-token-validation

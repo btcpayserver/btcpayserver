@@ -98,7 +98,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v26.06.1
+    image: btcpayserver/lightning:v26.06.10
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -127,7 +127,7 @@ services:
       - bitcoind
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v26.06.1
+    image: btcpayserver/lightning:v26.06.10
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:

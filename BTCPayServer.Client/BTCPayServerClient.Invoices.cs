@@ -32,7 +32,7 @@ public partial class BTCPayServerClient
         if (textSearch != null)
             queryPayload.Add(nameof(textSearch), textSearch);
         if (status != null)
-            queryPayload.Add(nameof(status), status.Select(s => s.ToString().ToLower()).ToArray());
+            queryPayload.Add(nameof(status), status.Select(s => s.ToString().ToLowerInvariant()).ToArray());
         if (skip != null)
             queryPayload.Add(nameof(skip), skip);
         if (take != null)

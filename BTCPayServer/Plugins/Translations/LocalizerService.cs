@@ -1,15 +1,20 @@
 #nullable enable
-using Dapper;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using Microsoft.EntityFrameworkCore;
-using System;
 using BTCPayServer.Services;
-using Newtonsoft.Json.Linq;
-using Microsoft.Extensions.Logging;
+using Dapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.Translations
 {
@@ -24,14 +29,23 @@ namespace BTCPayServer.Plugins.Translations
         ILogger<LocalizerService> logger,
         ApplicationDbContextFactory contextFactory,
         ISettingsAccessor<PoliciesSettings> settingsAccessor,
-        IEnumerable<IDefaultTranslationProvider> defaultTranslationProviders)
+        IEnumerable<IDefaultTranslationProvider> defaultTranslationProviders,
+        IMemoryCache memoryCache)
     {
         public record LoadedTranslations(Translations Translations, Translations Fallback, string LangName, bool Rtl);
         LoadedTranslations _LoadedTranslations = new(Translations.Default, Translations.Default, Translations.DefaultLanguage, false);
-        public Translations Translations => _LoadedTranslations.Translations;
 
-        // Whether the currently loaded server language is written right-to-left.
-        public bool IsRtl => _LoadedTranslations.Rtl;
+        static readonly TimeSpan CacheIdle = TimeSpan.FromMinutes(30);
+        static readonly MemoryCacheEntryOptions UserChoiceOptions = new() { SlidingExpiration = CacheIdle };
+        static string GetTranslationsCacheKey(string name) => $"{nameof(LocalizerService)}-translations-{name}";
+        static string GetUserChoiceCacheKey(string userId) => $"{nameof(LocalizerService)}-user-{userId}";
+
+        CancellationTokenSource _translationsChanged = new();
+        public LoadedTranslations ServerTranslations => _LoadedTranslations;
+        public Translations Translations => _LoadedTranslations.Translations;
+        public string ServerLanguage => _LoadedTranslations.LangName;
+
+        public void SetUserLanguage(string userId, string? translationName) => memoryCache.Set(GetUserChoiceCacheKey(userId), translationName, UserChoiceOptions);
 
         /// <summary>
         /// Load the translation of the server into memory
@@ -49,6 +63,50 @@ namespace BTCPayServer.Plugins.Translations
                 throw;
             }
         }
+
+        public static bool IsInstalledTranslation(string translationName, IEnumerable<Translation> installed)
+        {
+            return installed.Any(t => t.TranslationName == translationName);
+        }
+
+        public async Task<LoadedTranslations?> GetUserTranslations(string? translationName)
+        {
+            if (string.IsNullOrEmpty(translationName) || translationName == _LoadedTranslations.LangName)
+                return null;
+
+            var key = GetTranslationsCacheKey(translationName);
+            var loading = memoryCache.GetOrCreate(key, async entry =>
+            {
+                entry.SlidingExpiration = CacheIdle;
+                entry.AddExpirationToken(new CancellationChangeToken(_translationsChanged.Token));
+                return await GetTranslation(translationName) is null ? null : await GetTranslations(translationName);
+            })!;
+            try
+            {
+                return await loading;
+            }
+            catch
+            {
+                if (memoryCache.TryGetValue(key, out Task<LoadedTranslations?>? current) && ReferenceEquals(current, loading))
+                    memoryCache.Remove(key);
+                throw;
+            }
+        }
+
+        public async Task<LoadedTranslations?> GetTranslationsForUser(ClaimsPrincipal principal, UserManager<ApplicationUser> userManager)
+        {
+            var userId = userManager.GetUserId(principal);
+            if (userId is null)
+                return null;
+            var key = GetUserChoiceCacheKey(userId);
+            if (!memoryCache.TryGetValue(key, out string? choice))
+            {
+                var stored = (await userManager.FindByIdAsync(userId))?.GetBlob()?.LangTranslation;
+                choice = memoryCache.GetOrCreate(key, e => { e.SlidingExpiration = CacheIdle; return stored; });
+            }
+            return await GetUserTranslations(choice);
+        }
+        void InvalidateUserTranslations() => Interlocked.Exchange(ref _translationsChanged, new CancellationTokenSource()).Cancel();
 
         public async Task<LoadedTranslations> GetTranslations(string translationName)
         {
@@ -138,6 +196,7 @@ namespace BTCPayServer.Plugins.Translations
 
             if (_LoadedTranslations.LangName == loadedTranslations.LangName)
                 _LoadedTranslations = loadedTranslations with { Translations = translations };
+            InvalidateUserTranslations();
         }
 
         public record Translation(string TranslationName, string? Fallback, string Source, JObject Metadata);
@@ -177,6 +236,7 @@ namespace BTCPayServer.Plugins.Translations
             await using var ctx = contextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
             await db.ExecuteAsync("INSERT INTO lang_dictionaries (dict_id, fallback, source) VALUES (@langName, @fallback, @source)", new { langName, fallback, source });
+            InvalidateUserTranslations();
             return new Translation(langName, fallback, source ?? "", new JObject());
         }
 
@@ -185,6 +245,7 @@ namespace BTCPayServer.Plugins.Translations
             await using var ctx = contextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
             await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id=@dict_id AND source IN ('Custom', 'LanguagePack')", new { dict_id = translationName });
+            InvalidateUserTranslations();
         }
 
         public async Task UpdateMetadata(string translationName, string version, bool rtl)
@@ -194,6 +255,7 @@ namespace BTCPayServer.Plugins.Translations
             await db.ExecuteAsync(
                 "UPDATE lang_dictionaries SET metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('version', @version::text, 'rtl', @rtl::boolean) WHERE dict_id = @dict_id",
                 new { dict_id = translationName, version, rtl });
+            InvalidateUserTranslations();
         }
     }
 }

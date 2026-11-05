@@ -25,6 +25,7 @@ public class TranslationsPlugin : BaseBTCPayServerPlugin
         services.TryAddSingleton<IStringLocalizerFactory, LocalizerFactory>();
         services.TryAddSingleton<IHtmlLocalizerFactory, LocalizerFactory>();
         services.TryAddSingleton<LocalizerService>();
+        services.TryAddSingleton<TranslationsAccessor>();
         services.TryAddSingleton<LanguagePackUpdateService>();
         services.AddStartupTask<LoadTranslationsStartupTask>();
         services.AddHttpClient(LanguagePackUpdateService.HttpClientName)

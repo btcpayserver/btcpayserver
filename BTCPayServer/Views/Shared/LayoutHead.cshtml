@@ -2,7 +2,7 @@
 @using BTCPayServer.Plugins.Translations
 @inject PoliciesSettings PoliciesSettings
 @inject UriResolver UriResolver
-@inject LocalizerService LocalizerService
+@inject TranslationsAccessor TranslationsAccessor
 @{
     ViewData.TryGetValue("StoreBranding", out var storeBranding);
     var store = Context.GetStoreDataOrNull();
@@ -24,7 +24,7 @@
 <title>@ViewData["Title"]</title>
 @* CSS *@
 @{
-    var isRtl = LocalizerService.IsRtl;
+    var isRtl = TranslationsAccessor.Current.Rtl;
 }
 @if (isRtl)
 {

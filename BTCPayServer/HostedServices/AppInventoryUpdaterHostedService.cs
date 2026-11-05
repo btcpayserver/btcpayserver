@@ -34,7 +34,12 @@ namespace BTCPayServer.HostedServices
                 switch (invoiceEvent.Name)
                 {
                     case InvoiceEvent.Expired:
+                    case InvoiceEvent.FailedToConfirm:
+                        deduct = 1;
+                        break;
                     case InvoiceEvent.MarkedInvalid:
+                        if (invoiceEvent.PreviousStatus is InvoiceStatus.Expired)
+                            return;
                         deduct = 1;
                         break;
                     case InvoiceEvent.Created:

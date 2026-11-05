@@ -11,7 +11,7 @@ namespace BTCPayServer.Plugins.Translations
     public class LocalizerFactory : IStringLocalizerFactory, IHtmlLocalizerFactory
     {
         internal readonly Logs _logs;
-        private readonly LocalizerService _localizerService;
+        private readonly TranslationsAccessor _translationsAccessor;
 
         class StringLocalizer : IStringLocalizer, IHtmlLocalizer
         {
@@ -34,7 +34,7 @@ namespace BTCPayServer.Plugins.Translations
                 _baseName = baseName;
                 _location = location;
             }
-            Translations Translations => _Factory._localizerService.Translations;
+            Translations Translations => _Factory._translationsAccessor.Current.Translations;
             public LocalizedString this[string name]
             {
                 get
@@ -100,10 +100,10 @@ namespace BTCPayServer.Plugins.Translations
                 return this[name, arguments];
             }
         }
-        public LocalizerFactory(Logs logs, LocalizerService localizerService)
+        public LocalizerFactory(Logs logs, TranslationsAccessor translationsAccessor)
         {
             _logs = logs;
-            _localizerService = localizerService;
+            _translationsAccessor = translationsAccessor;
         }
         public IStringLocalizer Create(Type resourceSource)
         {

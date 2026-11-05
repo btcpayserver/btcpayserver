@@ -3,14 +3,14 @@
 @using BTCPayServer.Services
 @using BTCPayServer.Plugins.Translations
 @inject DisplayFormatter DisplayFormatter
-@inject LocalizerService LocalizerService
+@inject TranslationsAccessor TranslationsAccessor
 @{
     Layout = null;
     ViewData.SetTitle($"Receipt from {Model.StoreName}");
     var isProcessing = Model.Status == InvoiceStatus.Processing;
     var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.InvoiceAmount == 0);
     var isSettled = Model.Status == InvoiceStatus.Settled;
-    var isRtl = LocalizerService.IsRtl;
+    var isRtl = TranslationsAccessor.Current.Rtl;
 }
 <!DOCTYPE html>
 <html lang="en"@(isRtl ? " dir=\"rtl\"" : "")>

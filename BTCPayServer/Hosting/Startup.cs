@@ -359,6 +359,7 @@ namespace BTCPayServer.Hosting
             app.UseProviderStorage(dataDirectories);
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseMiddleware<UserLanguageMiddleware>();
             app.UseSession();
 
             app.UseWebSockets();

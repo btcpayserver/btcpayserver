@@ -646,6 +646,27 @@ namespace BTCPayServer.Tests
             Assert.Equal(new FeeRate(Money.Satoshis(3350), 350), minFeeRate);
             Assert.Equal(Money.Satoshis(1350), bump.NewTxFee);
 
+            // Truncating 17200 / 171 to 100.584 sat/vB before adding 0.1 sat/vB
+            // gives a 17-satoshi increase, but the node requires ceil(171 * 0.1) = 18.
+            replacementInfo = new ReplacementInfo
+            (
+                new MempoolEntry()
+                {
+                    BaseFee = Money.Satoshis(17200),
+                    VirtualSizeBytes = 171,
+                    DescendantFees = Money.Satoshis(17200),
+                    DescendantVirtualSizeBytes = 171,
+                    AncestorFees = Money.Satoshis(17200),
+                    AncestorVirtualSizeBytes = 171,
+                },
+                IncrementalRelayFee: new FeeRate(0.1m),
+                MinMempoolFeeRate: new FeeRate(0.1m)
+            );
+            minFeeRate = replacementInfo.CalculateNewMinFeeRate();
+            bump = replacementInfo.CalculateBumpResult(minFeeRate);
+            Assert.Equal(Money.Satoshis(18), bump.BumpTxFee);
+            Assert.Equal(Money.Satoshis(17218), bump.NewTxFee);
+
             // Check MinMempoolFee is respected
             replacementInfo = new ReplacementInfo
             (
@@ -1087,7 +1108,8 @@ namespace BTCPayServer.Tests
             DisplayFormatter displayFormatter = new(GetCurrencyNameTable());
             foreach (var test in new[]
             {
-                (0.0005m, "0.0005 USD", "USD"), (0.001m, "0.001 USD", "USD"), (0.01m, "0.01 USD", "USD"),
+                (0.0005m, "0.0005 USD", "USD"), (-0.0005m, "-0.0005 USD", "USD"),
+                (0.001m, "0.001 USD", "USD"), (0.01m, "0.01 USD", "USD"),
                 (0.1m, "0.10 USD", "USD"), (0.1m, "0,10 EUR", "EUR"), (1000m, "1,000 JPY", "JPY"),
                 (1000.0001m, "1,000.00 INR", "INR"),
                 (0.0m, "0.00 USD", "USD"), (1m, "1 COP", "COP"), (1m, "1 ARS", "ARS")
@@ -1097,6 +1119,9 @@ namespace BTCPayServer.Tests
                 actual = actual.Replace("￥", "¥"); // Hack so JPY test pass on linux as well
                 Assert.Equal(test.Item2, actual);
             }
+            // Negative amounts keep the same significant digits as positive ones
+            Assert.Equal(-0.0005m, (-0.0005m).RoundToSignificant(2));
+            Assert.Equal(-1000.00m, (-1000.0001m).RoundToSignificant(2));
             Assert.Equal(0, GetCurrencyNameTable().GetNumberFormatInfo("ARS").CurrencyDecimalDigits);
             Assert.Equal(0, GetCurrencyNameTable().GetNumberFormatInfo("COP").CurrencyDecimalDigits);
         }

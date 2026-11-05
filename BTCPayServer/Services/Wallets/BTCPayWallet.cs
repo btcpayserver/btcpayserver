@@ -540,6 +540,9 @@ namespace BTCPayServer.Services.Wallets
         {
             var newTotalFee = GetFeeRoundUp(newEffectiveFeeRate, GetPackageVirtualSize());
             var oldTotalFee = GetPackageFee();
+            // FeeRate truncates to sat/kvB, so rounding the total fee alone can leave
+            // the increase one satoshi below the incremental relay requirement.
+            newTotalFee = Money.Max(newTotalFee, oldTotalFee + GetFeeRoundUp(IncrementalRelayFee, Entry.VirtualSizeBytes));
             var bump = newTotalFee - oldTotalFee;
             var newTxFee = Entry.BaseFee + bump;
             var newTxFeeRate = new FeeRate(newTxFee, Entry.VirtualSizeBytes);

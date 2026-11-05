@@ -5,12 +5,15 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Emails.Controllers;
 using BTCPayServer.Plugins.Emails.HostedServices;
+using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Plugins.GlobalSearch;
 using BTCPayServer.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json.Linq;
+using static NBitcoin.WalletPolicies.MiniscriptNode;
 
 namespace BTCPayServer.Plugins.Emails;
 
@@ -48,7 +51,28 @@ public class EmailsPlugin : BaseBTCPayServerPlugin
 
         services.AddSingleton<IEmailTriggerViewModelTransformer, StoreTransformer>();
         services.AddSingleton<IEmailTriggerEventTransformer, StoreTransformer>();
-        services.AddScheduledTask<CleanupEmailLogsTask>(TimeSpan.FromHours(12.0));
+        services.AddSingleton<EmailLogRepository>();
+        services.AddScheduledDbScript("Email Logs Cleanup", $"DELETE FROM email_logs WHERE created_at < NOW() - INTERVAL '{EmailLogRepository.RetentionDays} days'");
+        services.AddStaticSearch(new ActionResultItemViewModel()
+        {
+            RequiredPolicy = Policies.CanViewStoreSettings,
+            Title = "View store's sent emails",
+            Action = nameof(UIStoreEmailLogsController.StoreEmailLogsList),
+            Controller = "UIStoreEmailLogs",
+            Values = ctx => new { area = Area, storeId = ctx.Store!.Id },
+            Category = "Store",
+            Aliases = ["Email", "Logs", "Sent", "History"]
+        });
+        services.AddStaticSearch(new ActionResultItemViewModel()
+        {
+            RequiredPolicy = Policies.CanModifyServerSettings,
+            Title = "View server's sent emails",
+            Action = nameof(UIServerEmailLogsController.ServerEmailLogsList),
+            Controller = "UIServerEmailLogs",
+            Values = ctx => new { area = Area },
+            Category = "Server",
+            Aliases = ["Email", "Logs", "Sent", "History"]
+        });
         services.AddDefaultTranslations(StoreTransformer.TranslatedStrings);
 
 

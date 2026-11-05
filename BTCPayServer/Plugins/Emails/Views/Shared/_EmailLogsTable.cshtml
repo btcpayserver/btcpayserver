@@ -17,23 +17,21 @@
 		<tbody>
 			@foreach (var log in Model.Logs)
 			{
-				var blob = log.GetBlob();
-				if (blob is null) { continue; }
 				<tr>
 					<td><input type="checkbox" name="ids" value="@log.Id" class="form-check-input row-checkbox" /></td>
 					<td>
-						@if (blob.Status == EmailLogStatus.Sent)
+						@if (log.Status == EmailLogStatus.Sent)
 						{
 							<span class="badge bg-success" text-translate="true">Sent</span>
 						}
 						else
 						{
-							<span class="badge bg-danger" data-bs-toggle="tooltip" title="@blob.Error" text-translate="true">Failed</span>
+							<span class="badge bg-danger" data-bs-toggle="tooltip" title="@log.Error" text-translate="true">Failed</span>
 						}
 					</td>
-					<td>@blob.Trigger</td>
-					<td>@string.Join(", ", blob.To ?? Array.Empty<string>())</td>
-					<td>@blob.Subject</td>
+					<td>@log.Trigger</td>
+					<td>@string.Join(", ", log.To ?? Array.Empty<string>())</td>
+					<td>@log.Subject</td>
 					<td>@log.Timestamp.ToBrowserDate()</td>
 				</tr>
 			}

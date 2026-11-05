@@ -12,7 +12,7 @@ public class EmailSenderFactory(
     SettingsRepository settingsSettingsRepository,
     EventAggregator eventAggregator,
     ISettingsAccessor<PoliciesSettings> policiesSettings,
-    ApplicationDbContextFactory dbContextFactory,
+    EmailLogRepository emailLogs,
     StoreRepository storeRepository,
     Logs logs)
 {
@@ -20,12 +20,12 @@ public class EmailSenderFactory(
 
     public Task<IEmailSender> GetEmailSender(string? storeId = null)
     {
-        var serverSender = new ServerEmailSender(settingsSettingsRepository, jobClient, eventAggregator, dbContextFactory, Logs);
+        var serverSender = new ServerEmailSender(settingsSettingsRepository, jobClient, eventAggregator, emailLogs, Logs);
         if (string.IsNullOrEmpty(storeId))
             return Task.FromResult<IEmailSender>(serverSender);
         return Task.FromResult<IEmailSender>(new StoreEmailSender(storeRepository,
             !policiesSettings.Settings.DisableStoresToUseServerEmailSettings ? serverSender : null, jobClient,
-            eventAggregator, dbContextFactory, storeId, Logs));
+            eventAggregator, emailLogs, storeId, Logs));
     }
 
     public async Task<bool> IsComplete(string? storeId = null)

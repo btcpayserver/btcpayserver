@@ -9,8 +9,8 @@ namespace BTCPayServer.Plugins.Emails.Services;
 class ServerEmailSender(SettingsRepository settingsRepository,
     IBackgroundJobClient backgroundJobClient,
     EventAggregator eventAggregator,
-    ApplicationDbContextFactory dbContextFactory,
-    Logs logs) : EmailSender(backgroundJobClient, eventAggregator, dbContextFactory, logs)
+    EmailLogRepository emailLogs,
+    Logs logs) : EmailSender(backgroundJobClient, eventAggregator, emailLogs, logs)
 {
     public override Task<EmailSettings?> GetEmailSettings()
         => settingsRepository.GetSettingAsync<EmailSettings>();

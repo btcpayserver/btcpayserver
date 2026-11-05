@@ -302,32 +302,6 @@ namespace BTCPayServer.Migrations
                     b.ToTable("customers_identities");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.EmailLogData", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Blob")
-                        .HasColumnType("JSONB");
-
-                    b.Property<bool>("Pruned")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("StoreId")
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StoreId");
-
-                    b.HasIndex("Timestamp");
-
-                    b.ToTable("EmailLogs");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.EmailRuleData", b =>
                 {
                     b.Property<long>("Id")
@@ -2185,16 +2159,6 @@ namespace BTCPayServer.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
-                });
-
-            modelBuilder.Entity("BTCPayServer.Data.EmailLogData", b =>
-                {
-                    b.HasOne("BTCPayServer.Data.StoreData", "Store")
-                        .WithMany()
-                        .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Store");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.EmailRuleData", b =>

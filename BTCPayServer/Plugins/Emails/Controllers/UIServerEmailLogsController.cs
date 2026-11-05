@@ -9,6 +9,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Plugins.Emails.Views.Shared;
@@ -25,11 +26,11 @@ namespace BTCPayServer.Plugins.Emails.Controllers;
 [Route("server/emails/logs")]
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-public class UIServerEmailLogsController(ApplicationDbContextFactory dbContextFactory, EmailSenderFactory emailSenderFactory)
-    : UIEmailLogControllerBase(dbContextFactory, emailSenderFactory)
+public class UIServerEmailLogsController(EmailLogRepository emailLogs, EmailSenderFactory emailSenderFactory, IStringLocalizer stringLocalizer)
+    : UIEmailLogControllerBase(emailLogs, emailSenderFactory, stringLocalizer)
 {
     [HttpGet("")]
-    public Task<IActionResult> ServerEmailLogsList(int skip = 0, int count = 50) => EmailLogsListCore(CreateContext(), skip, count);
+    public Task<IActionResult> ServerEmailLogsList(int skip = 0, int count = BasePagingViewModel.CountDefault) => EmailLogsListCore(CreateContext(), skip, count);
 
     [HttpPost("resend")]
     public Task<IActionResult> ResendServerEmails(string[] ids) => EmailLogsResendCore(CreateContext(), ids, null);
@@ -39,7 +40,6 @@ public class UIServerEmailLogsController(ApplicationDbContextFactory dbContextFa
         {
             StoreId = null,
             ModifyPermission = Policies.CanModifyServerSettings,
-            LogsQuery = (ctx) => ctx.EmailLogs.AsQueryable().GetServerLogs().ToListAsync(),
             RedirectToLogsList = (redirectUrl) => redirectUrl != null ? LocalRedirect(redirectUrl) : RedirectToAction(nameof(ServerEmailLogsList))
         };
 }

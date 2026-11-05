@@ -16,10 +16,10 @@ class StoreEmailSender(
     EmailSender? fallback,
     IBackgroundJobClient backgroundJobClient,
     EventAggregator eventAggregator,
-    ApplicationDbContextFactory dbContextFactory,
+    EmailLogRepository emailLogs,
     string storeId,
     Logs logs)
-    : EmailSender(backgroundJobClient, eventAggregator, dbContextFactory, logs)
+    : EmailSender(backgroundJobClient, eventAggregator, emailLogs, logs)
 {
     public StoreRepository StoreRepository { get; } = storeRepository;
     public EmailSender? FallbackSender { get; } = fallback;

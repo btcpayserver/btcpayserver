@@ -9,6 +9,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Plugins.Emails.Views.Shared;
@@ -21,31 +22,31 @@ using Npgsql;
 
 namespace BTCPayServer.Plugins.Emails.Controllers;
 
-public class UIEmailLogControllerBase(ApplicationDbContextFactory dbContextFactory, EmailSenderFactory emailSenderFactory) : Controller
+public class UIEmailLogControllerBase(EmailLogRepository emailLogs, EmailSenderFactory emailSenderFactory, IStringLocalizer stringLocalizer) : Controller
 {
-
+    public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
     public class EmailLogsControllerContext
     {
         public string? StoreId { get; set; }
         public string ModifyPermission { get; set; } = Client.Policies.CanModifyStoreSettings;
-        public Func<ApplicationDbContext, Task<List<EmailLogData>>> LogsQuery = null!;
         public Func<string?, IActionResult> RedirectToLogsList = null!;
     }
 
 
-    protected async Task<IActionResult> EmailLogsListCore(EmailLogsControllerContext context, int skip = 0, int count = 50)
+    protected async Task<IActionResult> EmailLogsListCore(EmailLogsControllerContext context, int skip = 0, int count = BasePagingViewModel.CountDefault)
     {
-        await using var ctx = dbContextFactory.CreateContext();
-        var all = await context.LogsQuery(ctx);
+        skip = Math.Max(skip, 0);
+        count = Math.Clamp(count, 1, 500);
+        var (items, total) = await emailLogs.GetPage(context.StoreId, skip, count);
         var vm = new EmailLogsViewModel
         {
             StoreId = context.StoreId,
             ModifyPermission = context.ModifyPermission,
             Skip = skip,
             Count = count,
-            Total = all.Count,
-            Logs = all.Skip(skip).Take(count).ToList()
+            Total = total,
+            Logs = items.ToList()
         };
         return View("EmailLogsList", vm);
     }
@@ -54,25 +55,17 @@ public class UIEmailLogControllerBase(ApplicationDbContextFactory dbContextFacto
     {
         if (ids is not { Length: > 0 })
         {
-            TempData[WellKnownTempData.ErrorMessage] = "Select at least one email to resend.";
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Select at least one email to resend."].Value;
             return context.RedirectToLogsList(redirectUrl);
         }
-
-        await using var ctx = dbContextFactory.CreateContext();
-        var logs = await ctx.EmailLogs.Where(l => l.StoreId == context.StoreId && ids.Contains(l.Id)).ToListAsync();
-
+        var logs = await emailLogs.GetByIds(context.StoreId, ids);
         var sender = await emailSenderFactory.GetEmailSender(context.StoreId);
-        var resent = 0;
         foreach (var log in logs)
         {
-            var blob = log.GetBlob();
-            if (blob is null)
-                continue;
-            sender.SendEmail(ParseAddresses(blob.To), ParseAddresses(blob.CC), ParseAddresses(blob.BCC), blob.Subject, blob.Body, context.StoreId, blob.Trigger);
-            resent++;
+            sender.SendEmail(ParseAddresses(log.To), ParseAddresses(log.CC), ParseAddresses(log.BCC), log.Subject, log.Body, context.StoreId, log.Trigger);
         }
 
-        TempData[WellKnownTempData.SuccessMessage] = $"Queued {resent} email(s) for resend.";
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Queued {0} email(s) for resend.", logs.Length].Value;
         return context.RedirectToLogsList(redirectUrl);
     }
 
@@ -80,12 +73,10 @@ public class UIEmailLogControllerBase(ApplicationDbContextFactory dbContextFacto
         => addresses?.Select(a => MailboxAddressValidator.TryParse(a, out var mb) ? mb : null).OfType<MailboxAddress>().ToArray() ?? Array.Empty<MailboxAddress>();
 }
 
-public class EmailLogsViewModel
+public class EmailLogsViewModel : BasePagingViewModel
 {
     public string? StoreId { get; set; }
     public string ModifyPermission { get; set; } = null!;
-    public int Skip { get; set; }
-    public int Count { get; set; }
-    public int Total { get; set; }
-    public List<EmailLogData> Logs { get; set; } = new();
+    public List<EmailLogListItem> Logs { get; set; } = new();
+    public override int CurrentPageCount => Logs.Count;
 }

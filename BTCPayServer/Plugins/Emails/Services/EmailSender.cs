@@ -13,7 +13,7 @@ using static BTCPayServer.Plugins.Monetization.Views.SelectExistingOfferingModal
 namespace BTCPayServer.Plugins.Emails.Services;
 
 public abstract class EmailSender(IBackgroundJobClient jobClient, EventAggregator eventAggregator,
-    ApplicationDbContextFactory dbContextFactory, Logs logs) : IEmailSender
+    EmailLogRepository emailLogs, Logs logs) : IEmailSender
 {
     public EventAggregator EventAggregator { get; } = eventAggregator;
     public Logs Logs { get; } = logs;
@@ -29,47 +29,43 @@ public abstract class EmailSender(IBackgroundJobClient jobClient, EventAggregato
     {
         jobClient.Schedule(async cancellationToken =>
         {
-            var emailSettings = await GetEmailSettings();
-            if (emailSettings?.IsComplete() is not true)
-            {
-                Logs.Configuration.LogWarning("Should have sent email, but email settings are not configured");
-                return;
-            }
-
-            var log = EmailLogData.Create(storeId);
-            var blob = new EmailLogBlob
-            {
-                Trigger = trigger ?? "Unknown",
-                To = Array.ConvertAll(email ?? [], m => m.ToString()),
-                CC = Array.ConvertAll(cc ?? [], m => m.ToString()),
-                BCC = Array.ConvertAll(bcc ?? [], m => m.ToString()),
-                Subject = subject,
-                Body = message
-            };
-
+            var log = EmailLogEntry.Create(storeId);
+            log.Trigger = trigger ?? "Unknown";
+            log.To = Array.ConvertAll(email ?? [], m => m.ToString());
+            log.CC = Array.ConvertAll(cc ?? [], m => m.ToString());
+            log.BCC = Array.ConvertAll(bcc ?? [], m => m.ToString());
+            log.Subject = subject;
+            log.Body = message;
+            log.Status = EmailLogStatus.Failed;
             try
             {
+                var emailSettings = await GetEmailSettings();
+                if (emailSettings?.IsComplete() is not true)
+                {
+                    log.Error = "The email settings are not configured";
+                    Logs.Configuration.LogWarning("Should have sent email, but email settings are not configured");
+                    return;
+                }
                 using var smtp = await emailSettings.CreateSmtpClient();
                 var mail = emailSettings.CreateMailMessage(email, cc, bcc, subject, message, true);
                 var response = await smtp.SendAsync(mail, cancellationToken);
                 await smtp.DisconnectAsync(true, cancellationToken);
-
-                blob.Status = EmailLogStatus.Sent;
+                log.Status = EmailLogStatus.Sent;
                 EventAggregator.Publish(new Events.EmailSentEvent(response, mail));
             }
             catch (Exception ex)
             {
-                blob.Status = EmailLogStatus.Failed;
-                blob.Error = ex.Message;
+                log.Error = ex.Message;
                 Logs.Configuration.LogWarning(ex, "Failed to send email ({Trigger})", trigger);
                 throw;
             }
             finally
             {
-                log.SetBlob(blob);
-                await using var ctx = dbContextFactory.CreateContext();
-                ctx.EmailLogs.Add(log);
-                await ctx.SaveChangesAsync(CancellationToken.None);
+                try { await emailLogs.Add(log); }
+                catch (Exception ex)
+                {
+                    Logs.Configuration.LogWarning(ex, "Failed to save the email log ({Trigger})", trigger);
+                }
             }
         }, TimeSpan.Zero);
     }

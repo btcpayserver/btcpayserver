@@ -17,9 +17,10 @@ using BTCPayServer.Forms;
 using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
-using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.PaymentRequest;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Plugins.Wallets;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
@@ -329,6 +330,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}")]
         [AllowAnonymous]
+        [UseStoreLanguage]
         public async Task<IActionResult> ViewPaymentRequest(string payReqId)
         {
             var vm = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());
@@ -355,6 +357,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("{payReqId}/form")]
         [HttpPost("{payReqId}/form")]
         [AllowAnonymous]
+        [UseStoreLanguage]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> ViewPaymentRequestForm(string payReqId, FormViewModel viewModel)
         {
@@ -415,6 +418,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}/pay")]
         [AllowAnonymous]
+        [UseStoreLanguage]
         public async Task<IActionResult> PayPaymentRequest(string payReqId, bool redirectToInvoice = true,
             decimal? amount = null, CancellationToken cancellationToken = default)
         {
@@ -504,6 +508,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}/cancel")]
         [AllowAnonymous]
+        [UseStoreLanguage]
         public async Task<IActionResult> CancelUnpaidPendingInvoice(string payReqId, bool redirect = true)
         {
             var result = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());

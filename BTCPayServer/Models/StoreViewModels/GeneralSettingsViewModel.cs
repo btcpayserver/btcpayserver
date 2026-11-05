@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -22,6 +24,10 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Store Website")]
         [MaxLength(500)]
         public string StoreWebsite { get; set; }
+
+        [Display(Name = "Storefront language")]
+        public string StorefrontLanguage { get; set; }
+        public List<SelectListItem> StorefrontLanguages { get; set; } = new();
 
         [Display(Name = "Brand Color")]
         public string BrandColor { get; set; }

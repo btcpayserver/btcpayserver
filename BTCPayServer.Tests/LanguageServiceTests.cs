@@ -801,6 +801,46 @@ namespace BTCPayServer.Tests
             await localizer.DeleteTranslation("French");
             Assert.Null(await localizer.GetUserTranslations("French"));
         }
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanUseStoreLanguage()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var localizer = tester.PayTester.GetService<LocalizerService>();
+            var accessor = tester.PayTester.GetService<TranslationsAccessor>();
+            var db = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext().Database.GetDbConnection();
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('French', 'English', 'Custom')");
+            var dict = await localizer.GetTranslation("French");
+            await localizer.Save(dict!, new Translations(new[] { KeyValuePair.Create("Hello", "Salut") }));
+            static string Hello(Translations t) => t.Records.TryGetValue("Hello", out var v) ? v : null;
+            var french = await localizer.GetUserTranslations("French");
+
+            async Task<string> RenderPublicPage(LocalizerService.LoadedTranslations userLanguage, string storeLanguage)
+            {
+                return await Task.Run(async () =>
+                {
+                    using (accessor.BeginRequest())
+                    {
+                        accessor.RequestTranslations = userLanguage;
+                        await accessor.UseStoreLanguage(storeLanguage);
+                        return Hello(accessor.Current.Translations);
+                    }
+                });
+            }
+            Assert.Equal("Salut", await RenderPublicPage(null, "French"));
+            Assert.NotEqual("Salut", await RenderPublicPage(french, localizer.ServerLanguage));
+            Assert.NotEqual("Salut", await RenderPublicPage(french, null));
+            Assert.Equal("Salut", await RenderPublicPage(french, "Klingon"));
+            for (var i = 0; i < 20; i++)
+            {
+                var frenchStore = RenderPublicPage(null, "French");
+                var serverStore = RenderPublicPage(french, localizer.ServerLanguage);
+                Assert.Equal("Salut", await frenchStore);
+                Assert.NotEqual("Salut", await serverStore);
+            }
+            Assert.NotEqual("Salut", Hello(localizer.Translations));
+        }
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Playwright", "Playwright")]

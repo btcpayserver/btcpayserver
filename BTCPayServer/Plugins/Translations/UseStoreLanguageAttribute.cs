@@ -16,7 +16,7 @@ namespace BTCPayServer.Plugins.Translations;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class UseStoreLanguageAttribute() : TypeFilterAttribute(typeof(StoreLanguageFilter));
 
-internal class StoreLanguageFilter(LocalizerService localizer, StoreRepository storeRepository,
+internal class StoreLanguageFilter(TranslationsAccessor translationsAccessor, StoreRepository storeRepository,
     ApplicationDbContextFactory dbContextFactory, IMemoryCache memoryCache,
     IEnumerable<BuiltInPermissionScopeProvider.RouteValueToStoreIdQuery> routeValueQueries) : IAsyncActionFilter
 {
@@ -26,7 +26,7 @@ internal class StoreLanguageFilter(LocalizerService localizer, StoreRepository s
     {
         var storeId = await FindStoreId(context.RouteData);
         if (storeId is not null && await storeRepository.FindStore(storeId) is { } store)
-            await localizer.UseStoreLanguage(store.GetStoreBlob().StorefrontLanguage);
+            await translationsAccessor.UseStoreLanguage(store.GetStoreBlob().StorefrontLanguage);
         await next();
     }
 

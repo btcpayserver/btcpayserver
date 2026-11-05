@@ -16,10 +16,8 @@ public class UserLanguageMiddleware(
 {
     public async Task Invoke(HttpContext httpContext, UserManager<ApplicationUser> userManager)
     {
-        var previousTranslations = translationsAccessor.RequestTranslations;
-        try
+        using (translationsAccessor.BeginRequest())
         {
-            translationsAccessor.RequestTranslations = null;
             if (httpContext.User.Identity is { IsAuthenticated: true } identity &&
                 identity.AuthenticationType == IdentityConstants.ApplicationScheme)
             {
@@ -34,10 +32,6 @@ public class UserLanguageMiddleware(
             }
 
             await next(httpContext);
-        }
-        finally
-        {
-            translationsAccessor.RequestTranslations = previousTranslations;
         }
     }
 }

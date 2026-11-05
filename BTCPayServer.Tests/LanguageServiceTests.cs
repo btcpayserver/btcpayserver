@@ -801,7 +801,6 @@ namespace BTCPayServer.Tests
             await localizer.DeleteTranslation("French");
             Assert.Null(await localizer.GetUserTranslations("French"));
         }
-
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanUseStoreLanguage()
@@ -809,6 +808,7 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester(newDb: true);
             await tester.StartAsync();
             var localizer = tester.PayTester.GetService<LocalizerService>();
+            var accessor = tester.PayTester.GetService<TranslationsAccessor>();
             var db = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext().Database.GetDbConnection();
             await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('French', 'English', 'Custom')");
             var dict = await localizer.GetTranslation("French");
@@ -820,12 +820,13 @@ namespace BTCPayServer.Tests
             {
                 return await Task.Run(async () =>
                 {
-                    localizer.BeginRequest();
-                    localizer.SetRequestTranslations(userLanguage);
-                    await Action();
-                    return Hello(localizer.Translations);
+                    using (accessor.BeginRequest())
+                    {
+                        accessor.RequestTranslations = userLanguage;
+                        await accessor.UseStoreLanguage(storeLanguage);
+                        return Hello(accessor.Current.Translations);
+                    }
                 });
-                async Task Action() => await localizer.UseStoreLanguage(storeLanguage);
             }
             Assert.Equal("Salut", await RenderPublicPage(null, "French"));
             Assert.NotEqual("Salut", await RenderPublicPage(french, localizer.ServerLanguage));

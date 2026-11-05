@@ -1,11 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Plugins.Emails;
 using BTCPayServer.Plugins.Emails.Controllers;
 using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Emails.Services;
@@ -183,6 +186,137 @@ public class EmailsTests(ITestOutputHelper helper) : UnitTestBase(helper)
         }, ""));
 
         await AssertIsLogin<StoreEmailSender>(acc.StoreId, "server@server.com");
+    }
+
+    [Fact(Timeout = TestUtils.LongRunningTestTimeout)]
+    [Trait("Integration", "Integration")]
+    public async Task SendingEmailCreatesEmailLog()
+    {
+        using var tester = CreateServerTester(newDb: true);
+        await tester.StartAsync();
+
+        var acc = tester.NewAccount();
+        await acc.GrantAccessAsync(true);
+
+        var settings = tester.PayTester.GetService<SettingsRepository>();
+        await settings.UpdateSetting(new PoliciesSettings() { DisableStoresToUseServerEmailSettings = false });
+
+        Assert.IsType<RedirectToActionResult>(await acc.GetController<UIStoresEmailController>().StoreEmailSettings(acc.StoreId, new(new()
+        {
+            From = "store@store.com",
+            Login = "store@store.com",
+            Password = "store@store.com",
+            Port = tester.MailPitSettings.SmtpPort,
+            Server = tester.MailPitSettings.Hostname
+        })
+        { IsCustomSMTP = true }, ""));
+
+        var emailLogs = tester.PayTester.GetService<EmailLogRepository>();
+        var emailSenderFactory = tester.PayTester.GetService<EmailSenderFactory>();
+
+        await tester.AssertHasEmail(async () =>
+        {
+            var sender = await emailSenderFactory.GetEmailSender(acc.StoreId);
+            sender.SendEmail(MailboxAddress.Parse("destination@test.com"), "log test subject", "log test body");
+        });
+
+        EmailLogListItem? logRow = null;
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var (items, _) = await emailLogs.GetPage(acc.StoreId, 0, 1);
+            logRow = items.FirstOrDefault();
+            Assert.NotNull(logRow);
+        });
+        Assert.Equal(EmailLogStatus.Sent, logRow!.Status);
+        Assert.Equal("log test subject", logRow.Subject);
+        Assert.Contains("destination@test.com", logRow.To);
+        Assert.Null(logRow.Error);
+    }
+
+    [Fact(Timeout = TestUtils.LongRunningTestTimeout)]
+    [Trait("Integration", "Integration")]
+    public async Task IncompleteSmtpSettingsCreateFailedEmailLog()
+    {
+        using var tester = CreateServerTester(newDb: true);
+        await tester.StartAsync();
+
+        var acc = tester.NewAccount();
+        await acc.GrantAccessAsync(true);
+
+        var settings = tester.PayTester.GetService<SettingsRepository>();
+        await settings.UpdateSetting(new PoliciesSettings() { DisableStoresToUseServerEmailSettings = true });
+
+        var emailLogs = tester.PayTester.GetService<EmailLogRepository>();
+        var emailSenderFactory = tester.PayTester.GetService<EmailSenderFactory>();
+        var sender = await emailSenderFactory.GetEmailSender(acc.StoreId);
+        sender.SendEmail(MailboxAddress.Parse("destination@test.com"), "no smtp subject", "no smtp body");
+
+        EmailLogListItem? logRow = null;
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var (items, _) = await emailLogs.GetPage(acc.StoreId, 0, 1);
+            logRow = items.FirstOrDefault();
+            Assert.NotNull(logRow);
+        });
+        Assert.Equal(EmailLogStatus.Failed, logRow!.Status);
+        Assert.Equal("no smtp subject", logRow.Subject);
+        Assert.Contains("destination@test.com", logRow.To);
+        Assert.NotNull(logRow.Error);
+    }
+
+    [Fact(Timeout = TestUtils.LongRunningTestTimeout)]
+    [Trait("Integration", "Integration")]
+    public async Task FailedSendCreatesFailedEmailLogAndCanBeResent()
+    {
+        using var tester = CreateServerTester(newDb: true);
+        await tester.StartAsync();
+
+        var acc = tester.NewAccount();
+        await acc.GrantAccessAsync(true);
+
+        var settings = tester.PayTester.GetService<SettingsRepository>();
+        await settings.UpdateSetting(new PoliciesSettings() { DisableStoresToUseServerEmailSettings = false });
+
+        Assert.IsType<RedirectToActionResult>(await acc.GetController<UIStoresEmailController>().StoreEmailSettings(acc.StoreId, new(new()
+        {
+            From = "store@store.com",
+            Login = "store@store.com",
+            Password = "store@store.com",
+            Port = 1,
+            Server = "127.0.0.1"
+        })
+        { IsCustomSMTP = true }, ""));
+
+        var emailLogs = tester.PayTester.GetService<EmailLogRepository>();
+        var emailSenderFactory = tester.PayTester.GetService<EmailSenderFactory>();
+        var sender = await emailSenderFactory.GetEmailSender(acc.StoreId);
+        sender.SendEmail(MailboxAddress.Parse("destination@test.com"), "failing subject", "failing body");
+
+        EmailLogListItem? logRow = null;
+        await TestUtils.EventuallyAsync(async () =>
+        {
+            var (items, _) = await emailLogs.GetPage(acc.StoreId, 0, 1);
+            logRow = items.FirstOrDefault();
+            Assert.NotNull(logRow);
+            Assert.Equal(EmailLogStatus.Failed, logRow!.Status);
+        });
+        Assert.NotNull(logRow!.Error);
+
+        Assert.IsType<RedirectToActionResult>(await acc.GetController<UIStoresEmailController>().StoreEmailSettings(acc.StoreId, new(new()
+        {
+            From = "store@store.com",
+            Login = "store@store.com",
+            Password = "store@store.com",
+            Port = tester.MailPitSettings.SmtpPort,
+            Server = tester.MailPitSettings.Hostname
+        })
+        { IsCustomSMTP = true }, ""));
+
+        var message = await tester.AssertHasEmail(async () =>
+        {
+            await acc.GetController<UIStoreEmailLogsController>().ResendStoreEmails(acc.StoreId, new[] { logRow.Id });
+        });
+        Assert.Equal("failing subject", message.Subject);
     }
 
     [Fact]

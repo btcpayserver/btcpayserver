@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -11,6 +12,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
@@ -19,7 +21,11 @@ using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payouts;
+using BTCPayServer.Plugins.Emails.HostedServices;
 using BTCPayServer.Plugins.Wallets;
+using BTCPayServer.Plugins.Webhooks;
+using BTCPayServer.Plugins.Webhooks.HostedServices;
+using BTCPayServer.Plugins.Webhooks.TriggerProviders;
 using BTCPayServer.Plugins.Webhooks.Views;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
@@ -191,7 +197,54 @@ namespace BTCPayServer.Controllers
 
             model.AdditionalData = additionalData;
 
+            var canResendEmail = (await _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanModifyStoreSettings)).Succeeded;
+            if (canResendEmail)
+            {
+                await using var emailRuleCtx = _dbContextFactory.CreateContext();
+                var occurredTriggers = GetOccurredEmailTriggers(invoice, details.Payments.Any());
+                model.ResendableEmailRules = await emailRuleCtx.EmailRules.Where(r => r.StoreId == invoice.StoreId && occurredTriggers.Contains(r.Trigger)).ToListAsync();
+            }
             return View(model);
+        }
+
+        [HttpPost("i/{invoiceId}/resend-email")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> ResendEmail(string invoiceId, long ruleId)
+        {
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
+            if (invoice is null)
+                return NotFound();
+
+            var store = await _StoreRepository.GetStoreByInvoiceId(invoice.Id);
+            if (store is null)
+                return NotFound();
+
+            await using var emailRuleCtx = _dbContextFactory.CreateContext();
+            var rule = await emailRuleCtx.EmailRules.FirstOrDefaultAsync(r => r.StoreId == invoice.StoreId && r.Id == ruleId);
+            if(rule is null)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["No matching email rule found."].Value;
+                return RedirectToAction(nameof(Invoice), new { invoiceId });
+            }
+            var occurredTriggers = GetOccurredEmailTriggers(invoice, invoice.GetPayments(false).Any());
+            if (!occurredTriggers.Contains(rule.Trigger))
+                return NotFound();
+
+            var invoiceEvent = CreateInvoiceEventForTrigger(invoice, rule.Trigger);
+            var webhookEvent = invoiceEvent is null ? null : await _invoiceTriggerProvider.GetWebhookEventAsync((object)invoiceEvent);
+            if (invoiceEvent is null || webhookEvent is null)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This email cannot be resent."].Value;
+                return RedirectToAction(nameof(Invoice), new { invoiceId });
+            }
+            var ctx = _invoiceTriggerProvider.CreateWebhookTriggerContext(store, invoiceEvent, webhookEvent);
+            var model = await _invoiceTriggerProvider.GetEmailModel(ctx);
+            _EventAggregator.Publish(new TriggerEvent(invoice.StoreId, rule.Trigger, model, new WebhookProviderHostedService.WebhookTriggerOwner(_invoiceTriggerProvider, ctx))
+            {
+                OnlyRuleId = rule.Id
+            });
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email resent."].Value;
+            return RedirectToAction(nameof(Invoice), new { invoiceId });
         }
 
         [XFrameOptions(null)]
@@ -1339,6 +1392,62 @@ namespace BTCPayServer.Controllers
                 return true;
             var authorizationResult = await _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanViewInvoices);
             return authorizationResult.Succeeded;
+        }
+
+        private static List<string> GetPlausibleWebhookEventTypes(InvoiceEntity invoice, bool hasPayments)
+        {
+            var types = new List<string> { WebhookEventType.InvoiceCreated };
+
+            if (hasPayments)
+                types.Add(WebhookEventType.InvoiceReceivedPayment);
+
+            switch (invoice.Status)
+            {
+                case InvoiceStatus.Processing:
+                    types.Add(WebhookEventType.InvoiceProcessing);
+                    break;
+
+                case InvoiceStatus.Settled:
+                    types.Add(WebhookEventType.InvoiceProcessing);
+                    types.Add(WebhookEventType.InvoiceSettled);
+                    types.Add(WebhookEventType.InvoicePaymentSettled);
+                    if (invoice.ExceptionStatus == InvoiceExceptionStatus.PaidLate)
+                        types.Add(WebhookEventType.InvoicePaidAfterExpiration);
+                    break;
+
+                case InvoiceStatus.Expired:
+                    types.Add(invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial ? WebhookEventType.InvoiceExpiredPaidPartial : WebhookEventType.InvoiceExpired);
+                    break;
+
+                case InvoiceStatus.Invalid:
+                    types.Add(WebhookEventType.InvoiceInvalid);
+                    break;
+            }
+            return types;
+        }
+
+        private static List<string> GetOccurredEmailTriggers(InvoiceEntity invoice, bool hasPayments)
+            => GetPlausibleWebhookEventTypes(invoice, hasPayments).Select(EmailRuleData.GetWebhookTriggerName).Distinct().ToList();
+
+        private static Events.InvoiceEvent? CreateInvoiceEventForTrigger(InvoiceEntity invoice, string trigger)
+        {
+            var webhookType = trigger.StartsWith(EmailRuleData.GetWebhookTriggerName(""), StringComparison.Ordinal)
+                ? trigger.Substring(EmailRuleData.GetWebhookTriggerName("").Length)
+                : trigger;
+            var payment = invoice.GetPayments(false).LastOrDefault();
+            return webhookType switch
+            {
+                WebhookEventType.InvoiceCreated => new Events.InvoiceEvent(invoice, Events.InvoiceEvent.Created),
+                WebhookEventType.InvoiceReceivedPayment when payment is not null => new Events.InvoiceEvent(invoice, Events.InvoiceEvent.ReceivedPayment) { Payment = payment },
+                WebhookEventType.InvoicePaymentSettled when payment is not null => new Events.InvoiceEvent(invoice, Events.InvoiceEvent.PaymentSettled) { Payment = payment },
+                WebhookEventType.InvoiceProcessing => new Events.InvoiceEvent(invoice, Events.InvoiceEvent.PaidInFull),
+                WebhookEventType.InvoiceSettled => new Events.InvoiceEvent(invoice, Events.InvoiceEvent.Confirmed),
+                WebhookEventType.InvoiceExpired => new Events.InvoiceEvent(invoice, Events.InvoiceEvent.Expired),
+                WebhookEventType.InvoiceExpiredPaidPartial => new Events.InvoiceEvent(invoice, Events.InvoiceEvent.ExpiredPaidPartial),
+                WebhookEventType.InvoiceInvalid => new Events.InvoiceEvent(invoice, Events.InvoiceEvent.FailedToConfirm),
+                WebhookEventType.InvoicePaidAfterExpiration => new Events.InvoiceEvent(invoice, Events.InvoiceEvent.PaidAfterExpiration),
+                _ => null
+            };
         }
     }
 }

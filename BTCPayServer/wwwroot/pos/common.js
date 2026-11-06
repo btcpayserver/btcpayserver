@@ -155,6 +155,34 @@ function loadState(name) {
             }
         }
     }
+
+    // Reconcile aggregate inventory across cart lines that share an item id
+    // (option combinations create multiple lines for the same item; shared stock is one capacity).
+    const totalsByItem = new Map();
+    const itemIds = new Set();
+    for (const line of cart) {
+        if (!line) continue;
+        itemIds.add(line.id);
+        totalsByItem.set(line.id, (totalsByItem.get(line.id) || 0) + (+line.count || 0));
+    }
+    for (const id of itemIds) {
+        const item = srvModel.items.find(i => i.id === id);
+        const total = totalsByItem.get(id);
+        if (!item || item.inventory == null) continue;
+        const cap = Math.min(total, item.inventory);
+        if (cap >= total) continue;
+        let remaining = total - cap;
+        for (let i = cart.length - 1; i >= 0; i--) {
+            const line = cart[i];
+            if (!line || line.id !== id) continue;
+            const lineCount = (+line.count || 0);
+            if (lineCount <= 0) { cart.splice(i, 1); continue; }
+            const take = Math.min(lineCount, remaining);
+            line.count = lineCount - take;
+            remaining -= take;
+            if ((+line.count || 0) <= 0) cart.splice(i, 1);
+        }
+    }
     return cart;
 }
 
@@ -173,6 +201,7 @@ const posCommon = {
             searchTerm: null,
             cart: [],
             amounts: [null],
+            optionsItem: null,
             recentTransactions: [],
             recentTransactionsLoading: false,
             dateFormatter: getDateFormatter(),
@@ -205,7 +234,7 @@ const posCommon = {
             const data = { subTotal: this.summary.priceTaxExcluded, total: this.summary.priceTaxIncludedWithTips }
             const amounts = this.amounts.filter(e => e) // clear empty or zero values
             if (amounts) data.amounts = amounts.map(parseFloat)
-            if (this.cart) data.cart = this.cart
+            if (this.cart) data.cart = this.cart.map(this.prepareCartItem)
             if (this.summary.discount > 0) data.discountAmount = this.summary.discount
             if (this.discountPercentNumeric > 0) data.discountPercentage = this.discountPercentNumeric
             if (this.summary.tip > 0) data.tip = this.summary.tip
@@ -253,10 +282,37 @@ const posCommon = {
         },
         cart: {
             handler(newCart) {
+                // Enforce the shared inventory limit across lines that share an item id
+                // (option combinations create multiple lines for the same item; shared stock is one capacity).
+                const totalsByItem = new Map();
+                const itemIds = new Set();
+                for (const line of newCart) {
+                    if (!line) continue;
+                    itemIds.add(line.id);
+                    totalsByItem.set(line.id, (totalsByItem.get(line.id) || 0) + (+line.count || 0));
+                }
+                for (const id of itemIds) {
+                    const item = this.items.find(i => i.id === id);
+                    const total = totalsByItem.get(id);
+                    if (!item || item.inventory == null) continue;
+                    const cap = Math.min(total, item.inventory);
+                    const excess = total - cap;
+                    if (excess <= 0) continue;
+                    let remaining = excess;
+                    for (let i = newCart.length - 1; i >= 0; i--) {
+                        const line = newCart[i];
+                        if (!line || line.id !== id) continue;
+                        const lineCount = (+line.count || 0);
+                        if (lineCount <= 0) { newCart.splice(i, 1); continue; }
+                        const take = Math.min(lineCount, remaining);
+                        line.count = lineCount - take;
+                        remaining -= take;
+                        if ((+line.count || 0) <= 0) newCart.splice(i, 1);
+                    }
+                }
                 newCart.forEach(item => {
                     if (!item.count) item.count = 1
-                    if (item.inventory && item.inventory < item.count) item.count = item.inventory
-                })
+                });
                 if (this.persistState) {
                     saveState('cart', newCart)
                 }
@@ -306,9 +362,12 @@ const posCommon = {
         },
         inStock(index) {
             const item = this.items[index]
-            const itemInCart = this.cart.find(lineItem => lineItem.id === item.id)
+            // Count quantities across every cart line of this item (option combinations create multiple lines)
+            const inCart = this.cart
+                .filter(lineItem => lineItem.id === item.id)
+                .reduce((res, lineItem) => res + (+lineItem.count || 0), 0)
 
-            return item.inventory == null || item.inventory > (itemInCart ? itemInCart.count : 0)
+            return item.inventory == null || item.inventory > inCart
         },
         addToCart(index, count) {
             if (!this.inStock(index)) return null;
@@ -324,43 +383,158 @@ const posCommon = {
                 item.price = parseFloat($amount.value);
             }
 
-            let itemInCart = this.cart.find(lineItem => lineItem.id === item.id && lineItem.price === item.price);
+            // Items with option groups need the guest to pick options first
+            if (Array.isArray(item.optionGroups) && item.optionGroups.length > 0) {
+                // The options modal is rendered in the Cart view; views without it (e.g. keypad) cannot pick options
+                if (this.$refs?.OptionsModal) {
+                    this.openOptions(index);
+                    return null;
+                }
+            }
 
+            let itemInCart = this.cart.find(lineItem => lineItem.id === item.id && lineItem.price === item.price);
+            itemInCart = this.addCartLine(itemInCart, item, count);
+            return itemInCart;
+        },
+        addCartLine(itemInCart, item, count, options, priceDelta) {
+            // item.id is user-defined; getElementById avoids CSS-selector escaping issues
+            const $posItem = document.getElementById(`card_${item.id}`);
             // Add new item because it doesn't exist yet
             if (!itemInCart) {
                 itemInCart = {
                     ...item,
                     count
                 }
+                if (options && options.length) {
+                    const decimals = srvModel.currencyInfo.divisibility;
+                    itemInCart.price = +((item.price ?? 0) + (priceDelta || 0)).toFixed(decimals);
+                    itemInCart.options = options;
+                }
+                itemInCart._key = ++this._lineSeq;
                 this.cart.push(itemInCart);
             } else {
                 itemInCart.count += count;
             }
 
             // Animate
-            if (!$posItem.classList.contains(POS_ITEM_ADDED_CLASS)) $posItem.classList.add(POS_ITEM_ADDED_CLASS);
+            if ($posItem && !$posItem.classList.contains(POS_ITEM_ADDED_CLASS)) $posItem.classList.add(POS_ITEM_ADDED_CLASS);
 
             this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate, this.taxIncludedInPrice);
             return itemInCart;
         },
-        removeFromCart(id) {
-            const index = this.cart.findIndex(lineItem => lineItem.id === id);
+        openOptions(index) {
+            const item = this.items[index];
+            const isFixedPrice = item.priceType.toLowerCase() === 'fixed';
+            let basePrice = item.price;
+            if (!isFixedPrice) {
+                const $posItem = this.$refs.posItems.querySelectorAll('.posItem')[index];
+                const $amount = $posItem.querySelector('input[name="amount"]');
+                if (!$amount.reportValidity()) return false;
+                basePrice = parseFloat($amount.value);
+            }
+            this.optionsItem = {
+                ...item,
+                index,
+                price: Number(basePrice) || 0,
+                groups: item.optionGroups.map(group => ({
+                    ...group,
+                    choices: (group.choices || []).map(choice => ({ ...choice, selected: false }))
+                }))
+            };
+            this.$nextTick(() => {
+                bootstrap.Modal.getOrCreateInstance(this.$refs.OptionsModal).show();
+            });
+        },
+        closeOptions() {
+            if (this.$refs.OptionsModal) bootstrap.Modal.getInstance(this.$refs.OptionsModal)?.hide();
+            this.optionsItem = null;
+        },
+        confirmOptions() {
+            if (!this.optionsItem) return null;
+            const options = [];
+            let priceDelta = 0;
+            for (const group of this.optionsItem.groups) {
+                for (const choice of group.choices) {
+                    if (!choice.selected) continue;
+                    const label = group.title ? `${group.title}: ${choice.title}` : choice.title;
+                    options.push(label);
+                    const choicePrice = +(choice.price || 0);
+                    if (choicePrice > 0) priceDelta += choicePrice;
+                }
+            }
+            const itemInCart = this.cart.find(lineItem =>
+                lineItem.id === this.optionsItem.id &&
+                lineItem.price === +(this.optionsItem.price + priceDelta).toFixed(this.currencyInfo.divisibility) &&
+                lineItem.options && lineItem.options.length == options.length &&
+                lineItem.options.every((o, i) => o === options[i]));
+            // Inventory is shared across all lines of the item; cap additions accordingly
+            const stockItem = this.items[this.optionsItem.index];
+            if (stockItem && stockItem.inventory != null) {
+                const inCartForItem = this.cart
+                    .filter(lineItem => lineItem.id === this.optionsItem.id)
+                    .reduce((res, lineItem) => res + (+lineItem.count || 0), 0);
+                if (inCartForItem + 1 > stockItem.inventory) return null;
+            }
+            const added = this.optionsItem.id && this.addCartLine(
+                itemInCart,
+                this.optionsItem,
+                1,
+                options,
+                priceDelta);
+            this.closeOptions();
+            return added;
+        },
+        hasSelectedOptions(item) {
+            return (item.groups || []).some(group => (group.choices || []).some(choice => choice.selected));
+        },
+        optionsTotalDelta(item) {
+            if (!item) return 0;
+            return (item.groups || [])
+                .flatMap(group => group.choices || [])
+                .filter(choice => choice.selected)
+                .reduce((sum, choice) => sum + Math.max(0, +(choice.price || 0)), 0);
+        },
+        removeFromCart(item) {
+            const index = typeof item === 'object'
+                ? this.cart.indexOf(item)
+                : this.cart.findIndex(lineItem => lineItem.id === item);
             this.cart.splice(index, 1);
             this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate, this.taxIncludedInPrice);
         },
-        getQuantity(id) {
-            const itemInCart = this.cart.find(lineItem => lineItem.id === id);
+        getQuantity(item) {
+            const itemInCart = typeof item === 'object'
+                ? this.cart.find(lineItem => lineItem === item)
+                : this.cart.find(lineItem => lineItem.id === item);
             return itemInCart ? itemInCart.count : 0;
         },
-        updateQuantity(id, count, addOrRemove) {
-            let itemInCart = this.cart.find(lineItem => lineItem.id === id);
+        updateQuantity(item, count, addOrRemove) {
+            let itemInCart = typeof item === 'object'
+                ? this.cart.find(lineItem => lineItem === item)
+                : this.cart.find(lineItem => lineItem.id === item);
+            let added = false;
             if (!itemInCart && addOrRemove && count > 0) {
-                const index = this.items.findIndex(lineItem => lineItem.id === id);
-                itemInCart = this.addToCart(index, 0);
+                const index = this.items.findIndex(lineItem => lineItem.id === (typeof item === 'object' ? item.id : item));
+                const target = this.items[index];
+                const optionBearing = Array.isArray(target?.optionGroups) && target.optionGroups.length > 0;
+                if (optionBearing && this.$refs?.OptionsModal) {
+                    // Option-bearing items open the options modal; wait for the guest's selection.
+                    itemInCart = this.addToCart(index, 0);
+                    if (!itemInCart) return;
+                } else if (optionBearing) {
+                    // No options modal available (e.g. keypad view): add directly with base behavior.
+                    itemInCart = this.addToCart(index, count);
+                    added = true;
+                } else {
+                    itemInCart = this.addToCart(index, 0);
+                }
             }
+            // Respect inventory across all lines of this item (option combinations create multiple lines)
+            const itemCount = this.cart
+                .filter(lineItem => lineItem.id === itemInCart.id)
+                .reduce((res, lineItem) => res + (+lineItem.count || 0), 0);
             const applyable = addOrRemove || (count < 0 && itemInCart.count + count > 0) ||
-                (count > 0 && (itemInCart.inventory == null || itemInCart.count + count <= itemInCart.inventory));
-            if (applyable) {
+                (count > 0 && (itemInCart.inventory == null || itemCount + count <= itemInCart.inventory));
+            if (!added && applyable) {
                 itemInCart.count += count;
             }
             if (itemInCart && itemInCart.count <= 0 && addOrRemove) {
@@ -372,6 +546,14 @@ const posCommon = {
             this.cart = [];
             this.amounts = [null];
             this.tip = this.discount = this.tipPercent = this.discountPercent = null;
+        },
+        prepareCartItem(item) {
+            // Strip display-only keys; the item definition helpers don't belong in the order
+            const cartItem = { ...item };
+            delete cartItem._key;
+            delete cartItem.groups;
+            delete cartItem.optionGroups;
+            return cartItem;
         },
         forEachItem(callback) {
             if (this.$refs.posItems) {
@@ -424,9 +606,14 @@ const posCommon = {
         }
     },
     beforeMount() {
+        this._lineSeq = 0;
         if (this.persistState) {
             this.cart = loadState('cart');
         }
+        // Persisted lines may carry stale or missing line keys; reassign to guarantee Vue row keys stay unique
+        this.cart.forEach(line => {
+            line._key = ++this._lineSeq;
+        });
         this.posOrder.setTipTaxRate(this.tipTaxRate);
         this.posOrder.setCart(this.cart, this.amounts, this.defaultTaxRate, this.taxIncludedInPrice);
 

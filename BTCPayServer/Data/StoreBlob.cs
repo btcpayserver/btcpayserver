@@ -29,6 +29,7 @@ namespace BTCPayServer.Data
             RecommendedFeeBlockTarget = 1;
             PaymentMethodCriteria = new List<PaymentMethodCriteria>();
             ReceiptOptions = InvoiceDataBase.ReceiptOptions.CreateDefault();
+            TaxRates = new List<StoreTaxRate>();
         }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
@@ -42,6 +43,7 @@ namespace BTCPayServer.Data
         public bool RedirectAutomatically { get; set; }
         public bool ShowRecommendedFee { get; set; }
         public int RecommendedFeeBlockTarget { get; set; }
+        public List<StoreTaxRate> TaxRates { get; set; }
         string _DefaultCurrency;
         public string DefaultCurrency
         {

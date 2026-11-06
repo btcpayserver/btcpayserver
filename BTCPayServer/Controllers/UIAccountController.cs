@@ -59,6 +59,8 @@ namespace BTCPayServer.Controllers
         Logs logs)
         : Controller
     {
+        private const string PasswordResetTwoFactorUserIdKey = "PasswordResetTwoFactorUserId";
+        private const string PasswordResetTwoFactorTokenKey = "PasswordResetTwoFactorToken";
         readonly ILogger _logger = logs.PayServer;
 
         public PoliciesSettings PoliciesSettings { get; } = policiesSettings;
@@ -267,6 +269,8 @@ namespace BTCPayServer.Controllers
             public string AuthenticationMethod { get; set; } = AuthenticationSchemes.LimitedLogin;
             public bool RememberMe { get; set; }
             public string ReturnUrl { get; set; }
+            public string PasswordResetUserId { get; set; }
+            public string PasswordResetToken { get; set; }
             [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
             public DateTimeOffset? ExpiresUtc { get; set; }
 
@@ -486,6 +490,16 @@ namespace BTCPayServer.Controllers
         {
             await this.HttpContext.SignOutAsync(IdentityConstants.TwoFactorUserIdScheme);
             session.Clear(HttpContext.Session);
+
+            if (session.PasswordResetUserId is not null && session.PasswordResetToken is not null)
+            {
+                if (session.PasswordResetUserId != user.Id)
+                    return Forbid();
+
+                HttpContext.Session.SetString(PasswordResetTwoFactorUserIdKey, session.PasswordResetUserId);
+                HttpContext.Session.SetString(PasswordResetTwoFactorTokenKey, session.PasswordResetToken);
+                return RedirectToLocal(session.ReturnUrl);
+            }
 
             var loginContext = this.CreateLoginContext(user);
             if (!await userService.CanLogin(loginContext))
@@ -708,6 +722,26 @@ namespace BTCPayServer.Controllers
                 email = user?.Email;
             }
 
+            if (user is not null && await signInManager.IsTwoFactorEnabledAsync(user) &&
+                !HasPassedPasswordResetTwoFactor(user, code))
+            {
+                var validToken = await userManager.VerifyUserTokenAsync(user,
+                    userManager.Options.Tokens.PasswordResetTokenProvider,
+                    UserManager<ApplicationUser>.ResetPasswordTokenPurpose, code);
+                if (validToken)
+                {
+                    var returnUrl = Url.Action(nameof(SetPassword), new { code, userId, email });
+                    new LoginSession
+                    {
+                        ReturnUrl = returnUrl,
+                        PasswordResetUserId = user.Id,
+                        PasswordResetToken = code
+                    }.Store(HttpContext.Session);
+                    await signInManager.TwoFactorSignInAsync(user);
+                    return RedirectToSecondaryLogin();
+                }
+            }
+
             return View(new SetPasswordViewModel
             {
                 Code = code,
@@ -740,9 +774,19 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(Login));
             }
 
+            if (await signInManager.IsTwoFactorEnabledAsync(user) &&
+                !HasPassedPasswordResetTwoFactor(user, model.Code))
+            {
+                ModelState.AddModelError(string.Empty,
+                    StringLocalizer["Two-factor authentication is required to reset your password."]);
+                model.HasPassword = hasPassword;
+                return View(model);
+            }
+
             var result = await userManager.ResetPasswordAsync(user!, model.Code, model.Password);
             if (result.Succeeded)
             {
+                ClearPasswordResetTwoFactor();
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Success,
@@ -769,6 +813,18 @@ namespace BTCPayServer.Controllers
             AddErrors(result);
             model.HasPassword = await userManager.HasPasswordAsync(user);
             return View(model);
+        }
+
+        private bool HasPassedPasswordResetTwoFactor(ApplicationUser user, string token)
+        {
+            return HttpContext.Session.GetString(PasswordResetTwoFactorUserIdKey) == user.Id &&
+                   HttpContext.Session.GetString(PasswordResetTwoFactorTokenKey) == token;
+        }
+
+        private void ClearPasswordResetTwoFactor()
+        {
+            HttpContext.Session.Remove(PasswordResetTwoFactorUserIdKey);
+            HttpContext.Session.Remove(PasswordResetTwoFactorTokenKey);
         }
 
         [AllowAnonymous]

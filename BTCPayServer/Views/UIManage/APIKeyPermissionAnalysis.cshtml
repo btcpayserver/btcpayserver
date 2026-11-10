@@ -20,7 +20,7 @@
                     <span class="text-muted small" text-translate="true">Total Permissions</span>
                     <i class="bi bi-key fs-5 text-muted"></i>
                 </div>
-                <div class="display-6 fw-bold mb-2">@Model.TotalPermissions</div>
+                <div class="display-6 fw-bold mb-2 api-key-analysis__total-count">@Model.TotalPermissions</div>
                 <div class="progress" style="height:4px">
                     <div class="progress-bar" style="width:100%"></div>
                 </div>
@@ -34,7 +34,7 @@
                     <span class="text-muted small" text-translate="true">Used Permissions</span>
                     <i class="bi bi-check-circle fs-5 text-muted"></i>
                 </div>
-                <div class="display-6 fw-bold mb-1">@Model.UsedPermissions.Count</div>
+                <div class="display-6 fw-bold mb-1 api-key-analysis__used-count">@Model.UsedPermissions.Count</div>
                 <div class="small text-muted mb-2">@usedPermissionsPercentage% of total</div>
                 <div class="progress" style="height:4px">
                     <div class="progress-bar" style="width:@usedPermissionsPercentage%"></div>
@@ -49,7 +49,7 @@
                     <span class="text-muted small" text-translate="true">Unused Permissions</span>
                     <i class="bi bi-exclamation-circle fs-5 text-muted"></i>
                 </div>
-                <div class="display-6 fw-bold mb-1">@Model.UnusedPermissions.Count</div>
+                <div class="display-6 fw-bold mb-1 api-key-analysis__unused-count">@Model.UnusedPermissions.Count</div>
                 <div class="small text-muted mb-2">@(100 - usedPermissionsPercentage)% of total</div>
                 <div class="progress" style="height:4px">
                     <div class="progress-bar" style="width:@(100 - usedPermissionsPercentage)%"></div>
@@ -82,7 +82,7 @@
     <div class="card-body p-3">
         <div class="tab-content" id="permissionTabContent">
 
-            <div class="tab-pane fade show active" id="all-permissions" role="tabpanel">
+            <div class="tab-pane fade show active api-key-analysis__all-permissions" id="all-permissions" role="tabpanel">
                 @if (Model.AllPermissions.Any())
                 {
                     <table class="table table-hover mb-0">
@@ -150,7 +150,7 @@
                 }
             </div>
 
-            <div class="tab-pane fade" id="used-permissions" role="tabpanel">
+            <div class="tab-pane fade api-key-analysis__used-permissions" id="used-permissions" role="tabpanel">
                 @if (Model.UsedPermissions.Any())
                 {
                     <table class="table table-hover mb-0">
@@ -194,7 +194,7 @@
                 }
             </div>
 
-            <div class="tab-pane fade" id="unused-permissions" role="tabpanel">
+            <div class="tab-pane fade api-key-analysis__unused-permissions" id="unused-permissions" role="tabpanel">
                 @if (Model.UnusedPermissions.Any())
                 {
                     <table class="table table-hover mb-0">

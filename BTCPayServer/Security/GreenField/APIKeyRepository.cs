@@ -125,13 +125,14 @@ namespace BTCPayServer.Security.Greenfield
             VALUES (@Id, @ApiKeyId, @Permission, @LastUsed, 1)
             ON CONFLICT (""Id"")
             DO UPDATE SET
+                ""Permission"" = @Permission,
                 ""LastUsed"" = @LastUsed,
                 ""UsageCount"" = ""ApiKeyPermissionUsages"".""UsageCount"" + 1";
 
             await context.Database.ExecuteSqlRawAsync(sql,
                 new NpgsqlParameter("@Id", $"{id}-{permission}"),
                 new NpgsqlParameter("@ApiKeyId", id),
-                new NpgsqlParameter("@Permission", permission.Policy),
+                new NpgsqlParameter("@Permission", permission.ToString()),
                 new NpgsqlParameter("@LastUsed", DateTimeOffset.UtcNow));
         }
 
@@ -141,6 +142,33 @@ namespace BTCPayServer.Security.Greenfield
             await using var ctx = applicationDbContextFactory.CreateContext();
             var entity = ctx.ApiKeyPermissionUsages.Where(c => c.ApiKeyId == id).ToList();
             return entity.Any() ? entity : new List<ApiKeyPermissionUsage>();
+        }
+
+        public static bool TryAggregateUsage(string grant, IEnumerable<ApiKeyPermissionUsage> usages, out int usageCount, out DateTimeOffset lastUsed)
+        {
+            usageCount = 0;
+            lastUsed = default;
+            if (!Permission.TryParse(grant, out var parsedGrant))
+                return false;
+
+            var matched = false;
+            foreach (var usage in usages)
+            {
+                var prefix = usage.ApiKeyId + "-";
+                var raw = usage.Id is not null && usage.Id.StartsWith(prefix, StringComparison.Ordinal)
+                    ? usage.Id.Substring(prefix.Length)
+                    : usage.Permission;
+                if (!Permission.TryParse(raw, out var recorded) || recorded.Policy != parsedGrant.Policy)
+                    continue;
+                if (parsedGrant.Scope is not null && parsedGrant.Scope != recorded.Scope)
+                    continue;
+
+                matched = true;
+                usageCount += usage.UsageCount;
+                if (usage.LastUsed > lastUsed)
+                    lastUsed = usage.LastUsed;
+            }
+            return matched;
         }
 
         public class APIKeyQuery

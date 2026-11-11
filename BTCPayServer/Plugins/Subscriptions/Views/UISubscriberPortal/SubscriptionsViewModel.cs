@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Data;
 using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Plugins.Emails.Views;
@@ -49,6 +50,7 @@ public class SubscriptionsViewModel
 
     public List<EmailRule> EmailRules { get; set; }
     public List<EmailTriggerViewModel> AvailableTriggers { get; set; }
+    [Range(0, PlanData.MaxPeriodDays)]
     public int PaymentRemindersDays { get; set; }
     public string SearchTerm { get; set; }
 }

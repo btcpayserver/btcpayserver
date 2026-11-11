@@ -158,7 +158,7 @@ public class SubscriptionHostedService(
                 {
                     sub.PeriodEnd = expDate;
                     sub.TrialEnd = null;
-                    sub.GracePeriodEnd = sub.Plan.GracePeriodDays > 0 ? expDate.AddDays(sub.Plan.GracePeriodDays) : (DateTimeOffset?)null;
+                    sub.GracePeriodEnd = sub.Plan.GracePeriodDays > 0 ? expDate.AddDays(PlanData.ClampDays(sub.Plan.GracePeriodDays)) : (DateTimeOffset?)null;
                     sub.ReminderDate = expDate - TimeSpan.FromDays(sub.PaymentReminderDaysOrDefault);
                 }
             }

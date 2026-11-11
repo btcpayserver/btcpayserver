@@ -168,6 +168,10 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 ModelState.AddModelError(nameof(request.Price), "Price cannot be negative");
             if (request?.Name is null)
                 ModelState.AddModelError(nameof(request.Name), "Name is required");
+            if (request?.GracePeriodDays is < 0 or > PlanData.MaxPeriodDays)
+                ModelState.AddModelError(nameof(request.GracePeriodDays), $"Grace period must be between 0 and {PlanData.MaxPeriodDays} days");
+            if (request?.TrialDays is < 0 or > PlanData.MaxPeriodDays)
+                ModelState.AddModelError(nameof(request.TrialDays), $"Trial period must be between 0 and {PlanData.MaxPeriodDays} days");
             if (request?.Description?.Length > PlanData.MaxDescriptionLength)
                 ModelState.AddModelError(nameof(request.Description), $"Description must be at most {PlanData.MaxDescriptionLength} characters");
             if (request?.Currency?.Length > CurrencyNameTable.MaxCurrencyCodeLength)
@@ -241,6 +245,10 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 return PlanNotFound();
             if (request?.Price < 0m)
                 ModelState.AddModelError(nameof(request.Price), "Price cannot be negative");
+            if (request?.GracePeriodDays is < 0 or > PlanData.MaxPeriodDays)
+                ModelState.AddModelError(nameof(request.GracePeriodDays), $"Grace period must be between 0 and {PlanData.MaxPeriodDays} days");
+            if (request?.TrialDays is < 0 or > PlanData.MaxPeriodDays)
+                ModelState.AddModelError(nameof(request.TrialDays), $"Trial period must be between 0 and {PlanData.MaxPeriodDays} days");
             if (request?.Description?.Length > PlanData.MaxDescriptionLength)
                 ModelState.AddModelError(nameof(request.Description), $"Description must be at most {PlanData.MaxDescriptionLength} characters");
             if (request?.Currency?.Length > CurrencyNameTable.MaxCurrencyCodeLength)

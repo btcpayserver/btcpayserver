@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -15,6 +15,8 @@ namespace BTCPayServer.Data.Subscriptions;
 public class PlanData : BaseEntityData
 {
     public const int MaxDescriptionLength = 1_000;
+    public const int MaxPeriodDays = 3650;
+    public static int ClampDays(int days) => Math.Clamp(days, 0, MaxPeriodDays);
 
     [Key]
     [Column("id")]
@@ -111,7 +113,8 @@ public class PlanData : BaseEntityData
                 RecurringInterval.Yearly => 12,
                 _ => throw new NotSupportedException(RecurringType.ToString())
             });
-        return (to, GracePeriodDays is 0 ? null : to.AddDays(GracePeriodDays));
+        var gracePeriodDays = ClampDays(GracePeriodDays);
+        return (to, gracePeriodDays == 0 ? null : to.AddDays(gracePeriodDays));
     }
 
     // Avoid cartesian explosion if there are lots of features

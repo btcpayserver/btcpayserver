@@ -201,7 +201,7 @@ public class SubscriberData : BaseEntityData
         {
             PlanStarted = now;
             PeriodEnd = null;
-            TrialEnd = now.AddDays(plan.TrialDays);
+            TrialEnd = now.AddDays(PlanData.ClampDays(plan.TrialDays));
             ReminderDate = TrialEnd - TimeSpan.FromDays(PaymentReminderDaysOrDefault);
             GracePeriodEnd = null;
             PaidAmount = null;
@@ -226,7 +226,7 @@ public class SubscriberData : BaseEntityData
     }
 
     [NotMapped]
-    public int PaymentReminderDaysOrDefault => PaymentReminderDays ?? Plan.Offering.DefaultPaymentRemindersDays;
+    public int PaymentReminderDaysOrDefault => PlanData.ClampDays(PaymentReminderDays ?? Plan.Offering.DefaultPaymentRemindersDays);
 
     public string ToNiceString()
         => $"{this.Customer?.GetPrimaryIdentity()} ({CustomerId})";

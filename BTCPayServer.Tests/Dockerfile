@@ -25,7 +25,7 @@ RUN dotnet tool install --global Microsoft.Playwright.CLI
 ENV PATH="$PATH:/root/.dotnet/tools"
 # Keep browser dependencies available during an Ubuntu archive DNS outage.
 RUN printf '%s\n' 'http://archive.ubuntu.com/ubuntu/' 'https://mirrors.edge.kernel.org/ubuntu/' > /etc/apt/ubuntu-mirrors.txt \
-    && sed -i -E 's|http://(archive|security)\.ubuntu\.com/ubuntu/?|mirror+file:/etc/apt/ubuntu-mirrors.txt|g' /etc/apt/sources.list.d/ubuntu.sources \
+    && sed -i -E 's#http://(archive|security)\.ubuntu\.com/ubuntu/?#mirror+file:/etc/apt/ubuntu-mirrors.txt#g' /etc/apt/sources.list.d/ubuntu.sources \
     && playwright install chromium --with-deps
 WORKDIR /source/BTCPayServer.Tests
 ENV CONFIGURATION_NAME=${CONFIGURATION_NAME}

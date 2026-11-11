@@ -5,8 +5,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using BTCPayServer.Data;
-using CsvHelper.Configuration;
-using CsvHelper.Configuration.Attributes;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Wallets.Export
@@ -89,34 +87,48 @@ namespace BTCPayServer.Services.Wallets.Export
         private static string ProcessCsv(IEnumerable<ExportTransaction> invoices)
         {
             using StringWriter writer = new();
-            using var csvWriter = new CsvHelper.CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture), true);
-            csvWriter.Context.RegisterClassMap<ExportTransactionMap>();
-            csvWriter.WriteHeader<ExportTransaction>();
-            csvWriter.NextRecord();
-            csvWriter.WriteRecords(invoices);
+            using var csvWriter = CsvHelper.CsvWriter.Create(writer, new CsvHelper.CsvWriterOptions
+            {
+                FormatProvider = CultureInfo.InvariantCulture,
+                NewLine = "\r\n"
+            }, leaveOpen: true);
+            csvWriter.WriteHeader("Transaction Id", "Timestamp", "Amount", "Currency", "Is Confirmed", "Comment", "Labels");
+            foreach (var invoice in invoices)
+            {
+                csvWriter.WriteField(invoice.TransactionId);
+                csvWriter.WriteField(invoice.Timestamp.ToString(CultureInfo.InvariantCulture));
+                csvWriter.WriteField(invoice.Amount);
+                csvWriter.WriteField(invoice.Currency);
+                csvWriter.WriteField(invoice.IsConfirmed.ToString());
+                csvWriter.WriteField(EscapeCsvMetadata(invoice.Comment));
+                csvWriter.WriteField(EscapeCsvMetadata(invoice.Labels == null ? string.Empty : string.Join(", ", invoice.Labels)));
+                csvWriter.EndRecord();
+            }
             csvWriter.Flush();
             return writer.ToString();
         }
-    }
 
-    public sealed class ExportTransactionMap : ClassMap<ExportTransaction>
-    {
-        public ExportTransactionMap()
+        private static string? EscapeCsvMetadata(string? value)
         {
-            AutoMap(CultureInfo.InvariantCulture);
-            Map(m => m.Labels).Convert(row => row.Value.Labels == null ? string.Empty : string.Join(", ", row.Value.Labels));
+            if (string.IsNullOrEmpty(value))
+                return value;
+
+            // Quoting CSV fields alone does not stop spreadsheets from evaluating formulas.
+            var trimmed = value.AsSpan().TrimStart();
+            return value[0] is '\t' or '\r' or '\n' ||
+                   (!trimmed.IsEmpty && trimmed[0] is '=' or '+' or '-' or '@' or '＝' or '＋' or '－' or '＠')
+                ? "'" + value
+                : value;
         }
     }
 
     public class ExportTransaction
     {
-        [Name("Transaction Id")]
         public string TransactionId { get; set; } = string.Empty;
         public DateTimeOffset Timestamp { get; set; }
         public string Amount { get; set; } = string.Empty;
         public string Currency { get; set; } = string.Empty;
 
-        [Name("Is Confirmed")]
         public bool IsConfirmed { get; set; }
         public string? Comment { get; set; }
         public List<string>? Labels { get; set; }

@@ -18,13 +18,11 @@ namespace BTCPayServer.Fido2
     {
         private readonly ApplicationDbContextFactory _contextFactory;
         private readonly IFido2 _fido2;
-        private readonly Fido2Configuration _fido2Configuration;
 
-        public Fido2Service(ApplicationDbContextFactory contextFactory, IFido2 fido2, Fido2Configuration fido2Configuration)
+        public Fido2Service(ApplicationDbContextFactory contextFactory, IFido2 fido2)
         {
             _contextFactory = contextFactory;
             _fido2 = fido2;
-            _fido2Configuration = fido2Configuration;
         }
 
         public async Task<CredentialCreateOptions?> RequestCreation(string userId, Fido2Credential.CredentialType credType)
@@ -146,8 +144,7 @@ namespace BTCPayServer.Fido2
             var exts = new AuthenticationExtensionsClientInputs()
             {
                 UserVerificationMethod = true,
-                Extensions = true,
-                AppID = _fido2Configuration.Origins.First()
+                Extensions = true
             };
 
             // 3. Create options

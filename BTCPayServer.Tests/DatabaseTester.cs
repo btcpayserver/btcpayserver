@@ -42,11 +42,18 @@ namespace BTCPayServer.Tests
             }), _loggerFactory);
         }
 
-        public InvoiceRepository GetInvoiceRepository()
+        public InvoiceRepository GetInvoiceRepository(EventAggregator eventAggregator = null)
         {
             var logs = new BTCPayServer.Logging.Logs();
             logs.Configure(_loggerFactory);
-            return new InvoiceRepository(CreateContextFactory(), new EventAggregator(logs));
+            return new InvoiceRepository(CreateContextFactory(), eventAggregator ?? new EventAggregator(logs));
+        }
+
+        public EventAggregator CreateEventAggregator()
+        {
+            var logs = new BTCPayServer.Logging.Logs();
+            logs.Configure(_loggerFactory);
+            return new EventAggregator(logs);
         }
         public WalletRepository GetWalletRepository() => new (CreateContextFactory());
 

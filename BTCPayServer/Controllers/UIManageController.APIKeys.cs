@@ -40,7 +40,6 @@ namespace BTCPayServer.Controllers
 
             var allPermissions = key.GetBlob().Permissions;
             var usageRecords = await _apiKeyRepository.GetAPIPermissionUsageRecords(id);
-            var usageByPermission = usageRecords.ToDictionary(u => u.Permission, u => u);
 
             var usedPermissions = new List<PermissionUsageViewModel>();
             var unusedPermissions = new List<string>();
@@ -48,13 +47,13 @@ namespace BTCPayServer.Controllers
 
             foreach (var permission in allPermissions)
             {
-                if (usageByPermission.TryGetValue(permission, out var usage))
+                if (APIKeyRepository.TryAggregateUsage(permission, usageRecords, out var usageCount, out var lastUsed))
                 {
                     var usageVM = new PermissionUsageViewModel
                     {
-                        Permission = usage.Permission,
-                        LastUsed = usage.LastUsed,
-                        UsageCount = usage.UsageCount
+                        Permission = permission,
+                        LastUsed = lastUsed,
+                        UsageCount = usageCount
                     };
                     usedPermissions.Add(usageVM);
                     allPermissionVMs.Add(new PermissionViewModel { Permission = permission, Usage = usageVM });

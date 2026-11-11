@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -391,49 +392,101 @@ namespace BTCPayServer.Tests
 
             await s.Page.Locator(".api-key-list__view-usage").ClickAsync();
 
-            var cards = await s.Page.Locator(".display-6.fw-bold").AllTextContentsAsync();
-            Assert.Equal("2", cards[0].Trim());
-            Assert.Equal("0", cards[1].Trim());
-            Assert.Equal("2", cards[2].Trim());
+            await Expect(s.Page.Locator(".api-key-analysis__total-count")).ToHaveTextAsync("2");
+            await Expect(s.Page.Locator(".api-key-analysis__used-count")).ToHaveTextAsync("0");
+            await Expect(s.Page.Locator(".api-key-analysis__unused-count")).ToHaveTextAsync("2");
 
-            var allRows = s.Page.Locator("#all-permissions tbody tr");
-            Assert.Equal(2, await allRows.CountAsync());
-            var neverUsedBadges = s.Page.Locator("#all-permissions .badge:has-text('Never Used')");
-            Assert.Equal(2, await neverUsedBadges.CountAsync());
+            var allRows = s.Page.Locator(".api-key-analysis__all-permissions tbody tr");
+            await Expect(allRows).ToHaveCountAsync(2);
+            await Expect(allRows.Locator(".badge")).ToHaveTextAsync(new[] { "Never Used", "Never Used" });
 
-            await s.Page.Locator("#used-tab").ClickAsync();
-            await s.Page.Locator("#used-permissions.show.active").WaitForAsync();
-            Assert.Equal(0, await s.Page.Locator("#used-permissions tbody tr").CountAsync());
+            await s.Page.GetByRole(AriaRole.Tab, new() { Name = "Used (0)", Exact = true }).ClickAsync();
+            var usedRows = s.Page.Locator(".api-key-analysis__used-permissions tbody tr");
+            await Expect(usedRows).ToHaveCountAsync(0);
 
-            await s.Page.Locator("#unused-tab").ClickAsync();
-            await s.Page.Locator("#unused-permissions.show.active").WaitForAsync();
-            var unusedRows = s.Page.Locator("#unused-permissions tbody tr");
-            Assert.Equal(2, await unusedRows.CountAsync());
+            await s.Page.GetByRole(AriaRole.Tab, new() { Name = "Unused (2)", Exact = true }).ClickAsync();
+            var unusedRows = s.Page.Locator(".api-key-analysis__unused-permissions tbody tr");
+            await Expect(unusedRows).ToHaveCountAsync(2);
 
-            var uri = new Uri(tester.PayTester.ServerUri, $"api/v1/stores/{user.StoreId}/invoices");
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            request.Headers.Authorization = new AuthenticationHeaderValue("token", apiKey);
-            var response = await tester.PayTester.HttpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
+            var firstStoreId = user.StoreId;
+            await user.CreateStoreAsync();
+            var secondStoreId = user.StoreId;
+            var client = user.CreateClientFromAPIKey(apiKey);
+            await client.GetInvoices(firstStoreId);
+            await client.GetInvoices(secondStoreId);
+
+            var apiKeyRepo = tester.PayTester.GetService<APIKeyRepository>();
+            var selector = new APIKeyRepository.Selector.ByApiKey(apiKey);
+            // Usage is recorded asynchronously by the permission handler.
+            await TestUtils.EventuallyAsync(async () =>
+                Assert.Equal(2, (await apiKeyRepo.GetAPIPermissionUsageRecords(selector)).Sum(u => u.UsageCount)));
 
             await s.Page.ReloadAsync();
-            await s.Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            await Expect(s.Page.Locator(".api-key-analysis__total-count")).ToHaveTextAsync("2");
+            await Expect(s.Page.Locator(".api-key-analysis__used-count")).ToHaveTextAsync("1");
+            await Expect(s.Page.Locator(".api-key-analysis__unused-count")).ToHaveTextAsync("1");
+            await s.Page.GetByRole(AriaRole.Tab, new() { Name = "Used (1)", Exact = true }).ClickAsync();
+            await Expect(usedRows).ToHaveCountAsync(1);
+            await Expect(usedRows.Locator("td").Nth(0)).ToHaveTextAsync(Policies.CanViewInvoices);
+            await Expect(usedRows.Locator("td").Nth(1)).ToHaveTextAsync("2");
+            await Expect(usedRows.Locator(".badge")).ToHaveTextAsync("Active");
 
-            cards = await s.Page.Locator(".display-6.fw-bold").AllTextContentsAsync();
-            Assert.Equal("2", cards[0].Trim());
-            Assert.Equal("1", cards[1].Trim());
-            Assert.Equal("1", cards[2].Trim());
+            await s.Page.GetByRole(AriaRole.Tab, new() { Name = "Unused (1)", Exact = true }).ClickAsync();
+            await Expect(unusedRows).ToHaveCountAsync(1);
+            await Expect(unusedRows.Locator("code")).ToHaveTextAsync(Policies.CanCreateInvoice);
 
-            await s.Page.Locator("#used-tab").ClickAsync();
-            await s.Page.Locator("#used-permissions.show.active").WaitForAsync();
-            var usedRows = s.Page.Locator("#used-permissions tbody tr");
-            Assert.Equal(1, await usedRows.CountAsync());
-            await s.Page.Locator("#used-permissions .badge.bg-success:has-text('Active')").WaitForAsync();
+            // Older versions stored only the policy in the Permission column, duplicating it across stores.
+            var dbFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            await using (var context = dbFactory.CreateContext())
+            {
+                await context.ApiKeyPermissionUsages.Where(u => u.ApiKeyId == selector.GetId())
+                    .ExecuteUpdateAsync(update => update.SetProperty(u => u.Permission, Policies.CanViewInvoices));
+            }
+            await s.Page.ReloadAsync();
+            await s.Page.GetByRole(AriaRole.Tab, new() { Name = "Used (1)", Exact = true }).ClickAsync();
+            await Expect(usedRows.Locator("td").Nth(1)).ToHaveTextAsync("2");
 
-            await s.Page.Locator("#unused-tab").ClickAsync();
-            await s.Page.Locator("#unused-permissions.show.active").WaitForAsync();
-            unusedRows = s.Page.Locator("#unused-permissions tbody tr");
-            Assert.Equal(1, await unusedRows.CountAsync());
+            // Reusing a legacy row updates its format without losing its previous count.
+            await client.GetInvoices(firstStoreId);
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var usages = await apiKeyRepo.GetAPIPermissionUsageRecords(selector);
+                Assert.Equal(3, usages.Sum(u => u.UsageCount));
+                Assert.Contains(usages, u => u.Permission == Permission.Create(Policies.CanViewInvoices, firstStoreId).ToString());
+            });
+            await s.Page.ReloadAsync();
+            await s.Page.GetByRole(AriaRole.Tab, new() { Name = "Used (1)", Exact = true }).ClickAsync();
+            await Expect(usedRows.Locator("td").Nth(1)).ToHaveTextAsync("3");
+
+            // Store-specific grants must show only their own usage, not the other store's count.
+            var firstGrant = Permission.Create(Policies.CanViewInvoices, firstStoreId).ToString();
+            var secondGrant = Permission.Create(Policies.CanViewInvoices, secondStoreId).ToString();
+            var scopedClient = await user.CreateClient(firstGrant, secondGrant, Policies.CanCreateInvoice);
+            await scopedClient.GetInvoices(firstStoreId);
+            await scopedClient.GetInvoices(firstStoreId);
+            await scopedClient.GetInvoices(secondStoreId);
+            var scopedSelector = new APIKeyRepository.Selector.ByApiKey(scopedClient.APIKey);
+            await TestUtils.EventuallyAsync(async () =>
+                Assert.Equal(3, (await apiKeyRepo.GetAPIPermissionUsageRecords(scopedSelector)).Sum(u => u.UsageCount)));
+
+            await s.GoToUrl($"api-keys/{scopedSelector.GetId()}/view-analysis", true);
+            await Expect(s.Page.Locator(".api-key-analysis__total-count")).ToHaveTextAsync("3");
+            await Expect(s.Page.Locator(".api-key-analysis__used-count")).ToHaveTextAsync("2");
+            await Expect(s.Page.Locator(".api-key-analysis__unused-count")).ToHaveTextAsync("1");
+            await s.Page.GetByRole(AriaRole.Tab, new() { Name = "Used (2)", Exact = true }).ClickAsync();
+            await Expect(usedRows).ToHaveCountAsync(2);
+            await Expect(usedRows.Filter(new() { HasText = firstGrant }).Locator("td").Nth(1)).ToHaveTextAsync("2");
+            await Expect(usedRows.Filter(new() { HasText = secondGrant }).Locator("td").Nth(1)).ToHaveTextAsync("1");
+
+            await using (var context = dbFactory.CreateContext())
+            {
+                await context.ApiKeyPermissionUsages.Where(u => u.ApiKeyId == scopedSelector.GetId())
+                    .ExecuteUpdateAsync(update => update.SetProperty(u => u.Permission, Policies.CanViewInvoices));
+            }
+            await s.Page.ReloadAsync();
+            await s.Page.GetByRole(AriaRole.Tab, new() { Name = "Used (2)", Exact = true }).ClickAsync();
+            await Expect(usedRows.Filter(new() { HasText = firstGrant }).Locator("td").Nth(1)).ToHaveTextAsync("2");
+            await Expect(usedRows.Filter(new() { HasText = secondGrant }).Locator("td").Nth(1)).ToHaveTextAsync("1");
         }
 
         [Fact]

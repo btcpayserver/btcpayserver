@@ -600,6 +600,42 @@
                 </section>
 
             }
+			@if (Model.ResendableEmailRules.Any())
+			{
+				<section class="mt-4 d-print-none">
+					<h3 class="mb-3" text-translate="true">Emails</h3>
+                    <p class="text-muted">
+                        @StringLocalizer["Only emails sent in the last {0} days are shown in the logs.", BTCPayServer.Plugins.Emails.Services.EmailLogRepository.RetentionDays]
+                        <a asp-area="@BTCPayServer.Plugins.Emails.EmailsPlugin.Area" asp-controller="UIStoreEmailLogs" asp-action="StoreEmailLogsList"
+                            asp-route-storeId="@Model.StoreId" text-translate="true">View email logs</a>
+                    </p>
+					<div class="table-responsive-xl">
+						<table class="table table-hover mb-5">
+							<thead>
+								<tr>
+									<th text-translate="true">Trigger</th>
+									<th class="text-end" text-translate="true">Action</th>
+								</tr>
+							</thead>
+							<tbody>
+								@foreach (var rule in Model.ResendableEmailRules)
+								{
+									<tr>
+										<td>@(rule.Subject ?? rule.Trigger)</td>
+										<td class="text-end">
+											<form asp-action="ResendEmail" asp-route-invoiceId="@Model.Id" method="post" class="d-inline">
+												<input type="hidden" name="ruleId" value="@rule.Id" />
+												<button type="submit" class="btn btn-link p-0" text-translate="true">Resend</button>
+											</form>
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				</section>
+			}
+
             @if ((Model.Refunds?.Count ?? 0) > 0)
             {
                 <section class="mt-4" permission="@Policies.CanViewPullPayments">

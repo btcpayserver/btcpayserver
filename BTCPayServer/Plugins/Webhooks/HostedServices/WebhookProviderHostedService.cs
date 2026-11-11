@@ -23,7 +23,7 @@ public class WebhookProviderHostedService(
     ILogger<WebhookProviderHostedService> logger)
     : EventHostedServiceBase(eventAggregator, logger)
 {
-    class WebhookTriggerOwner(WebhookTriggerProvider provider, WebhookTriggerContext ctx) : ITriggerOwner
+    internal class WebhookTriggerOwner(WebhookTriggerProvider provider, WebhookTriggerContext ctx) : ITriggerOwner
     {
         public Task BeforeSending(EmailRuleMatchContext context)
         => provider.BeforeSending(context, ctx);

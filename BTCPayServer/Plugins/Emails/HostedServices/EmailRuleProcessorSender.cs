@@ -27,6 +27,11 @@ public record TriggerEvent(string? StoreId, string Trigger, JObject Model, ITrig
     /// </summary>
     public HashSet<string> RawHtml { get; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// If set, only the rule with this id is executed (used when a single email is resent manually).
+    /// </summary>
+    public long? OnlyRuleId { get; init; }
+
     public override string ToString()
         => $"Trigger event '{Trigger}'";
 }
@@ -65,6 +70,8 @@ public class StoreEmailRuleProcessorSender(
             await using var ctx = dbContextFactory.CreateContext();
             await Transform(ctx, triggEvent);
             var actionableRules = await ctx.EmailRules.GetMatches(triggEvent.StoreId, triggEvent.Trigger, triggEvent.Model);
+            if (triggEvent.OnlyRuleId is { } onlyRuleId)
+                actionableRules = actionableRules.Where(r => r.Id == onlyRuleId).ToArray();
 
             if (actionableRules.Length > 0)
             {
@@ -94,7 +101,8 @@ public class StoreEmailRuleProcessorSender(
                         // This only happens when a plural placeholder expands to a pathological number of recipients.
                         continue;
                     }
-                    sender.SendEmail(matchedContext.To.ToArray(), matchedContext.CC.ToArray(), matchedContext.BCC.ToArray(), subject.Render(triggEvent.Model), body.Render(triggEvent.Model));
+                    sender.SendEmail(matchedContext.To.ToArray(), matchedContext.CC.ToArray(), matchedContext.BCC.ToArray(), subject.Render(triggEvent.Model),
+                       body.Render(triggEvent.Model), triggEvent.StoreId, triggEvent.Trigger);
                 }
             }
         }

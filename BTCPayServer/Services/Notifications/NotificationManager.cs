@@ -124,7 +124,7 @@ namespace BTCPayServer.Services.Notifications
 
             if (query.Take.HasValue)
             {
-                queryable2 = queryable.Take(query.Take.Value);
+                queryable2 = queryable2.Take(query.Take.Value);
             }
 
             return (queryable, queryable2);

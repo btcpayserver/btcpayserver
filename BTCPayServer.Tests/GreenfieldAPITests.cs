@@ -2827,6 +2827,16 @@ namespace BTCPayServer.Tests
             Assert.Equal(2, (await client.GetNotifications(storeId: [store1.Id, store2.Id])).Count());
             Assert.Equal(2, (await client.GetNotifications()).Count());
 
+            // Paging
+            var all = (await client.GetNotifications()).ToList();
+            var secondPage = Assert.Single(await client.GetNotifications(skip: 1, take: 1));
+            Assert.Equal(all[1].Id, secondPage.Id);
+
+            await AssertHttpError(404, async () =>
+            {
+                await client.GetNotification("doesnotexist");
+            });
+
             // Settings
             var settings = await client.GetNotificationSettings();
             Assert.True(settings.Notifications.Find(n => n.Identifier == "newversion").Enabled);

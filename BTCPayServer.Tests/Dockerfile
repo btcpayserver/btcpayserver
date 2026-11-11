@@ -23,7 +23,14 @@ ARG CONFIGURATION_NAME=Release
 RUN cd BTCPayServer.Tests && dotnet build --configuration ${CONFIGURATION_NAME} /p:CI_TESTS=true /p:RazorCompileOnBuild=true
 RUN dotnet tool install --global Microsoft.Playwright.CLI
 ENV PATH="$PATH:/root/.dotnet/tools"
-RUN playwright install chromium --with-deps
+# Keep browser dependencies available during an Ubuntu archive DNS outage.
+RUN set -e; \
+    for archive in archive security; do \
+        if ! timeout 10 getent ahostsv4 "$archive.ubuntu.com" > /dev/null; then \
+            sed -i "s#http://$archive\.ubuntu\.com/ubuntu/#https://mirrors.edge.kernel.org/ubuntu/#g" /etc/apt/sources.list.d/ubuntu.sources; \
+        fi; \
+    done; \
+    playwright install chromium --with-deps
 WORKDIR /source/BTCPayServer.Tests
 ENV CONFIGURATION_NAME=${CONFIGURATION_NAME}
 ENTRYPOINT ["./docker-entrypoint.sh"]

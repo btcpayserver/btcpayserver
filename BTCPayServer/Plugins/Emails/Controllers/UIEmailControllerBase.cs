@@ -9,6 +9,7 @@ using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Plugins.Emails.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using MailKit;
 using MimeKit;
 
 namespace BTCPayServer.Plugins.Emails.Controllers;

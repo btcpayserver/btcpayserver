@@ -40,6 +40,7 @@ namespace BTCPayServer.Services.Notifications
                     UserId = userId
                 });
                 entry.Value = res;
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
                 return res;
             });
         }
@@ -63,34 +64,34 @@ namespace BTCPayServer.Services.Notifications
             await using var dbContext = _factory.CreateContext();
 
             var queryables = GetNotificationsQueryable(dbContext, query);
-            var items = (await queryables.withPaging.ToListAsync()).Select(ToViewModel).Where(model => model != null).ToList();
-            items = FilterNotifications(items, query);
+            var items = new List<NotificationViewModel>();
+            var searchBody = !string.IsNullOrEmpty(query.SearchText);
+            var skip = searchBody ? query.Skip.GetValueOrDefault() : 0;
+            var take = query.Take ?? int.MaxValue;
+            // Only body search needs the localized, handler-generated view model.
+            // Otherwise filtering and paging both happen in the database.
+            var itemQuery = searchBody ? queryables.withoutPaging : queryables.withPaging;
+            if (take > 0)
+            {
+                await foreach (var data in itemQuery.AsNoTracking().AsAsyncEnumerable())
+                {
+                    var model = ToViewModel(data);
+                    if (model is null || (searchBody && !model.Body.Contains(query.SearchText)))
+                        continue;
+                    if (skip > 0)
+                    {
+                        skip--;
+                        continue;
+                    }
+                    items.Add(model);
+                    if (items.Count >= take)
+                        break;
+                }
+            }
             int? count = null;
             if (query.Seen is false)
             {
-                // Unseen notifications aren't likely to be too huge, so count should be fast
-                count = await queryables.withoutPaging.CountAsync();
-                if (count >= MaxUnseen)
-                {
-                    // If we have too much unseen notifications, we don't want to show the exact count
-                    // because it would be too long to display, so we just show 99+
-                    // Then cleanup a bit the database by removing the oldest notifications, as it would be expensive to fetch every time
-                    if (count >= MaxUnseen + (MaxUnseen / 2))
-                    {
-                        nextBatch:
-                        var seenToRemove = await queryables.withoutPaging.OrderByDescending(data => data.Created).Skip(MaxUnseen).Take(1000).ToListAsync();
-                        if (seenToRemove.Count > 0)
-                        {
-                            foreach (var seen in seenToRemove)
-                            {
-                                seen.Seen = true;
-                            }
-                            await dbContext.SaveChangesAsync();
-                            goto nextBatch;
-                        }
-                    }
-                    count = MaxUnseen;
-                }
+                count = await queryables.withoutPaging.Take(MaxUnseen).CountAsync();
             }
             return (Items: items, Count: count);
         }
@@ -114,7 +115,21 @@ namespace BTCPayServer.Services.Notifications
                 queryable = queryable.Where(data => data.Seen == query.Seen);
             }
 
-            queryable = queryable.OrderByDescending(a => a.Created);
+            if (query.Type?.Length > 0)
+            {
+                var types = query.Type.Contains("userupdate")
+                    ? new[] { "inviteaccepted", "userapproval" }
+                    : query.Type.Select(type => type.ToLowerInvariant()).ToArray();
+                queryable = queryable.Where(data => types.Contains(data.NotificationType.ToLower()));
+            }
+
+            if (query.StoreIds?.Length > 0)
+            {
+                var storeIds = query.StoreIds.Select(id => id.ToLowerInvariant()).ToArray();
+                queryable = queryable.Where(data => storeIds.Contains(NotificationData.GetBlobProperty(data.Blob2, "storeId").ToLower()));
+            }
+
+            queryable = queryable.OrderByDescending(a => a.Created).ThenByDescending(a => a.Id);
 
             var queryable2 = queryable;
             if (query.Skip.HasValue)
@@ -128,34 +143,6 @@ namespace BTCPayServer.Services.Notifications
             }
 
             return (queryable, queryable2);
-        }
-
-        private List<NotificationViewModel> FilterNotifications(List<NotificationViewModel> notifications, NotificationsQuery query)
-        {
-            if (!string.IsNullOrEmpty(query.SearchText))
-            {
-                notifications = notifications.Where(data => data.Body.Contains(query.SearchText)).ToList();
-            }
-            if (query.Type?.Length > 0)
-            {
-                if (query.Type?.Length > 0)
-                {
-                    if (query.Type.Contains("userupdate"))
-                    {
-                        notifications = notifications.Where(n => n.Type.Equals("inviteaccepted", StringComparison.OrdinalIgnoreCase) ||
-                                                                 n.Type.Equals("userapproval", StringComparison.OrdinalIgnoreCase)).ToList();
-                    }
-                    else
-                    {
-                        notifications = notifications.Where(n => query.Type.Contains(n.Type, StringComparer.OrdinalIgnoreCase)).ToList();
-                    }
-                }
-            }
-            if (query.StoreIds?.Length > 0)
-            {
-                notifications = notifications.Where(n => !string.IsNullOrEmpty(n.StoreId) && query.StoreIds.Contains(n.StoreId, StringComparer.OrdinalIgnoreCase)).ToList();
-            }
-            return notifications;
         }
 
         public async Task<List<NotificationViewModel>> ToggleSeen(NotificationsQuery notificationsQuery, bool? setSeen)

@@ -380,6 +380,40 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<NotificationManager>();
             services.AddSingleton<NotificationSender>();
+            services.AddScheduledDbScript("Notification Cleanup",
+                """
+                WITH deleted_notifications AS (
+                    DELETE FROM "Notifications"
+                    WHERE "Id" IN (
+                        SELECT "Id" FROM "Notifications"
+                        WHERE "Created" < @now - INTERVAL '30 days'
+                        ORDER BY "Created", "Id"
+                        LIMIT 10000
+                    )
+                    RETURNING 1
+                )
+                SELECT COUNT(*) FROM deleted_notifications;
+                """);
+            services.AddScheduledDbScript("Unseen Notification Cleanup",
+                """
+                WITH ranked_unseen AS (
+                    SELECT "Id", ROW_NUMBER() OVER (
+                        PARTITION BY "ApplicationUserId"
+                        ORDER BY "Created" DESC, "Id" DESC
+                    ) AS position
+                    FROM "Notifications"
+                    WHERE NOT "Seen"
+                ),
+                updated_notifications AS (
+                    UPDATE "Notifications"
+                    SET "Seen" = TRUE
+                    WHERE NOT "Seen" AND "Id" IN (
+                        SELECT "Id" FROM ranked_unseen WHERE position > 99
+                    )
+                    RETURNING 1
+                )
+                SELECT COUNT(*) FROM updated_notifications;
+                """);
 
             RegisterExchangeRecommendations(services);
             services.AddSingleton<DefaultRulesCollection>();

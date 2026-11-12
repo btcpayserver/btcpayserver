@@ -2837,6 +2837,63 @@ namespace BTCPayServer.Tests
                 await client.GetNotification("doesnotexist");
             });
 
+            // Matching notifications must be selected before paging, even when other
+            // stores and notification types occur between them.
+            var sender = tester.PayTester.GetService<NotificationSender>();
+            await sender.SendNotification(new UserScope(user.UserId), new NewVersionNotification());
+            await sender.SendNotification(new UserScope(user.UserId),
+                new InvoiceEventNotification("aaaaaaab", InvoiceEvent.Confirmed, store1.Id));
+            var storeNotifications = (await client.GetNotifications(storeId: [store1.Id])).ToList();
+            Assert.Equal(2, storeNotifications.Count);
+            Assert.Equal(storeNotifications[0].Id,
+                Assert.Single(await client.GetNotifications(storeId: [store1.Id], take: 1)).Id);
+            Assert.Equal(storeNotifications[1].Id,
+                Assert.Single(await client.GetNotifications(storeId: [store1.Id], skip: 1, take: 1)).Id);
+            Assert.Equal(2, (await client.GetNotifications(storeId: [store1.Id], take: 2)).Count());
+            Assert.Empty(await client.GetNotifications(storeId: [store1.Id], skip: 2, take: 1));
+            Assert.Empty(await client.GetNotifications(storeId: [store1.Id], take: 0));
+            Assert.Equal(storeNotifications.Select(n => n.Id),
+                (await client.GetNotifications(storeId: [store1.Id.ToUpperInvariant()])).Select(n => n.Id));
+
+            // Type and localized body search are UI filters, exercised through the
+            // shared service because the API only exposes the store filter.
+            var manager = tester.PayTester.GetService<NotificationManager>();
+            foreach (var query in new[]
+                     {
+                         new NotificationsQuery { Type = ["invoicestate"] },
+                         new NotificationsQuery { Type = ["INVOICESTATE"] },
+                         new NotificationsQuery { SearchText = "aaaaa" },
+                         new NotificationsQuery { StoreIds = [store1.Id], Type = ["invoicestate"], SearchText = "aaaaa" }
+                     })
+            {
+                query.UserId = user.UserId;
+                query.Seen = false;
+                var result = await manager.GetNotifications(query);
+                var matching = result.Items;
+                Assert.True(matching.Count >= 2);
+                if (string.IsNullOrEmpty(query.SearchText))
+                    Assert.Equal(matching.Count, result.Count);
+                query.Skip = 1;
+                query.Take = 1;
+                Assert.Equal(matching[1].Id, Assert.Single((await manager.GetNotifications(query)).Items).Id);
+            }
+            Assert.Empty((await manager.GetNotifications(new NotificationsQuery
+            {
+                UserId = user.UserId,
+                Type = ["userupdate", "invoicestate"]
+            })).Items);
+
+            // Equal timestamps still have a deterministic order across pages.
+            await using (var db = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext())
+            {
+                await db.Notifications.Where(n => n.ApplicationUserId == user.UserId)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(n => n.Created, DateTimeOffset.UnixEpoch));
+            }
+            all = (await client.GetNotifications()).ToList();
+            Assert.Equal(all.Select(n => n.Id).OrderByDescending(id => id, StringComparer.Ordinal), all.Select(n => n.Id));
+            for (var i = 0; i < all.Count; i++)
+                Assert.Equal(all[i].Id, Assert.Single(await client.GetNotifications(skip: i, take: 1)).Id);
+
             // Settings
             var settings = await client.GetNotificationSettings();
             Assert.True(settings.Notifications.Find(n => n.Identifier == "newversion").Enabled);

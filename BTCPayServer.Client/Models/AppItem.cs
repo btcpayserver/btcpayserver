@@ -13,6 +13,22 @@ public enum AppItemPriceType
     Minimum
 }
 
+public class AppItemOption
+{
+    public string Title { get; set; }
+
+    [JsonConverter(typeof(NumericStringJsonConverter))]
+    public decimal? Price { get; set; }
+}
+
+public class AppItemOptionGroup
+{
+    public string Title { get; set; }
+
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    public AppItemOption[] Choices { get; set; }
+}
+
 public class AppItem
 {
     public string Id { get; set; }
@@ -21,6 +37,8 @@ public class AppItem
     public string Description { get; set; }
     public string[] Categories { get; set; }
     public string Image { get; set; }
+
+    public AppItemOptionGroup[] OptionGroups { get; set; }
 
     [JsonConverter(typeof(StringEnumConverter))]
     public AppItemPriceType PriceType { get; set; }

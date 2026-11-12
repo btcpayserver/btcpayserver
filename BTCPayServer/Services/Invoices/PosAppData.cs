@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using BTCPayServer.Plugins.PointOfSale;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -68,10 +70,22 @@ public class PosAppData
         Tip = summary.Tip;
         Total = summary.PriceTaxIncludedWithTips;
     }
+
+    internal void NormalizeCartItemOptions()
+    {
+        if (Cart is null)
+            return;
+
+        foreach (var item in Cart)
+            item?.NormalizeOptions();
+    }
 }
 
 public class PosAppCartItem
 {
+    public const int MaxOptions = 20;
+    public const int MaxOptionLength = 200;
+
     [JsonProperty(PropertyName = "id")]
     public string Id { get; set; }
 
@@ -82,6 +96,9 @@ public class PosAppCartItem
     [JsonProperty(PropertyName = "title")]
     public string Title { get; set; }
 
+    [JsonProperty(PropertyName = "options", NullValueHandling = NullValueHandling.Ignore)]
+    public string[] Options { get; set; }
+
     [JsonProperty(PropertyName = "count")]
     public int Count { get; set; }
 
@@ -90,6 +107,43 @@ public class PosAppCartItem
 
     [JsonProperty(PropertyName = "image")]
     public string Image { get; set; }
+
+    internal void NormalizeOptions()
+    {
+        if (Options is null)
+            return;
+
+        Options = Options
+            .Select(NormalizeOption)
+            .Where(o => o is not null)
+            .Take(MaxOptions)
+            .ToArray();
+        if (Options.Length == 0)
+            Options = null;
+    }
+
+    private static string NormalizeOption(string option)
+    {
+        if (option is null)
+            return null;
+        option = option.Trim();
+        if (option.Length == 0)
+            return null;
+        return option.Length <= MaxOptionLength ? option : option[..MaxOptionLength];
+    }
+
+    public static string[] NormalizeOptionsList(IEnumerable<string> options)
+    {
+        if (options is null)
+            return null;
+
+        var normalized = options
+            .Select(NormalizeOption)
+            .Where(o => o is not null)
+            .Take(MaxOptions)
+            .ToArray();
+        return normalized.Length == 0 ? null : normalized;
+    }
 }
 
 public class PosAppCartItemPriceJsonConverter : JsonConverter

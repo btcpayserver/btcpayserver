@@ -63,7 +63,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 UserId = User.GetId()
             });
 
-            return items.Count == 0 ? NotificationNotFound() : Ok(ToModel(items.Items.First()));
+            return items.Items.Count == 0 ? NotificationNotFound() : Ok(ToModel(items.Items.First()));
         }
 
         [Authorize(Policy = Policies.CanManageNotificationsForUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

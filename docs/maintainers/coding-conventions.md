@@ -65,6 +65,14 @@ implementation.
   flows when practical. Briefly explain when useful visual evidence cannot be
   included.
 
+## API Documentation
+
+Keep Swagger descriptions concise and practical. Avoid pedantic explanations of
+routine behavior, such as applying filters before pagination, or implementation
+details such as ordering tie-breakers unless API consumers need them. A bug fix
+that restores expected behavior does not require expanding an already adequate
+description.
+
 ## Frontend Selectors
 
 Use BEM-style classes for reusable styling, JavaScript, and Playwright hooks:

@@ -22,8 +22,12 @@ namespace BTCPayServer.Data
         public byte[] Blob { get; set; }
         public string Blob2 { get; set; }
 
+        public static string GetBlobProperty(string blob, string property) => throw new InvalidOperationException("Only supported in database queries");
+
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
+            builder.HasDbFunction(typeof(NotificationData).GetMethod(nameof(GetBlobProperty)))
+                .HasName("jsonb_extract_path_text").IsBuiltIn();
             builder.Entity<NotificationData>()
                 .HasOne(o => o.ApplicationUser)
                 .WithMany(n => n.Notifications)

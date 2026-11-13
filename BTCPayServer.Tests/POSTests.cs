@@ -365,6 +365,33 @@ goodies:
             Assert.Equal(0, inv.Amount);
             Assert.NotEqual(InvoiceType.TopUp, inv.Type);
 
+            // marking an expired invoice invalid should not increment the inventory
+            vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
+            vmpos.Template = AppService.SerializeTemplate(TestUtils.ParsePOSYML(@"
+inventoryitem:
+  price: 1.0
+  title: good apple
+  inventory: 1
+"));
+            Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
+            var inventoryRedirect = Assert.IsType<RedirectToActionResult>(await publicApps
+                .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "inventoryitem"));
+            Assert.Equal("UIInvoice", inventoryRedirect.ControllerName);
+            var inventoryInvoiceId = inventoryRedirect.RouteValues!["invoiceId"]!.ToString();
+            var appsService = tester.PayTester.GetService<AppService>();
+            async Task<int?> ItemInventory()
+            {
+                var fresh = await appsService.GetApp(app.Id, PointOfSaleAppType.AppType);
+                return AppService.Parse(fresh!.GetSettings<PointOfSaleSettings>().Template)
+                    .Single(item => item.Id == "inventoryitem").Inventory;
+            }
+            await TestUtils.EventuallyAsync(async () => Assert.Equal(0, await ItemInventory()), 10000);
+            await tester.PayTester.InvoiceRepository.UpdateInvoiceExpiry(inventoryInvoiceId, TimeSpan.Zero);
+            await TestUtils.EventuallyAsync(async () => Assert.Equal(1, await ItemInventory()), 10000);
+            var invoiceController = tester.PayTester.GetController<UIInvoiceController>(user.UserId, user.StoreId);
+            Assert.IsType<JsonResult>(await invoiceController.ChangeInvoiceState(inventoryInvoiceId, "invalid"));
+            await TestUtils.EventuallyAsync(async () => Assert.Equal(1, await ItemInventory()), 10000);
+
             // List
             appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
             app = appList.Apps[0];

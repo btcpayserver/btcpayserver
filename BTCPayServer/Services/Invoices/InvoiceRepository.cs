@@ -660,15 +660,19 @@ retry:
                         return false;
                 }
 
+                var previousStatus = invoiceData.GetInvoiceState().Status;
                 invoiceData.Status = status.ToString();
                 invoiceData.ExceptionStatus = InvoiceExceptionStatus.Marked.ToString();
+                var invoiceEvent = new InvoiceEvent(ToEntity(invoiceData), eventName);
+                if (eventName == InvoiceEvent.MarkedInvalid)
+                    invoiceEvent.PreviousStatus = previousStatus;
                 try
                 {
                     await context.SaveChangesAsync();
                 }
                 finally
                 {
-                    _eventAggregator.Publish(new InvoiceEvent(ToEntity(invoiceData), eventName));
+                    _eventAggregator.Publish(invoiceEvent);
                 }
             }
 

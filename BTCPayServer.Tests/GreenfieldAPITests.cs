@@ -3374,6 +3374,18 @@ namespace BTCPayServer.Tests
                 await client.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode), data => data.TransactionHash == txdata.TransactionHash);
             Assert.Contains(
                 await client.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode, null, "test label"), data => data.TransactionHash == txdata.TransactionHash);
+            // Both filters must match, and a transaction is listed once
+            Assert.Equal(txdata.TransactionHash, Assert.Single(
+                await client.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode,
+                    new[] { TransactionStatus.Unconfirmed }, "test label")).TransactionHash);
+            Assert.Empty(
+                await client.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode,
+                    new[] { TransactionStatus.Confirmed }, "test label"));
+            await AssertEx.AssertApiError("transaction-not-found", () =>
+                client.GetOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode, "invalid"));
+            await AssertEx.AssertApiError("transaction-not-found", () =>
+                client.PatchOnChainWalletTransaction(walletId.StoreId, walletId.CryptoCode, "invalid",
+                    new PatchOnChainTransactionRequest(), true));
 
             // unsigned PSBT creation and broadcast endpoint
             var psbtDestination = await client.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode, true);

@@ -1,0 +1,79 @@
+@using BTCPayServer.Views.Stores
+@using BTCPayServer.Client
+@using BTCPayServer.Abstractions.Models
+@model StoreTaxRatesViewModel
+@{
+	ViewData.SetLayoutModel(new(nameof(StoreNavPages.TaxRates), StringLocalizer["Tax Rates"]));
+	Layout = "_Layout";
+}
+
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
+
+<div class="row">
+	<div class="col-xxl-constrain col-xl-8">
+		@if (!ViewContext.ModelState.IsValid)
+		{
+			<div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+		}
+
+		<form asp-action="AddOrUpdateTaxRate" asp-route-storeId="@Context.GetStoreData().Id" method="post"
+			  class="d-flex flex-wrap align-items-center gap-3" permission="@Policies.CanModifyStoreSettings">
+			<input name="Name" type="text" class="form-control" placeholder="@StringLocalizer["e.g. VAT 20%"]" style="flex: 1 1 14rem">
+			<div class="input-group" style="flex: 0 1 8rem">
+				<input name="Rate" type="number" step="0.01" min="0" max="100" class="form-control" placeholder="0">
+				<span class="input-group-text">%</span>
+			</div>
+			<button type="submit" role="button" class="btn btn-primary text-nowrap flex-grow-1 flex-sm-grow-0" id="AddTaxRate" text-translate="true">Add tax rate</button>
+		</form>
+
+		@if (Model.TaxRates.Any())
+		{
+			<div class="table-responsive-md mt-3">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th text-translate="true">Name</th>
+							<th text-translate="true">Rate</th>
+							<th text-translate="true">Default</th>
+							<th class="actions-col" permission="@Policies.CanModifyStoreSettings"></th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var rate in Model.TaxRates)
+						{
+							<tr>
+								<td>@rate.Name</td>
+								<td>@rate.Rate.ToString("0.##")%</td>
+								<td>
+									@if (rate.IsDefault)
+									{
+										<span class="badge bg-info" text-translate="true">Default</span>
+									}
+									else
+									{
+										<form asp-action="SetDefault" asp-route-storeId="@Context.GetStoreData().Id" asp-route-taxRateId="@rate.Id" method="post" class="d-inline" permission="@Policies.CanModifyStoreSettings">
+											<button type="submit" class="btn btn-link p-0" text-translate="true">Make default</button>
+										</form>
+									}
+								</td>
+								<td class="actions-col" permission="@Policies.CanModifyStoreSettings">
+									<a asp-action="DeleteTaxRate" asp-route-storeId="@Context.GetStoreData().Id" asp-route-taxRateId="@rate.Id" class="text-danger"
+									   data-bs-toggle="modal" data-bs-target="#ConfirmModal"
+									   data-description="@StringLocalizer["Apps currently referencing <strong>{0}</strong> will fall back to untaxed.", Html.Encode(rate.Name)]"
+									   text-translate="true">Delete</a>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+		else
+		{
+			<p class="text-secondary mt-3" text-translate="true">No tax rates defined yet.</p>
+		}
+	</div>
+</div>
+
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete tax rate"], StringLocalizer["Apps currently referencing this rate will fall back to untaxed. Are you sure?"], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />

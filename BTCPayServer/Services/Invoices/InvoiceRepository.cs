@@ -662,14 +662,8 @@ retry:
 
                 invoiceData.Status = status.ToString();
                 invoiceData.ExceptionStatus = InvoiceExceptionStatus.Marked.ToString();
-                try
-                {
-                    await context.SaveChangesAsync();
-                }
-                finally
-                {
-                    _eventAggregator.Publish(new InvoiceEvent(ToEntity(invoiceData), eventName));
-                }
+                await context.SaveChangesAsync();
+                _eventAggregator.Publish(new InvoiceEvent(ToEntity(invoiceData), eventName));
             }
 
             return true;

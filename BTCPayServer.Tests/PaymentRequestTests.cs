@@ -433,6 +433,19 @@ namespace BTCPayServer.Tests
             }, ev => ev.Data.Status == PaymentRequestStatus.Expired);
 
             (await paymentRequestController.PayPaymentRequest(prId, false)).AssertType<BadRequestObjectResult>();
+
+            // Moving the expiry of an expired payment request to the future makes it pending again
+            request.ExpiryDate = (DateTimeOffset.UtcNow + TimeSpan.FromDays(1.0)).UtcDateTime;
+            paymentRequest = await repo.FindPaymentRequest(prId, null);
+            Assert.Equal(PaymentRequestStatus.Expired, paymentRequest.Status);
+            paymentRequestController.HttpContext.SetPaymentRequestData(paymentRequest);
+            await tester.WaitForEvent<PaymentRequestEvent>(async () =>
+            {
+                (await paymentRequestController.EditPaymentRequest(prId, request)).AssertType<RedirectToActionResult>();
+            }, ev => ev.Data.Id == prId && ev.Data.Status == PaymentRequestStatus.Pending);
+            paymentRequestController.HttpContext.SetPaymentRequestData(null);
+            Assert.Equal(PaymentRequestStatus.Pending, (await repo.FindPaymentRequest(prId, null)).Status);
+            (await paymentRequestController.PayPaymentRequest(prId, false)).AssertType<OkObjectResult>();
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

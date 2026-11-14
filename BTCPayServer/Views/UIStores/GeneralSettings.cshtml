@@ -52,10 +52,15 @@
                         </button>
                     </div>
                 </div>
-                <div class="form-group mb-0">
+                <div class="form-group">
                     <label asp-for="StoreWebsite" class="form-label"></label>
                     <input asp-for="StoreWebsite" class="form-control" />
                     <span asp-validation-for="StoreWebsite" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-0">
+                    <label asp-for="StorefrontLanguage" class="form-label"></label>
+                    <select asp-for="StorefrontLanguage" asp-items="Model.StorefrontLanguages" class="form-select w-auto"></select>
+                    <span asp-validation-for="StorefrontLanguage" class="text-danger"></span>
                 </div>
             </div>
 

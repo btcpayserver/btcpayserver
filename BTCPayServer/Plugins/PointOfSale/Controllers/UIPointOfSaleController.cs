@@ -22,6 +22,7 @@ using BTCPayServer.Forms.Models;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.PointOfSale.Models;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -95,6 +96,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [HttpGet("/apps/{appId}/pos/{viewType?}")]
         [DomainMappingConstraint(PointOfSaleAppType.AppType)]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
+        [UseStoreLanguage]
         public async Task<IActionResult> ViewPointOfSale(string appId, PosViewType? viewType = null)
         {
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
@@ -203,6 +205,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraint(PointOfSaleAppType.AppType)]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
+        [UseStoreLanguage]
         public async Task<IActionResult> ViewPointOfSale(string appId,
                                                         PosViewType? viewType = null,
                                                         [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal? amount = null,
@@ -493,6 +496,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [HttpPost("/apps/{appId}/pos/form/{viewType?}")]
         [IgnoreAntiforgeryToken]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
+        [UseStoreLanguage]
         public async Task<IActionResult> POSForm(string appId, PosViewType? viewType = null)
         {
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
@@ -538,6 +542,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [HttpPost("/apps/{appId}/pos/form/submit/{viewType?}")]
         [IgnoreAntiforgeryToken]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
+        [UseStoreLanguage]
         public async Task<IActionResult> POSFormSubmit(string appId, FormViewModel viewModel, PosViewType? viewType = null)
         {
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);

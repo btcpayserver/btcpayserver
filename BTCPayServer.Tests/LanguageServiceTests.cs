@@ -22,6 +22,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using BTCPayServer.Client.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.Filters;
+
 using static Microsoft.Playwright.Assertions;
 using Xunit;
 
@@ -992,6 +998,82 @@ namespace BTCPayServer.Tests
             await tester.GoToProfile();
             await Expect(tester.Page.Locator("body")).ToContainTextAsync("Tweak your profile");
             await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English (Custom)");
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanUseStoreLanguageOnPublicAppPages()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var localizer = tester.PayTester.GetService<LocalizerService>();
+            var accessor = tester.PayTester.GetService<TranslationsAccessor>();
+            var db = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext().Database.GetDbConnection();
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('French', 'English', 'Custom')");
+            var dict = await localizer.GetTranslation("French");
+            await localizer.Save(dict!, new Translations(new[]
+            {
+                KeyValuePair.Create("Hello", "Salut"),
+                KeyValuePair.Create("Powered by", "Fourni par")
+            }));
+            static string Hello(Translations t) => t.Records.TryGetValue("Hello", out var v) ? v : null;
+
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            var storeRepository = tester.PayTester.GetService<StoreRepository>();
+            var store = await storeRepository.FindStore(user.StoreId);
+            var blob = store!.GetStoreBlob();
+            blob.StorefrontLanguage = "French";
+            store.SetStoreBlob(blob);
+            await storeRepository.UpdateStore(store);
+
+            var client = await user.CreateClient();
+            var app = await client.CreatePointOfSaleApp(user.StoreId, new PointOfSaleAppRequest { AppName = "Lang test" });
+
+            var filter = (IAsyncActionFilter)new UseStoreLanguageAttribute().CreateInstance(tester.PayTester.ServiceProvider);
+            async Task<string> RenderPage(bool withAttribute)
+            {
+                return await Task.Run(async () =>
+                {
+                    using (accessor.BeginRequest())
+                    {
+                        var routeData = new RouteData();
+                        routeData.Values["appId"] = app.Id;
+                        var actionContext = new ActionContext(new DefaultHttpContext(), routeData, new ActionDescriptor());
+                        string rendered = null;
+                        ActionExecutionDelegate page = () =>
+                        {
+                            rendered = Hello(accessor.Current.Translations);
+                            return Task.FromResult(new ActionExecutedContext(actionContext, new List<IFilterMetadata>(), null));
+                        };
+                        if (withAttribute)
+                            await filter.OnActionExecutionAsync(
+                                new ActionExecutingContext(actionContext, new List<IFilterMetadata>(), new Dictionary<string, object>(), null), page);
+                        else
+                            await page();
+                        return rendered;
+                    }
+                });
+            }
+            TestLogs.LogInformation("A page with the attribute follows the store language, found through appId");
+            Assert.Equal("Salut", await RenderPage(withAttribute: true));
+            TestLogs.LogInformation("A page without the attribute keeps the server language");
+            Assert.NotEqual("Salut", await RenderPage(withAttribute: false));
+
+            TestLogs.LogInformation("The public POS page is served in the store language");
+            using var http = new HttpClient();
+            var posUri = new Uri(tester.PayTester.ServerUri, $"apps/{app.Id}/pos/static");
+            var posPage = await http.GetStringAsync(posUri);
+            Assert.Contains("Fourni par", posPage);
+            Assert.DoesNotContain("Powered by", posPage);
+
+            TestLogs.LogInformation("Without a store language, it falls back to the server language");
+            blob.StorefrontLanguage = null;
+            store.SetStoreBlob(blob);
+            await storeRepository.UpdateStore(store);
+            posPage = await http.GetStringAsync(posUri);
+            Assert.Contains("Powered by", posPage);
+            Assert.DoesNotContain("Fourni par", posPage);
         }
     }
 }

@@ -62,6 +62,7 @@ namespace BTCPayServer.Plugins.PayButton.Controllers
                 Currency = storeBlob.DefaultCurrency,
                 DefaultPaymentMethod = string.Empty,
                 PaymentMethods = storesController.GetEnabledPaymentMethodChoices(store),
+                TaxRates = storeBlob.TaxRates,
                 ButtonSize = 2,
                 UrlRoot = appUrl,
                 PayButtonImageUrl = appUrl + "img/paybutton/pay.svg",

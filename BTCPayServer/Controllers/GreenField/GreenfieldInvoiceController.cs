@@ -216,21 +216,6 @@ namespace BTCPayServer.Controllers.Greenfield
                     "PaymentTolerance can only be between 0 and 100 percent", this);
             }
 
-            if (request.Checkout.DefaultLanguage != null)
-            {
-                var lang = LanguageService.FindLanguage(request.Checkout.DefaultLanguage);
-                if (lang == null)
-                {
-                    request.AddModelError(invoiceRequest => invoiceRequest.Checkout.DefaultLanguage,
-                    "The requested defaultLang does not exists, Browse the ~/misc/lang page of your BTCPay Server instance to see the list of supported languages.", this);
-                }
-                else
-                {
-                    // Ensure this is good case
-                    request.Checkout.DefaultLanguage = lang.Code;
-                }
-            }
-
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
@@ -715,7 +700,6 @@ namespace BTCPayServer.Controllers.Greenfield
                         entity.GetPaymentPrompts().Select(method => method.PaymentMethodId.ToString()).ToArray(),
                     DefaultPaymentMethod = entity.DefaultPaymentMethod?.ToString(),
                     SpeedPolicy = entity.SpeedPolicy,
-                    DefaultLanguage = entity.DefaultLanguage,
                     RedirectAutomatically = entity.RedirectAutomatically,
                     RedirectURL = entity.RedirectURLTemplate
                 },

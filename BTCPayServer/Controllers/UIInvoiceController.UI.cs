@@ -908,7 +908,7 @@ namespace BTCPayServer.Controllers
                 RootPath = Request.PathBase.Value.WithTrailingSlash(),
                 OrderId = orderId,
                 InvoiceId = invoiceId,
-                DefaultLang = lang ?? invoice.DefaultLanguage ?? storeBlob.DefaultLang ?? "en",
+                DefaultLang = lang ?? "en",
                 ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
                 ShowStoreHeader = storeBlob.ShowStoreHeader,
                 NfcEnabled = storeBlob.NfcEnabled,

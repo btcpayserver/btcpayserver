@@ -40,11 +40,11 @@ else
 {
     <div class="alert alert-info alert-dismissible d-flex align-items-center justify-content-center sticky-top mb-0 rounded-0 d-print-none fade show" role="alert">
         <button type="button" class="btn btn-info me-4 border border-light" onclick="window.print()">
-            <vc:icon symbol="pos-print" />&nbsp;Print
+            <vc:icon symbol="pos-print" />&nbsp;@StringLocalizer["Print"]
         </button>
-        This view is intended for printing only —
+        @StringLocalizer["This view is intended for printing only"] —
 
-        <a asp-route-viewType="static" class="alert-link">Regular version</a>
+        <a asp-route-viewType="static" class="alert-link" text-translate="true">Regular version</a>
     </div>
 }
 <div id="PosPrint" class="public-page-wrap">
@@ -86,7 +86,7 @@ else
                                     @switch (item.PriceType)
                                     {
                                         case AppItemPriceType.Topup:
-                                            <span>Any amount</span>
+                                            <span text-translate="true">Any amount</span>
                                             break;
                                         case AppItemPriceType.Minimum:
                                             <span>@formatted minimum</span>

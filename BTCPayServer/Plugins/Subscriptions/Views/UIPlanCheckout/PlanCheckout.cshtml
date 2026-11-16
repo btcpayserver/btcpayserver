@@ -1,4 +1,4 @@
-﻿@inject BTCPayServer.Services.BTCPayServerEnvironment Env
+@inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject DisplayFormatter DisplayFormatter
 @inject LinkGenerator LinkGenerator
 @using BTCPayServer.Plugins.Subscriptions
@@ -196,7 +196,7 @@
 
                     @if (Model.Data.PlanFeatures.Count(i => !string.IsNullOrWhiteSpace(i.Feature.Description)) != 0)
                     {
-                        <h5 class="mb-3">What's included:</h5>
+                        <h5 class="mb-3" text-translate="true">What's included:</h5>
                         <ul class="feature-list">
                             @foreach (var item in Model.Data.PlanFeatures.Where(i => !string.IsNullOrWhiteSpace(i.Feature.Description)))
                             {
@@ -214,8 +214,8 @@
             <div class="col-lg-5 col-md-6">
                 <div class="checkout-form">
                     <div class="checkout-header">
-                        <h4 class="checkout-title">Complete Your Order</h4>
-                        <p class="checkout-subtitle">Enter your email to proceed to secure payment</p>
+                        <h4 class="checkout-title" text-translate="true">Complete Your Order</h4>
+                        <p class="checkout-subtitle" text-translate="true">Enter your email to proceed to secure payment</p>
                     </div>
 
                     <form id="checkoutForm" method="post">

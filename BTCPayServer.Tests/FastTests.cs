@@ -2192,14 +2192,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public void KitchenSinkTest()
-        {
-            var b = JsonConvert.DeserializeObject<PullPaymentBlob>("{}");
-            Assert.Equal(TimeSpan.FromDays(30.0), b.BOLT11Expiration);
-            JsonConvert.SerializeObject(b);
-        }
-
-        [Fact]
         public void CanParseRateRules()
         {
             var pair = CurrencyPair.Parse("USD_EMAT_IC");

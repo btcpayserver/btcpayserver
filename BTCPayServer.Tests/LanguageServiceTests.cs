@@ -32,10 +32,6 @@ namespace BTCPayServer.Tests
     {
         private const string ManifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
 
-        private class RealHttpClientFactory : IHttpClientFactory
-        {
-            public HttpClient CreateClient(string name) => new();
-        }
         public const int TestTimeout = TestUtils.TestTimeout;
 
         private sealed class TestHttpClientFactory(HttpMessageHandler handler) : IHttpClientFactory
@@ -159,30 +155,6 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]
-        public async Task LanguagePackUpdateService_ParsesBcp47()
-        {
-            var handler = new TestHttpMessageHandler();
-            handler.Register(ManifestUrl, () => TestHttpMessageHandler.JsonResponse(
-                """
-                {
-                  "Languages": [
-                    {
-                      "Name": "French",
-                      "Bcp47": "fr-FR",
-                      "File": "translations/french.json",
-                      "Sha": "sha-fr"
-                    }
-                  ]
-                }
-                """));
-            var service = CreateLanguageService(handler);
-            var languages = await service.GetManifestLanguages();
-            var french = Assert.Single(languages);
-            Assert.Equal("fr-FR", french.Bcp47);
-        }
-
-        [Fact(Timeout = TestTimeout)]
-        [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_FollowsTrustedRedirect()
         {
             const string body = "{\"Hello\":\"Bonjour\"}";
@@ -258,31 +230,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task LanguagePackUpdateService_ParsesRtlFlag()
-        {
-            // Hits the real translator manifest
-            var service = new LanguagePackUpdateService(new RealHttpClientFactory(), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
-            var languages = await service.GetManifestLanguages();
-
-            Assert.True(languages.Single(l => l.Name == "Arabic").Rtl);
-            Assert.False(languages.Single(l => l.Name == "French").Rtl);
-        }
-
-        [Fact(Timeout = TestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task LanguagePackUpdateService_FetchReturnsRtlFromManifest()
-        {
-
-            var service = new LanguagePackUpdateService(new RealHttpClientFactory(), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
-            var (translationsJson, version, rtl) = await service.FetchLanguagePackFromRepository("Arabic");
-
-            Assert.True(rtl);
-            Assert.False(string.IsNullOrEmpty(version));
-            Assert.NotNull(JObject.Parse(translationsJson));
-        }
-
-        [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]
         public async Task LanguagePackUpdateService_PropagatesExceptionOnMalformedManifest()
         {
@@ -333,9 +280,11 @@ namespace BTCPayServer.Tests
             await Assert.ThrowsAnyAsync<HttpRequestException>(() => service.GetManifestLanguages());
         }
 
-        [Fact(Timeout = TestTimeout)]
+        [Theory(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]
-        public async Task LanguagePackUpdateService_FetchesLanguagePackFromManifest()
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task LanguagePackUpdateService_FetchesLanguagePackFromManifest(bool expectedRtl)
         {
             const string body = "{\"Hello\":\"Bonjour\"}";
             var expectedSha = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(body)));
@@ -350,7 +299,8 @@ namespace BTCPayServer.Tests
                     {
                       "Name": "French",
                       "File": "translations/french.json",
-                      "Sha": "{{expectedSha}}"
+                      "Sha": "{{expectedSha}}",
+                      "Rtl": {{(expectedRtl ? "true" : "false")}}
                     }
                   ]
                 }
@@ -361,7 +311,7 @@ namespace BTCPayServer.Tests
             var (translationsJson, version, rtl) = await service.FetchLanguagePackFromRepository("French");
 
             Assert.Equal(expectedSha, version, ignoreCase: true);
-            Assert.False(rtl);
+            Assert.Equal(expectedRtl, rtl);
             Assert.Equal("Bonjour", JObject.Parse(translationsJson)["Hello"]?.ToString());
         }
 

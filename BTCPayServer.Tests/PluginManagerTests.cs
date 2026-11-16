@@ -30,19 +30,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public async Task InstalledPluginsViewModel_ReturnsDisabledPluginUpdateWhenNewerVersionAvailable()
-        {
-            var model = await CreateInstalledPluginsViewModel(
-                disabled: new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } },
-                allAvailable: [MakeAvailablePlugin("TestPlugin", "1.1.0")]);
-
-            var plugin = Assert.Single(model.DisabledPlugins);
-            Assert.Equal(new Version(1, 1, 0), plugin.RecommendedUpdateVersion);
-            var updateAction = Assert.Single(plugin.Actions, action => action.FormAction == "InstallPlugin");
-            Assert.Equal("1.1.0", updateAction.Version);
-        }
-
-        [Fact]
         public async Task InstalledPluginsViewModel_DoesNotAddDisabledPluginUpdateWhenSameVersion()
         {
             var model = await CreateInstalledPluginsViewModel(
@@ -79,26 +66,13 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public async Task InstalledPluginsViewModel_UsesCaseInsensitiveDisabledPluginIdentifierMatching()
-        {
-            var model = await CreateInstalledPluginsViewModel(
-                disabled: new Dictionary<string, Version> { { "MyPlugin", new Version(1, 0, 0, 0) } },
-                allAvailable: [MakeAvailablePlugin("myplugin", "1.1.0")]);
-
-            var plugin = Assert.Single(model.DisabledPlugins);
-            Assert.Equal(new Version(1, 1, 0), plugin.RecommendedUpdateVersion);
-            var updateAction = Assert.Single(plugin.Actions, action => action.FormAction == "InstallPlugin");
-            Assert.Equal("1.1.0", updateAction.Version);
-        }
-
-        [Fact]
-        public async Task InstalledPluginsViewModel_UsesNewestVersionFromMultipleEntries()
+        public async Task InstalledPluginsViewModel_UsesNewestVersionWithCaseInsensitiveIdentifierMatching()
         {
             var model = await CreateInstalledPluginsViewModel(
                 disabled: new Dictionary<string, Version> { { "TestPlugin", new Version(1, 0, 0, 0) } },
                 allAvailable: [
                     MakeAvailablePlugin("TestPlugin", "1.1.0"),
-                    MakeAvailablePlugin("TestPlugin", "1.3.0"),
+                    MakeAvailablePlugin("testplugin", "1.3.0"),
                     MakeAvailablePlugin("TestPlugin", "1.2.0")
                 ]);
 

@@ -137,7 +137,7 @@
 
                     <div class="buttons mt-3">
                         <template v-if="srvModel.formId && srvModel.formId !== 'None' && !srvModel.formSubmitted">
-                            <a asp-action="ViewPaymentRequestForm" asp-route-payReqId="@Model.Id" class="btn btn-primary btn-lg" data-test="form-button">
+                            <a asp-action="ViewPaymentRequestForm" asp-route-payReqId="@Model.Id" class="btn btn-primary btn-lg" data-test="form-button" text-translate="true">
                                 Pay Invoice
                             </a>
                         </template>

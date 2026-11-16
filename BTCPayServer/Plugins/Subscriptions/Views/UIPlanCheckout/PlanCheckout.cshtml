@@ -220,19 +220,19 @@
 
                     <form id="checkoutForm" method="post">
                         <div class="mb-4">
-                            <label for="customerEmail" class="form-label fw-semibold">Email Address</label>
+                            <label for="customerEmail" class="form-label fw-semibold" text-translate="true">Email Address</label>
                             <input
                                 asp-for="Email"
                                 type="email"
                                 class="plan-checkout__email form-control form-control-lg"
                                 id="emailInput"
-                                placeholder="Enter your email address"
+                                placeholder="@StringLocalizer["Enter your email address"]"
                                 required
                                 disabled="@Model.IsPrefilled">
                             <span asp-validation-for="Email" class="text-danger"></span>
                             <div class="form-text">
                                 <i class="fas fa fa-info-circle me-1"></i>
-                                We'll send your receipt and account details here
+                                <span text-translate="true">We'll send your receipt and account details here</span>
                             </div>
                         </div>
                         @if (Model.IsTrial)

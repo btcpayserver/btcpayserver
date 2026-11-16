@@ -87,14 +87,14 @@
             }
             @if (!Model.Started && Model.StartDate.HasValue)
             {
-                <h6 class="text-muted fst-italic mt-3" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate" v-text="`Starts in ${startDiff}`" data-test="time-state">
-                    @StringLocalizer["Starts {0}", TimeZoneInfo.ConvertTimeFromUtc(Model.StartDate.Value, TimeZoneInfo.Local)]
+                <h6 class="text-muted fst-italic mt-3" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate" data-test="time-state">
+                    <span text-translate="true">Starts in</span> <span v-text="startDiff"></span>
                 </h6>
             }
             else if (Model.Started && !Model.Ended && Model.EndDate.HasValue)
             {
-                <h6 class="text-muted fst-italic mt-3" v-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate" v-text="`Ends in ${endDiff}`" data-test="time-state">
-                    @StringLocalizer["Ends {0}", TimeZoneInfo.ConvertTimeFromUtc(Model.EndDate.Value, TimeZoneInfo.Local)]
+                <h6 class="text-muted fst-italic mt-3" v-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate" data-test="time-state">
+                    <span text-translate="true">Ends in</span> <span v-text="endDiff"></span>
                 </h6>
             }
             else if (Model.Started && !Model.Ended && !Model.EndDate.HasValue)

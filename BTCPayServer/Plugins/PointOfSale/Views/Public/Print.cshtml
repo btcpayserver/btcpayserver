@@ -30,8 +30,8 @@
 @if (supported is null)
 {
     <div class="alert alert-warning text-center sticky-top mb-0 rounded-0" role="alert">
-        LNURL is not enabled on your store, which this print feature relies on.
-        <a asp-controller="UIStores" asp-action="LightningSettings" asp-route-cryptoCode="BTC"  asp-route-storeId="@store.Id" class="alert-link p-0">
+        <span text-translate="true">LNURL is not enabled on your store, which this print feature relies on.</span>
+        <a asp-controller="UIStores" asp-action="LightningSettings" asp-route-cryptoCode="BTC"  asp-route-storeId="@store.Id" class="alert-link p-0" text-translate="true">
             Enable LNURL
         </a>
     </div>

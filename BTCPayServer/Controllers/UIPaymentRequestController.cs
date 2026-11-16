@@ -528,7 +528,8 @@ namespace BTCPayServer.Controllers
 
             foreach (var invoice in invoices)
             {
-                await _InvoiceRepository.MarkInvoiceStatus(invoice.Id, InvoiceStatus.Invalid);
+                if (!await _InvoiceRepository.MarkInvoiceStatus(invoice.Id, InvoiceStatus.Invalid))
+                    return BadRequest(StringLocalizer["The invoice could not be cancelled"]);
             }
 
             if (redirect)

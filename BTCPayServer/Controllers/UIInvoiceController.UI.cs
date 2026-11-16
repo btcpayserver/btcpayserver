@@ -1287,12 +1287,14 @@ namespace BTCPayServer.Controllers
             }
             if (newState == "invalid")
             {
-                await _InvoiceRepository.MarkInvoiceStatus(invoiceId, InvoiceStatus.Invalid);
+                if (!await _InvoiceRepository.MarkInvoiceStatus(invoiceId, InvoiceStatus.Invalid))
+                    return BadRequest(model);
                 model.StatusString = new InvoiceState(InvoiceStatus.Invalid, InvoiceExceptionStatus.Marked).ToString();
             }
             else if (newState == "settled")
             {
-                await _InvoiceRepository.MarkInvoiceStatus(invoiceId, InvoiceStatus.Settled);
+                if (!await _InvoiceRepository.MarkInvoiceStatus(invoiceId, InvoiceStatus.Settled))
+                    return BadRequest(model);
                 model.StatusString = new InvoiceState(InvoiceStatus.Settled, InvoiceExceptionStatus.Marked).ToString();
             }
 

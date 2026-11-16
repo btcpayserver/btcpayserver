@@ -1,12 +1,15 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -38,6 +41,44 @@ namespace BTCPayServer.Tests
             {
                 await task;
             }
+        }
+
+        [Fact]
+        public async Task MarkInvoiceStatusReportsFailures()
+        {
+            var tester = CreateDBTester();
+            await tester.MigrateUntil();
+            var events = tester.CreateEventAggregator();
+            var invoiceRepository = tester.GetInvoiceRepository(events);
+            await using var ctx = tester.CreateContext();
+            var conn = ctx.Database.GetDbConnection();
+            foreach (var (id, status) in new[] { ("New1", InvoiceStatus.New), ("Settled1", InvoiceStatus.Settled), ("Failing1", InvoiceStatus.New) })
+            {
+                var data = new BTCPayServer.Data.InvoiceData { Id = id, Created = DateTimeOffset.UtcNow, Status = status.ToString(), Currency = "USD" };
+                data.SetBlob(new InvoiceEntity { Id = id, Currency = "USD", InvoiceTime = DateTimeOffset.UtcNow, Status = status });
+                ctx.Invoices.Add(data);
+            }
+            await ctx.SaveChangesAsync();
+
+            var published = new System.Collections.Generic.List<string>();
+            using var sub = events.Subscribe<InvoiceEvent>(e => published.Add(e.Name));
+
+            // Transition not allowed: reported as false, nothing published
+            Assert.False(await invoiceRepository.MarkInvoiceStatus("Settled1", InvoiceStatus.Settled));
+            Assert.Empty(published);
+
+            // Allowed transition: true, published once
+            Assert.True(await invoiceRepository.MarkInvoiceStatus("New1", InvoiceStatus.Settled));
+            Assert.Equal([InvoiceEvent.MarkedCompleted], published);
+            published.Clear();
+
+            // The save fails: the exception reaches the caller and no event is published
+            await conn.ExecuteAsync("""
+                CREATE FUNCTION fail_invoice_update() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'update refused'; END; $$ LANGUAGE plpgsql;
+                CREATE TRIGGER fail_invoice_update BEFORE UPDATE ON "Invoices" FOR EACH ROW EXECUTE FUNCTION fail_invoice_update();
+                """);
+            await Assert.ThrowsAnyAsync<Exception>(() => invoiceRepository.MarkInvoiceStatus("Failing1", InvoiceStatus.Settled));
+            Assert.Empty(published);
         }
 
         [Fact]

@@ -822,6 +822,7 @@ namespace BTCPayServer.Tests
             await localizer.Save(dict!, new Translations(new[]
             {
                 KeyValuePair.Create("Hello", "Salut"),
+                KeyValuePair.Create("No due date", "Sans date limite"),
                 KeyValuePair.Create(amountError, "Veuillez fournir un montant supérieur à 0")
             }));
             static string Hello(Translations t) => t.Records.TryGetValue("Hello", out var v) ? v : null;
@@ -910,6 +911,12 @@ namespace BTCPayServer.Tests
             blob.StorefrontLanguage = "French";
             store.SetStoreBlob(blob);
             await stores.UpdateStore(store);
+
+            using var http = new HttpClient();
+            var paymentRequestPage = await http.GetStringAsync(new Uri(tester.PayTester.ServerUri,
+                $"payment-requests/{paymentRequest.Id}"));
+            Assert.Contains("Sans date limite", paymentRequestPage);
+            Assert.DoesNotContain("No due date", paymentRequestPage);
 
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             using var socket = new ClientWebSocket();

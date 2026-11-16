@@ -54,7 +54,10 @@ namespace BTCPayServer.PaymentRequest
             {
                 { Expirable: true, Expiry: { } e }
                     when e <= DateTimeOffset.UtcNow => PaymentRequestStatus.Expired,
-                { Status: PaymentRequestStatus.Expired, Expiry: null } => PaymentRequestStatus.Pending,
+                { Status: PaymentRequestStatus.Expired, Expiry: { } e }
+                    when e <= DateTimeOffset.UtcNow => PaymentRequestStatus.Expired,
+                // No expiry any more, or one moved to the future
+                { Status: PaymentRequestStatus.Expired } => PaymentRequestStatus.Pending,
                 _ => pr.Status
             };
 

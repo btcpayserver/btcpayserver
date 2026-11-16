@@ -11,7 +11,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Add hop hints for private channels to the Lightning invoice")]
         public bool LightningPrivateRouteHints { get; set; }
 
-        [Display(Name = "Unify on-chain and lightning payment URL/QR code")]
+        [Display(Name = "Unify payment methods into one payment URL/QR code")]
         public bool OnChainWithLnInvoiceFallback { get; set; }
 
         [Display(Name = "Description template of the lightning invoice")]

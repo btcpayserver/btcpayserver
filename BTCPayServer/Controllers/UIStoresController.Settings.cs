@@ -33,7 +33,7 @@ public partial class UIStoresController
             Id = store.Id,
             StoreName = store.StoreName,
             StoreWebsite = store.StoreWebsite,
-            StorefrontLanguage = storeBlob.StorefrontLanguage ?? Translations.DefaultLanguage,
+            StorefrontLanguage = storeBlob.StorefrontLanguage,
             LogoUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.LogoUrl),
             CssUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.CssUrl),
             BrandColor = storeBlob.BrandColor,
@@ -57,6 +57,7 @@ public partial class UIStoresController
     private async Task<IActionResult> GeneralSettingsView(GeneralSettingsViewModel model)
     {
         model.StorefrontLanguages = await _localizer.GetTranslationsSelectList();
+        model.StorefrontLanguages.Insert(0, new SelectListItem(StringLocalizer["Default"].Value, ""));
         return View(nameof(GeneralSettings), model);
     }
 

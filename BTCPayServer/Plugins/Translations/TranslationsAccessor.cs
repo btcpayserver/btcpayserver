@@ -15,16 +15,14 @@ public class TranslationsAccessor(LocalizerService localizerService, ILogger<Tra
 
     readonly AsyncLocal<RequestLanguage?> _request = new();
 
-    public LocalizerService.LoadedTranslations? RequestTranslations
+    public LocalizerService.LoadedTranslations? RequestTranslations => _request.Value?.Translations;
+
+    public void UseStoreLanguage(LocalizerService.LoadedTranslations? translations)
     {
-        get => _request.Value?.Translations;
-        set
-        {
-            if (_request.Value is { } current)
-                current.Translations = value;
-            else
-                _request.Value = new RequestLanguage { Translations = value };
-        }
+        if (_request.Value is { } current)
+            current.Translations = translations;
+        else
+            _request.Value = new RequestLanguage { Translations = translations };
     }
 
     public IDisposable BeginRequest()
@@ -44,21 +42,17 @@ public class TranslationsAccessor(LocalizerService localizerService, ILogger<Tra
     public async Task UseStoreLanguage(string? translationName)
     {
         if (string.IsNullOrEmpty(translationName))
-        {
-            RequestTranslations = new LocalizerService.LoadedTranslations(
-                Translations.Default, Translations.Default, Translations.DefaultLanguage, false);
             return;
-        }
 
         if (translationName == localizerService.ServerLanguage)
         {
-            RequestTranslations = null;
+            UseStoreLanguage((LocalizerService.LoadedTranslations?)null);
             return;
         }
         try
         {
             if (await localizerService.GetUserTranslations(translationName) is { } translations)
-                RequestTranslations = translations;
+                UseStoreLanguage(translations);
         }
         catch (Exception ex)
         {

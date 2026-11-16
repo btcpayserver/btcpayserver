@@ -468,6 +468,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<APIKeyRepository>();
             services.AddSingleton<IPermissionHandler, BuiltInPermissionHandler>();
             services.AddSingleton<IPermissionScopeProvider, BuiltInPermissionScopeProvider>();
+            services.AddSingleton<RouteStoreResolver>();
             services.AddSingleton<BuiltInPermissionScopeProvider.IStoreScopeProvider, BuiltInPermissionScopeProvider.SqlStoreScopeProvider>();
 
             foreach (var routeDataToStoreId in new BuiltInPermissionScopeProvider.RouteValueToStoreIdQuery[]

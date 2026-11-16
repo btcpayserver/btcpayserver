@@ -23,7 +23,7 @@ public class UserLanguageMiddleware(
             {
                 try
                 {
-                    translationsAccessor.RequestTranslations = await localizer.GetTranslationsForUser(httpContext.User, userManager);
+                    translationsAccessor.UseStoreLanguage(await localizer.GetTranslationsForUser(httpContext.User, userManager));
                 }
                 catch (Exception ex)
                 {

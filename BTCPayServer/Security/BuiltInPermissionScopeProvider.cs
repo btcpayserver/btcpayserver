@@ -6,10 +6,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
-using BTCPayServer.Data;
-using Dapper;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace BTCPayServer.Security;
 
@@ -31,15 +27,11 @@ public class BuiltInPermissionScopeProvider(
     /// </summary>
     public record RouteValueToStoreIdQuery(string RouteValue, string Sql);
 
-    internal class SqlStoreScopeProvider(
-        IEnumerable<RouteValueToStoreIdQuery> routeDataToStoreIds,
-        ApplicationDbContextFactory dbContextFactory,
-        IMemoryCache memoryCache) : IStoreScopeProvider
+    internal class SqlStoreScopeProvider(RouteStoreResolver routeStoreResolver) : IStoreScopeProvider
     {
         public async Task<string?> GetStoreId(AuthorizationHandlerContext authContext, ScopeProviderAuthorizationContext providerContext, RouteData routeData)
         {
 
-            await using var ctx = dbContextFactory.CreateContext();
             var httpContext = providerContext.HttpContext;
             var storeId = providerContext.HttpContext.GetCurrentStoreId();
             var resolvedStoreIds = new HashSet<string>();
@@ -105,54 +97,27 @@ public class BuiltInPermissionScopeProvider(
                 return null;
             }
 
-            List<AdditionalScope> additionalScopes = new();
-            foreach (var i in routeDataToStoreIds)
+            switch (await routeStoreResolver.Resolve(routeData))
             {
-                if (routeData.Values.TryGetValue(i.RouteValue, out var ido) && ido is string id)
-                {
-                    var cacheKey = $"SqlStoreScopeProvider-{i.RouteValue}-{id}";
-                    memoryCache.TryGetValue(cacheKey, out var storeIdFromCache);
-                    var storeId2 = storeIdFromCache as string;
-                    if (storeId2 is null)
-                    {
-                        storeId2 = await ctx.Database.GetDbConnection().ExecuteScalarAsync<string>(i.Sql, new { id });
-                        if (storeId2 is not null)
-                        {
-                            var id2 = storeId2;
-                            memoryCache.GetOrCreate(cacheKey, cacheEntry =>
-                            {
-                                cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(10);
-                                return id2;
-                            });
-                        }
-                        // If the route is "pull-payments/DO-NOT-EXIT/edit", this will returns 403
-                        // For legacy, if the route is "stores/{storeId}/pull-payments/DO-NOT-EXIT/edit", the action itself needs to handle 404.
-                        else if (storeId is null)
-                        {
-                            authContext.Fail();
-                            return null;
-                        }
-                    }
-                    storeId ??= storeId2;
-
-                    // Consider the route /stores/{storeId}/apps/{appId}
-                    // This check is making sure that the `storeId` is matching the scope resolved from `appId`.
-                    if (storeId2 != storeId)
+                case RouteStoreResolver.Resolution.Invalid:
+                    authContext.Fail();
+                    return null;
+                case RouteStoreResolver.Resolution.Resolved resolved:
+                    if (storeId is not null && resolved.StoreId != storeId)
                     {
                         authContext.Fail();
                         return null;
                     }
-
-                    if (storeId2 is not null)
-                        additionalScopes.Add(new AdditionalScope(i.RouteValue, id));
-                }
+                    storeId = resolved.StoreId;
+                    providerContext.HttpContext.Items[AdditionalScopeKey] = resolved.AdditionalScopes;
+                    break;
+                case RouteStoreResolver.Resolution.Unscoped:
+                    providerContext.HttpContext.Items[AdditionalScopeKey] = Array.Empty<RouteStoreResolver.AdditionalScope>();
+                    break;
             }
-            providerContext.HttpContext.Items[AdditionalScopeKey] = additionalScopes;
             return storeId;
         }
     }
-
-    internal record AdditionalScope(string ScopeName, string Scope);
 
     public const string AdditionalScopeKey = "BuiltInPermissionScopeProvider-AdditionalScope";
     public async Task<string?> GetScope(AuthorizationHandlerContext authContext, ScopeProviderAuthorizationContext providerContext)

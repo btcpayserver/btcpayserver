@@ -11,9 +11,10 @@ using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
-using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
+using BTCPayServer.Plugins.Translations;
+using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -40,6 +41,7 @@ namespace BTCPayServer.Controllers
         public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
         [AllowAnonymous]
+        [UseStoreLanguage]
         [HttpGet("pull-payments/{pullPaymentId}")]
         public async Task<IActionResult> ViewPullPayment(string pullPaymentId)
         {
@@ -167,6 +169,7 @@ namespace BTCPayServer.Controllers
         }
 
         [AllowAnonymous]
+        [UseStoreLanguage]
         [HttpPost("pull-payments/{pullPaymentId}")]
         public async Task<IActionResult> ClaimPullPayment(string pullPaymentId, ViewPullPaymentModel vm, CancellationToken cancellationToken)
         {

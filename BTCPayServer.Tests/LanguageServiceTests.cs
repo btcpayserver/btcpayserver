@@ -4,17 +4,23 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.WebSockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Plugins.Translations;
+using BTCPayServer.Security;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Stores;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using static Microsoft.Playwright.Assertions;
 using Xunit;
@@ -762,21 +768,21 @@ namespace BTCPayServer.Tests
                 var previousTranslations = accessor.RequestTranslations;
                 try
                 {
-                    accessor.RequestTranslations = french;
+                    accessor.UseStoreLanguage(french);
                     Assert.Same(french, accessor.Current);
                     Assert.Equal("Salut", Hello(accessor.Current.Translations));
                     Assert.NotEqual("Salut", Hello(localizer.Translations));
 
-                    accessor.RequestTranslations = french with { Rtl = true };
+                    accessor.UseStoreLanguage(french with { Rtl = true });
                     Assert.True(accessor.Current.Rtl);
 
-                    accessor.RequestTranslations = null;
+                    accessor.UseStoreLanguage((LocalizerService.LoadedTranslations)null);
                     Assert.Same(localizer.ServerTranslations, accessor.Current);
                     Assert.Equal(localizer.ServerTranslations.Rtl, accessor.Current.Rtl);
                 }
                 finally
                 {
-                    accessor.RequestTranslations = previousTranslations;
+                    accessor.UseStoreLanguage(previousTranslations);
                 }
             });
             Assert.Null(accessor.RequestTranslations);
@@ -800,6 +806,169 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation("Removing the language falls back to the server language");
             await localizer.DeleteTranslation("French");
             Assert.Null(await localizer.GetUserTranslations("French"));
+        }
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanUseStoreLanguage()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var localizer = tester.PayTester.GetService<LocalizerService>();
+            var accessor = tester.PayTester.GetService<TranslationsAccessor>();
+            var db = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext().Database.GetDbConnection();
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('French', 'English', 'Custom')");
+            var dict = await localizer.GetTranslation("French");
+            const string amountError = "Please provide an amount greater than 0";
+            await localizer.Save(dict!, new Translations(new[]
+            {
+                KeyValuePair.Create("Hello", "Salut"),
+                KeyValuePair.Create("No due date", "Sans date limite"),
+                KeyValuePair.Create(amountError, "Veuillez fournir un montant supérieur à 0")
+            }));
+            static string Hello(Translations t) => t.Records.TryGetValue("Hello", out var v) ? v : null;
+            var french = await localizer.GetUserTranslations("French");
+
+            async Task<string> RenderPublicPage(LocalizerService.LoadedTranslations userLanguage, string storeLanguage)
+            {
+                return await Task.Run(async () =>
+                {
+                    using (accessor.BeginRequest())
+                    {
+                        accessor.UseStoreLanguage(userLanguage);
+                        await accessor.UseStoreLanguage(storeLanguage);
+                        return Hello(accessor.Current.Translations);
+                    }
+                });
+            }
+            Assert.Equal("Salut", await RenderPublicPage(null, "French"));
+            Assert.NotEqual("Salut", await RenderPublicPage(french, localizer.ServerLanguage));
+            Assert.Equal("Salut", await RenderPublicPage(french, null));
+            Assert.Equal("Salut", await RenderPublicPage(french, ""));
+            using (accessor.BeginRequest())
+            {
+                await accessor.UseStoreLanguage((string)null);
+                Assert.Same(localizer.ServerTranslations, accessor.Current);
+            }
+            Assert.Equal("Salut", await RenderPublicPage(french, "Klingon"));
+            for (var i = 0; i < 20; i++)
+            {
+                var frenchStore = RenderPublicPage(null, "French");
+                var serverStore = RenderPublicPage(french, localizer.ServerLanguage);
+                Assert.Equal("Salut", await frenchStore);
+                Assert.NotEqual("Salut", await serverStore);
+            }
+            Assert.NotEqual("Salut", Hello(localizer.Translations));
+
+            // SignalR calls the controller directly, bypassing MVC action filters.
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            var client = await user.CreateClient();
+            var paymentRequest = await client.CreatePaymentRequest(user.StoreId,
+                new() { Title = "Store language", Currency = "USD", Amount = 1 });
+            var resolver = tester.PayTester.GetService<RouteStoreResolver>();
+            var routeData = new RouteData();
+            routeData.Values["payReqId"] = paymentRequest.Id;
+            var resolved = Assert.IsType<RouteStoreResolver.Resolution.Resolved>(await resolver.Resolve(routeData));
+            Assert.Equal(user.StoreId, resolved.StoreId);
+            Assert.Equal(new RouteStoreResolver.AdditionalScope("payReqId", paymentRequest.Id),
+                Assert.Single(resolved.AdditionalScopes));
+            Assert.Equal(user.StoreId,
+                Assert.IsType<RouteStoreResolver.Resolution.Resolved>(await resolver.Resolve(routeData)).StoreId); // Cached lookup.
+            routeData.Values["payReqId"] = "missing";
+            Assert.IsType<RouteStoreResolver.Resolution.Invalid>(await resolver.Resolve(routeData));
+            routeData.Values["storeId"] = user.StoreId;
+            Assert.IsType<RouteStoreResolver.Resolution.Invalid>(await resolver.Resolve(routeData));
+            routeData.Values["payReqId"] = paymentRequest.Id;
+            Assert.Equal(user.StoreId,
+                Assert.IsType<RouteStoreResolver.Resolution.Resolved>(await resolver.Resolve(routeData)).StoreId);
+            routeData.Values["storeId"] = "another-store";
+            Assert.IsType<RouteStoreResolver.Resolution.Invalid>(await resolver.Resolve(routeData));
+            routeData.Values.Remove("storeId");
+            routeData.Values["paymentRequestId"] = paymentRequest.Id;
+            resolved = Assert.IsType<RouteStoreResolver.Resolution.Resolved>(await resolver.Resolve(routeData));
+            Assert.Equal(user.StoreId, resolved.StoreId);
+            Assert.Equal(new[]
+            {
+                new RouteStoreResolver.AdditionalScope("payReqId", paymentRequest.Id),
+                new RouteStoreResolver.AdditionalScope("paymentRequestId", paymentRequest.Id)
+            }, resolved.AdditionalScopes);
+            var otherUser = tester.NewAccount();
+            await otherUser.GrantAccessAsync();
+            var otherClient = await otherUser.CreateClient();
+            var otherRequest = await otherClient.CreatePaymentRequest(otherUser.StoreId,
+                new() { Title = "Other store", Currency = "USD", Amount = 1 });
+            routeData.Values["paymentRequestId"] = otherRequest.Id;
+            Assert.IsType<RouteStoreResolver.Resolution.Invalid>(await resolver.Resolve(routeData));
+            routeData.Values.Clear();
+            Assert.IsType<RouteStoreResolver.Resolution.Unscoped>(await resolver.Resolve(routeData));
+            routeData.Values["storeId"] = user.StoreId;
+            resolved = Assert.IsType<RouteStoreResolver.Resolution.Resolved>(await resolver.Resolve(routeData));
+            Assert.Equal(user.StoreId, resolved.StoreId);
+            Assert.Empty(resolved.AdditionalScopes);
+            var stores = tester.PayTester.GetService<StoreRepository>();
+            var store = await stores.FindStore(user.StoreId);
+            var blob = store.GetStoreBlob();
+            blob.StorefrontLanguage = "French";
+            store.SetStoreBlob(blob);
+            await stores.UpdateStore(store);
+
+            using var http = new HttpClient();
+            var paymentRequestPage = await http.GetStringAsync(new Uri(tester.PayTester.ServerUri,
+                $"payment-requests/{paymentRequest.Id}"));
+            Assert.Contains("Sans date limite", paymentRequestPage);
+            Assert.DoesNotContain("No due date", paymentRequestPage);
+
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var socket = new ClientWebSocket();
+            var hubUri = new UriBuilder(new Uri(tester.PayTester.ServerUri, "payment-requests/hub"))
+            {
+                Scheme = "ws"
+            }.Uri;
+            await socket.ConnectAsync(hubUri, timeout.Token);
+
+            async Task Send(object message)
+            {
+                var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message) + "\u001e");
+                await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, timeout.Token);
+            }
+
+            async Task<JObject> Receive()
+            {
+                using var message = new MemoryStream();
+                var buffer = new byte[4096];
+                WebSocketReceiveResult received;
+                do
+                {
+                    received = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), timeout.Token);
+                    Assert.Equal(WebSocketMessageType.Text, received.MessageType);
+                    message.Write(buffer, 0, received.Count);
+                } while (!received.EndOfMessage);
+                return JsonParser.ParseObject(Encoding.UTF8.GetString(message.ToArray()).Split('\u001e')[0]);
+            }
+
+            await Send(new { protocol = "json", version = 1 });
+            Assert.Empty(await Receive());
+            async Task<string> PayError()
+            {
+                await Send(new { type = 1, target = "Pay", arguments = new object[] { paymentRequest.Id, 0 } });
+                JObject response;
+                do
+                {
+                    response = await Receive();
+                } while (response["type"]?.Value<int>() == 6); // Ignore keep-alive messages.
+                Assert.Equal("InvoiceError", response["target"]?.Value<string>());
+                return response["arguments"]![0]!["value"]!.Value<string>();
+            }
+
+            Assert.Equal("Veuillez fournir un montant supérieur à 0", await PayError());
+            blob.StorefrontLanguage = null;
+            store.SetStoreBlob(blob);
+            await stores.UpdateStore(store);
+            Assert.Equal(amountError, await PayError());
+
+            tester.PayTester.GetService<ISettingsAccessor<PoliciesSettings>>().Settings.LangTranslation = "French";
+            await localizer.Load();
+            Assert.Equal("Salut", await RenderPublicPage(null, null));
         }
 
         [Fact(Timeout = TestTimeout)]

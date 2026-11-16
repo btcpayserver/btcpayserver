@@ -50,7 +50,7 @@ public class SetContextFilter(
             httpContext.SetStoresData(stores);
 
         //TODO: We should probably do this on controller specific filters, this would be better example for plugins
-        if (httpContext.Items.TryGetValue(BuiltInPermissionScopeProvider.AdditionalScopeKey, out var o) && o is IEnumerable<BuiltInPermissionScopeProvider.AdditionalScope> additionalScopes)
+        if (httpContext.Items.TryGetValue(BuiltInPermissionScopeProvider.AdditionalScopeKey, out var o) && o is IEnumerable<RouteStoreResolver.AdditionalScope> additionalScopes)
         {
             foreach (var additionalScope in additionalScopes)
             {

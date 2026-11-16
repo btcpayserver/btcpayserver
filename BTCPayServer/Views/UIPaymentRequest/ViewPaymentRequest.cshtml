@@ -108,12 +108,12 @@
                     <p>
                         @if (Model.IsPending && Model.ExpiryDate.HasValue)
                         {
-                            <span class="text-muted">Due</span>
+                            <span class="text-muted" text-translate="true">Due</span>
                             <span>@Model.ExpiryDate.Value.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)</span>
                         }
                         else
                         {
-                            <span class="text-muted">No due date</span>
+                            <span class="text-muted" text-translate="true">No due date</span>
                         }
                     </p>
                     <dl class="mt-n1 mb-4" v-if="srvModel.amountCollected > 0 && srvModel.amountDue > 0">

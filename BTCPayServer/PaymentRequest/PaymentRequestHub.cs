@@ -1,10 +1,13 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Controllers;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
+using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Services;
 using BTCPayServer.Services.PaymentRequests;
 using Microsoft.AspNetCore.Builder;
@@ -19,6 +22,8 @@ namespace BTCPayServer.PaymentRequest
     public class PaymentRequestHub : Hub
     {
         private readonly UIPaymentRequestController _PaymentRequestController;
+        private readonly TranslationsAccessor _translationsAccessor;
+        private readonly PaymentRequestRepository _paymentRequestRepository;
         public const string InvoiceCreated = "InvoiceCreated";
         public const string InvoiceConfirmed = "InvoiceConfirmed";
         public const string PaymentReceived = "PaymentReceived";
@@ -27,9 +32,25 @@ namespace BTCPayServer.PaymentRequest
         public const string CancelInvoiceError = "CancelInvoiceError";
         public const string InvoiceCancelled = "InvoiceCancelled";
 
-        public PaymentRequestHub(UIPaymentRequestController paymentRequestController)
+        public PaymentRequestHub(UIPaymentRequestController paymentRequestController,
+            TranslationsAccessor translationsAccessor, PaymentRequestRepository paymentRequestRepository)
         {
             _PaymentRequestController = paymentRequestController;
+            _translationsAccessor = translationsAccessor;
+            _paymentRequestRepository = paymentRequestRepository;
+        }
+
+        private async Task<IActionResult> InStoreLanguage(string prId, Func<Task<IActionResult>> action)
+        {
+            var currentTranslations = _translationsAccessor.RequestTranslations;
+            using (_translationsAccessor.BeginRequest())
+            {
+                _translationsAccessor.UseStoreLanguage(currentTranslations);
+                var paymentRequest = await _paymentRequestRepository.FindPaymentRequest(prId, null);
+                if (paymentRequest?.StoreData is { } store)
+                    await _translationsAccessor.UseStoreLanguage(store.GetStoreBlob().StorefrontLanguage);
+                return await action();
+            }
         }
 
         public async Task ListenToPaymentRequest(string prId)
@@ -53,7 +74,7 @@ namespace BTCPayServer.PaymentRequest
                 return;
             _PaymentRequestController.ControllerContext.HttpContext = Context.GetHttpContext();
             var result =
-                await _PaymentRequestController.PayPaymentRequest(prId, false, amount);
+                await InStoreLanguage(prId, () => _PaymentRequestController.PayPaymentRequest(prId, false, amount));
             switch (result)
             {
                 case OkObjectResult okObjectResult:
@@ -77,7 +98,7 @@ namespace BTCPayServer.PaymentRequest
                 return;
             _PaymentRequestController.ControllerContext.HttpContext = Context.GetHttpContext();
             var result =
-                await _PaymentRequestController.CancelUnpaidPendingInvoice(prId, false);
+                await InStoreLanguage(prId, () => _PaymentRequestController.CancelUnpaidPendingInvoice(prId, false));
             switch (result)
             {
                 case OkObjectResult:

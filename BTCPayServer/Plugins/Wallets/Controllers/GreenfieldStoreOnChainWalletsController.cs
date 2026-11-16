@@ -197,17 +197,18 @@ namespace BTCPayServer.Controllers.Greenfield
                     if (!string.IsNullOrWhiteSpace(labelFilter))
                     {
                         walletTransactionsInfoAsync.TryGetValue(t.TransactionId.ToString(), out var transactionInfo);
-                        if (transactionInfo?.LabelColors.ContainsKey(labelFilter) is true)
-                            filteredList.Add(t);
+                        if (transactionInfo?.LabelColors.ContainsKey(labelFilter) is not true)
+                            continue;
                     }
 
                     if (statusFilter?.Any() is true)
                     {
-                        if (statusFilter.Contains(TransactionStatus.Confirmed) && t.Confirmations != 0)
-                            filteredList.Add(t);
-                        else if (statusFilter.Contains(TransactionStatus.Unconfirmed) && t.Confirmations == 0)
-                            filteredList.Add(t);
+                        var status = t.Confirmations != 0 ? TransactionStatus.Confirmed : TransactionStatus.Unconfirmed;
+                        if (!statusFilter.Contains(status))
+                            continue;
                     }
+
+                    filteredList.Add(t);
                 }
 
                 txs = filteredList;
@@ -231,7 +232,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 return actionResult;
 
             var wallet = btcPayWalletProvider.GetWallet(network);
-            var tx = await wallet.FetchTransaction(derivationScheme.AccountDerivation, uint256.Parse(transactionId));
+            var tx = uint256.TryParse(transactionId, out var transactionHash)
+                ? await wallet.FetchTransaction(derivationScheme.AccountDerivation, transactionHash)
+                : null;
             if (tx is null)
             {
                 return this.CreateAPIError(404, "transaction-not-found", "The transaction was not found.");
@@ -261,7 +264,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 return actionResult;
 
             var wallet = btcPayWalletProvider.GetWallet(network);
-            var transactionHash = uint256.Parse(transactionId);
+            if (!uint256.TryParse(transactionId, out var transactionHash))
+            {
+                return this.CreateAPIError(404, "transaction-not-found", "The transaction was not found.");
+            }
             var tx = await wallet.FetchTransaction(derivationScheme.AccountDerivation, transactionHash);
             if (!force && tx is null)
             {

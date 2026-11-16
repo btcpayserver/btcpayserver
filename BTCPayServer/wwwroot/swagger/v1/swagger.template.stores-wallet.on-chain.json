@@ -260,7 +260,7 @@
                         "name": "labelFilter",
                         "in": "query",
                         "required": false,
-                        "description": "Transaction label to filter by",
+                        "description": "Transaction label to filter by. When combined with `statusFilter`, only transactions matching both are returned",
                         "schema": {
                             "type": "string"
                         },

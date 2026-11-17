@@ -35,6 +35,8 @@ namespace BTCPayServer.HostedServices
                 {
                     case InvoiceEvent.Expired:
                     case InvoiceEvent.MarkedInvalid:
+                        if (invoiceEvent.PreviousStatus is InvoiceStatus.Expired)
+                            return;
                         deduct = 1;
                         break;
                     case InvoiceEvent.Created:

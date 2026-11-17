@@ -60,8 +60,8 @@ namespace BTCPayServer.Tests
             }
             await ctx.SaveChangesAsync();
 
-            var published = new System.Collections.Generic.List<string>();
-            using var sub = events.Subscribe<InvoiceEvent>(e => published.Add(e.Name));
+            var published = new System.Collections.Generic.List<InvoiceEvent>();
+            using var sub = events.Subscribe<InvoiceEvent>(e => published.Add(e));
 
             // Transition not allowed: reported as false, nothing published
             Assert.False(await invoiceRepository.MarkInvoiceStatus("Settled1", InvoiceStatus.Settled));
@@ -69,7 +69,15 @@ namespace BTCPayServer.Tests
 
             // Allowed transition: true, published once
             Assert.True(await invoiceRepository.MarkInvoiceStatus("New1", InvoiceStatus.Settled));
-            Assert.Equal([InvoiceEvent.MarkedCompleted], published);
+            var completed = Assert.Single(published);
+            Assert.Equal(InvoiceEvent.MarkedCompleted, completed.Name);
+            Assert.Equal(InvoiceStatus.New, completed.PreviousStatus);
+            published.Clear();
+
+            Assert.True(await invoiceRepository.MarkInvoiceStatus("New1", InvoiceStatus.Invalid));
+            var invalid = Assert.Single(published);
+            Assert.Equal(InvoiceEvent.MarkedInvalid, invalid.Name);
+            Assert.Equal(InvoiceStatus.Settled, invalid.PreviousStatus);
             published.Clear();
 
             // The save fails: the exception reaches the caller and no event is published

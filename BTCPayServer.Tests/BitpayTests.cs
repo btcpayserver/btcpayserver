@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -115,6 +116,9 @@ public class BitpayTests(ITestOutputHelper log) : UnitTestBase(log)
             await acc.GrantAccessAsync();
             acc.RegisterDerivationScheme("BTC");
             await acc.ModifyGeneralSettings(p => p.SpeedPolicy = SpeedPolicy.LowSpeed);
+            var invoiceEvents = new ConcurrentQueue<InvoiceEvent>();
+            using var subscription = tester.PayTester.GetService<EventAggregator>()
+                .Subscribe<InvoiceEvent>(evt => invoiceEvents.Enqueue(evt));
             var invoice = await acc.BitPay.CreateInvoiceAsync(new Invoice
             {
                 Price = 5.0m,
@@ -171,6 +175,15 @@ public class BitpayTests(ITestOutputHelper log) : UnitTestBase(log)
             }
             var invoice2 = await acc.BitPay.GetInvoiceAsync(invoice.Id);
             Assert.NotNull(invoice2);
+            var events = invoiceEvents.Where(evt => evt.InvoiceId == invoice.Id).ToArray();
+            Assert.Null(Assert.Single(events, evt => evt.Name == InvoiceEvent.Created).PreviousStatus);
+            Assert.Null(Assert.Single(events, evt => evt.Name == InvoiceEvent.ReceivedPayment).PreviousStatus);
+            Assert.Equal(InvoiceStatus.New,
+                Assert.Single(events, evt => evt.Name == InvoiceEvent.PaidInFull).PreviousStatus);
+            Assert.Equal(InvoiceStatus.Processing,
+                Assert.Single(events, evt => evt.Name == InvoiceEvent.Confirmed).PreviousStatus);
+            Assert.Equal(InvoiceStatus.Processing,
+                Assert.Single(events, evt => evt.Name == InvoiceEvent.Completed).PreviousStatus);
         }
 
         [Fact]

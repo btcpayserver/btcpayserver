@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -10,6 +11,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Forms;
 using BTCPayServer.Forms.Models;
 using BTCPayServer.HostedServices;
@@ -27,6 +29,7 @@ using LNURL;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Playwright;
 using NBitcoin;
@@ -358,12 +361,63 @@ goodies:
             store.AllowZeroAmountInvoices = true;
             await client.UpdateStore(store.Id, store);
 
-            var redirectToCheckout = Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(app.Id, PosViewType.Cart, 0, choiceKey: "goodies").Result);
+            var invoiceEvents = new ConcurrentQueue<InvoiceEvent>();
+            using var invoiceEventsSubscription = tester.PayTester.GetService<EventAggregator>()
+                .Subscribe<InvoiceEvent>(evt => invoiceEvents.Enqueue(evt));
+            RedirectToActionResult redirectToCheckout = null;
+            var completedInvoice = await tester.WaitForEvent<InvoiceEvent>(async () =>
+            {
+                redirectToCheckout = Assert.IsType<RedirectToActionResult>(
+                    await publicApps.ViewPointOfSale(app.Id, PosViewType.Cart, 0, choiceKey: "goodies"));
+            }, evt => evt.Name == InvoiceEvent.Completed && evt.Invoice.Metadata.ItemCode == "goodies");
             Assert.Equal("InvoiceReceipt", redirectToCheckout.ActionName);
             var invoiceId = redirectToCheckout.RouteValues!["invoiceId"]!.ToString();
+            Assert.Equal(invoiceId, completedInvoice.InvoiceId);
+            var zeroAmountEvents = invoiceEvents.Where(evt => evt.InvoiceId == invoiceId).ToArray();
+            Assert.Null(Assert.Single(zeroAmountEvents, evt => evt.Name == InvoiceEvent.Created).PreviousStatus);
+            Assert.Equal(InvoiceStatus.New,
+                Assert.Single(zeroAmountEvents, evt => evt.Name == InvoiceEvent.PaidInFull).PreviousStatus);
+            Assert.Equal(InvoiceStatus.Processing,
+                Assert.Single(zeroAmountEvents, evt => evt.Name == InvoiceEvent.Confirmed).PreviousStatus);
+            Assert.Equal(InvoiceStatus.Processing, completedInvoice.PreviousStatus);
             var inv = await client.GetInvoice(invoiceId);
             Assert.Equal(0, inv.Amount);
             Assert.NotEqual(InvoiceType.TopUp, inv.Type);
+
+            // marking an expired invoice invalid should not increment the inventory
+            vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
+            vmpos.Template = AppService.SerializeTemplate(TestUtils.ParsePOSYML(@"
+inventoryitem:
+  price: 1.0
+  title: good apple
+  inventory: 1
+"));
+            Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
+            var inventoryRedirect = Assert.IsType<RedirectToActionResult>(await publicApps
+                .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "inventoryitem"));
+            Assert.Equal("UIInvoice", inventoryRedirect.ControllerName);
+            var inventoryInvoiceId = inventoryRedirect.RouteValues!["invoiceId"]!.ToString();
+            var appsService = tester.PayTester.GetService<AppService>();
+            async Task<int?> ItemInventory()
+            {
+                var fresh = await appsService.GetApp(app.Id, PointOfSaleAppType.AppType);
+                return AppService.Parse(fresh!.GetSettings<PointOfSaleSettings>().Template)
+                    .Single(item => item.Id == "inventoryitem").Inventory;
+            }
+            var inventoryUpdater = tester.PayTester.GetService<IEnumerable<IHostedService>>()
+                .OfType<AppInventoryUpdaterHostedService>().Single();
+            await inventoryUpdater.WaitForPendingEventsAsync();
+            Assert.Equal(0, await ItemInventory());
+            var expiredInvoice = await tester.WaitForEvent<InvoiceEvent>(
+                () => tester.PayTester.InvoiceRepository.UpdateInvoiceExpiry(inventoryInvoiceId, TimeSpan.Zero),
+                evt => evt.InvoiceId == inventoryInvoiceId && evt.Name == InvoiceEvent.Expired);
+            Assert.Equal(InvoiceStatus.New, expiredInvoice.PreviousStatus);
+            await inventoryUpdater.WaitForPendingEventsAsync();
+            Assert.Equal(1, await ItemInventory());
+            var invoiceController = tester.PayTester.GetController<UIInvoiceController>(user.UserId, user.StoreId);
+            Assert.IsType<JsonResult>(await invoiceController.ChangeInvoiceState(inventoryInvoiceId, "invalid"));
+            await inventoryUpdater.WaitForPendingEventsAsync();
+            Assert.Equal(1, await ItemInventory());
 
             // List
             appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);

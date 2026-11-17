@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -274,6 +275,9 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             user.RegisterDerivationScheme("BTC");
             await user.SetupWebhook();
             var client = await user.CreateClient();
+            var invoiceEvents = new ConcurrentQueue<InvoiceEvent>();
+            using var subscription = tester.PayTester.GetService<EventAggregator>()
+                .Subscribe<InvoiceEvent>(evt => invoiceEvents.Enqueue(evt));
 
             // PaidAfterExpiration
             var invoicePaidAfterExpiration = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 0.01m, Currency = "BTC" });
@@ -317,6 +321,15 @@ public class WebhooksTests(ITestOutputHelper log) : UnitTestBase(log)
             {
                 Assert.Equal(invoiceExpiredPartial.Id, evt.InvoiceId);
             });
+            var latePaymentEvents = invoiceEvents.Where(evt => evt.InvoiceId == invoicePaidAfterExpiration.Id).ToArray();
+            Assert.Equal(InvoiceStatus.New,
+                Assert.Single(latePaymentEvents, evt => evt.Name == InvoiceEvent.Expired).PreviousStatus);
+            Assert.Null(Assert.Single(latePaymentEvents, evt => evt.Name == InvoiceEvent.PaidAfterExpiration).PreviousStatus);
+            var partialPaymentEvents = invoiceEvents.Where(evt => evt.InvoiceId == invoiceExpiredPartial.Id).ToArray();
+            Assert.Equal(InvoiceStatus.New,
+                Assert.Single(partialPaymentEvents, evt => evt.Name == InvoiceEvent.Expired).PreviousStatus);
+            Assert.Equal(InvoiceStatus.New,
+                Assert.Single(partialPaymentEvents, evt => evt.Name == InvoiceEvent.ExpiredPaidPartial).PreviousStatus);
         }
 
 

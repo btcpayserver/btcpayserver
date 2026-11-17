@@ -6,6 +6,7 @@ using BlazorDashboardKit.Abstractions;
 using BlazorDashboardKit.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Plugins.Dashboard;
 
@@ -21,11 +22,15 @@ public sealed class BtcpayDashboardStore : IDashboardStore
 
     private readonly StoreRepository _storeRepository;
     private readonly SettingsRepository _settingsRepository;
+    private readonly BtcpayDashboardContext _context;
+    private readonly ILogger<BtcpayDashboardStore> _logger;
 
-    public BtcpayDashboardStore(StoreRepository storeRepository, SettingsRepository settingsRepository)
+    public BtcpayDashboardStore(StoreRepository storeRepository, SettingsRepository settingsRepository, BtcpayDashboardContext context, ILogger<BtcpayDashboardStore> logger)
     {
         _storeRepository = storeRepository;
         _settingsRepository = settingsRepository;
+        _context = context;
+        _logger = logger;
     }
 
     public static bool TryParseOwner(string? ownerKey, out OwnerScope scope, out string? storeId)
@@ -62,6 +67,13 @@ public sealed class BtcpayDashboardStore : IDashboardStore
     {
         if (!TryParseOwner(ownerKey, out var scope, out var storeId))
             return;
+        // Owner-scoped write guard: the only writable target is the page scope this
+        // circuit was rendered for. The JS-reachable grid callback funnels through here.
+        if (scope == OwnerScope.Server ? _context.OwnerKey != ownerKey : !string.Equals(storeId, _context.StoreId, StringComparison.Ordinal) || string.IsNullOrEmpty(storeId))
+        {
+            _logger.LogWarning("Rejected dashboard save for {OwnerKey}: outside the circuit page scope", ownerKey);
+            return;
+        }
         if (scope == OwnerScope.Server)
             await _settingsRepository.UpdateSetting(collection, SettingKey);
         else

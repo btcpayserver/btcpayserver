@@ -1,0 +1,14 @@
+@using Microsoft.AspNetCore.Components.Authorization
+<CascadingAuthenticationState>
+    <BtcpayDashboard OwnerKey="@OwnerKey" IsSetUp="@IsSetUp" StoreId="@StoreId" CryptoCode="@CryptoCode" WalletEnabled="@WalletEnabled" LightningEnabled="@LightningEnabled" LightningSupported="@LightningSupported" />
+</CascadingAuthenticationState>
+
+@code {
+    [Parameter] public string OwnerKey { get; set; } = string.Empty;
+    [Parameter] public bool IsSetUp { get; set; }
+    [Parameter] public string StoreId { get; set; } = string.Empty;
+    [Parameter] public string CryptoCode { get; set; } = "BTC";
+    [Parameter] public bool WalletEnabled { get; set; }
+    [Parameter] public bool LightningEnabled { get; set; }
+    [Parameter] public bool LightningSupported { get; set; }
+}

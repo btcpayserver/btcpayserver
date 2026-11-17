@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="~/_content/BlazorDashboardKit/dashboard.css" asp-append-version="true" />
 }
 
-@(await Html.RenderComponentAsync<BtcpayDashboard>(RenderMode.ServerPrerendered, new
+@(await Html.RenderComponentAsync<BtcpayDashboardRoot>(RenderMode.ServerPrerendered, new
 {
     OwnerKey = Model.OwnerKey,
     IsSetUp = Model.IsSetUp,

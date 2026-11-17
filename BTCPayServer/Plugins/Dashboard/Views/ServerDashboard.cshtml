@@ -28,7 +28,7 @@
     <h2 class="my-1">@ViewData["Title"]</h2>
 </div>
 
-@(await Html.RenderComponentAsync<BtcpayDashboard>(RenderMode.ServerPrerendered, new
+@(await Html.RenderComponentAsync<BtcpayDashboardRoot>(RenderMode.ServerPrerendered, new
 {
     OwnerKey = Model.OwnerKey,
     IsSetUp = Model.IsSetUp

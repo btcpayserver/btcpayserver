@@ -21,11 +21,13 @@ public sealed class BtcpayWidgetAccessControl : IWidgetAccessControl
 {
     private readonly IAuthorizationService _authorizationService;
     private readonly IScopeProvider _scopeProvider;
+    private readonly BtcpayDashboardContext _context;
 
-    public BtcpayWidgetAccessControl(IAuthorizationService authorizationService, IScopeProvider scopeProvider)
+    public BtcpayWidgetAccessControl(IAuthorizationService authorizationService, IScopeProvider scopeProvider, BtcpayDashboardContext context)
     {
         _authorizationService = authorizationService;
         _scopeProvider = scopeProvider;
+        _context = context;
     }
 
     public async Task<bool> IsAllowedAsync(WidgetDescriptor descriptor, ClaimsPrincipal? user,
@@ -36,7 +38,9 @@ public sealed class BtcpayWidgetAccessControl : IWidgetAccessControl
         if (user is null)
             return false;
 
-        var storeId = _scopeProvider.GetCurrentStoreId();
+        // Prefer the explicit circuit scope: ambient HTTP context is unavailable
+        // inside interactive Blazor circuits, where the scope provider reads null.
+        var storeId = _context.StoreId ?? _scopeProvider.GetCurrentStoreId();
         foreach (var permission in descriptor.RequiredPermissions)
         {
             object? resource = Permission.TryGetPolicyType(permission) == PolicyType.Store

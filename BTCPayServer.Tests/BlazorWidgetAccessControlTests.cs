@@ -13,6 +13,7 @@ namespace BTCPayServer.Tests;
 [Trait("Fast", "Fast")]
 public class BlazorWidgetAccessControlTests
 {
+    private static BtcpayDashboardContext Ctx(string? storeId = null) => new() { StoreId = storeId };
     private sealed class AllowAll : IAuthorizationService
     {
         public Task<AuthorizationResult> AuthorizeAsync(ClaimsPrincipal user, object? resource,
@@ -26,15 +27,15 @@ public class BlazorWidgetAccessControlTests
     [Fact]
     public async Task NoRequiredPermissions_IsAllowed()
     {
-        var sut = new BtcpayWidgetAccessControl(new AllowAll(), new NullScopeProvider());
-        var ok = await sut.IsAllowedAsync(new WidgetDescriptor { Type = "Notes" }, new ClaimsPrincipal());
+        var sut = new BtcpayWidgetAccessControl(new AllowAll(), new NullScopeProvider(), Ctx());
+        var ok = await sut.IsAllowedAsync(new WidgetDescriptor { Type = "WalletBalance" }, new ClaimsPrincipal());
         Assert.True(ok);
     }
 
     [Fact]
     public async Task RequiredPermissions_NullUser_IsDenied()
     {
-        var sut = new BtcpayWidgetAccessControl(new AllowAll(), new NullScopeProvider());
+        var sut = new BtcpayWidgetAccessControl(new AllowAll(), new NullScopeProvider(), Ctx());
         var ok = await sut.IsAllowedAsync(
             new WidgetDescriptor { Type = "X", RequiredPermissions = new[] { "btcpay.store.canviewstoresettings" } },
             user: null);

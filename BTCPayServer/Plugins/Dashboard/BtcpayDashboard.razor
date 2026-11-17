@@ -4,21 +4,23 @@
 @using System.Threading.Tasks
 @using BlazorDashboardKit.Components
 @using BTCPayServer.Abstractions.Contracts
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Routing
 @using Microsoft.Extensions.Logging
 @inject Microsoft.AspNetCore.Routing.LinkGenerator LinkGenerator
 @inject Microsoft.Extensions.Localization.IStringLocalizer StringLocalizer
 @inject ILogger<BtcpayDashboard> Logger
+@inject BtcpayDashboardContext DashboardContext
 @inject IEnumerable<IStoreSetupStepProvider> SetupStepProviders
 
 @if (ShowSetupGuide)
 {
-    <p class="lead text-secondary mt-2">To start accepting payments, set up a wallet or a Lightning node.</p>
+    <p class="lead text-secondary mt-2">@StringLocalizer["To start accepting payments, set up a wallet or a Lightning node."]</p>
     <div class="list-group" id="SetupGuide" style="max-width: 30em;">
         <div class="list-group-item d-flex align-items-center">
             <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
             <div class="content">
-                <h5 class="mb-0 text-success">Create your store</h5>
+                <h5 class="mb-0 text-success">@StringLocalizer["Create your store"]</h5>
             </div>
         </div>
         @foreach (var step in _setupSteps.OrderBy(s => s.Order))
@@ -48,7 +50,7 @@
 }
 else
 {
-    <DashboardHost OwnerKey="@OwnerKey" />
+    <DashboardHost OwnerKey="@OwnerKey" StoreId="@StoreId" />
 }
 
 @code {
@@ -66,6 +68,18 @@ else
     // payment-configured. The server dashboard (OwnerKey "server") has no such
     // concept and always mounts the dashboard directly.
     private bool ShowSetupGuide => !IsSetUp && OwnerKey.StartsWith("store:", StringComparison.Ordinal);
+
+    [CascadingParameter] private Task<AuthenticationState> AuthState { get; set; } = default!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Explicit circuit scope: ambient HTTP context is unavailable interactively.
+        DashboardContext.OwnerKey = OwnerKey;
+        DashboardContext.StoreId = OwnerKey.StartsWith("store:", StringComparison.Ordinal)
+            ? OwnerKey.Substring("store:".Length)
+            : null;
+        await base.OnParametersSetAsync();
+    }
 
     protected override async Task OnInitializedAsync()
     {

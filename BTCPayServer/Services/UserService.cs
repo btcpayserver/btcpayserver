@@ -362,6 +362,36 @@ namespace BTCPayServer.Services
             }
         }
 
+        // An admin is the last one when no other admin can log in, even if this one can't log in either:
+        // once no user holds the admin role, the next registrant becomes admin
+        public async Task<bool> IsLastAdmin(ApplicationUser user)
+        {
+            await using var ctx = _applicationDbContextFactory.CreateContext();
+            return await ctx.Database.GetDbConnection().QuerySingleAsync<bool>("""
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM "AspNetUserRoles" user_roles
+                    JOIN "AspNetRoles" roles ON roles."Id" = user_roles."RoleId"
+                    WHERE user_roles."UserId" = @userId AND roles."Name" = @adminRole)
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM "AspNetUsers" users
+                    JOIN "AspNetUserRoles" user_roles ON user_roles."UserId" = users."Id"
+                    JOIN "AspNetRoles" roles ON roles."Id" = user_roles."RoleId"
+                    LEFT JOIN user_access_restrictions restrictions ON restrictions.user_id = users."Id"
+                    WHERE roles."Name" = @adminRole
+                      AND users."Id" <> @userId
+                      AND users."PasswordHash" IS NOT NULL
+                      AND (users."EmailConfirmed" OR NOT users."RequiresEmailConfirmation")
+                      AND (users."Approved" OR NOT users."RequiresApproval")
+                      AND restrictions.user_id IS NULL);
+                """, new
+            {
+                userId = user.Id,
+                adminRole = Roles.ServerAdmin
+            });
+        }
+
         public async Task<bool> IsUserTheOnlyOneAdmin(CanLoginContext canLoginContext)
         {
             await using var ctx = _applicationDbContextFactory.CreateContext();

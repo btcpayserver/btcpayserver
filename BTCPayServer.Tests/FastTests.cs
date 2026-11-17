@@ -25,6 +25,7 @@ using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
 using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Rating;
+using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Fees;
@@ -57,6 +58,21 @@ namespace BTCPayServer.Tests
     {
         public FastTests(ITestOutputHelper helper) : base(helper)
         {
+        }
+
+        [Theory]
+        [InlineData("formId", "SELECT 1")]
+        [InlineData("formId", "SELECT 2")]
+        [InlineData("FormId", "SELECT 1")]
+        public void RouteStoreResolverRejectsDuplicateRouteValues(string routeValue, string sql)
+        {
+            BuiltInPermissionScopeProvider.RouteValueToStoreIdQuery[] queries =
+            [
+                new("formId", "SELECT 1"),
+                new(routeValue, sql)
+            ];
+
+            Assert.Throws<ArgumentException>(() => new RouteStoreResolver(queries, null!, null!));
         }
 
         [Fact]

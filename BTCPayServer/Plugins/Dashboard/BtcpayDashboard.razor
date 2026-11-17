@@ -1,0 +1,122 @@
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@using System.Threading.Tasks
+@using BlazorDashboardKit.Components
+@using BTCPayServer.Abstractions.Contracts
+@using Microsoft.AspNetCore.Routing
+@using Microsoft.Extensions.Logging
+@inject Microsoft.AspNetCore.Routing.LinkGenerator LinkGenerator
+@inject Microsoft.Extensions.Localization.IStringLocalizer StringLocalizer
+@inject ILogger<BtcpayDashboard> Logger
+@inject IEnumerable<IStoreSetupStepProvider> SetupStepProviders
+
+@if (ShowSetupGuide)
+{
+    <p class="lead text-secondary mt-2">To start accepting payments, set up a wallet or a Lightning node.</p>
+    <div class="list-group" id="SetupGuide" style="max-width: 30em;">
+        <div class="list-group-item d-flex align-items-center">
+            <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
+            <div class="content">
+                <h5 class="mb-0 text-success">Create your store</h5>
+            </div>
+        </div>
+        @foreach (var step in _setupSteps.OrderBy(s => s.Order))
+        {
+            @if (step.IsComplete)
+            {
+                <div class="list-group-item d-flex align-items-center">
+                    <svg role="img" class="icon icon-done me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#done"></use></svg>
+                    <div class="content">
+                        <h5 class="mb-0 text-success">@step.Title</h5>
+                    </div>
+                </div>
+            }
+            else if (!string.IsNullOrEmpty(step.SetupUrl))
+            {
+                <a href="@step.SetupUrl"
+                   class="list-group-item list-group-item-action d-flex align-items-center order-1">
+                    <svg role="img" class="icon icon-@step.IconSymbol me-3" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#@step.IconSymbol"></use></svg>
+                    <div class="content flex-fill">
+                        <h5 class="mb-0">@step.Title</h5>
+                    </div>
+                    <svg role="img" class="icon icon-caret-right" style="width:1.5rem;height:1.5rem;"><use href="/img/icon-sprite.svg#caret-right"></use></svg>
+                </a>
+            }
+        }
+    </div>
+}
+else
+{
+    <DashboardHost OwnerKey="@OwnerKey" />
+}
+
+@code {
+    [Parameter] public string OwnerKey { get; set; } = string.Empty;
+    [Parameter] public bool IsSetUp { get; set; }
+    [Parameter] public string StoreId { get; set; } = string.Empty;
+    [Parameter] public string CryptoCode { get; set; } = "BTC";
+    [Parameter] public bool WalletEnabled { get; set; }
+    [Parameter] public bool LightningEnabled { get; set; }
+    [Parameter] public bool LightningSupported { get; set; }
+
+    private readonly List<StoreSetupStep> _setupSteps = new();
+
+    // The payment setup-guide only applies to a store dashboard that isn't yet
+    // payment-configured. The server dashboard (OwnerKey "server") has no such
+    // concept and always mounts the dashboard directly.
+    private bool ShowSetupGuide => !IsSetUp && OwnerKey.StartsWith("store:", StringComparison.Ordinal);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ShowSetupGuide)
+            return;
+
+        // Built-in steps (faithful to the pre-extraction inline setup guide).
+        _setupSteps.Clear();
+        _setupSteps.Add(new StoreSetupStep
+        {
+            Title = StringLocalizer["Set up a wallet"],
+            SetupUrl = LinkGenerator.GetPathByAction(
+                action: "SetupWallet",
+                controller: "UIStores",
+                values: new { storeId = StoreId, cryptoCode = CryptoCode }),
+            IsComplete = WalletEnabled,
+            Order = 10,
+            IconSymbol = "wallet-new"
+        });
+        if (LightningSupported)
+        {
+            _setupSteps.Add(new StoreSetupStep
+            {
+                Title = StringLocalizer["Set up a Lightning node"],
+                SetupUrl = LinkGenerator.GetPathByAction(
+                    action: "SetupLightningNode",
+                    controller: "UIStores",
+                    values: new { storeId = StoreId, cryptoCode = CryptoCode }),
+                IsComplete = LightningEnabled,
+                Order = 20,
+                IconSymbol = "wallet-new"
+            });
+        }
+
+        // Plugin-contributed steps. A faulty provider must not break the guide.
+        var setupContext = new StoreSetupStepContext
+        {
+            StoreId = StoreId,
+            CryptoCode = CryptoCode
+        };
+        foreach (var provider in SetupStepProviders)
+        {
+            try
+            {
+                var pluginSteps = await provider.GetStepsAsync(setupContext);
+                _setupSteps.AddRange(pluginSteps);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Setup step provider {Provider} threw while contributing dashboard setup steps", provider.GetType().FullName);
+            }
+        }
+    }
+}

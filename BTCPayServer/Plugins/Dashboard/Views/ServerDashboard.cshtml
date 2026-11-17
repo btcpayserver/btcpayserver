@@ -1,0 +1,39 @@
+@model BTCPayServer.Plugins.Dashboard.Models.Dashboard2ViewModel
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Plugins.Dashboard
+@using BTCPayServer.Views.Server
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Dashboard), "Dashboard")
+        .SetCategory(WellKnownCategories.Server));
+    this.ViewData.SetBlazorAllowed(true);
+}
+
+@*
+    BlazorDashboardKit injects its CSS + GridStack script lazily — only the
+    first time a dashboard becomes interactive. BTCPay renders this dashboard
+    via MVC RenderComponentAsync(ServerPrerendered), so its markup is in the
+    initial HTML; we include the stylesheets in <head> (and the GridStack
+    script) explicitly so the prerendered dashboard is styled on first paint
+    and GridStack is ready before interactivity. The kit's injection is
+    idempotent and skips assets the host already references.
+*@
+@section PageHeadContent {
+    <link rel="stylesheet" href="~/_content/BlazorDashboardKit/gridstack/gridstack.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/_content/BlazorDashboardKit/dashboard.css" asp-append-version="true" />
+}
+
+<div class="sticky-header">
+    <h2 class="my-1">@ViewData["Title"]</h2>
+</div>
+
+@(await Html.RenderComponentAsync<BtcpayDashboard>(RenderMode.ServerPrerendered, new
+{
+    OwnerKey = Model.OwnerKey,
+    IsSetUp = Model.IsSetUp
+}))
+
+@section PageFootContent {
+    <script src="~/_content/BlazorDashboardKit/gridstack/gridstack-all.js" asp-append-version="true"></script>
+}

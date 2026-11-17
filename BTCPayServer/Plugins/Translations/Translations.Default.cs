@@ -1206,6 +1206,7 @@ namespace BTCPayServer.Plugins.Translations
   "Not configured": "",
   "Not recommended": "",
   "Not recommended for customer self-checkout.": "",
+  "Not uploaded due to an invalid plugin file: {0}": "",
   "Note that <code>bitcoin-host</code> and <code>bitcoin-auth</code> are optional, only useful if you want to use <code>GetDepositAddress</code>\n                                on Eclair:": "",
   "Note: {0} are still immature and require additional confirmations.": "",
   "Notification email updated.": "",

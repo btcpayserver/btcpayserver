@@ -165,21 +165,42 @@ public class UIPluginManagerController(
             : RedirectToAction(nameof(ListPlugins));
     }
 
+    // The status message lives in a cookie, so a crafted upload can't make it grow without bound
+    private const int MaxRejectedNamesLength = 300;
+
     [HttpPost("upload")]
     public async Task<IActionResult> UploadPlugin(List<IFormFile> files)
     {
-        foreach (var formFile in files.Where(file => file.Length > 0).Where(file => file.FileName.IsValidFileName()))
+        var uploaded = 0;
+        var rejected = new List<string>();
+        foreach (var formFile in files)
         {
+            var plugin = formFile.FileName.TrimEnd(PluginManager.BTCPayPluginSuffix, StringComparison.InvariantCultureIgnoreCase);
+            if (formFile.Length == 0 || !formFile.FileName.IsValidFileName() || !pluginService.IsSafePluginName(plugin))
+            {
+                rejected.Add(formFile.FileName);
+                continue;
+            }
             await pluginService.UploadPlugin(formFile);
-            pluginService.InstallPlugin(formFile.FileName.TrimEnd(PluginManager.BTCPayPluginSuffix,
-                StringComparison.InvariantCultureIgnoreCase));
+            pluginService.InstallPlugin(plugin);
+            uploaded++;
         }
 
-        TempData.SetStatusMessageModel(new StatusMessageModel
+        var status = new StatusMessageModel
         {
             Message = stringLocalizer["Files uploaded, restart server to load plugins"].Value,
             Severity = StatusMessageModel.StatusSeverity.Success
-        });
+        };
+        if (rejected.Count > 0)
+        {
+            var names = string.Join(", ", rejected);
+            if (names.Length > MaxRejectedNamesLength)
+                names = names[..MaxRejectedNamesLength] + "...";
+            var warning = stringLocalizer["Not uploaded due to an invalid plugin file: {0}", names].Value;
+            status.Message = uploaded > 0 ? $"{status.Message}\n{warning}" : warning;
+            status.Severity = StatusMessageModel.StatusSeverity.Warning;
+        }
+        TempData.SetStatusMessageModel(status);
         return RedirectToAction(nameof(ListPlugins));
     }
 

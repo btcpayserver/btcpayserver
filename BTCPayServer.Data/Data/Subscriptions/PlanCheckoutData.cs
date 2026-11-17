@@ -113,8 +113,8 @@ public class PlanCheckoutData : BaseEntityData
     {
         if (!IsSafeRedirectUrl(SuccessRedirectUrl))
             return null;
-        // Add ?checkoutPlanId=... to the redirect URL
-        try { return QueryHelpers.AddQueryString(SuccessRedirectUrl!, "checkoutPlanId", Id); }
+        // Add ?planCheckoutId=... to the redirect URL
+        try { return QueryHelpers.AddQueryString(SuccessRedirectUrl!, "planCheckoutId", Id); }
         catch (UriFormatException) { return null; }
     }
 

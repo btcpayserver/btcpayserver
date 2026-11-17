@@ -36,12 +36,12 @@ public class UISubscriberPortalController(
     UriResolver uriResolver) : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
     [HttpGet]
-    public async Task<IActionResult> SubscriberPortal(string portalSessionId, string? checkoutPlanId = null, string? anchor = null, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> SubscriberPortal(string portalSessionId, string? planCheckoutId = null, string? anchor = null, CancellationToken cancellationToken = default)
     {
         await using var ctx = DbContextFactory.CreateContext();
-        if (checkoutPlanId is not null)
+        if (planCheckoutId is not null)
         {
-            var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutPlanId);
+            var checkout = await ctx.PlanCheckouts.GetCheckout(planCheckoutId);
 
             var message = checkout switch
             {

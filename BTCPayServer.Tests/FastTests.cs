@@ -515,7 +515,7 @@ namespace BTCPayServer.Tests
             checkout.SuccessRedirectUrl = "/subscriptions/success";
             Assert.Null(checkout.GetRedirectUrl());
             checkout.SuccessRedirectUrl = "https://example.com/success?source=test";
-            Assert.Equal("https://example.com/success?source=test&checkoutPlanId=checkout-id", checkout.GetRedirectUrl());
+            Assert.Equal("https://example.com/success?source=test&planCheckoutId=checkout-id", checkout.GetRedirectUrl());
         }
 
         [Fact]

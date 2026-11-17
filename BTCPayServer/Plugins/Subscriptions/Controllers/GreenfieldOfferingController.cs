@@ -446,13 +446,13 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("~/api/v1/plan-checkout/{checkoutId}")]
-        public async Task<IActionResult> ProceedPlanCheckout(string checkoutId,
+        [HttpPost("~/api/v1/plan-checkout/{planCheckoutId}")]
+        public async Task<IActionResult> ProceedPlanCheckout(string planCheckoutId,
             [FromServices] MonetizationSettings monetizationSettings,
             [FromServices] IRateLimitService rateLimitService,
             [FromQuery] string? email = null)
         {
-            var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
+            var checkout = await ctx.PlanCheckouts.GetCheckout(planCheckoutId);
             if (checkout is null)
                 return CheckoutNotFound();
             if (checkout.IsExpired)
@@ -463,7 +463,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 return this.CreateValidationError(ModelState);
 
             if (checkout is { Invoice: { Status: not (Data.InvoiceData.Expired or Data.InvoiceData.Invalid) } })
-                return await GetPlanCheckout(checkoutId);
+                return await GetPlanCheckout(planCheckoutId);
 
             if (checkout is { NewSubscriber: true, NewSubscriberEmail: null } && email is {})
             {
@@ -490,16 +490,16 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers
                 return this.CreateAPIError(400, "invoice-creation-error", ex.Message);
             }
             ctx.ChangeTracker.Clear();
-            return await GetPlanCheckout(checkoutId);
+            return await GetPlanCheckout(planCheckoutId);
         }
 
         // Intentional: expired sessions still return data so the client can show
         // "expired" data are cleaned up monthly.
         [AllowAnonymous]
-        [HttpGet("~/api/v1/plan-checkout/{checkoutId}")]
-        public async Task<IActionResult> GetPlanCheckout(string checkoutId)
+        [HttpGet("~/api/v1/plan-checkout/{planCheckoutId}")]
+        public async Task<IActionResult> GetPlanCheckout(string planCheckoutId)
         {
-            var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
+            var checkout = await ctx.PlanCheckouts.GetCheckout(planCheckoutId);
             if (checkout is null)
                 return CheckoutNotFound();
             var model = Mapper.MapPlanCheckout(checkout);

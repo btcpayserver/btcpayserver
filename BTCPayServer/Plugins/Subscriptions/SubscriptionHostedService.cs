@@ -64,7 +64,7 @@ public class SubscriptionHostedService(
                     Status: InvoiceStatus.Settled or InvoiceStatus.Invalid or InvoiceStatus.Processing
                 } settledInvoice
             } &&
-            GetCheckoutPlanIdFromInvoice(settledInvoice) is string checkoutId)
+            GetPlanCheckoutIdFromInvoice(settledInvoice) is string checkoutId)
         {
             await ProcessSubscriptionPayment(settledInvoice, checkoutId, cancellationToken);
         }
@@ -178,8 +178,8 @@ public class SubscriptionHostedService(
     SubscriptionContext CreateContext(CancellationToken cancellationToken) =>
         new(applicationDbContextFactory.CreateContext(), EventAggregator, currencyNameTable, cancellationToken);
 
-    public static string GetCheckoutPlanTag(string checkoutId) => $"SUBS#{checkoutId}";
-    public static string? GetCheckoutPlanIdFromInvoice(InvoiceEntity invoiceEntiy) => invoiceEntiy.GetInternalTags("SUBS#").FirstOrDefault();
+    public static string GetPlanCheckoutTag(string planCheckoutId) => $"SUBS#{planCheckoutId}";
+    public static string? GetPlanCheckoutIdFromInvoice(InvoiceEntity invoiceEntiy) => invoiceEntiy.GetInternalTags("SUBS#").FirstOrDefault();
 
     private async Task CreateInvoiceForCheckout(SubscriptionContext subCtx, PlanCheckoutData checkout)
     {
@@ -215,7 +215,7 @@ public class SubscriptionHostedService(
                     },
                     Metadata = invoiceMetadata
                 }, plan.Offering.App.StoreData, checkout.BaseUrl.ToString(),
-                [GetCheckoutPlanTag(checkout.Id)], CancellationToken.None);
+                [GetPlanCheckoutTag(checkout.Id)], CancellationToken.None);
             if (checkout.SubscriberId is not null)
             {
                 subCtx.Context.SubscribersInvoices.Add(new()

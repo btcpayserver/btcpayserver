@@ -661,7 +661,7 @@
                 }
             }
         },
-        "/api/v1/plan-checkout/{checkoutId}": {
+        "/api/v1/plan-checkout/{planCheckoutId}": {
             "get": {
                 "summary": "Get a plan checkout",
                 "description": "Retrieves the details of a plan checkout session. Authentication is optional. Before the plan starts, callers without the `btcpay.store.canmanagesubscribers` permission for the checkout's store receive `null` for `successRedirectUrl`, `redirectUrl`, and `subscriber.offering.successRedirectUrl`. After the plan starts, these values are returned to all callers. Regardless of whether the plan has started, callers without this permission receive `null` for every `metadata` field (including `invoiceMetadata` and `newSubscriberMetadata`), `0` for every `memberCount`, and only the checkout's plan and the subscriber's current and next plans, with their features, in `subscriber.offering`.",
@@ -868,7 +868,7 @@
                 "schema": { "$ref": "#/components/schemas/PortalSessionId" }
             },
             "PlanCheckoutId": {
-                "name": "checkoutId",
+                "name": "planCheckoutId",
                 "in": "path",
                 "required": true,
                 "example": "plancheckout_Hpm59L1NPCMUj477Q5",
@@ -973,8 +973,8 @@
                     "redirectUrl": {
                         "type": "string",
                         "nullable": true,
-                        "description": "Checkout success redirect URL with the `checkoutPlanId` query parameter added. Before the plan starts, this is `null` for callers without permission to manage subscribers for the checkout's store.",
-                        "example": "https://example.com/success?checkoutPlanId=plancheckout_Hpm59L1NPCMUj477Q5"
+                        "description": "Checkout success redirect URL with the `planCheckoutId` query parameter added. Before the plan starts, this is `null` for callers without permission to manage subscribers for the checkout's store.",
+                        "example": "https://example.com/success?planCheckoutId=plancheckout_Hpm59L1NPCMUj477Q5"
                     },
                     "invoiceMetadata": {
                         "type": "object",
@@ -1110,7 +1110,7 @@
                     },
                     "successRedirectLink": {
                         "type": "string",
-                        "description": "URL to redirect the user after checkout success. (This default to offering's successRedirectLink, also, the `checkoutPlanId` query parameter will be added to the URL.)",
+                        "description": "URL to redirect the user after checkout success. (This default to offering's successRedirectLink, also, the `planCheckoutId` query parameter will be added to the URL.)",
                         "example": "https://example.com/thank-you"
                     },
                     "newSubscriberEmail": {

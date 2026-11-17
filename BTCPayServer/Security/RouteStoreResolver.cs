@@ -27,7 +27,8 @@ public class RouteStoreResolver(
 
     static readonly MemoryCacheEntryOptions CacheOptions = new() { SlidingExpiration = TimeSpan.FromMinutes(10) };
 
-    readonly BuiltInPermissionScopeProvider.RouteValueToStoreIdQuery[] _queries = queries.ToArray();
+    readonly BuiltInPermissionScopeProvider.RouteValueToStoreIdQuery[] _queries =
+        queries.ToDictionary(query => query.RouteValue, StringComparer.OrdinalIgnoreCase).Values.ToArray();
 
     public record AdditionalScope(string ScopeName, string Scope);
 

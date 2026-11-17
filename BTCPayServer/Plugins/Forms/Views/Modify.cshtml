@@ -4,7 +4,7 @@
 @{
     Csp.UnsafeEval();
     var storeId = Context.GetCurrentStoreId();
-    var formId = Context.GetRouteValue("id");
+    var formId = Context.GetRouteValue("formId");
     var isNew = formId is null;
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.Forms), isNew ? StringLocalizer["Create Form"] : StringLocalizer["Edit Form"]).SetCategory(WellKnownCategories.Store));
     ViewData.SetBreadcrumbs([new(StringLocalizer["Forms"], Action: nameof(BTCPayServer.Forms.UIFormsController.FormsList), Controller: nameof(BTCPayServer.Forms.UIFormsController), RouteValues: new { storeId })]);
@@ -200,7 +200,7 @@
     <partial name="_ValidationScriptsPartial" />
 }
 
-<form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
+<form method="post" asp-action="Modify" asp-route-formId="@formId" asp-route-storeId="@(isNew ? storeId : null)">
     <div class="sticky-header">
         <vc:title-header documentation-url="https://docs.btcpayserver.org/Forms" />
         <div>

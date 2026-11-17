@@ -127,6 +127,7 @@ namespace BTCPayServer.Tests
             await s.Page.Locator("[name='FormConfig']").ClearAsync();
             await s.Page.FillAsync("[name='FormConfig']", config.Replace("Enter your email", "CustomFormInputTest"));
             await s.ClickPagePrimary();
+            await Expect(s.Page).ToHaveURLAsync(new Regex(@"/forms/[^/]+/edit$"));
             await s.Page.ClickAsync("#ViewForm");
             var formUrl = s.Page.Url;
             Assert.Contains("CustomFormInputTest", await s.Page.ContentAsync());
@@ -140,6 +141,8 @@ namespace BTCPayServer.Tests
             await s.GoToStore(StoreNavPages.Forms);
             await s.Page.WaitForLoadStateAsync();
             await Expect(s.Page.Locator("text=Custom Form 1")).ToBeVisibleAsync();
+            await Expect(s.Page.GetByRole(AriaRole.Link, new() { Name = "Remove" }))
+                .ToHaveAttributeAsync("href", new Regex(@"^/forms/[^/]+/remove$"));
             await s.Page.GetByRole(AriaRole.Link, new() { Name = "Remove" }).ClickAsync();
             await s.ConfirmDeleteModal();
             await s.Page.WaitForLoadStateAsync();
@@ -161,6 +164,7 @@ namespace BTCPayServer.Tests
             await s.GoToStore();
             await s.GoToStore(StoreNavPages.Forms);
             await s.Page.GetByRole(AriaRole.Link, new() { Name = "Custom Form 2" }).ClickAsync();
+            await Expect(s.Page).ToHaveURLAsync(new Regex(@"/forms/[^/]+/edit$"));
             await s.Page.Locator("[name='Name']").ClearAsync();
             await s.Page.FillAsync("[name='Name']", "Custom Form 3");
             await s.ClickPagePrimary();

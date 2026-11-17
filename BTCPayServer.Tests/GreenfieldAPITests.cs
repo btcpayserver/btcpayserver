@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -9,6 +10,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -27,12 +29,14 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Storage.Services;
 using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
@@ -408,8 +412,40 @@ namespace BTCPayServer.Tests
             Assert.NotNull(singleFile.Url);
 
             // Delete
+            using var httpClient = new HttpClient();
+            Assert.Equal(HttpStatusCode.OK, (await httpClient.GetAsync(singleFile.Url)).StatusCode);
             await client.DeleteFile(upload.Id);
             Assert.Empty(await client.GetFiles());
+            // The stored file is removed too
+            Assert.Equal(HttpStatusCode.NotFound, (await httpClient.GetAsync(singleFile.Url)).StatusCode);
+
+            // A file that is already gone from storage can still be deleted
+            upload = await client.UploadFile(filePath, "text/csv");
+            var storedFile = await tester.PayTester.GetService<StoredFileRepository>().GetFile(upload.Id);
+            File.Delete(Path.Combine(tester.PayTester.GetService<IOptions<DataDirectories>>().Value.StorageDir, storedFile.StorageFileName));
+            await client.DeleteFile(upload.Id);
+            Assert.Empty(await client.GetFiles());
+
+            // A storage error is an API error, and the file is kept
+            upload = await client.UploadFile(filePath, "text/csv");
+            var fileRepository = tester.PayTester.GetService<StoredFileRepository>();
+            storedFile = await fileRepository.GetFile(upload.Id);
+            var storagePath = Path.Combine(tester.PayTester.GetService<IOptions<DataDirectories>>().Value.StorageDir, storedFile.StorageFileName);
+            File.Delete(storagePath);
+            Directory.CreateDirectory(storagePath);
+            try
+            {
+                await AssertAPIError("file-delete-failed", () => client.DeleteFile(upload.Id));
+                Assert.NotNull(await fileRepository.GetFile(upload.Id));
+            }
+            finally
+            {
+                Directory.Delete(storagePath);
+            }
+
+            // Retry once the storage error has been resolved
+            await client.DeleteFile(upload.Id);
+            Assert.Null(await fileRepository.GetFile(upload.Id));
 
             // Profile image
             await AssertValidationError(["file"],

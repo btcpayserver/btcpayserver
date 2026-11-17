@@ -83,11 +83,27 @@ namespace BTCPayServer.Storage.Services
             };
             var path = GetFilePath(storedFile);
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            await using (var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, true))
+            var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, true);
+            try
             {
-                await file.CopyToAsync(output);
+                await using (output)
+                {
+                    await file.CopyToAsync(output);
+                }
+                await _fileRepository.AddFile(storedFile);
             }
-            await _fileRepository.AddFile(storedFile);
+            catch
+            {
+                try
+                {
+                    File.Delete(path);
+                }
+                catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+                {
+                    // Preserve the original upload error if cleanup fails.
+                }
+                throw;
+            }
             return storedFile;
         }
 
@@ -103,16 +119,28 @@ namespace BTCPayServer.Storage.Services
 
         public async Task RemoveFile(string fileId, string userId)
         {
+            ArgumentException.ThrowIfNullOrEmpty(userId);
             var storedFile = await _fileRepository.GetFile(fileId);
-            if (storedFile != null && (string.IsNullOrEmpty(userId) ||
-                storedFile.ApplicationUserId.Equals(userId, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                var path = GetFilePath(storedFile);
-                if (!File.Exists(path))
-                    throw new FileNotFoundException("The stored file was not found.", path);
-                File.Delete(path);
-                await _fileRepository.RemoveFile(storedFile);
-            }
+            if (storedFile != null &&
+                storedFile.ApplicationUserId.Equals(userId, StringComparison.InvariantCultureIgnoreCase))
+                await RemoveFile(storedFile);
+        }
+
+        /// <summary>
+        /// Removes a file without checking ownership. The caller must authorize server-admin access.
+        /// </summary>
+        public async Task RemoveFileAsAdmin(string fileId)
+        {
+            var storedFile = await _fileRepository.GetFile(fileId);
+            if (storedFile != null)
+                await RemoveFile(storedFile);
+        }
+
+        private async Task RemoveFile(StoredFile storedFile)
+        {
+            var path = GetFilePath(storedFile);
+            File.Delete(path);
+            await _fileRepository.RemoveFile(storedFile);
         }
 
         private string GetFilePath(StoredFile storedFile)

@@ -150,6 +150,16 @@
                     "200": {
                         "description": "File deleted successfully"
                     },
+                    "400": {
+                        "description": "The file could not be removed from storage. Well-known error code is: `file-delete-failed`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
                     "404": {
                         "description": "The file could not be found"
                     }

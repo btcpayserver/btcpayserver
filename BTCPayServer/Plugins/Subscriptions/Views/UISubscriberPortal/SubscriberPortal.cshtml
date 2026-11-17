@@ -238,17 +238,17 @@
     <partial name="_StatusMessage" />
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Subscription Management</h2>
+        <h2 class="mb-0" text-translate="true">Subscription Management</h2>
         @if (@Model.Subscriber.Customer.ExternalRef is not null)
         {
-            <span class="text-muted">Customer Reference: @Model.Subscriber.Customer.ExternalRef</span>
+            <span class="text-muted">@StringLocalizer["Customer Reference: {0}", Model.Subscriber.Customer.ExternalRef]</span>
         }
     </div>
 
     <!-- Current Subscription -->
     <div class="card">
         <div class="card-header">
-            <i class="fa fa-address-book me-2"></i>Current Subscription
+            <i class="fa fa-address-book me-2"></i><span text-translate="true">Current Subscription</span>
         </div>
         <div class="card-body">
             <div class="row">
@@ -279,15 +279,15 @@
                         {
                             @if (Model.Subscriber.Phase is SubscriberData.PhaseTypes.Normal)
                             {
-                                <span class="text-muted">Next billing: @date</span>
+                                <span class="text-muted">@StringLocalizer["Next billing: {0}", date]</span>
                             }
                             else if (Model.Subscriber.Phase is SubscriberData.PhaseTypes.Trial)
                             {
-                                <span class="text-muted">Trial expires: @date</span>
+                                <span class="text-muted">@StringLocalizer["Trial expires: {0}", date]</span>
                             }
                             else if (Model.Subscriber.Phase is SubscriberData.PhaseTypes.Grace)
                             {
-                                <span class="text-muted">The subscription has already expired and will soon be inactivated</span>
+                                <span class="text-muted" text-translate="true">The subscription has already expired and will soon be inactivated</span>
                             }
                         }
                     </div>
@@ -309,11 +309,11 @@
             <div class="notice-content">
                 <i class="fa fa-warning alert-icon"></i>
                 <div class="alert-text">
-                    <div class="notice-title"><span>Access suspended</span></div>
-                    <p class="notice-subtitle">Your access to this subscription has been suspended.</p>
+                    <div class="notice-title"><span text-translate="true">Access suspended</span></div>
+                    <p class="notice-subtitle" text-translate="true">Your access to this subscription has been suspended.</p>
                     @if (!String.IsNullOrEmpty(Model.Subscriber.SuspensionReason))
                     {
-                        <p class="notice-subtitle">Reason: @Model.Subscriber.SuspensionReason</p>
+                        <p class="notice-subtitle">@StringLocalizer["Reason: {0}", Model.Subscriber.SuspensionReason]</p>
                     }
                 </div>
             </div>
@@ -325,8 +325,8 @@
             <div class="notice-content">
                 <i class="fa fa-warning alert-icon"></i>
                 <div class="alert-text">
-                    <div class="notice-title"><span>Access expired</span></div>
-                    <p class="notice-subtitle">Your access to this subscription has been expired.</p>
+                    <div class="notice-title"><span text-translate="true">Access expired</span></div>
+                    <p class="notice-subtitle" text-translate="true">Your access to this subscription has been expired.</p>
                 </div>
             </div>
             <partial name="NextAction" model="@("btn btn-danger", Model.Subscriber)" />
@@ -338,8 +338,8 @@
             <div class="notice-content">
                 <i class="fa fa-warning alert-icon"></i>
                 <div class="alert-text">
-                    <div class="notice-title"><span>You are in trial</span></div>
-                    <p class="notice-subtitle">You access will be revoked in <span>@FormatDays(daysRemaining)</span></p>
+                    <div class="notice-title"><span text-translate="true">You are in trial</span></div>
+                    <p class="notice-subtitle">@StringLocalizer["You access will be revoked in {0}", FormatDays(daysRemaining)]</p>
                 </div>
             </div>
             <partial name="NextAction" model="@("btn btn-info", Model.Subscriber)" />
@@ -352,8 +352,8 @@
             <div class="notice-content">
                 <i class="fa fa-warning alert-icon"></i>
                 <div class="alert-text">
-                    <div class="notice-title">Upgrade needed in <span>@FormatDays(daysRemaining)</span></div>
-                    <div class="notice-subtitle">You access will be revoked in <span>@FormatDays(daysRemaining)</span>, you need to subscribe to a new plan.</div>
+                    <div class="notice-title">@StringLocalizer["Upgrade needed in {0}", FormatDays(daysRemaining)]</div>
+                    <div class="notice-subtitle">@StringLocalizer["You access will be revoked in {0}, you need to subscribe to a new plan.", FormatDays(daysRemaining)]</div>
                 </div>
             </div>
             <partial name="NextAction" model="@("btn btn-warning", Model.Subscriber)" />
@@ -368,7 +368,7 @@
                 <div class="notice-content">
                     <i class="fa fa-warning alert-icon"></i>
                     <div class="alert-text">
-                        <div class="notice-title">Payment due</div>
+                        <div class="notice-title" text-translate="true">Payment due</div>
                         <div class="notice-subtitle">You access will be revoked in <span>@FormatDays(graceRemaining)</span></div>
                     </div>
                 </div>
@@ -381,9 +381,8 @@
                 <div class="notice-content">
                     <i class="fa fa-clock-o alert-icon"></i>
                     <div class="alert-text">
-                        <div class="notice-title">Payment due in <span>@FormatDays(daysRemaining)</span></div>
-                        <p class="notice-subtitle">Next billing
-                            date: @date • @DisplayFormatter.Currency(Model.Subscriber.Plan.Price, Model.Subscriber.Plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)</p>
+                        <div class="notice-title">@StringLocalizer["Payment due in {0}", FormatDays(daysRemaining)]</div>
+                        <p class="notice-subtitle">@StringLocalizer["Next billing date: {0} • {1}", date, DisplayFormatter.Currency(Model.Subscriber.Plan.Price, Model.Subscriber.Plan.Currency, DisplayFormatter.CurrencyFormat.Symbol)]</p>
                     </div>
                 </div>
                 <partial name="NextAction" model="@("btn btn-warning", Model.Subscriber)" />
@@ -414,7 +413,7 @@
 					<form method="post">
 						<div class="input-group">
 							<button type="submit" name="command" value="add-credit" class="btn btn-primary">Proceed to payment</button>
-							<input inputmode="decimal" class="form-control" placeholder="Enter credit amount" asp-for="Credit.InputAmount" min="0"
+							<input inputmode="decimal" class="form-control" placeholder="@StringLocalizer["Enter credit amount"]" asp-for="Credit.InputAmount" min="0"
 									required />
 						</div>
 						<span asp-validation-for="Credit.InputAmount" class="text-danger"></span>
@@ -446,7 +445,7 @@
 						</div>
 					}
 					<div class="d-flex justify-content-between fw-semibold credit-next-charge">
-						<div>Next charge on @date</div>
+						<div>@StringLocalizer["Next charge on {0}", date]</div>
 						<div>@DisplayFormatter.Currency(Model.Credit.NextCharge, Model.Credit.Currency, DisplayFormatter.CurrencyFormat.Symbol)</div>
 					</div>
 					<form method="post" class="d-flex mt-3">
@@ -504,7 +503,7 @@
 						<div class="notice-content">
 							<i class="fa fa-clock-o alert-icon"></i>
 							<div class="alert-text">
-								<div class="notice-title">Plan change scheduled</div>
+								<div class="notice-title" text-translate="true">Plan change scheduled</div>
 								<p class="notice-subtitle">
 									Switching to <strong>@Model.Subscriber.NewPlan.Name</strong>
 									on @(Model.Subscriber.PeriodEnd?.ToString("D") ?? "period end")
@@ -550,7 +549,7 @@
 												   @(hasPending ? "" : "data-bs-toggle=modal")
 												   @(hasPending ? "" : "data-bs-target=#changePlanModal")
 												   data-action="upgrade"
-												   title="@(hasPending ? "Cancel your scheduled change first" : "")">
+												   title="@(hasPending ? StringLocalizer["Cancel your scheduled change first"] : "")">
 													Upgrade
 												</a>
                                             }
@@ -561,7 +560,7 @@
 												   @(hasPending ? "" : "data-bs-toggle=modal")
 												   @(hasPending ? "" : "data-bs-target=#changePlanModal")
 												   data-action="downgrade"
-												   title="@(hasPending ? "Cancel your scheduled change first" : "")">
+												   title="@(hasPending ? StringLocalizer["Cancel your scheduled change first"] : "")">
 													Downgrade
 												</a>
                                             }

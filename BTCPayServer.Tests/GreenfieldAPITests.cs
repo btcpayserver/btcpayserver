@@ -2590,7 +2590,6 @@ namespace BTCPayServer.Tests
                     Amount = 1,
                     Checkout = new CreateInvoiceRequest.CheckoutOptions
                     {
-                        DefaultLanguage = "it-it ",
                         RedirectURL = "http://toto.com/lol"
                     }
                 });
@@ -2600,7 +2599,6 @@ namespace BTCPayServer.Tests
             Assert.EndsWith($"/i/{newInvoice.Id}", newInvoice.CheckoutLink);
             var controller = tester.PayTester.GetController<UIInvoiceController>(user.UserId, user.StoreId);
             var model = (CheckoutModel)((ViewResult)await controller.Checkout(newInvoice.Id)).Model;
-            Assert.Equal("it-IT", model.DefaultLang);
             Assert.Equal("http://toto.com/lol", model.MerchantRefLink);
 
             var langs = tester.PayTester.GetService<LanguageService>();

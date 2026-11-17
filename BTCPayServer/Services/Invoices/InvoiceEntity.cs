@@ -294,8 +294,6 @@ namespace BTCPayServer.Services.Invoices
         public string StoreId { get; set; }
 
         public SpeedPolicy SpeedPolicy { get; set; }
-        [JsonProperty]
-        public string DefaultLanguage { get; set; }
         [JsonIgnore]
         public DateTimeOffset InvoiceTime { get; set; }
         public DateTimeOffset ExpirationTime { get; set; }

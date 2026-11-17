@@ -82,7 +82,6 @@ namespace BTCPayServer.Client.Models
             public string RedirectURL { get; set; }
 
             public bool? RedirectAutomatically { get; set; }
-            public string DefaultLanguage { get; set; }
             public bool? LazyPaymentMethods { get; set; }
         }
     }

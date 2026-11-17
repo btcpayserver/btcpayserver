@@ -145,7 +145,7 @@
                                                 link="getExplorerUrl(value, row[columnIndex-1])" />
                         </template>
                         <template
-                            v-else-if="value && srv.result.fields[columnIndex].name.toLowerCase().endsWith('url')">
+                            v-else-if="value && typeof value === 'string' && srv.result.fields[columnIndex].name.toLowerCase().endsWith('url')">
                             <template v-if="value.startsWith('http')">
                                 <a :href="value" target="_blank">Link</a>
                             </template>
@@ -167,7 +167,7 @@
                         <span
                             v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value < 0 || (typeof value === 'object' && value.v < 0))"
                             class="text-danger">{{ displayValue(value) }}</span>
-                        <span v-else-if="['State'].includes(srv.result.fields[columnIndex].name)" class="badge"
+                        <span v-else-if="typeof value === 'string' && ['State'].includes(srv.result.fields[columnIndex].name)" class="badge"
                               :class="`badge-${value.toLowerCase()}`">{{ displayValue(value) }}</span>
                         <template v-else>{{ displayValue(value) }}</template>
                     </td>

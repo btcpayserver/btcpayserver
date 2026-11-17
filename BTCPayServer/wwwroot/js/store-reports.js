@@ -142,6 +142,9 @@ function modifyFields(fields, data, type, action) {
     }
 }
 
+// Text a spreadsheet would run as a formula, but not numbers such as negative amounts
+const csvFormulaPattern = /^(?![+-]?\d+(\.\d+)?$)([\t\r\n]|\s*[=+\-@＝＋－＠])/;
+
 function downloadCSV() {
     if (!origData) return;
     const data = clone(origData);
@@ -149,7 +152,7 @@ function downloadCSV() {
     // Convert ISO8601 dates to YYYY-MM-DD HH:mm:ss so the CSV easily integrate with Excel
     modifyFields(srv.result.fields, data, 'amount', displayValue)
     modifyFields(srv.result.fields, data, 'datetime', v => v ? moment(v).format('YYYY-MM-DD HH:mm:ss') : v);
-    const csv = Papa.unparse({fields: srv.result.fields.map(f => f.name), data});
+    const csv = Papa.unparse({fields: srv.result.fields.map(f => f.name), data}, {escapeFormulae: csvFormulaPattern});
     const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     saveAs(blob, "export.csv");
 }

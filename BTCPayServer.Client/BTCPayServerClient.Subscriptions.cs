@@ -25,8 +25,8 @@ public partial class BTCPayServerClient
         => await SendHttpRequest<OfferingModel[]>($"api/v1/stores/{storeId}/offerings", null, HttpMethod.Get, token);
     public async Task<PlanCheckoutModel> CreatePlanCheckout(CreatePlanCheckoutRequest request, CancellationToken token = default)
         => await SendHttpRequest<PlanCheckoutModel>($"api/v1/plan-checkout", request, HttpMethod.Post, token);
-    public async Task<PlanCheckoutModel> GetPlanCheckout(string checkoutId, CancellationToken token = default)
-        => await SendHttpRequest<PlanCheckoutModel>($"api/v1/plan-checkout/{checkoutId}", null, HttpMethod.Get, token);
+    public async Task<PlanCheckoutModel> GetPlanCheckout(string planCheckoutId, CancellationToken token = default)
+        => await SendHttpRequest<PlanCheckoutModel>($"api/v1/plan-checkout/{planCheckoutId}", null, HttpMethod.Get, token);
 
     public async Task<CreditModel> GetCredit(string storeId, string offeringId, string customerSelector, string currency, CancellationToken token = default)
         => await SendHttpRequest<CreditModel>($"api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/credits/{currency}", null, HttpMethod.Get, token);
@@ -34,12 +34,12 @@ public partial class BTCPayServerClient
     public async Task<CreditModel> UpdateCredit(string storeId, string offeringId, string customerSelector, string currency, UpdateCreditRequest request, CancellationToken token = default)
         => await SendHttpRequest<CreditModel>($"api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}/credits/{currency}", request, HttpMethod.Post, token);
 
-    public async Task<PlanCheckoutModel> ProceedPlanCheckout(string checkoutId, string? email = null, CancellationToken token = default)
+    public async Task<PlanCheckoutModel> ProceedPlanCheckout(string planCheckoutId, string? email = null, CancellationToken token = default)
     {
         if (email is not null)
-            return await SendHttpRequest<PlanCheckoutModel>($"api/v1/plan-checkout/{checkoutId}?email={email}", null, HttpMethod.Post, token);
+            return await SendHttpRequest<PlanCheckoutModel>($"api/v1/plan-checkout/{planCheckoutId}?email={email}", null, HttpMethod.Post, token);
         else
-            return await SendHttpRequest<PlanCheckoutModel>($"api/v1/plan-checkout/{checkoutId}", null, HttpMethod.Post, token);
+            return await SendHttpRequest<PlanCheckoutModel>($"api/v1/plan-checkout/{planCheckoutId}", null, HttpMethod.Post, token);
     }
     public async Task<SubscriberModel> GetSubscriber(string storeId, string offeringId, string customerSelector, CancellationToken token = default)
     => await SendHttpRequest<SubscriberModel>($"api/v1/stores/{storeId}/offerings/{offeringId}/subscribers/{customerSelector}", null, HttpMethod.Get, token);

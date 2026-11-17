@@ -746,7 +746,7 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         Assert.Equal(planCheckout.Id, planCheckout2.Id);
         Assert.Equal("metatest", planCheckout2.Metadata["checkout"]?.ToString());
         Assert.Equal("https://example.com/success?token=secret", planCheckout2.SuccessRedirectUrl);
-        Assert.Equal($"https://example.com/success?token=secret&checkoutPlanId={planCheckout.Id}", planCheckout2.RedirectUrl);
+        Assert.Equal($"https://example.com/success?token=secret&planCheckoutId={planCheckout.Id}", planCheckout2.RedirectUrl);
         Assert.Null(planCheckout.InvoiceId);
 
         await CanAccessUrl(planCheckout.Url);

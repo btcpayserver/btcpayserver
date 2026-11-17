@@ -28,15 +28,15 @@ public class UISubscriptionControllerBase(
         => RedirectToAction(nameof(UISubscriberPortalController.SubscriberPortal), "UISubscriberPortal", new { portalSessionId = portalId, anchor });
 
     [NonAction]
-    public IActionResult RedirectToPlanCheckout(string checkoutId)
-        => RedirectToAction(nameof(UIPlanCheckoutController.PlanCheckout), "UIPlanCheckout", new { checkoutId });
+    public IActionResult RedirectToPlanCheckout(string planCheckoutId)
+        => RedirectToAction(nameof(UIPlanCheckoutController.PlanCheckout), "UIPlanCheckout", new { planCheckoutId });
 
     [NonAction]
-    public async Task<IActionResult> RedirectToPlanCheckoutPayment(string checkoutId, CancellationToken cancellationToken)
+    public async Task<IActionResult> RedirectToPlanCheckoutPayment(string planCheckoutId, CancellationToken cancellationToken)
     {
         try
         {
-            await SubsService.ProceedToSubscribe(checkoutId, cancellationToken);
+            await SubsService.ProceedToSubscribe(planCheckoutId, cancellationToken);
         }
         catch (InvalidOperationException) { }
         catch (BitpayHttpException ex)
@@ -47,11 +47,11 @@ public class UISubscriptionControllerBase(
                 Severity = StatusMessageModel.StatusSeverity.Error,
                 AllowDismiss = true
             });
-            return RedirectToPlanCheckout(checkoutId);
+            return RedirectToPlanCheckout(planCheckoutId);
         }
 
         await using var ctx = DbContextFactory.CreateContext();
-        var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
+        var checkout = await ctx.PlanCheckouts.GetCheckout(planCheckoutId);
         return checkout switch
         {
             { PlanStarted: true } when checkout.GetRedirectUrl() is string url => Redirect(url),

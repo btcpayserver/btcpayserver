@@ -821,14 +821,13 @@ namespace BTCPayServer.Tests
             await user.RegisterDerivationSchemeAsync("BTC");
 
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.01m, "BTC"));
-            await tester.WaitForEvent<InvoiceEvent>(async () =>
+            var paidInFull = await tester.WaitForEvent<InvoiceEvent>(async () =>
             {
                 await tester.ExplorerNode.SendToAddressAsync(
                     BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest),
                     Money.Coins(0.01m));
-            });
-
-
+            }, evt => evt.InvoiceId == invoice.Id && evt.Name == InvoiceEvent.PaidInFull);
+            Assert.Equal(InvoiceStatus.New, paidInFull.PreviousStatus);
 
             var payments = Assert.IsType<InvoiceDetailsModel>(
                     Assert.IsType<ViewResult>(await user.GetController<UIInvoiceController>().Invoice(invoice.Id)).Model)

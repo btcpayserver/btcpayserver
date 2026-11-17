@@ -49,7 +49,8 @@ namespace BTCPayServer.HostedServices
                             try
                             {
                                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, e.CancellationToken);
-                                await ProcessEvent(e.Event, linkedCts.Token);
+                                if (e.Event is not EventBarrier)
+                                    await ProcessEvent(e.Event, linkedCts.Token);
                                 e.Tcs.TrySetResult();
                             }
                             catch (OperationCanceledException pce) when (e.CancellationToken.IsCancellationRequested || cancellationToken.IsCancellationRequested)
@@ -104,6 +105,14 @@ namespace BTCPayServer.HostedServices
         }
 
         record ExecutingEvent(object Event, TaskCompletionSource Tcs, CancellationToken CancellationToken);
+        private sealed record EventBarrier;
+
+        /// <summary>
+        /// Waits for events already queued on this service to finish processing.
+        /// </summary>
+        public Task WaitForPendingEventsAsync(CancellationToken cancellationToken = default)
+            => RunEvent(new EventBarrier()).WaitAsync(cancellationToken);
+
         protected Task RunEvent(object obj, CancellationToken cancellationToken = default)
         {
             var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

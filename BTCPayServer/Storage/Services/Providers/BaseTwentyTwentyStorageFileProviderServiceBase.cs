@@ -46,7 +46,7 @@ namespace BTCPayServer.Storage.Services.Providers
             return provider.GetBlobUrl(providerConfiguration.ContainerName, storedFile.StorageFileName);
         }
 
-        public async Task RemoveFile(StoredFile storedFile, StorageSettings configuration)
+        public virtual async Task RemoveFile(StoredFile storedFile, StorageSettings configuration)
         {
             var providerConfiguration = GetProviderConfiguration(configuration);
             var provider = await GetStorageProvider(providerConfiguration);

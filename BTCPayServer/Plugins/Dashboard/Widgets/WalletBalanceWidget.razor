@@ -1,0 +1,111 @@
+@using BlazorDashboardKit.Models
+@using BTCPayServer.Client
+@using BTCPayServer.Common
+@using BTCPayServer.Payments
+@using BTCPayServer.Services.Invoices
+@using BTCPayServer.Services.Stores
+@using BTCPayServer.Services.Wallets
+@using Microsoft.Extensions.Logging
+@using System.Threading
+@inherits BlazorDashboardKit.Components.BaseWidgetComponent<WalletBalanceWidget.WalletBalanceConfig>
+@inject BtcpayDashboardContext DashboardContext
+@inject BTCPayWalletProvider WalletProvider
+@inject BTCPayNetworkProvider NetworkProvider
+@inject PaymentMethodHandlerDictionary Handlers
+@inject StoreRepository StoreRepository
+@inject ILogger<WalletBalanceWidget> Logger
+
+<header class="mb-2">
+    <h6 class="mb-0">@(TypedConfig?.Title ?? "Wallet balance")</h6>
+</header>
+@if (Loading)
+{
+    <p class="text-muted small mb-0">Loading…</p>
+}
+else if (_missingWallet)
+{
+    <p class="text-muted small mb-0">No wallet configured@(string.IsNullOrEmpty(_cryptoCode) ? "." : $" for {_cryptoCode}.")</p>
+}
+else if (!_balanceLoaded)
+{
+    <p class="text-muted small mb-0">Balance unavailable.</p>
+}
+else
+{
+    <div class="fs-4 fw-bold">@_balance @_cryptoCode</div>
+    <p class="text-muted small mb-0">Confirmed on-chain balance</p>
+}
+
+@code {
+    private decimal _balance;
+    private string _cryptoCode = string.Empty;
+    private bool _missingWallet;
+    private bool _balanceLoaded;
+
+    public class WalletBalanceConfig
+    {
+        public string Title { get; set; } = "Wallet balance";
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        if (DataParametersChanged)
+            await LoadBalanceAsync();
+    }
+
+    private async Task LoadBalanceAsync()
+    {
+        _balance = 0;
+        _balanceLoaded = false;
+        _cryptoCode = string.Empty;
+        _missingWallet = false;
+        Loading = true;
+        try
+        {
+            var storeId = DashboardContext.StoreId;
+            if (string.IsNullOrEmpty(storeId))
+                return;
+            var store = await StoreRepository.FindStore(storeId);
+            if (store is null)
+                return;
+            var cryptoCode = NetworkProvider.DefaultCryptoCode;
+            if (string.IsNullOrEmpty(cryptoCode))
+                return;
+            _cryptoCode = cryptoCode;
+            var wallet = WalletProvider.GetWallet(cryptoCode);
+            var derivation = store.GetDerivationSchemeSettings(Handlers, cryptoCode);
+            var handler = Handlers.TryGetBitcoinHandler(cryptoCode);
+            if (wallet is null || derivation?.AccountDerivation is null || handler is null)
+            {
+                _missingWallet = true;
+                return;
+            }
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var balance = await wallet.GetBalance(derivation.AccountDerivation, cts.Token);
+            _balance = balance.Available.GetValue(handler.Network);
+            _balanceLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Wallet balance widget failed to load for store {StoreId}", DashboardContext.StoreId);
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    public static readonly WidgetDescriptor Descriptor = new()
+    {
+        Type = "WalletBalance",
+        Name = "Wallet balance",
+        Description = "Confirmed on-chain balance of this store's wallet",
+        Category = "Store",
+        AlwaysInteractive = true,
+        MinColumnSize = 2,
+        MaxColumnSize = 12,
+        DefaultColumnSize = 4,
+        RequiredPermissions = new[] { Policies.CanViewStoreSettings }
+    };
+}

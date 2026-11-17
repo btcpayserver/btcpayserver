@@ -23,11 +23,12 @@ public class DashboardPlugin : BaseBTCPayServerPlugin
         // that fails BTCPay's scope validation at startup. The kit only resolves
         // these via its scoped DashboardService / component context, so scoped is
         // both correct and safe (scoped can consume scoped + singleton deps).
+        services.AddScoped<BtcpayDashboardContext>();
         services.AddScoped<IDashboardStore, BtcpayDashboardStore>();
         services.AddScoped<IWidgetAccessControl, BtcpayWidgetAccessControl>();
 
         services.AddBlazorDashboard();
 
-        services.AddDashboardWidget<NotesWidget>(NotesWidget.Descriptor);
+        services.AddDashboardWidget<WalletBalanceWidget>(WalletBalanceWidget.Descriptor);
     }
 }

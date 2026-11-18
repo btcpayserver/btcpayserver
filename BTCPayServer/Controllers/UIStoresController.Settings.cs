@@ -276,6 +276,7 @@ public partial class UIStoresController
         vm.CheckoutText = storeBlob.CheckoutText;
         vm.DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalMinutes;
         vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(storeBlob.ReceiptOptions);
+        vm.PublicInvoiceExpiration = storeBlob.PublicInvoiceExpiration is { } expiration ? (int)expiration.TotalDays : null;
         vm.AutoDetectLanguage = storeBlob.AutoDetectLanguage;
         vm.SetLanguages(_langService, storeBlob.DefaultLang);
 
@@ -416,6 +417,7 @@ public partial class UIStoresController
         blob.AllowZeroAmountInvoices = model.AllowZeroAmountInvoices;
         blob.RedirectAutomatically = model.RedirectAutomatically;
         blob.ReceiptOptions = model.ReceiptOptions.ToDTO();
+        blob.PublicInvoiceExpiration = model.PublicInvoiceExpiration is { } days ? TimeSpan.FromDays(days) : null;
         blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
         blob.CheckoutText = string.IsNullOrWhiteSpace(model.CheckoutText) ? null : model.CheckoutText;
         blob.DisplayExpirationTimer = TimeSpan.FromMinutes(model.DisplayExpirationTimer);

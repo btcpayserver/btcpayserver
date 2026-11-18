@@ -40,6 +40,9 @@ namespace BTCPayServer.Client.Models
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public TimeSpan? MonitoringExpiration { get; set; }
 
+        [JsonConverter(typeof(TimeSpanJsonConverter.WholeDays))]
+        public TimeSpan? PublicInvoiceExpiration { get; set; }
+
         [JsonConverter(typeof(StringEnumConverter))]
         public SpeedPolicy? SpeedPolicy { get; set; }
         public string LightningDescriptionTemplate { get; set; }

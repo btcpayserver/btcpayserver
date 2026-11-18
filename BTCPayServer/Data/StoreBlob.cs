@@ -180,6 +180,8 @@ namespace BTCPayServer.Data
 #nullable enable
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public InvoiceDataBase.ReceiptOptions ReceiptOptions { get; set; }
+        [JsonConverter(typeof(TimeSpanJsonConverter.Days))]
+        public TimeSpan? PublicInvoiceExpiration { get; set; }
 #nullable restore
 
         public bool AnyoneCanInvoice { get; set; }

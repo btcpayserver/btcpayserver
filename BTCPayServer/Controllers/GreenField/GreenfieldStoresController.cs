@@ -118,7 +118,10 @@ namespace BTCPayServer.Controllers.Greenfield
                     MergeNullValueHandling = MergeNullValueHandling.Ignore,
                     MergeArrayHandling = MergeArrayHandling.Replace
                 });
-            return templateRaw.ToObject<T>(serializer);
+            var result = templateRaw.ToObject<T>(serializer);
+            result.PublicInvoiceExpiration = request.PublicInvoiceExpiration;
+            result.Receipt.PublicReceiptExpiration = request.Receipt?.PublicReceiptExpiration;
+            return result;
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -228,6 +231,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 DefaultLang = storeBlob.DefaultLang,
                 MonitoringExpiration = storeBlob.MonitoringExpiration,
                 InvoiceExpiration = storeBlob.InvoiceExpiration,
+                PublicInvoiceExpiration = storeBlob.PublicInvoiceExpiration,
                 DisplayExpirationTimer = storeBlob.DisplayExpirationTimer,
                 HtmlTitle = storeBlob.HtmlTitle,
                 AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
@@ -269,6 +273,7 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.NetworkFeeMode = restModel.NetworkFeeMode.Value;
             blob.DefaultCurrency = restModel.DefaultCurrency;
             blob.AdditionalTrackedRates = restModel.AdditionalTrackedRates?.ToArray();
+            blob.PublicInvoiceExpiration = restModel.PublicInvoiceExpiration;
             blob.ReceiptOptions = InvoiceDataBase.ReceiptOptions.Merge(restModel.Receipt, null);
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi.Value;
             blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints.Value;
@@ -332,7 +337,15 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             if (request.RefundBOLT11Expiration < TimeSpan.FromDays(0) ||
                 request.RefundBOLT11Expiration > TimeSpan.FromDays(365 * 10))
-                ModelState.AddModelError(nameof(request.RefundBOLT11Expiration), "refundBOLT11Expiration should be between 0 and 36500");
+                ModelState.AddModelError(nameof(request.RefundBOLT11Expiration), "refundBOLT11Expiration should be between 0 and 3650 days");
+            if (request.PublicInvoiceExpiration < TimeSpan.Zero ||
+                request.PublicInvoiceExpiration > TimeSpan.FromDays(LengthLimits.MaxExpirationDays))
+                request.AddModelError(r => r.PublicInvoiceExpiration,
+                    $"PublicInvoiceExpiration must be between 0 and {LengthLimits.MaxExpirationDays} days", this);
+            if (request.Receipt?.PublicReceiptExpiration < TimeSpan.Zero ||
+                request.Receipt?.PublicReceiptExpiration > TimeSpan.FromDays(LengthLimits.MaxExpirationDays))
+                request.AddModelError(r => r.Receipt.PublicReceiptExpiration,
+                    $"PublicReceiptExpiration must be between 0 and {LengthLimits.MaxExpirationDays} days", this);
 
             if (string.IsNullOrEmpty(request.Name))
                 ModelState.AddModelError(nameof(request.Name), "Name is missing");

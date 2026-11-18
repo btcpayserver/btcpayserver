@@ -206,18 +206,17 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.GetStoreByInvoiceId(i.Id);
             if (store is null)
                 return NotFound();
-            if (!await ValidateAccessToInvoice(i))
+            var storeBlob = store.GetStoreBlob();
+            var receipt = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, i.ReceiptOptions);
+            if (!await ValidateAccessToInvoice(i, storeBlob, receipt))
                 return NotFound();
 
-            var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, i.ReceiptOptions);
             if (receipt.Enabled is not true)
             {
                 return i.RedirectURL is not null
                     ? Redirect(i.RedirectURL.ToString())
                     : NotFound();
             }
-
-            var storeBlob = store.GetStoreBlob();
             var vm = new InvoiceReceiptViewModel
             {
                 InvoiceId = i.Id,
@@ -756,14 +755,18 @@ namespace BTCPayServer.Controllers
                 // see if the invoice actually exists and is in a state for which we do not display the checkout
                 // TODO: Can happen if the invoice has lazy activation which failed for all payment methods. We should display error instead...
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-                if (invoice is null || !await ValidateAccessToInvoice(invoice))
+                if (invoice is null)
                     return NotFound();
                 var store = await _StoreRepository.GetStoreByInvoiceId(invoice.Id);
-                var receipt = store != null ? InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, invoice.ReceiptOptions) : null;
-                var redirectUrl = invoice.RedirectURL?.ToString();
-                return receipt?.Enabled is true
-                    ? RedirectToAction(nameof(InvoiceReceipt), new { invoiceId })
-                    : !string.IsNullOrEmpty(redirectUrl) ? Redirect(redirectUrl) : NotFound();
+                if (store is null)
+                    return NotFound();
+                var storeBlob = store.GetStoreBlob();
+                var receipt = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, invoice.ReceiptOptions);
+                if (receipt.Enabled is true && await ValidateAccessToInvoice(invoice, storeBlob, receipt))
+                    return RedirectToAction(nameof(InvoiceReceipt), new { invoiceId });
+                return !await ValidateAccessToInvoice(invoice, storeBlob) || string.IsNullOrEmpty(invoice.RedirectURL?.ToString()) ?
+                    NotFound() :
+                    Redirect(invoice.RedirectURL.ToString());
             }
 
             if (view == "modal")
@@ -779,15 +782,14 @@ namespace BTCPayServer.Controllers
             if (invoice == null)
                 return null;
 
-            if (!await ValidateAccessToInvoice(invoice))
-                return null;
-
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             if (store == null)
                 return null;
+            var storeBlob = store.GetStoreBlob();
+            if (!await ValidateAccessToInvoice(invoice, storeBlob))
+                return null;
             excludedPaymentMethodIds ??= new HashSet<PaymentMethodId>();
             bool isDefaultPaymentId = false;
-            var storeBlob = store.GetStoreBlob();
 
             var displayedPaymentMethods = invoice.GetPaymentPrompts()
                 .Where(p => !excludedPaymentMethodIds.Contains(p.PaymentMethodId))
@@ -880,8 +882,10 @@ namespace BTCPayServer.Controllers
             }
             lang ??= storeBlob.DefaultLang;
 
-            var receiptEnabled = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, invoice.ReceiptOptions).Enabled is true;
-            var receiptUrl = receiptEnabled ? _linkGenerator.ReceiptLink(invoiceId, Request.GetRequestBaseUrl()) : null;
+            var receipt = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, invoice.ReceiptOptions);
+            var receiptUrl = receipt.Enabled is true && await ValidateAccessToInvoice(invoice, storeBlob, receipt)
+                ? _linkGenerator.ReceiptLink(invoiceId, Request.GetRequestBaseUrl())
+                : null;
 
             var orderId = invoice.Metadata.OrderId;
             var supportUrl = !string.IsNullOrEmpty(storeBlob.StoreSupportUrl)
@@ -1050,7 +1054,7 @@ namespace BTCPayServer.Controllers
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-            if (invoice == null || invoice.Status == InvoiceStatus.Settled || invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired)
+            if (invoice is not { Status: not InvoiceStatus.Settled and not InvoiceStatus.Invalid and not InvoiceStatus.Expired })
                 return NotFound();
 
             if (!await ValidateAccessToInvoice(invoice))
@@ -1337,10 +1341,18 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListInvoices), new { storeId });
         }
 
-        private async Task<bool> ValidateAccessToInvoice(InvoiceEntity invoice)
+        private async Task<bool> ValidateAccessToInvoice(InvoiceEntity invoice, StoreBlob? storeBlob = null, InvoiceDataBase.ReceiptOptions? receiptOpts = null)
         {
-            if (!invoice.Archived && DateTimeOffset.UtcNow < invoice.MonitoringExpiration.AddMonths(1))
-                return true;
+            if (!invoice.Archived)
+            {
+                storeBlob ??= (await _StoreRepository.FindStore(invoice.StoreId))?.GetStoreBlob() ?? new();
+                var expiration = receiptOpts is not null
+                    ? receiptOpts.PublicReceiptExpiration ??
+                      TimeSpan.FromDays(90)
+                    : storeBlob.PublicInvoiceExpiration ?? TimeSpan.FromDays(30);
+                if (expiration == TimeSpan.Zero || DateTimeOffset.UtcNow - invoice.MonitoringExpiration < expiration)
+                    return true;
+            }
             var authorizationResult = await _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanViewInvoices);
             return authorizationResult.Succeeded;
         }

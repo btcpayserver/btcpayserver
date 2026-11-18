@@ -181,6 +181,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Amount), $"The amount should less than {GreenfieldConstants.MaxAmount}.");
             }
             request.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();
+            if (request.Receipt?.PublicReceiptExpiration < TimeSpan.Zero ||
+                request.Receipt?.PublicReceiptExpiration > TimeSpan.FromDays(LengthLimits.MaxExpirationDays))
+                request.AddModelError(r => r.Receipt.PublicReceiptExpiration,
+                    $"PublicReceiptExpiration must be between 0 and {LengthLimits.MaxExpirationDays} days", this);
             if (!string.IsNullOrEmpty(request.Checkout.RedirectURL) &&
                 (!Uri.TryCreate(request.Checkout.RedirectURL, UriKind.Absolute, out var redirectUri) ||
                  redirectUri.Scheme is not ("http" or "https")))

@@ -1,10 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -81,11 +81,22 @@ namespace BTCPayServer.Models.StoreViewModels
         [Range(1, 60 * 24 * 24)]
         public int DisplayExpirationTimer { get; set; }
 
+        [Display(Name = "Public invoice link expiration")]
+        [Range(0, LengthLimits.MaxExpirationDays)]
+        public int? PublicInvoiceExpiration { get; set; }
+
         public class ReceiptOptionsViewModel
         {
             public static ReceiptOptionsViewModel Create(Client.Models.InvoiceDataBase.ReceiptOptions opts)
             {
-                return JObject.FromObject(opts).ToObject<ReceiptOptionsViewModel>();
+                opts = Client.Models.InvoiceDataBase.ReceiptOptions.Merge(opts, null);
+                return new ReceiptOptionsViewModel
+                {
+                    Enabled = opts.Enabled.Value,
+                    ShowQR = opts.ShowQR.Value,
+                    ShowPayments = opts.ShowPayments.Value,
+                    PublicReceiptExpiration = opts.PublicReceiptExpiration is { } expiration ? (int)expiration.TotalDays : null
+                };
             }
             [Display(Name = "Enable public receipt page for settled invoices")]
             public bool Enabled { get; set; }
@@ -95,9 +106,19 @@ namespace BTCPayServer.Models.StoreViewModels
 
             [Display(Name = "Show the payment list in the public receipt page")]
             public bool ShowPayments { get; set; }
+
+            [Display(Name = "Public receipt link expiration")]
+            [Range(0, LengthLimits.MaxExpirationDays)]
+            public int? PublicReceiptExpiration { get; set; }
             public Client.Models.InvoiceDataBase.ReceiptOptions ToDTO()
             {
-                return JObject.FromObject(this).ToObject<Client.Models.InvoiceDataBase.ReceiptOptions>();
+                return new Client.Models.InvoiceDataBase.ReceiptOptions
+                {
+                    Enabled = Enabled,
+                    ShowQR = ShowQR,
+                    ShowPayments = ShowPayments,
+                    PublicReceiptExpiration = PublicReceiptExpiration is { } days ? TimeSpan.FromDays(days) : null
+                };
             }
         }
         public ReceiptOptionsViewModel ReceiptOptions { get; set; } = ReceiptOptionsViewModel.Create(Client.Models.InvoiceDataBase.ReceiptOptions.CreateDefault());

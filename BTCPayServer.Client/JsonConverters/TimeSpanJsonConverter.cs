@@ -41,6 +41,24 @@ namespace BTCPayServer.Client.JsonConverters
                 return TimeSpan.FromDays(value);
             }
         }
+        public class WholeDays : Days
+        {
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                var value = base.ReadJson(reader, objectType, existingValue, serializer);
+                if (value is TimeSpan duration && duration.Ticks % TimeSpan.TicksPerDay != 0)
+                    throw new JsonObjectException("Expected a whole number of days", reader);
+                return value;
+            }
+
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                if (value is TimeSpan duration && duration.Ticks % TimeSpan.TicksPerDay != 0)
+                    throw new JsonSerializationException("Expected a whole number of days");
+                base.WriteJson(writer, value, serializer);
+            }
+        }
+
         public override bool CanConvert(Type objectType)
         {
             return objectType == typeof(TimeSpan) || objectType == typeof(TimeSpan?);

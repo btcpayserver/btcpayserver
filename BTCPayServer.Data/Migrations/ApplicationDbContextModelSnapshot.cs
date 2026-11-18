@@ -18,7 +18,7 @@ namespace BTCPayServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.14")
+                .HasAnnotation("ProductVersion", "10.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -901,6 +901,12 @@ namespace BTCPayServer.Migrations
 
                     b.Property<DateTimeOffset>("BroadcastAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<string[]>("PayjoinOutpoints")
+                        .HasColumnType("text[]");
+
+                    b.Property<string>("PayjoinTransactionId")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 

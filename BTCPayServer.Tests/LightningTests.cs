@@ -765,7 +765,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         await user.RegisterDerivationSchemeAsync("BTC");
         await user.RegisterLightningNodeAsync("BTC", LightningTestImplementation.CoreLightning);
         await user.SetNetworkFeeMode(NetworkFeeMode.Never);
-        await user.ModifyGeneralSettings(p => p.SpeedPolicy = SpeedPolicy.HighSpeed);
+        await user.ModifyGeneralSettings(p => p.SpeedPolicy = SpeedPolicy.MediumSpeed);
         var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.0001m, "BTC"));
         await tester.WaitForEvent<InvoiceNewPaymentDetailsEvent>(async () =>
         {
@@ -775,6 +775,7 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
                     Replaceable = false
                 });
         }, e => e.InvoiceId == invoice.Id && e.PaymentMethodId == PaymentTypes.LN.GetPaymentMethodId("BTC"));
+        await tester.ExplorerNode.GenerateAsync(1); // On-chain BTC payments need 1 confirmation to settle
         Invoice newInvoice = null;
         await TestUtils.EventuallyAsync(async () =>
         {

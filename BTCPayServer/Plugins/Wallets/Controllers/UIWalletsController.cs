@@ -1722,8 +1722,11 @@ namespace BTCPayServer.Controllers
         public IActionResult SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             SigningContextModel signingContext, string? returnUrl, string? backUrl)
         {
-            signingContext.PendingTransactionId = null;
-            signingContext.OriginalPSBT = null;
+            signingContext = new SigningContextModel
+            {
+                PSBT = signingContext.PSBT,
+                EnforceLowR = signingContext.EnforceLowR
+            };
             return ViewSignWithSeed(signingContext, returnUrl, backUrl);
         }
 

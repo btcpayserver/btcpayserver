@@ -100,6 +100,7 @@ public class UISubscriberPortalController(
         var creditHist = await ctx.SubscriberCreditHistory
             .Where(s => s.SubscriberId == session.SubscriberId && s.Currency == session.Subscriber.Plan.Currency)
             .OrderByDescending(s => s.CreatedAt)
+            .ThenByDescending(s => s.Id)
             .Take(50)
             .ToArrayAsync(cancellationToken);
         foreach (var hist in creditHist)

@@ -7,8 +7,10 @@ using BTCPayServer.Data;
 using BTCPayServer.Logging;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.RPC;
 
 namespace BTCPayServer.Services
 {
@@ -20,6 +22,8 @@ namespace BTCPayServer.Services
             public DateTimeOffset BroadcastTime;
             public Transaction Transaction;
             public BTCPayNetwork Network;
+            public string PayjoinTransactionId;
+            public string[] PayjoinOutpoints;
         }
 
         private readonly BTCPayNetworkProvider _networkProvider;
@@ -41,7 +45,11 @@ namespace BTCPayServer.Services
             this.Logs = logs;
         }
 
-        public async Task Schedule(DateTimeOffset broadcastTime, Transaction transaction, BTCPayNetwork network)
+        public Task Schedule(DateTimeOffset broadcastTime, Transaction transaction, BTCPayNetwork network)
+            => Schedule(broadcastTime, transaction, network, null, null);
+
+        internal async Task Schedule(DateTimeOffset broadcastTime, Transaction transaction, BTCPayNetwork network,
+            uint256 payjoinTransactionId, OutPoint[] payjoinOutpoints)
         {
             ArgumentNullException.ThrowIfNull(transaction);
             ArgumentNullException.ThrowIfNull(network);
@@ -49,14 +57,20 @@ namespace BTCPayServer.Services
             var conn = db.Database.GetDbConnection();
             await conn.ExecuteAsync(
                 """
-                INSERT INTO "PlannedTransactions"("Id", "BroadcastAt", "Blob") VALUES(@Id, @BroadcastAt, @Blob)
-                ON CONFLICT DO NOTHING
+                INSERT INTO "PlannedTransactions"("Id", "BroadcastAt", "Blob", "PayjoinTransactionId", "PayjoinOutpoints")
+                VALUES(@Id, @BroadcastAt, @Blob, @PayjoinTransactionId, @PayjoinOutpoints)
+                ON CONFLICT ("Id") DO UPDATE SET
+                    "PayjoinTransactionId" = EXCLUDED."PayjoinTransactionId",
+                    "PayjoinOutpoints" = EXCLUDED."PayjoinOutpoints"
+                WHERE "PlannedTransactions"."PayjoinTransactionId" IS NULL AND EXCLUDED."PayjoinTransactionId" IS NOT NULL
                 """,
                 new
                 {
                     Id = $"{network.CryptoCode}-{transaction.GetHash()}",
                     BroadcastAt = broadcastTime,
-                    Blob = transaction.ToBytes()
+                    Blob = transaction.ToBytes(),
+                    PayjoinTransactionId = payjoinTransactionId?.ToString(),
+                    PayjoinOutpoints = payjoinOutpoints?.Select(o => o.ToString()).ToArray()
                 });
         }
 
@@ -65,32 +79,35 @@ namespace BTCPayServer.Services
             if (disabled)
                 return 0;
             List<Record> scheduled = new List<Record>();
-            using (var db = _dbContextFactory.CreateContext())
+            using (var readContext = _dbContextFactory.CreateContext())
             {
-                scheduled = (await db.PlannedTransactions
-                    .ToListAsync()).Select(ToRecord)
+                scheduled = (await readContext.PlannedTransactions
+                    .ToListAsync(cancellationToken)).Select(ToRecord)
                     .Where(r => r != null)
                     // Client side filtering because entity framework is retarded.
                     .Where(r => r.BroadcastTime < DateTimeOffset.UtcNow).ToList();
             }
 
-            List<Record> rescheduled = new List<Record>();
             List<Record> broadcasted = new List<Record>();
 
             var broadcasts = scheduled.Select(async (record) =>
             {
                 var explorer = _explorerClientProvider.GetExplorerClient(record.Network);
                 if (explorer is null)
-                    return false;
+                    return record.PayjoinTransactionId is not null;
                 try
                 {
-                    // We don't look the result, this is a best effort basis.
+                    if (record.PayjoinTransactionId is not null &&
+                        (await explorer.GetTransactionAsync(uint256.Parse(record.PayjoinTransactionId), cancellationToken))?.Confirmations > 0)
+                        return false;
+
                     var result = await explorer.BroadcastAsync(record.Transaction, cancellationToken);
                     if (result.Success)
                     {
                         Logs.PayServer.LogInformation($"{record.Network.CryptoCode}: {record.Transaction.GetHash()} has been successfully broadcasted");
                     }
-                    return false;
+                    return record.PayjoinTransactionId is not null && !result.Success &&
+                           result.RPCCode != RPCErrorCode.RPC_TRANSACTION_ALREADY_IN_CHAIN;
                 }
                 catch
                 {
@@ -101,18 +118,33 @@ namespace BTCPayServer.Services
 
             for (int i = 0; i < scheduled.Count; i++)
             {
-                var needReschedule = await broadcasts[i];
-                (needReschedule ? rescheduled : broadcasted).Add(scheduled[i]);
+                if (!await broadcasts[i])
+                    broadcasted.Add(scheduled[i]);
             }
 
-            using (var db = _dbContextFactory.CreateContext())
+            if (broadcasted.Count == 0)
+                return 0;
+
+            await using var db = _dbContextFactory.CreateContext();
+            return await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
             {
-                foreach (Record record in broadcasted)
+                await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+                var removed = 0;
+                foreach (var record in broadcasted.OrderBy(r => r.Id, StringComparer.Ordinal))
                 {
-                    db.PlannedTransactions.Remove(new PlannedTransaction() { Id = record.Id });
+                    var deleted = await db.PlannedTransactions
+                        .Where(p => p.Id == record.Id && p.PayjoinTransactionId == record.PayjoinTransactionId)
+                        .ExecuteDeleteAsync(cancellationToken);
+                    if (deleted == 0)
+                        continue;
+                    removed += deleted;
+                    var outpoints = record.PayjoinOutpoints;
+                    if (outpoints is not null)
+                        await db.PayjoinLocks.Where(l => outpoints.Contains(l.Id)).ExecuteDeleteAsync(cancellationToken);
                 }
-                return await db.SaveChangesAsync();
-            }
+                await transaction.CommitAsync(cancellationToken);
+                return removed;
+            });
         }
 
         private Record ToRecord(PlannedTransaction plannedTransaction)
@@ -126,7 +158,9 @@ namespace BTCPayServer.Services
                 Id = plannedTransaction.Id,
                 Network = network,
                 Transaction = Transaction.Load(plannedTransaction.Blob, network.NBitcoinNetwork),
-                BroadcastTime = plannedTransaction.BroadcastAt
+                BroadcastTime = plannedTransaction.BroadcastAt,
+                PayjoinTransactionId = plannedTransaction.PayjoinTransactionId,
+                PayjoinOutpoints = plannedTransaction.PayjoinOutpoints
             };
         }
 

@@ -629,6 +629,8 @@ retry:
 
         public async Task<bool> MarkInvoiceStatus(string invoiceId, InvoiceStatus status)
         {
+            var retriesRemaining = 2;
+retry:
             using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await GetInvoiceRaw(invoiceId, context);
@@ -664,7 +666,15 @@ retry:
                 invoiceData.Status = status.ToString();
                 invoiceData.ExceptionStatus = InvoiceExceptionStatus.Marked.ToString();
                 var invoiceEvent = new InvoiceEvent(ToEntity(invoiceData), eventName) { PreviousStatus = previousStatus };
-                await context.SaveChangesAsync();
+                try
+                {
+                    await context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException) when (retriesRemaining > 0)
+                {
+                    retriesRemaining--;
+                    goto retry;
+                }
                 _eventAggregator.Publish(invoiceEvent);
             }
 

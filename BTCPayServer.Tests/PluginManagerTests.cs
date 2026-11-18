@@ -188,6 +188,92 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task DownloadPluginAndDependencies_LeavesPendingInstallIntactWhenDependenciesAreCyclic(bool dependencyInstalled)
+        {
+            using var httpClient = CreatePluginCatalogClient(
+                MakeAvailablePlugin("PluginA", "1.0.0", ("pluginb", ">=1.0.0")),
+                MakeAvailablePlugin("PluginB", "1.0.0", ("plugina", ">=1.0.0")));
+            IBTCPayServerPlugin[] loaded = dependencyInstalled
+                ? [MakeLoadedPlugin("PluginB", ("PluginA", ">=1.0.0"))]
+                : [];
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-cycle-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                var pendingArchive = Path.Combine(pluginDir, "PluginA.btcpay");
+                byte[] originalContents = [0x00, 0x01];
+                await File.WriteAllBytesAsync(pendingArchive, originalContents);
+                PluginManager.QueueCommands(pluginDir, ("install", "PluginA"));
+                var controller = CreatePluginManagerController(pluginDir, loaded, httpClient);
+
+                var error = await controller.DownloadPluginAndDependencies("PluginA", null);
+
+                Assert.Contains("cycl", error, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(("install", "PluginA"), Assert.Single(PluginManager.GetPendingCommands(pluginDir)));
+                Assert.Equal(originalContents, await File.ReadAllBytesAsync(pendingArchive));
+                Assert.False(File.Exists(Path.Combine(pluginDir, "PluginB.btcpay")));
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
+        [Fact]
+        public async Task DownloadPluginAndDependencies_SchedulesSharedDependencyOnlyOnce()
+        {
+            using var httpClient = CreatePluginCatalogClient(
+                MakeAvailablePlugin("PluginA", "1.0.0", ("PluginB", ">=1.0.0"), ("PluginC", ">=1.0.0")),
+                MakeAvailablePlugin("PluginB", "1.0.0", ("plugind", ">=1.0.0")),
+                MakeAvailablePlugin("PluginC", "1.0.0", ("PluginD", ">=1.0.0")),
+                MakeAvailablePlugin("PluginD", "1.0.0"));
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-dependencies-test-{Guid.NewGuid():N}");
+            try
+            {
+                var controller = CreatePluginManagerController(pluginDir, [], httpClient);
+
+                var error = await controller.DownloadPluginAndDependencies("PluginA", null);
+
+                Assert.Null(error);
+                Assert.Equal(
+                    new[] { "PluginD", "PluginB", "PluginC", "PluginA" },
+                    PluginManager.GetPendingCommands(pluginDir).Select(command => command.plugin));
+                Assert.True(File.Exists(Path.Combine(pluginDir, "PluginD.btcpay")));
+            }
+            finally
+            {
+                if (Directory.Exists(pluginDir))
+                    Directory.Delete(pluginDir, true);
+            }
+        }
+
+        private static HttpClient CreatePluginCatalogClient(params PluginService.AvailablePlugin[] plugins)
+        {
+            var catalog = plugins.ToDictionary(plugin => plugin.Identifier, StringComparer.OrdinalIgnoreCase);
+            return new HttpClient(new TestHttpMessageHandler(request =>
+            {
+                var path = Uri.UnescapeDataString(request.RequestUri!.AbsolutePath);
+                var identifier = path.Split('/')[4].Trim('[', ']');
+                if (!catalog.TryGetValue(identifier, out var plugin))
+                    return new HttpResponseMessage(HttpStatusCode.NotFound);
+                if (path.EndsWith("/download", StringComparison.Ordinal))
+                    return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent([0x50, 0x4b]) };
+
+                var manifest = JsonConvert.SerializeObject(new
+                {
+                    projectSlug = plugin.CatalogSlug,
+                    buildId = 1,
+                    manifestInfo = plugin,
+                    buildInfo = new { }
+                });
+                return TestHttpMessageHandler.JsonResponse(
+                    path.Contains("/versions/", StringComparison.Ordinal) ? manifest : $"[{manifest}]");
+            })) { BaseAddress = new Uri("https://plugins.example/") };
+        }
+
         [Fact]
         public async Task InstalledPluginsViewModel_DropsUnsafeMetadataLinks()
         {

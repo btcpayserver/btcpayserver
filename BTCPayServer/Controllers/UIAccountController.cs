@@ -490,17 +490,22 @@ namespace BTCPayServer.Controllers
             var loginContext = this.CreateLoginContext(user);
             if (!await userService.CanLogin(loginContext))
             {
-                signInManager.AuthenticationScheme = AuthenticationSchemes.LimitedLogin;
-                await signInManager.SignInAsync(user, session.ToAuthenticationProperties(true), session.AuthenticationMethod);
+                if (!user.AccessRestrictions.Exists(restriction => restriction.Type == UserAccessRestrictionConstants.Administrative))
+                {
+                    await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+                    signInManager.AuthenticationScheme = AuthenticationSchemes.LimitedLogin;
+                    await signInManager.SignInAsync(user, session.ToAuthenticationProperties(true), session.AuthenticationMethod);
 
-                if (loginContext.FailedRedirectUrl is { } url)
-                    return Redirect(url);
+                    if (loginContext.FailedRedirectUrl is { } url)
+                        return Redirect(url);
+                }
 
                 TempData.SetStatusLoginResult(loginContext);
                 return RedirectToAction(nameof(Login), new { returnUrl = session.ReturnUrl });
             }
             else
             {
+                await HttpContext.SignOutAsync(AuthenticationSchemes.LimitedLogin);
                 await signInManager.SignInAsync(user, session.ToAuthenticationProperties(false), session.AuthenticationMethod);
                 if (await userManager.IsInRoleAsync(user, Roles.ServerAdmin))
                 {
@@ -604,9 +609,11 @@ namespace BTCPayServer.Controllers
         public bool RegisteredAdmin { get; set; }
 
         [HttpPost("/logout")]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.LimitedLogin)]
         public async Task<IActionResult> Logout()
         {
             await signInManager.SignOutAsync();
+            await HttpContext.SignOutAsync(AuthenticationSchemes.LimitedLogin);
             HttpContext.DeleteUserPrefsCookie();
             return RedirectToAction(nameof(Login));
         }

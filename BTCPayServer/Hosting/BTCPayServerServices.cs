@@ -7,6 +7,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
+using BTCPayServer.Blazor;
 using BTCPayServer.Common;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
@@ -173,6 +174,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<UserService>();
             services.AddSingleton<UserService.LoginExtension, UserService.DefaultLoginExtension>();
+            services.TryAddSingleton<CircuitUserRevalidator>();
 
             services.TryAddSingleton<UriResolver>();
             services.TryAddSingleton<WalletHistogramService>();
@@ -944,6 +946,17 @@ namespace BTCPayServer.Hosting
                     options.SlidingExpiration = false;
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
+                    options.Events.OnValidatePrincipal = async context =>
+                    {
+                        var services = context.HttpContext.RequestServices;
+                        var signInManager = services.GetRequiredService<SignInManager<ApplicationUser>>();
+                        var user = await signInManager.ValidateSecurityStampAsync(context.Principal);
+                        if (user is not null && !await services.GetRequiredService<UserService>()
+                                .IsRestricted(user.Id, UserAccessRestrictionConstants.Administrative))
+                            return;
+                        context.RejectPrincipal();
+                        await context.HttpContext.SignOutAsync(AuthenticationSchemes.LimitedLogin);
+                    };
                     options.LoginPath = "/login";
                     options.AccessDeniedPath = "/errors/403";
                     options.LogoutPath = "/logout";

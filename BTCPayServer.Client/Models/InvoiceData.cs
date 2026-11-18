@@ -65,9 +65,14 @@ namespace BTCPayServer.Client.Models
         }
         public class CheckoutOptions
         {
+            private SpeedPolicy? _speedPolicy;
 
             [JsonConverter(typeof(StringEnumConverter))]
-            public SpeedPolicy? SpeedPolicy { get; set; }
+            public SpeedPolicy? SpeedPolicy
+            {
+                get => _speedPolicy?.Normalize();
+                set => _speedPolicy = value?.Normalize();
+            }
 
             public string[] PaymentMethods { get; set; }
             public string DefaultPaymentMethod { get; set; }

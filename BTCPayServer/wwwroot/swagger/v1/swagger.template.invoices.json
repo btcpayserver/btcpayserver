@@ -568,7 +568,7 @@
                         "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
-                "description": "Refund invoice. The store is resolved automatically from the invoice.",
+                "description": "Refund invoice. The store is resolved automatically from the invoice. Unless the `refundVariant` is `Custom`, this fails if the invoice already has a refund which is not archived.",
                 "operationId": "Invoices_Refund",
                 "requestBody": {
                     "required": true,

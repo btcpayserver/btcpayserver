@@ -17,6 +17,7 @@
 @implements IDisposable
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IAuthorizationService AuthorizationService
+@inject CircuitUserRevalidator CircuitUserRevalidator
 @inject HostIntegrationState HostIntegrationState
 @inject ProcessRunner ProcessRunner
 @inject SettingsRepository SettingsRepository
@@ -160,7 +161,7 @@
         {
             var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var authorization = await AuthorizationService.AuthorizeAsync(authenticationState.User, Policies.CanModifyServerSettings);
-            if (!authorization.Succeeded)
+            if (!authorization.Succeeded || await CircuitUserRevalidator.Revalidate(authenticationState.User, Roles.ServerAdmin) is null)
                 throw new InvalidOperationException(StringLocalizer["You are not authorized to run maintenance commands."].Value);
 
             if (HostIntegrationState.Current?.Commands?.Contains(command) is not true)

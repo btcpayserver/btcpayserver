@@ -12,6 +12,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.InvoicingModels;
@@ -134,9 +135,8 @@ namespace BTCPayServer.Controllers
                 Id = invoice.Id,
                 Entity = invoice,
                 State = invoiceState,
-                TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" :
-                                   invoice.SpeedPolicy == SpeedPolicy.MediumSpeed ? "medium" :
-                                   invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed ? "low-medium" :
+                TransactionSpeed = invoice.SpeedPolicy.Normalize() == SpeedPolicy.MediumSpeed ? "medium" :
+                                   invoice.SpeedPolicy.Normalize() == SpeedPolicy.LowMediumSpeed ? "low-medium" :
                                    "low",
                 CreatedDate = invoice.InvoiceTime,
                 ExpirationDate = invoice.ExpirationTime,
@@ -289,12 +289,13 @@ namespace BTCPayServer.Controllers
                                             .FirstOrDefaultAsync(cancellationToken);
             if (invoice is null)
                 return NotFound();
-            var currentRefund = invoice.Refunds.OrderByDescending(r => r.PullPaymentData.StartDate).FirstOrDefault();
+            var currentRefund = invoice.Refunds.Where(r => !r.PullPaymentData.Archived)
+                .OrderByDescending(r => r.PullPaymentData.StartDate).FirstOrDefault();
             if (currentRefund?.PullPaymentDataId is null && User.GetIdOrNull() is null)
                 return NotFound();
             if (!invoice.GetInvoiceState().CanRefund())
                 return NotFound();
-            if (currentRefund?.PullPaymentDataId is string ppId && !currentRefund.PullPaymentData.Archived)
+            if (currentRefund?.PullPaymentDataId is string ppId)
             {
                 // TODO: Having dedicated UI later on
                 return RedirectToAction(nameof(UIPullPaymentController.ViewPullPayment),
@@ -342,6 +343,13 @@ namespace BTCPayServer.Controllers
 
             if (invoice?.GetInvoiceState().CanRefund() is not true)
                 return NotFound();
+
+            if (await PullPaymentHostedService.FindOpenRefundId(ctx, invoiceId, cancellationToken) is { } currentPpId)
+            {
+                return RedirectToAction(nameof(UIPullPaymentController.ViewPullPayment),
+                                "UIPullPayment",
+                                new { pullPaymentId = currentPpId });
+            }
 
             var store = HttpContext.GetStoreData();
             var pmi = PayoutMethodId.Parse(model.SelectedPayoutMethod);
@@ -547,12 +555,15 @@ namespace BTCPayServer.Controllers
                 return View("_RefundModal", model);
             }
 
-            var ppId = await _paymentHostedService.CreateRefundPullPayment(store, createPullPayment, invoice.Id);
-            TempData.SetStatusMessageModel(new StatusMessageModel
+            var (ppId, created) = await _paymentHostedService.GetOrCreateRefundPullPayment(store, createPullPayment, invoice.Id);
+            if (created)
             {
-                Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Store > Payouts.",
-                Severity = StatusMessageModel.StatusSeverity.Success
-            });
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Store > Payouts.",
+                    Severity = StatusMessageModel.StatusSeverity.Success
+                });
+            }
 
             // TODO: Having dedicated UI later on
             return RedirectToAction(nameof(UIPullPaymentController.ViewPullPayment),

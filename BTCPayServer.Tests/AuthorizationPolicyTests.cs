@@ -4,8 +4,10 @@ using System.Reflection;
 using BTCPayServer.Client;
 using BTCPayServer.Controllers;
 using BTCPayServer.Controllers.Greenfield;
+using BTCPayServer.Plugins.Monetization.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NicolasDorier.RateLimits;
 using Xunit;
 
 namespace BTCPayServer.Tests;
@@ -56,5 +58,16 @@ public class AuthorizationPolicyTests(ITestOutputHelper helper) : UnitTestBase(h
         var method = typeof(UIAppsController).GetMethod(nameof(UIAppsController.FileUpload));
         Assert.NotNull(method);
         Assert.Empty(method.GetCustomAttributes<IgnoreAntiforgeryTokenAttribute>(true));
+    }
+
+    [Fact]
+    [Trait("Fast", "Fast")]
+    public void AnonymousMonetizationSignupIsRateLimited()
+    {
+        var method = typeof(UIUserMonetizationController).GetMethod(nameof(UIUserMonetizationController.NewUser));
+        Assert.NotNull(method);
+        var limit = Assert.Single(method.GetCustomAttributes<RateLimitsFilterAttribute>(true));
+        Assert.Equal(ZoneLimits.PublicInvoices, limit.ZoneName);
+        Assert.Equal(RateLimitsScope.RemoteAddress, limit.Scope);
     }
 }

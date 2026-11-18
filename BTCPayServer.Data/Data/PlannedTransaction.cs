@@ -10,5 +10,7 @@ namespace BTCPayServer.Data
         public string Id { get; set; } // Id in the format [cryptocode]-[txid]
         public DateTimeOffset BroadcastAt { get; set; }
         public byte[] Blob { get; set; }
+        public string PayjoinTransactionId { get; set; }
+        public string[] PayjoinOutpoints { get; set; }
     }
 }

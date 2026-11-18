@@ -634,6 +634,14 @@ retry:
         [Authorize(Policy = Policies.CanManagePayouts, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> ApprovePayout(string payoutId, ApprovePayoutRequest approvePayoutRequest, CancellationToken cancellationToken = default)
         {
+            if (approvePayoutRequest?.RateRule is not null)
+            {
+                if (!(await _authorizationService.AuthorizeAsync(User, CurrentStoreId,
+                        new PolicyRequirement(Policies.CanCreatePullPayments))).Succeeded)
+                {
+                    return this.CreateAPIPermissionError(Policies.CanCreatePullPayments);
+                }
+            }
             using var ctx = _dbContextFactory.CreateContext();
             ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
             var revision = approvePayoutRequest?.Revision;

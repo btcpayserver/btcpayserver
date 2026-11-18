@@ -1083,6 +1083,8 @@ public class SubscriptionTests(ITestOutputHelper testOutputHelper) : UnitTestBas
         Assert.True(disabled.Subscriber.IsSuspended);
         Assert.Equal(disabled.Subscriber.SuspensionReason, disabled.SuspensionReason);
         Assert.Equal("The plan has been started by an invoice which later became invalid.", disabled.Subscriber.SuspensionReason);
+        Assert.NotNull(disabled.Subscriber.PaidAmount);
+        Assert.Equal(-disabled.Subscriber.PaidAmount.Value, disabled.Subscriber.GetCredit());
 
         await s.FastReloadAsync();
 

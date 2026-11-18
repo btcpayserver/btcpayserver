@@ -253,6 +253,7 @@ namespace BTCPayServer.Payments.Bitcoin
             if (validationContext.Config is JValue { Type: JTokenType.String, Value: string config }
                 && parser.TryParseXpub(config, ref settings))
             {
+                settings.IsHotWallet = KeepsPreviousHotWallet(validationContext, settings);
                 validationContext.Config = JToken.FromObject(settings, Serializer);
                 return Task.CompletedTask;
             }
@@ -288,15 +289,26 @@ namespace BTCPayServer.Payments.Bitcoin
 
             if (res.IsHotWallet)
             {
-                var previous = validationContext.PreviousConfig?.ToObject<DerivationSchemeSettings>(Serializer);
-                if (previous?.IsHotWallet is not true ||
-                    previous.AccountDerivation?.ToString() != res.AccountDerivation?.ToString())
+                if (!KeepsPreviousHotWallet(validationContext, res))
                 {
                     validationContext.ModelState.AddModelError(nameof(res.IsHotWallet),
                         "IsHotWallet cannot be set through this API. Generate or import a wallet with private keys instead.");
                 }
             }
+            // Not every accepted shape carries the flag, so an update of the same wallet must not clear it
+            else if (KeepsPreviousHotWallet(validationContext, res))
+            {
+                res.IsHotWallet = true;
+                validationContext.Config = JToken.FromObject(res, Serializer);
+            }
             return Task.CompletedTask;
+        }
+
+        private bool KeepsPreviousHotWallet(PaymentMethodConfigValidationContext validationContext, DerivationSchemeSettings res)
+        {
+            var previous = validationContext.PreviousConfig?.ToObject<DerivationSchemeSettings>(Serializer);
+            return previous?.IsHotWallet is true &&
+                   previous.AccountDerivation?.ToString() == res.AccountDerivation?.ToString();
         }
 
         public BitcoinLikePaymentData ParsePaymentDetails(JToken details)

@@ -23,6 +23,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
@@ -37,6 +38,7 @@ using BTCPayServer.Services.Wallets.Import;
 using BTCPayServer.Services.WalletFileParsing;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -819,6 +821,18 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanOnlyMarkInvoiceStatusOnce()
+        {
+            var settled = new InvoiceState(InvoiceStatus.Settled, InvoiceExceptionStatus.Marked);
+            Assert.False(settled.CanMarkComplete());
+            var invalid = new InvoiceState(InvoiceStatus.Invalid, InvoiceExceptionStatus.Marked);
+            Assert.False(invalid.CanMarkInvalid());
+            // An invoice marked invalid can still be marked settled afterwards.
+            Assert.True(invalid.CanMarkComplete());
+            Assert.True(new InvoiceState(InvoiceStatus.New, InvoiceExceptionStatus.None).CanMarkComplete());
+        }
+
+        [Fact]
         public void CanCalculateDust()
         {
             var entity = new InvoiceEntity() { Currency = "USD" };
@@ -864,6 +878,73 @@ namespace BTCPayServer.Tests
             Assert.Equal(0.0m, accounting.DueUncapped);
 
 #pragma warning restore CS0618
+        }
+
+        [Fact]
+        public void CanCalculateConfirmationRequired()
+        {
+            static InvoiceEntity Invoice(SpeedPolicy policy) => new() { SpeedPolicy = policy };
+            static BitcoinLikePaymentData Payment() => new();
+
+            Assert.Equal(1, NBXplorerListener.ConfirmationRequired(Invoice(SpeedPolicy.HighSpeed), Payment()));
+            Assert.Equal(1, NBXplorerListener.ConfirmationRequired(Invoice(SpeedPolicy.MediumSpeed), Payment()));
+            Assert.Equal(2, NBXplorerListener.ConfirmationRequired(Invoice(SpeedPolicy.LowMediumSpeed), Payment()));
+            Assert.Equal(6, NBXplorerListener.ConfirmationRequired(Invoice(SpeedPolicy.LowSpeed), Payment()));
+        }
+
+        [Fact]
+        public void LegacyHighSpeedNormalizesToMedium()
+        {
+            var store = new BTCPayServer.Data.StoreData { SpeedPolicy = SpeedPolicy.HighSpeed };
+            var invoice = new InvoiceEntity { SpeedPolicy = SpeedPolicy.HighSpeed };
+            Assert.Equal(SpeedPolicy.MediumSpeed, store.SpeedPolicy);
+            Assert.Equal(1, NBXplorerListener.ConfirmationRequired(invoice, new BitcoinLikePaymentData()));
+
+            var apiStore = JsonConvert.DeserializeObject<BTCPayServer.Client.Models.StoreData>(
+                "{\"speedPolicy\":\"HighSpeed\"}");
+            Assert.Equal(SpeedPolicy.MediumSpeed, apiStore.SpeedPolicy);
+            Assert.Contains("\"MediumSpeed\"", JsonConvert.SerializeObject(apiStore));
+
+            var apiInvoice = JsonConvert.DeserializeObject<BTCPayServer.Client.Models.InvoiceData>(
+                "{\"checkout\":{\"speedPolicy\":\"HighSpeed\"}}");
+            Assert.Equal(SpeedPolicy.MediumSpeed, apiInvoice.Checkout.SpeedPolicy);
+        }
+
+        [Fact]
+        public void CanKeepHotWalletOnConfigUpdate()
+        {
+            var network = CreateNetworkProvider(ChainName.Regtest).GetNetwork<BTCPayNetwork>("BTC");
+            var handler = new BitcoinLikePaymentHandler(BTC, null, network, null, null, null, null, null);
+            DerivationSchemeSettings HotWallet(string xpub) =>
+                new(network.GetDerivationSchemeParser().Parse(xpub), network) { IsHotWallet = true };
+            string NewXpub() => new ExtKey().Neuter().GetWif(network.NBitcoinNetwork).ToString();
+
+            var xpub = NewXpub();
+            var previous = JToken.FromObject(HotWallet(xpub), handler.Serializer);
+
+            var ctx = Validate(handler, new JObject { ["derivationScheme"] = xpub }, previous);
+            Assert.True(ctx.ModelState.IsValid);
+            Assert.True(handler.ParsePaymentMethodConfig(ctx.Config).IsHotWallet);
+
+            ctx = Validate(handler, JToken.FromObject(xpub), previous);
+            Assert.True(ctx.ModelState.IsValid);
+            Assert.True(handler.ParsePaymentMethodConfig(ctx.Config).IsHotWallet);
+
+            // Pointing at another wallet gives no reason to believe we hold its keys
+            ctx = Validate(handler, new JObject { ["derivationScheme"] = NewXpub() }, previous);
+            Assert.True(ctx.ModelState.IsValid);
+            Assert.False(handler.ParsePaymentMethodConfig(ctx.Config).IsHotWallet);
+
+            var watchOnly = JToken.FromObject(new DerivationSchemeSettings(network.GetDerivationSchemeParser().Parse(xpub), network), handler.Serializer);
+            ctx = Validate(handler, JToken.FromObject(HotWallet(xpub), handler.Serializer), watchOnly);
+            Assert.False(ctx.ModelState.IsValid);
+        }
+
+        private static PaymentMethodConfigValidationContext Validate(BitcoinLikePaymentHandler handler, JToken config, JToken previousConfig)
+        {
+            var ctx = new PaymentMethodConfigValidationContext(null, new ModelStateDictionary(), config, null, previousConfig, null);
+            handler.ValidatePaymentMethodConfig(ctx).GetAwaiter().GetResult();
+            return ctx;
         }
 
         [Fact]

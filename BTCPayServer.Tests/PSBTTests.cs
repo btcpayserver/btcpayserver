@@ -1,6 +1,8 @@
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Controllers;
 using BTCPayServer.Plugins.Wallets.Views.ViewModels;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBitcoin;
 using Xunit;
@@ -22,6 +24,38 @@ namespace BTCPayServer.Tests
             Assert.Null(await vm.GetPSBT(Network.RegTest, modelState));
             Assert.False(modelState.IsValid);
             Assert.Contains(modelState["PSBT"].Errors, error => error.ErrorMessage == "The PSBT is too large.");
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void SeedSigningLinkOnlyCarriesTheTransactionToSign()
+        {
+            // The seed signing GET touches no service, so an instance without dependencies is enough.
+            var controller = new UIWalletsController(null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null);
+
+            var result = Assert.IsType<ViewResult>(controller.SignWithSeed(null, new SigningContextModel
+            {
+                PSBT = "the-psbt",
+                EnforceLowR = false,
+                OriginalPSBT = "the-original-psbt",
+                PendingTransactionId = "the-pending-transaction",
+                PayJoinBIP21 = "the-bip21",
+                ChangeAddress = "the-change-address",
+                Comment = "the-comment",
+                BalanceChangeFromReplacement = long.MaxValue
+            }, null, null));
+
+            var signingContext = Assert.IsType<SignWithSeedViewModel>(result.Model).SigningContext;
+            Assert.Equal("the-psbt", signingContext.PSBT);
+            Assert.False(signingContext.EnforceLowR);
+            Assert.Null(signingContext.OriginalPSBT);
+            Assert.Null(signingContext.PendingTransactionId);
+            Assert.Null(signingContext.PayJoinBIP21);
+            Assert.Null(signingContext.ChangeAddress);
+            Assert.Null(signingContext.Comment);
+            Assert.Equal(0, signingContext.BalanceChangeFromReplacement);
         }
 
         [Fact]

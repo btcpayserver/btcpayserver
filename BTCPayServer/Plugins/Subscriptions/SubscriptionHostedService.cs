@@ -18,7 +18,9 @@ using BTCPayServer.Services.Rates;
 using Dapper;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using static BTCPayServer.Data.Subscriptions.SubscriberData;
@@ -58,10 +60,12 @@ public class SubscriptionHostedService(
                 EventCode: InvoiceEventCode.Completed or
                 InvoiceEventCode.MarkedCompleted or
                 InvoiceEventCode.MarkedInvalid or
+                InvoiceEventCode.FailedToConfirm or
+                InvoiceEventCode.Expired or
                 InvoiceEventCode.PaidInFull,
                 Invoice:
                 {
-                    Status: InvoiceStatus.Settled or InvoiceStatus.Invalid or InvoiceStatus.Processing
+                    Status: InvoiceStatus.Settled or InvoiceStatus.Invalid or InvoiceStatus.Processing or InvoiceStatus.Expired
                 } settledInvoice
             } &&
             GetPlanCheckoutIdFromInvoice(settledInvoice) is string checkoutId)
@@ -88,6 +92,11 @@ public class SubscriptionHostedService(
                 throw new InvalidOperationException("Checkout not found or expired");
             if (checkout.Invoice is { Status: not (Data.InvoiceData.Expired or Data.InvoiceData.Invalid) })
                 return;
+            if (checkout.CreditedByInvoice != 0m)
+                throw new InvalidOperationException("The previous checkout invoice has not been reconciled");
+            if (checkout.Subscriber is { } subscriber &&
+                !subscriber.Plan.Currency.Equals(checkout.Plan.Currency, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("The checkout's plan isn't in the same currency as the subscriber's plan");
             if (checkout.SuccessRedirectUrl is null)
             {
                 var redirectLink = checkout.Plan.Offering.SuccessRedirectUrl ??
@@ -448,102 +457,116 @@ public class SubscriptionHostedService(
 
     private async Task ProcessSubscriptionPayment(InvoiceEntity invoice, string checkoutId, CancellationToken cancellationToken = default)
     {
-        var needUpdate = false;
+        await using var ctx = applicationDbContextFactory.CreateContext();
+        await ctx.Database.CreateExecutionStrategy().ExecuteAsync(
+            token => ProcessSubscriptionPaymentCore(invoice, checkoutId, token), cancellationToken);
+    }
+
+    private async Task ProcessSubscriptionPaymentCore(InvoiceEntity invoice, string checkoutId, CancellationToken cancellationToken)
+    {
         await using var subCtx = CreateContext(cancellationToken);
         var ctx = subCtx.Context;
+        await using var tx = await ctx.Database.BeginTransactionAsync(cancellationToken);
+        var lockedCheckoutId = await ctx.Database.GetDbConnection().ExecuteScalarAsync<string?>(new CommandDefinition(
+            "SELECT id FROM subs_plan_checkouts WHERE id = @checkoutId FOR UPDATE",
+            new { checkoutId }, tx.GetDbTransaction(), cancellationToken: cancellationToken));
+        if (lockedCheckoutId is null)
+            return;
+
         var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
-        var plan = checkout?.Plan;
-        if (checkout is null || plan is null ||
+        if (checkout?.Invoice is null || checkout.InvoiceId != invoice.Id ||
+            checkout.Invoice.Status != invoice.Status.ToString() ||
             checkout.Plan.Offering.App.StoreDataId != invoice.StoreId)
             return;
 
-        // If subscrberId isn't set, then it should be a new subscriber.
         if (checkout.Subscriber is null && !checkout.NewSubscriber)
             throw new InvalidOperationException("Bug: Subscriber is null and not a new subscriber");
 
-        var sub = checkout.Subscriber;
-        var processingInvoiceId = invoice.Status == InvoiceStatus.Processing ? invoice.Id : null;
-        if (sub is not null &&
-            sub.ProcessingInvoiceId != processingInvoiceId)
+        try
         {
-            sub.ProcessingInvoiceId = processingInvoiceId;
-            await ctx.SaveChangesAsync();
+            await ReconcileCheckoutInvoice(subCtx, checkout, invoice);
+            await tx.CommitAsync(cancellationToken);
         }
-
-        if (invoice.Status == InvoiceStatus.Processing && !plan.OptimisticActivation)
-            return;
-
-        if (invoice.Status is InvoiceStatus.Settled or InvoiceStatus.Processing)
+        catch
         {
-            // We only create a new subscriber lazily when a payment has been received
-            if (sub is null)
-            {
-                var optimisticActivation = invoice.Status == InvoiceStatus.Processing && plan.OptimisticActivation;
-                sub = await CreateSubscription(subCtx, checkout, optimisticActivation);
-                if (sub is null)
-                    return;
-
-                ctx.SubscribersInvoices.Add(new SubscriberInvoiceData()
-                {
-                    SubscriberId = sub.Id,
-                    InvoiceId = invoice.Id
-                });
-                await ctx.SaveChangesAsync();
-            }
-
-            var invoiceCredit = subCtx.GetAmountToCredit(invoice);
-            if (checkout.CreditedByInvoice != invoiceCredit)
-            {
-                var diff = invoiceCredit - checkout.CreditedByInvoice;
-                if (diff > 0)
-                {
-                    checkout.CreditedByInvoice += diff;
-                    await subCtx.CreditSubscriber(sub, $"Credit purchase (Inv: {invoice.Id})", diff);
-                    await TryStartPlan(subCtx, checkout, sub);
-                }
-                else
-                {
-                    await subCtx.TryChargeSubscriber(sub, $"Adjustement (Inv: {invoice.Id})", -diff, allowOverdraft: true);
-                    checkout.CreditedByInvoice -= -diff;
-                }
-            }
-
-            if (invoice.Status == InvoiceStatus.Settled && sub.Plan.OptimisticActivation)
-                // Maybe we don't need this column
-                sub.OptimisticActivation = false;
-
-            needUpdate = true;
-            await ctx.SaveChangesAsync();
-        }
-        else if (sub is not null && invoice.Status == InvoiceStatus.Invalid &&
-                 checkout is { PlanStarted: true, CreditedByInvoice: not 0m })
-        {
-            // We should probably ask the merchant before reversing the credit...
-            // await TryChargeSubscriber(ctx, sub, checkout.Credited, force: true);
-            // checkout.Credited = 0m;
-            sub.IsSuspended = true;
-            sub.SuspensionReason = "The plan has been started by an invoice which later became invalid.";
-            needUpdate = true;
-            await ctx.SaveChangesAsync();
-        }
-
-        if (sub is not null)
-        {
-            if (needUpdate)
-                await UpdateSubscriptionStates(subCtx, sub.Id);
+            subCtx.DiscardEvents();
+            throw;
         }
     }
 
-    private async Task TryStartPlan(SubscriptionContext subCtx, PlanCheckoutData checkout, SubscriberData sub)
+    private async Task ReconcileCheckoutInvoice(SubscriptionContext subCtx, PlanCheckoutData checkout, InvoiceEntity invoice)
     {
-        if (checkout.PlanStarted)
+        var ctx = subCtx.Context;
+        var processing = invoice.Status == InvoiceStatus.Processing;
+        var failed = invoice.Status is InvoiceStatus.Invalid or InvoiceStatus.Expired;
+        var sub = checkout.Subscriber;
+        if (sub is null && !failed && (!processing || checkout.Plan.OptimisticActivation))
+        {
+            sub = await CreateSubscription(subCtx, checkout, processing);
+            if (sub is not null)
+                ctx.SubscribersInvoices.Add(new SubscriberInvoiceData { SubscriberId = sub.Id, InvoiceId = invoice.Id });
+        }
+
+        if (sub is null)
+            return;
+
+        if (processing && sub.ProcessingInvoiceId is null)
+            sub.ProcessingInvoiceId = invoice.Id;
+        if (!processing && sub.ProcessingInvoiceId == invoice.Id)
+        {
+            sub.ProcessingInvoiceId = null;
+            if (!failed)
+                sub.OptimisticActivation = false;
+        }
+
+        if (processing)
+        {
+            if (checkout.Plan.OptimisticActivation && checkout.CreditPurchase is null)
+                await TryStartPlan(subCtx, checkout, sub, invoice);
+            await ctx.SaveChangesAsync(subCtx.CancellationToken);
+            if (checkout.PlanStarted)
+                await UpdateSubscriptionStates(subCtx, sub.Id);
+            return;
+        }
+
+        if (failed && checkout.PlanStarted && checkout.CreditedByInvoice > 0m)
+        {
+            sub.IsSuspended = true;
+            sub.SuspensionReason = "The plan has been started by an invoice which later became invalid.";
+        }
+
+        var invoiceCredit = failed ? 0m : subCtx.GetAmountToCredit(invoice);
+        var diff = invoiceCredit - checkout.CreditedByInvoice;
+        if (diff > 0m)
+        {
+            await subCtx.CreditSubscriber(sub, $"Credit purchase (Inv: {invoice.Id})", diff, invoice.Currency);
+            checkout.CreditedByInvoice = invoiceCredit;
+            await TryStartPlan(subCtx, checkout, sub);
+        }
+        else if (diff < 0m)
+        {
+            var description = failed ? $"Reversal (Inv: {invoice.Id})" : $"Adjustment (Inv: {invoice.Id})";
+            if (await subCtx.TryChargeSubscriber(sub, description, -diff, allowOverdraft: true, currency: invoice.Currency))
+                checkout.CreditedByInvoice = invoiceCredit;
+            else
+                Logs.PayServer.LogWarning("Subscriber credit adjustment for invoice {InvoiceId} exceeds balance limits", invoice.Id);
+        }
+
+        await ctx.SaveChangesAsync(subCtx.CancellationToken);
+        if (!failed || diff != 0m)
+            await UpdateSubscriptionStates(subCtx, sub.Id);
+    }
+
+    private async Task TryStartPlan(SubscriptionContext subCtx, PlanCheckoutData checkout, SubscriberData sub, InvoiceEntity? unconfirmedInvoice = null)
+    {
+        if (checkout.PlanStarted || !checkout.Plan.Currency.Equals(sub.Plan.Currency, StringComparison.OrdinalIgnoreCase))
             return;
         var prevPlan = sub.Plan;
         var now = subCtx.Now;
         using var scope = sub.NewPlanScope(checkout.Plan);
         if (sub.CanStartNextPlanEx(checkout.NewSubscriber))
         {
-            if (checkout.IsTrial || await subCtx.TryChargeSubscriber(sub, $"Starting plan '{sub.NextPlan.Name}'", sub.NextPlan.Price))
+            if (checkout.IsTrial || await TryChargeForPlan($"Starting plan '{sub.NextPlan.Name}'", 0m))
             {
                 sub.StartNextPlan(now, checkout.IsTrial);
                 scope.Commit();
@@ -567,7 +590,7 @@ public class SubscriptionHostedService(
                 PlanChangeData.ChangeType.Downgrade => $"Downgrade to new plan '{sub.NewPlan?.Name}'",
                 _ => $"Migration to plan '{sub.NewPlan?.Name}'"
             };
-            if (checkout.IsTrial || await subCtx.TryCreditDebitSubscriber(sub, description, unusedAmount, sub.NextPlan.Price) is not null)
+            if (checkout.IsTrial || await TryChargeForPlan(description, unusedAmount))
             {
                 checkout.RefundAmount = unusedAmount;
                 sub.StartNextPlan(now, checkout.IsTrial);
@@ -577,6 +600,39 @@ public class SubscriptionHostedService(
         }
         if (checkout.PlanStarted)
             subCtx.AddEvent(new SubscriptionEvent.PlanStarted(sub, prevPlan));
+
+        async Task<bool> TryChargeForPlan(string description, decimal refund)
+        {
+            var plan = sub.NextPlan;
+            if (unconfirmedInvoice is null)
+                return await subCtx.TryCreditDebitSubscriber(sub, description, refund, plan.Price) is not null;
+            if (!plan.Currency.Equals(unconfirmedInvoice.Currency, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            var maxProvisionalCredit = Math.Max(0m, subCtx.RoundAmount(plan.Price, plan.Currency) - refund);
+            var availablePayment = subCtx.GetAmountToCredit(unconfirmedInvoice);
+            var credit = Math.Min(maxProvisionalCredit, availablePayment) - checkout.CreditedByInvoice;
+            if (credit <= 0m)
+                return await subCtx.TryCreditDebitSubscriber(sub, description, refund, plan.Price) is not null;
+
+            var tx = subCtx.Context.Database.CurrentTransaction!;
+            var cancellationToken = subCtx.CancellationToken;
+            var eventCount = subCtx.Events.Count;
+            const string savepoint = "plan_purchase";
+            await tx.CreateSavepointAsync(savepoint, cancellationToken);
+            if (await subCtx.TryCreditDebitSubscriber(sub, $"Credit purchase (Inv: {unconfirmedInvoice.Id})", credit, 0m, currency: unconfirmedInvoice.Currency) is not null &&
+                await subCtx.TryCreditDebitSubscriber(sub, description, refund, plan.Price) is not null)
+            {
+                checkout.CreditedByInvoice += credit;
+                await tx.ReleaseSavepointAsync(savepoint, cancellationToken);
+                return true;
+            }
+
+            await tx.RollbackToSavepointAsync(savepoint, cancellationToken);
+            subCtx.DiscardEvents(eventCount);
+            await subCtx.ReloadCredits(sub);
+            return false;
+        }
     }
 
     record MoveTimeRequest(MemberSelector MemberSelector, TimeSpan Period);
@@ -736,6 +792,9 @@ public class SubscriptionHostedService(
             var planChangeRecord  = portal.Subscriber.Plan.PlanChanges
                 .FirstOrDefault(pc => pc.PlanId == portal.Subscriber.PlanId && pc.PlanChangeId == planId);
             if (planChangeRecord == null)
+                return new PlanMigrationResult.NotFound();
+
+            if (!plan.Currency.Equals(portal.Subscriber.Plan.Currency, StringComparison.OrdinalIgnoreCase))
                 return new PlanMigrationResult.NotFound();
 
             if (planChangeRecord.Timing == PlanChangeData.ChangeTiming.AtPeriodEnd)

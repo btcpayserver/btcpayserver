@@ -181,7 +181,7 @@ namespace BTCPayServer.Controllers
                 entity.Price = 0.0m;
                 entity.Type = InvoiceType.TopUp;
             }
-            entity.SpeedPolicy = invoice.Checkout.SpeedPolicy ?? store.SpeedPolicy;
+            entity.SpeedPolicy = (invoice.Checkout.SpeedPolicy ?? store.SpeedPolicy).Normalize();
             if (invoice.Checkout.DefaultPaymentMethod is not null && PaymentMethodId.TryParse(invoice.Checkout.DefaultPaymentMethod, out var paymentMethodId))
             {
                 entity.DefaultPaymentMethod = paymentMethodId;

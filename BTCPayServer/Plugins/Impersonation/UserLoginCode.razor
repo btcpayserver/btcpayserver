@@ -12,6 +12,7 @@
 @using Microsoft.Extensions.Localization
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IAuthorizationService AuthorizationService
+@inject CircuitUserRevalidator CircuitUserRevalidator
 @inject UserManager<ApplicationUser> UserManager
 @inject UserLoginCodeService UserLoginCodeService
 @inject LinkGenerator LinkGenerator
@@ -53,17 +54,20 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        var auth = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var userId = auth.User.Identity?.IsAuthenticated is true
-            ? auth.User.GetIdOrNull()
-            : null;
-        if (userId is null) return;
-        var loggedInUser = await UserManager.FindByIdAsync(ImpersonatedUserId ?? userId);
-        if (loggedInUser is null) return;
-        if (await AuthorizationService.AuthorizeAsync(auth.User, loggedInUser.Id, [new PolicyRequirement(ImpersonationPlugin.CanImpersonateUser)]) is not { Succeeded: true })
-            return;
-        _user = loggedInUser;
+        _user = await GetAuthorizedUser();
+        if (_user is null) return;
         GenerateCodeAndStartTimer();
+    }
+
+    private async Task<ApplicationUser> GetAuthorizedUser()
+    {
+        var auth = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (await CircuitUserRevalidator.Revalidate(auth.User) is not { } signedInUser) return null;
+        var loggedInUser = await UserManager.FindByIdAsync(ImpersonatedUserId ?? signedInUser.Id);
+        if (loggedInUser is null) return null;
+        if (await AuthorizationService.AuthorizeAsync(auth.User, loggedInUser.Id, [new PolicyRequirement(ImpersonationPlugin.CanImpersonateUser)]) is not { Succeeded: true })
+            return null;
+        return loggedInUser;
     }
 
     public void Dispose()
@@ -85,10 +89,27 @@
     private void CountDownTimer(object source, ElapsedEventArgs e)
     {
         if (_seconds > 0)
+        {
             _seconds -= 1;
+            InvokeAsync(StateHasChanged);
+            return;
+        }
+        ((Timer)source).Enabled = false;
+        InvokeAsync(RegenerateCode);
+    }
+
+    private async Task RegenerateCode()
+    {
+        _user = await GetAuthorizedUser();
+        if (_user is null)
+        {
+            _data = null;
+            _timer?.Dispose();
+            _timer = null;
+        }
         else
             GenerateCodeAndStartTimer();
-        InvokeAsync(StateHasChanged);
+        StateHasChanged();
     }
 
     private string GetData(string loginCode)

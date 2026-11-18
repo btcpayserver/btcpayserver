@@ -511,7 +511,12 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             createPullPayment.AutoApproveClaims = createPullPayment.AutoApproveClaims && (await _authorizationService.AuthorizeAsync(User, storeId ,Policies.CanCreatePullPayments)).Succeeded;
-            var ppId = await _pullPaymentService.CreateRefundPullPayment(store, createPullPayment, invoice.Id);
+            var ppId = await _pullPaymentService.CreateRefundPullPayment(store, createPullPayment, invoice.Id, request.RefundVariant is RefundVariant.Custom);
+            if (ppId is null)
+            {
+                ModelState.AddModelError(nameof(request.RefundVariant), "This invoice already has a refund which is not archived");
+                return this.CreateValidationError(ModelState);
+            }
 
             var pp = await _pullPaymentService.GetPullPayment(ppId, false);
             return this.Ok(CreatePullPaymentData(pp));
@@ -703,7 +708,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     PaymentMethods =
                         entity.GetPaymentPrompts().Select(method => method.PaymentMethodId.ToString()).ToArray(),
                     DefaultPaymentMethod = entity.DefaultPaymentMethod?.ToString(),
-                    SpeedPolicy = entity.SpeedPolicy,
+                    SpeedPolicy = entity.SpeedPolicy.Normalize(),
                     RedirectAutomatically = entity.RedirectAutomatically,
                     RedirectURL = entity.RedirectURLTemplate
                 },

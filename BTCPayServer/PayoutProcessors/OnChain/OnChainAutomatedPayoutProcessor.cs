@@ -7,6 +7,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
 using BTCPayServer.Services;
@@ -15,8 +16,12 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.RPC;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
@@ -28,6 +33,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
 		private readonly BTCPayWalletProvider _btcPayWalletProvider;
 		private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
 		private readonly BitcoinLikePayoutHandler _bitcoinLikePayoutHandler;
+		private readonly PullPaymentHostedService _pullPaymentHostedService;
 
         public BTCPayNetwork Network { get; }
 
@@ -47,7 +53,8 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             PayoutMethodHandlerDictionary payoutHandlers,
             PaymentMethodHandlerDictionary handlers,
 			IPluginHookService pluginHookService,
-			IFeeProviderFactory feeProviderFactory) :
+			IFeeProviderFactory feeProviderFactory,
+			PullPaymentHostedService pullPaymentHostedService) :
 			base(
                 PaymentTypes.CHAIN.GetPaymentMethodId(GetPayoutHandler(payoutHandlers, payoutMethodId).Network.CryptoCode),
                 logger, storeRepository, payoutProcesserSettings, applicationDbContextFactory,
@@ -60,6 +67,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
             Network = _bitcoinLikePayoutHandler.Network;
             WalletRepository = walletRepository;
             _feeProviderFactory = feeProviderFactory;
+            _pullPaymentHostedService = pullPaymentHostedService;
         }
 
         private static BitcoinLikePayoutHandler GetPayoutHandler(PayoutMethodHandlerDictionary payoutHandlers, PayoutMethodId payoutMethodId)
@@ -166,32 +174,49 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 try
                 {
                     var txHash = workingTx.GetHash();
-                    var previousProofs = transfersProcessing.ToDictionary(p => p.Id, p => p.Proof);
-                    foreach (var payoutData in transfersProcessing)
+                    var proof = JObject.FromObject(
+                        new PayoutTransactionOnChainBlob()
+                        {
+                            Accounted = true,
+                            TransactionId = txHash,
+                            Candidates = new HashSet<uint256>() { txHash }
+                        },
+                        JsonSerializer.Create(_btcPayNetworkJsonSerializerSettings.GetSerializer(PayoutMethodId)));
+                    var claimed = new List<PayoutData>();
+                    try
                     {
-                        payoutData.State = PayoutState.InProgress;
-                        _bitcoinLikePayoutHandler.SetProofBlob(payoutData,
-                            new PayoutTransactionOnChainBlob()
+                        foreach (var payoutData in transfersProcessing)
+                        {
+                            var claim = await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest()
                             {
-                                Accounted = true,
-                                TransactionId = txHash,
-                                Candidates = new HashSet<uint256>() { txHash }
+                                PayoutId = payoutData.Id,
+                                State = PayoutState.InProgress,
+                                Proof = proof,
+                                ExpectedState = PayoutState.AwaitingPayment,
+                                ExpectedProof = payoutData.GetProofBlobJson()
                             });
+                            if (claim != MarkPayoutRequest.PayoutPaidResult.Ok)
+                                return;
+                            claimed.Add(payoutData);
+                        }
                     }
-                    var cts = new CancellationTokenSource();
+                    finally
+                    {
+                        if (claimed.Count != transfersProcessing.Count)
+                            await RevertClaims(claimed, proof);
+                    }
+                    using var cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
                     cts.CancelAfter(TimeSpan.FromSeconds(20));
                     var task = _eventAggregator.WaitNext<NewOnChainTransactionEvent>(
                         e => e.NewTransactionEvent.TransactionData.TransactionHash == txHash,
                         cts.Token);
                     var broadcastResult = await explorerClient.BroadcastAsync(workingTx, cts.Token);
-                    if (!broadcastResult.Success)
+                    if (!broadcastResult.Success &&
+                        broadcastResult.RPCCode != RPCErrorCode.RPC_TRANSACTION_ALREADY_IN_CHAIN &&
+                        await explorerClient.GetTransactionAsync(txHash, cts.Token) is null)
                     {
-                        // The node refused the transaction, so nothing has been paid: leave those payouts for the next run
-                        foreach (var payoutData in transfersProcessing)
-                        {
-                            payoutData.State = PayoutState.AwaitingPayment;
-                            payoutData.Proof = previousProofs[payoutData.Id];
-                        }
+                        if (broadcastResult.RPCCode is RPCErrorCode.RPC_TRANSACTION_ERROR or RPCErrorCode.RPC_TRANSACTION_REJECTED)
+                            await RevertClaims(claimed, proof);
                         return;
                     }
                     var walletId = new WalletId(PayoutProcessorSettings.StoreId, Network.CryptoCode);
@@ -210,6 +235,22 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 {
                     Logs.PayServer.LogError(e, "Could not finalize and broadcast");
                 }
+            }
+        }
+
+        private async Task RevertClaims(List<PayoutData> claimed, JObject proof)
+        {
+            foreach (var payoutData in claimed)
+            {
+                await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest()
+                {
+                    PayoutId = payoutData.Id,
+                    State = PayoutState.AwaitingPayment,
+                    Proof = payoutData.GetProofBlobJson(),
+                    RestoreProof = true,
+                    ExpectedState = PayoutState.InProgress,
+                    ExpectedProof = proof
+                });
             }
         }
 

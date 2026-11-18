@@ -69,6 +69,9 @@
             </button>
             <ul id="globalNavServerMenu" class="dropdown-menu dropdown-menu-end">
                 <li>
+                    <a id="menu-item-@nameof(ServerNavPages.Dashboard)" class="dropdown-item@(activePage == nameof(ServerNavPages.Dashboard) ? " active" : "")" asp-controller="UIServerDashboard" asp-action="ServerDashboard" text-translate="true">Dashboard</a>
+                </li>
+                <li>
                     <a id="menu-item-@nameof(ServerNavPages.Policies)" class="dropdown-item@(activePage == nameof(ServerNavPages.Policies) ? " active" : "")" asp-area="" asp-controller="UIServer" asp-action="Policies" text-translate="true">Policies</a>
                 </li>
                 <li>

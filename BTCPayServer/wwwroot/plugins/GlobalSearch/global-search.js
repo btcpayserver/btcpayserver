@@ -269,6 +269,7 @@
         };
 
         const renderInitial = () => {
+            latestSearchToken++;
             setLoadingState(false);
             syncSearchActionState();
             showPanel();

@@ -282,7 +282,7 @@ namespace BTCPayServer.Tests
                     foreach (Match match in matches)
                     {
                         var k = match.Groups[1].Value;
-                        k = k.Replace("\\", "");
+                        k = k.Replace("\\n", "\n").Replace("\\", "");
                         defaultTranslatedKeys.Add(k);
                     }
                 }

@@ -272,10 +272,32 @@
                 </div>
             </div>
 
+            <h3 class="settings-section__heading" text-translate="true">Public Links</h3>
+            <div class="settings-section public-link-settings">
+                <div class="form-group">
+                    <label asp-for="PublicInvoiceExpiration" class="form-label"></label>
+                    <div class="input-group">
+                        <input inputmode="numeric" asp-for="PublicInvoiceExpiration" placeholder="30" class="form-control public-link-settings__invoice-expiration" style="max-width:12ch;" />
+                        <span class="input-group-text" text-translate="true">days</span>
+                    </div>
+                    <span asp-validation-for="PublicInvoiceExpiration" class="text-danger"></span>
+                    <div class="form-text" text-translate="true">Applies to checkout. The default is 30 days. Expired checkout links redirect to the receipt if it is still accessible.</div>
+                </div>
+                <div class="form-group mb-0">
+                    <label asp-for="ReceiptOptions.PublicReceiptExpiration" class="form-label"></label>
+                    <div class="input-group">
+                        <input inputmode="numeric" asp-for="ReceiptOptions.PublicReceiptExpiration" placeholder="90" class="form-control public-link-settings__receipt-expiration" style="max-width:12ch;" />
+                        <span class="input-group-text" text-translate="true">days</span>
+                    </div>
+                    <span asp-validation-for="ReceiptOptions.PublicReceiptExpiration" class="text-danger"></span>
+                    <div class="form-text" text-translate="true">Applies only to public receipt pages. The default is 90 days.</div>
+                </div>
+            </div>
+
             <h3 id="receipt" class="settings-section__heading" text-translate="true">Receipt</h3>
             <div class="settings-section">
                 <div class="d-flex mb-3">
-                    <input asp-for="ReceiptOptions.Enabled" type="checkbox" class="btcpay-toggle me-3" />
+                    <input asp-for="ReceiptOptions.Enabled" type="checkbox" class="btcpay-toggle me-3 receipt-settings__enabled" />
                     <label asp-for="ReceiptOptions.Enabled" class="form-check-label"></label>
                 </div>
                 <div class="d-flex my-3">

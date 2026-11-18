@@ -527,6 +527,18 @@
                             }
                         ]
                     },
+                    "publicInvoiceExpiration": {
+                        "nullable": true,
+                        "default": null,
+                        "minimum": 0,
+                        "maximum": 36500,
+                        "description": "Days public invoice links remain accessible after payment monitoring ends. Null or omission uses the default of 30 days; use 0 for indefinite access.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanDays"
+                            }
+                        ]
+                    },
                     "refundBOLT11Expiration": {
                         "default": 30,
                         "minimum": 0,

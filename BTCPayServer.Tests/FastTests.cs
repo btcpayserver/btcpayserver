@@ -304,6 +304,27 @@ namespace BTCPayServer.Tests
             Assert.Equal(expected, d.Qty);
         }
 
+        [Theory]
+        [InlineData(12)]
+        [InlineData(-12)]
+        public void PublicLinkExpirationRejectsPartialDays(int hours)
+        {
+            var duration = TimeSpan.FromHours(hours);
+            Assert.Throws<JsonSerializationException>(() => JsonConvert.SerializeObject(new UpdateStoreRequest
+            {
+                PublicInvoiceExpiration = duration
+            }));
+            Assert.Throws<JsonSerializationException>(() => JsonConvert.SerializeObject(new InvoiceDataBase.ReceiptOptions
+            {
+                PublicReceiptExpiration = duration
+            }));
+            var value = duration.ToString("c", CultureInfo.InvariantCulture);
+            Assert.Throws<NBitcoin.JsonConverters.JsonObjectException>(() => JsonConvert.DeserializeObject<UpdateStoreRequest>(
+                new JObject { ["publicInvoiceExpiration"] = value }.ToString()));
+            Assert.Throws<NBitcoin.JsonConverters.JsonObjectException>(() => JsonConvert.DeserializeObject<InvoiceDataBase.ReceiptOptions>(
+                new JObject { ["publicReceiptExpiration"] = value }.ToString()));
+        }
+
         [Fact]
         public void CanMergeReceiptOptions()
         {
@@ -311,6 +332,7 @@ namespace BTCPayServer.Tests
             Assert.True(r?.Enabled);
             Assert.True(r?.ShowPayments);
             Assert.True(r?.ShowQR);
+            Assert.Null(r.PublicReceiptExpiration);
 
             r = InvoiceDataBase.ReceiptOptions.Merge(new InvoiceDataBase.ReceiptOptions(), null);
             Assert.True(r?.Enabled);
@@ -331,6 +353,20 @@ namespace BTCPayServer.Tests
             Assert.True(blob.ReceiptOptions.Enabled);
             blob = JsonConvert.DeserializeObject<StoreBlob>("{}");
             Assert.True(blob.ReceiptOptions.Enabled);
+            Assert.Null(blob.PublicInvoiceExpiration);
+            Assert.Null(blob.ReceiptOptions.PublicReceiptExpiration);
+            blob.PublicInvoiceExpiration = TimeSpan.FromDays(60);
+            blob.ReceiptOptions.PublicReceiptExpiration = TimeSpan.Zero;
+            var json = JObject.FromObject(blob);
+            Assert.Equal(60, json["PublicInvoiceExpiration"].Value<int>());
+            Assert.Equal(0, json["ReceiptOptions"]["PublicReceiptExpiration"].Value<int>());
+            blob = json.ToObject<StoreBlob>();
+            Assert.Equal(TimeSpan.FromDays(60), blob.PublicInvoiceExpiration);
+            Assert.Equal(TimeSpan.Zero, blob.ReceiptOptions.PublicReceiptExpiration);
+            r = InvoiceDataBase.ReceiptOptions.Merge(blob.ReceiptOptions, new() { PublicReceiptExpiration = TimeSpan.FromDays(7) });
+            Assert.Equal(TimeSpan.FromDays(7), r.PublicReceiptExpiration);
+            r = InvoiceDataBase.ReceiptOptions.Merge(blob.ReceiptOptions, null);
+            Assert.Equal(TimeSpan.Zero, r.PublicReceiptExpiration);
             blob = JsonConvert.DeserializeObject<StoreBlob>("{\"receiptOptions\":{\"enabled\": false}}");
             Assert.False(blob.ReceiptOptions.Enabled);
             blob = JsonConvert.DeserializeObject<StoreBlob>(JsonConvert.SerializeObject(blob));

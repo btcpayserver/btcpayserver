@@ -26,6 +26,8 @@ namespace BTCPayServer.Client.Models
             public bool? Enabled { get; set; }
             public bool? ShowQR { get; set; }
             public bool? ShowPayments { get; set; }
+            [JsonConverter(typeof(TimeSpanJsonConverter.WholeDays))]
+            public TimeSpan? PublicReceiptExpiration { get; set; }
             [JsonExtensionData]
             public IDictionary<string, JToken> AdditionalData { get; set; }
 

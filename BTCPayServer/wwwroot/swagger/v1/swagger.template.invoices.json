@@ -1215,6 +1215,14 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
+                    "publicReceiptExpiration": {
+                        "type": "integer",
+                        "nullable": true,
+                        "default": null,
+                        "minimum": 0,
+                        "maximum": 36500,
+                        "description": "Days public receipts remain accessible after payment monitoring ends. Null or omission uses the store setting for invoices, or the default of 90 days for stores. Use 0 for indefinite access."
+                    },
                     "enabled": {
                         "type": "boolean",
                         "nullable": true,

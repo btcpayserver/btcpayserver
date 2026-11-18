@@ -3,7 +3,6 @@ const STATUS_PAYABLE = ['New'];
 const STATUS_PAID = ['Processing'];
 const STATUS_SETTLED = ['Settled'];
 const STATUS_INVALID =  ['Expired', 'Invalid'];
-const urlParams = new URLSearchParams(window.location.search);
 
 class NDEFReaderWrapper {
     constructor() {
@@ -21,60 +20,29 @@ class NDEFReaderWrapper {
     }
 }
 
-function computeStartingLanguage() {
-    const lang = urlParams.get('lang')
-    if (lang && isLanguageAvailable(lang)) return lang;
-    const { defaultLang } = initialSrvModel;
-    return isLanguageAvailable(defaultLang) ? defaultLang : fallbackLanguage;
+const strings = window.checkoutStrings || {};
+
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"'\/]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;' }[c]));
 }
 
-function isLanguageAvailable(languageCode) {
-    return availableLanguages.includes(languageCode);
+function translate(key, args, escape) {
+    const text = Object.prototype.hasOwnProperty.call(strings, key) ? strings[key] : key;
+    if (!Array.isArray(args)) return text;
+    return text.replace(/\{(\d+)\}/g, (match, index) => index < args.length ? (escape ? escapeHtml(args[index]) : args[index]) : match);
 }
 
-function updateLanguageSelect() {
-    // calculate and set width, as we want it center aligned
-    const $languageSelect = document.getElementById('DefaultLang');
-    const element = document.createElement('div');
-    element.innerText = $languageSelect.querySelector('option:checked').text;
-    $languageSelect.parentElement.appendChild(element);
-    const width = element.offsetWidth;
-    $languageSelect.parentElement.removeChild(element);
-    if (width && width > 0) {
-        $languageSelect.style.setProperty('--text-width', `${width}px`);
-    } else { // in case of modal this might not be rendered properly yet
-        window.requestAnimationFrame(updateLanguageSelect);
-    }
+function applyTranslation(el, binding) {
+    const { value } = binding;
+    el.textContent = typeof value === 'string' ? translate(value) : translate(value.path, value.args);
 }
 
-const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
-
-function updateLanguageDir(lang) {
-    const normalizedLang = lang || document.documentElement.lang || 'en';
-    const baseLang = normalizedLang.toLowerCase().split(/[-_]/)[0];
-    document.documentElement.lang = normalizedLang.replace(/_/g, '-');
-    document.documentElement.dir = RTL_LANGUAGES.includes(baseLang) ? 'rtl' : 'ltr';
-}
-
-async function updateLanguage(lang) {
-    if (isLanguageAvailable(lang)) {
-        await i18next.changeLanguage(lang);
-        updateLanguageDir(lang);
-        urlParams.set('lang', lang);
-        window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
-        updateLanguageSelect();
-    }
-}
+Vue.prototype.$t = (key, args) => translate(key, args, true);
+Vue.directive('t', { bind: applyTranslation, update: applyTranslation });
 
 function asNumber(val) {
     return val && parseFloat(val.toString().replace(/\s/g, '')); // e.g. sats are formatted with spaces: 1 000 000
 }
-
-Vue.use(VueI18next);
-
-const fallbackLanguage = 'en';
-const startingLanguage = computeStartingLanguage();
-const i18n = new VueI18next(i18next);
 
 const PaymentDetails = {
     template: '#payment-details',
@@ -86,20 +54,13 @@ const PaymentDetails = {
         paid: Number,
         due: Number
     },
-    mounted() {
-        if (this.$i18n) {
-            this.$watch(() => this.$i18n.i18nLoadedAt, () => this.$forceUpdate());
-        }
-    },
     methods: {
         asNumber
     }
 }
 
 function initApp() {
-    updateLanguageDir(i18next.language);
     return new Vue({
-        i18n,
         el: '#Checkout',
         components: {
             'payment-details': PaymentDetails,
@@ -260,7 +221,6 @@ function initApp() {
             if (this.nfc.supported) {
                 await this.setupNFC();
             }
-            updateLanguageSelect();
 
             window.parent.postMessage('loaded', '*');
         },
@@ -280,9 +240,6 @@ function initApp() {
                     url.pathname = checkoutBaseUrl + '/' + id;
                     history.pushState({}, "", url);
                 }
-            },
-            changeLanguage (e) {
-                updateLanguage(e.target.value);
             },
             padTime (val) {
                 return val.toString().padStart(2, '0');
@@ -483,15 +440,8 @@ function initApp() {
     });
 }
 
-i18next
-    .use(window.i18nextHttpBackend)
-    .init({
-        backend: {
-            loadPath: i18nUrl
-        },
-        lng: startingLanguage,
-        fallbackLng: fallbackLanguage,
-        nsSeparator: false,
-        keySeparator: false,
-        load: 'currentOnly'
-    }, initApp);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}

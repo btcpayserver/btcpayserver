@@ -12,17 +12,6 @@ namespace BTCPayServer.Models.StoreViewModels
     {
         public SelectList PaymentMethods { get; set; }
 
-        public void SetLanguages(LanguageService langService, string defaultLang)
-        {
-            defaultLang = langService.GetLanguages().Any(language => language.Code == defaultLang) ? defaultLang : "en";
-            var choices = langService.GetLanguages().Select(o => new PaymentMethodOptionViewModel.Format() { Name = o.DisplayName, Value = o.Code }).ToArray().OrderBy(o => o.Name);
-            var chosen = choices.FirstOrDefault(f => f.Value == defaultLang) ?? choices.FirstOrDefault();
-            Languages = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
-            DefaultLang = chosen.Value;
-        }
-
-        public SelectList Languages { get; set; }
-
         [Display(Name = "Unify payment methods into one payment URL/QR code")]
         public bool OnChainWithLnInvoiceFallback { get; set; }
 
@@ -55,12 +44,6 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public bool RedirectAutomatically { get; set; }
-
-        [Display(Name = "Auto-detect language on checkout")]
-        public bool AutoDetectLanguage { get; set; }
-
-        [Display(Name = "Default language on checkout")]
-        public string DefaultLang { get; set; }
 
         [Display(Name = "Custom sound file for successful payment")]
         public IFormFile SoundFile { get; set; }

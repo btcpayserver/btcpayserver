@@ -783,7 +783,7 @@ namespace BTCPayServer.Plugins.Translations
   "Files": "",
   "Files added successfully": "",
   "Files could not be added due to invalid names": "",
-  "Files uploaded, restart server to load plugins": "",
+  "File uploaded, restart server to load plugin": "",
   "Fill fake": "",
   "Fill out currency pair to test for (like {0})": "",
   "Filter": "",

@@ -471,7 +471,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public async Task UploadPlugin_NamesRejectedFiles()
+        public async Task UploadPlugin_NamesRejectedFile()
         {
             var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-upload-test-{Guid.NewGuid():N}");
             Directory.CreateDirectory(pluginDir);
@@ -483,33 +483,35 @@ namespace BTCPayServer.Tests
                 {
                     TempData = new TempDataDictionary(new DefaultHttpContext(), new MemoryTempDataProvider())
                 };
-                static IFormFile Upload(string name, int length = 1) => new FormFile(new MemoryStream(new byte[length]), 0, length, "files", name);
-                const string uploaded = "Files uploaded, restart server to load plugins";
+                static IFormFile Upload(string name, int length = 1) => new FormFile(new MemoryStream(new byte[length]), 0, length, "file", name);
+                const string uploaded = "File uploaded, restart server to load plugin";
                 const string rejected = "Not uploaded due to an invalid plugin file: ";
 
-                // Every file rejected, by its plugin name, its file name or its size: no success message and no restart
-                await controller.UploadPlugin([Upload("commands.btcpay"), Upload("Disabled.btcpay"), Upload("Plugin:Test.btcpay"), Upload("Empty.btcpay", 0)]);
-                var status = controller.TempData.GetStatusMessageModel();
-                Assert.Equal(StatusMessageModel.StatusSeverity.Warning, status.Severity);
-                Assert.Equal(rejected + "commands.btcpay, Disabled.btcpay, Plugin:Test.btcpay, Empty.btcpay", status.Message);
-                Assert.Empty(PluginManager.GetPendingCommands(pluginDir));
+                // A missing file does not schedule an install
+                Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestResult>(await controller.UploadPlugin(null));
 
-                // Some files rejected: the others are still installed
-                await controller.UploadPlugin([Upload("BTCPayServer.Plugins.Test.btcpay"), Upload(".btcpay")]);
-                status = controller.TempData.GetStatusMessageModel();
-                Assert.Equal(StatusMessageModel.StatusSeverity.Warning, status.Severity);
-                Assert.Equal($"{uploaded}\n{rejected}.btcpay", status.Message);
-                Assert.Equal(new[] { ("install", "BTCPayServer.Plugins.Test") }, PluginManager.GetPendingCommands(pluginDir));
+                // Reject invalid plugin names, file names and empty files without scheduling an install
+                foreach (var file in new[] { Upload("commands.btcpay"), Upload("Disabled.btcpay"), Upload("Plugin:Test.btcpay"), Upload("Empty.btcpay", 0), Upload(".btcpay") })
+                {
+                    await controller.UploadPlugin(file);
+                    var warning = controller.TempData.GetStatusMessageModel();
+                    Assert.Equal(StatusMessageModel.StatusSeverity.Warning, warning.Severity);
+                    Assert.Equal(rejected + file.FileName, warning.Message);
+                    Assert.Empty(Directory.EnumerateFileSystemEntries(pluginDir));
+                    Assert.Empty(PluginManager.GetPendingCommands(pluginDir));
+                }
 
                 // Long names are cut, so the message stays small
-                await controller.UploadPlugin([Upload(new string('a', 2000) + ".btcpay")]);
+                await controller.UploadPlugin(Upload(new string('a', 2000) + ".btcpay"));
                 Assert.Equal(rejected + new string('a', 300) + "...", controller.TempData.GetStatusMessageModel().Message);
 
-                // No file rejected: the success message is unchanged
-                await controller.UploadPlugin([Upload("BTCPayServer.Plugins.Other.btcpay")]);
-                status = controller.TempData.GetStatusMessageModel();
+                // A valid file is uploaded and scheduled for installation
+                await controller.UploadPlugin(Upload("BTCPayServer.Plugins.Test.btcpay"));
+                var status = controller.TempData.GetStatusMessageModel();
                 Assert.Equal(StatusMessageModel.StatusSeverity.Success, status.Severity);
                 Assert.Equal(uploaded, status.Message);
+                Assert.True(File.Exists(Path.Combine(pluginDir, "BTCPayServer.Plugins.Test.btcpay")));
+                Assert.Equal(new[] { ("install", "BTCPayServer.Plugins.Test") }, PluginManager.GetPendingCommands(pluginDir));
             }
             finally
             {

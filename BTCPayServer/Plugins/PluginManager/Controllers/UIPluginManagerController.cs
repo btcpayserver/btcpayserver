@@ -166,39 +166,32 @@ public class UIPluginManagerController(
     }
 
     // The status message lives in a cookie, so a crafted upload can't make it grow without bound
-    private const int MaxRejectedNamesLength = 300;
+    private const int MaxRejectedNameLength = 300;
 
     [HttpPost("upload")]
-    public async Task<IActionResult> UploadPlugin(List<IFormFile> files)
+    public async Task<IActionResult> UploadPlugin(IFormFile file)
     {
-        var uploaded = 0;
-        var rejected = new List<string>();
-        foreach (var formFile in files)
-        {
-            var plugin = formFile.FileName.TrimEnd(PluginManager.BTCPayPluginSuffix, StringComparison.InvariantCultureIgnoreCase);
-            if (formFile.Length == 0 || !formFile.FileName.IsValidFileName() || !pluginService.IsSafePluginName(plugin))
-            {
-                rejected.Add(formFile.FileName);
-                continue;
-            }
-            await pluginService.UploadPlugin(formFile);
-            pluginService.InstallPlugin(plugin);
-            uploaded++;
-        }
+        if (file is null)
+            return BadRequest();
 
+        var plugin = file.FileName.TrimEnd(PluginManager.BTCPayPluginSuffix, StringComparison.InvariantCultureIgnoreCase);
         var status = new StatusMessageModel
         {
-            Message = stringLocalizer["Files uploaded, restart server to load plugins"].Value,
+            Message = stringLocalizer["File uploaded, restart server to load plugin"].Value,
             Severity = StatusMessageModel.StatusSeverity.Success
         };
-        if (rejected.Count > 0)
+        if (file.Length == 0 || !file.FileName.IsValidFileName() || !pluginService.IsSafePluginName(plugin))
         {
-            var names = string.Join(", ", rejected);
-            if (names.Length > MaxRejectedNamesLength)
-                names = names[..MaxRejectedNamesLength] + "...";
-            var warning = stringLocalizer["Not uploaded due to an invalid plugin file: {0}", names].Value;
-            status.Message = uploaded > 0 ? $"{status.Message}\n{warning}" : warning;
+            var name = file.FileName;
+            if (name.Length > MaxRejectedNameLength)
+                name = name[..MaxRejectedNameLength] + "...";
+            status.Message = stringLocalizer["Not uploaded due to an invalid plugin file: {0}", name].Value;
             status.Severity = StatusMessageModel.StatusSeverity.Warning;
+        }
+        else
+        {
+            await pluginService.UploadPlugin(file);
+            pluginService.InstallPlugin(plugin);
         }
         TempData.SetStatusMessageModel(status);
         return RedirectToAction(nameof(ListPlugins));

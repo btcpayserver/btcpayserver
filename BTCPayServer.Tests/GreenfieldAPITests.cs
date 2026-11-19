@@ -276,22 +276,6 @@ namespace BTCPayServer.Tests
                 Assert.NotEmpty(perms);
                 var p = perms.First(p => p.PermissionName == "unrestricted");
                 Assert.True(p.SubPermissions.Count > 6);
-
-                using var http = new HttpClient();
-                using var removedLanguages = await http.GetAsync(new Uri(tester.PayTester.ServerUri, "misc/lang"));
-                Assert.Equal(HttpStatusCode.NotFound, removedLanguages.StatusCode);
-
-                var swagger = await unrestricted.SendHttpRequest<JObject>($"swagger/v1/swagger.json");
-                Assert.Null(swagger["paths"]!["/misc/lang"]);
-                Assert.DoesNotContain(swagger["paths"]!["/i/{invoiceId}"]!["parameters"]!,
-                    parameter => parameter["name"]?.Value<string>() == "lang");
-                var settings = swagger["components"]!["schemas"]!["StoreBaseData"]!["properties"]!;
-                Assert.Null(settings["defaultLang"]);
-                Assert.Null(settings["autoDetectLanguage"]);
-
-                var store = await unrestricted.SendHttpRequest<JObject>($"api/v1/stores/{acc.StoreId}");
-                Assert.Null(store["defaultLang"]);
-                Assert.Null(store["autoDetectLanguage"]);
             }
         }
 

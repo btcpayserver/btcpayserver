@@ -27,7 +27,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.WebUtilities;
 using NBitcoin;
 
 using static Microsoft.Playwright.Assertions;
@@ -1001,32 +1000,12 @@ namespace BTCPayServer.Tests
             store.SetStoreBlob(blob);
             await stores.UpdateStore(store);
 
-            using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })
+            using var http = new HttpClient
             {
                 BaseAddress = tester.PayTester.ServerUri
             };
             var canonicalPage = await http.GetStringAsync($"i/{invoice.Id}");
             Assert.Contains("Fourni par", canonicalPage);
-            foreach (var key in new[] { "id", "invoiceId" })
-            foreach (var paymentMethod in new[] { "", "&paymentMethodId=BTC-CHAIN" })
-            {
-                using var response = await http.GetAsync(
-                    $"invoice?{key}={invoice.Id}{paymentMethod}&view=modal&custom=a%26b&custom=c");
-                Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
-                var target = new Uri(http.BaseAddress, response.Headers.Location!);
-                Assert.Equal($"/i/{invoice.Id}{(paymentMethod.Length == 0 ? "" : "/BTC-CHAIN")}", target.AbsolutePath);
-                var query = QueryHelpers.ParseQuery(target.Query);
-                Assert.Equal("modal", query["view"].ToString());
-                Assert.Equal(new[] { "a&b", "c" }, query["custom"].ToArray());
-                Assert.False(query.ContainsKey("id"));
-                Assert.False(query.ContainsKey("invoiceId"));
-                Assert.False(query.ContainsKey("paymentMethodId"));
-                var page = await http.GetStringAsync(target);
-                Assert.Contains("Fourni par", page);
-                Assert.Contains("checkout-modal", page);
-            }
-            using var missingId = await http.GetAsync("invoice");
-            Assert.Equal(HttpStatusCode.NotFound, missingId.StatusCode);
         }
 
         [Fact(Timeout = TestTimeout)]

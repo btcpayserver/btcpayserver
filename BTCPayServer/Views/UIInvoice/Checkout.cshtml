@@ -341,7 +341,7 @@
         </dl>
     </script>
     <script>
-        const checkoutBaseUrl = @Safe.Json(Url.Action("Checkout", new { invoiceId = Model.InvoiceId, paymentMethodId = string.Empty }));
+        const checkoutBaseUrl = @Safe.Json(Url.InvoiceCheckout(Model.InvoiceId, paymentMethodId: string.Empty));
         const statusUrl = @Safe.Json(Url.Action("GetStatus", new { invoiceId = Model.InvoiceId }));
         const statusWsUrl = @Safe.Json(Url.Action("GetStatusWebSocket", new { invoiceId = Model.InvoiceId }));
         window.checkoutStrings = @Safe.Json(checkoutStrings);

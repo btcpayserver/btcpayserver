@@ -482,7 +482,7 @@ namespace BTCPayServer.Controllers
             {
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = currentInvoice.Id });
+                    return this.RedirectToInvoiceCheckout(currentInvoice.Id);
                 }
 
                 return Ok(currentInvoice.Id);
@@ -495,7 +495,7 @@ namespace BTCPayServer.Controllers
                 var newInvoice = await _InvoiceController.CreatePaymentRequestInvoice(prData, amount, result.AmountDue, store!, Request, cancellationToken);
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = newInvoice.Id });
+                    return this.RedirectToInvoiceCheckout(newInvoice.Id);
                 }
 
                 return Ok(newInvoice.Id);

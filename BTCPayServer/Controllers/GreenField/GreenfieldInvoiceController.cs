@@ -690,7 +690,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 PaidAmount = Math.Round(entity.PaidAmount.Net, currencyNameTable.GetNumberFormatInfo(entity.Currency)?.CurrencyDecimalDigits ?? 2),
                 Type = entity.Type,
                 Id = entity.Id,
-                CheckoutLink = request is null ? null : linkGenerator.CheckoutLink(entity.Id, request.Scheme, request.Host, request.PathBase),
+                CheckoutLink = request is null ? null : linkGenerator.InvoiceCheckoutLink(entity.Id, request.GetRequestBaseUrl()),
                 Status = entity.Status,
                 AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.Currency,

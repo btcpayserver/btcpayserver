@@ -757,7 +757,7 @@ namespace BTCPayServer.Controllers
             if (invoiceId is null)
                 return NotFound();
 
-            var url = Url.Action(nameof(Checkout), new { invoiceId, paymentMethodId })!;
+            var url = Url.InvoiceCheckout(invoiceId, paymentMethodId);
             var query = Request.Query.Where(p =>
                 !p.Key.Equals("invoiceId", StringComparison.OrdinalIgnoreCase) &&
                 !p.Key.Equals("id", StringComparison.OrdinalIgnoreCase) &&

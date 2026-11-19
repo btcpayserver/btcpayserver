@@ -222,7 +222,7 @@ public class UIFormsController(
             {
                 return RedirectToAction("InvoiceReceipt", "UIInvoice", new { invoiceId = inv.Id });
             }
-            return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = inv.Id });
+            return this.RedirectToInvoiceCheckout(inv.Id);
         }
         catch (Exception e)
         {

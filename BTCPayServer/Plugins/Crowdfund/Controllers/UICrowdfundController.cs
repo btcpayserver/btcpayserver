@@ -252,8 +252,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
                 if (request.RedirectToCheckout)
                 {
-                    return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice",
-                        new { invoiceId = invoice.Id });
+                    return this.RedirectToInvoiceCheckout(invoice.Id);
                 }
 
                 return Ok(invoice.Id);

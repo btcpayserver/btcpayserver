@@ -74,10 +74,6 @@ namespace BTCPayServer.Client.Models
 
         public string DefaultPaymentMethod { get; set; }
 
-        /// <summary>Unused legacy checkout setting, retained for compatibility.</summary>
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string DefaultLang { get; set; }
-
         public string HtmlTitle { get; set; }
 
         [JsonConverter(typeof(StringEnumConverter))]
@@ -89,9 +85,6 @@ namespace BTCPayServer.Client.Models
 
         public bool? PayJoinEnabled { get; set; }
 
-        /// <summary>Unused legacy checkout setting, retained for compatibility.</summary>
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public bool? AutoDetectLanguage { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public bool? ShowPayInWalletButton { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]

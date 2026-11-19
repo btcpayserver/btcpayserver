@@ -1098,7 +1098,6 @@ namespace BTCPayServer.Tests
                 Name = "Can Use Store?",
                 Website = "https://test.com/",
                 CelebratePayment = false,
-                DefaultLang = "fr-FR",
                 NetworkFeeMode = NetworkFeeMode.MultiplePaymentsOnly,
                 ShowStoreHeader = false,
                 AllowZeroAmountInvoices = true
@@ -1112,7 +1111,6 @@ namespace BTCPayServer.Tests
             Assert.Equal("https://test.com/", newStore.Website);
             Assert.False(newStore.CelebratePayment);
             Assert.True(newStore.AllowZeroAmountInvoices);
-            Assert.Equal("fr-FR", newStore.DefaultLang);
             Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
             Assert.False(newStore.ShowStoreHeader);
 
@@ -1120,7 +1118,6 @@ namespace BTCPayServer.Tests
             Assert.Equal("Yes you can also customize", newStore.Name);
             Assert.Equal("https://test.com/", newStore.Website);
             Assert.False(newStore.CelebratePayment);
-            Assert.Equal("fr-FR", newStore.DefaultLang);
             Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
             Assert.False(newStore.ShowStoreHeader);
 
@@ -1136,7 +1133,6 @@ namespace BTCPayServer.Tests
             Assert.Equal("Just changed it!", newStore.Name);
             Assert.Equal("https://test.com/", newStore.Website);
             Assert.False(newStore.CelebratePayment);
-            Assert.Equal("fr-FR", newStore.DefaultLang);
             Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
             Assert.False(newStore.ShowStoreHeader);
 
@@ -1160,14 +1156,12 @@ namespace BTCPayServer.Tests
             {
                 ["blob"] = new JObject
                 {
-                    ["defaultCurrency"] = "AAA",
-                    ["defaultLang"] = "de-DE"
+                    ["defaultCurrency"] = "AAA"
                 }
             };
             await settings.UpdateSetting(policies);
             newStore = await client.CreateStore(new() { Name = "Test2"});
             Assert.Equal("AAA", newStore.DefaultCurrency);
-            Assert.Equal("de-DE", newStore.DefaultLang);
             Assert.Equal(TimeSpan.FromDays(30), newStore.RefundBOLT11Expiration);
             Assert.Equal(TimeSpan.FromDays(1), newStore.MonitoringExpiration);
             Assert.Equal(TimeSpan.FromMinutes(5), newStore.DisplayExpirationTimer);

@@ -286,8 +286,12 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain(swagger["paths"]!["/i/{invoiceId}"]!["parameters"]!,
                     parameter => parameter["name"]?.Value<string>() == "lang");
                 var settings = swagger["components"]!["schemas"]!["StoreBaseData"]!["properties"]!;
-                Assert.True(settings["defaultLang"]!["deprecated"]!.Value<bool>());
-                Assert.True(settings["autoDetectLanguage"]!["deprecated"]!.Value<bool>());
+                Assert.Null(settings["defaultLang"]);
+                Assert.Null(settings["autoDetectLanguage"]);
+
+                var store = await unrestricted.SendHttpRequest<JObject>($"api/v1/stores/{acc.StoreId}");
+                Assert.Null(store["defaultLang"]);
+                Assert.Null(store["autoDetectLanguage"]);
             }
         }
 

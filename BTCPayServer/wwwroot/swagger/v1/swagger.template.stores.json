@@ -643,12 +643,6 @@
                         "default": 1,
                         "description": "The fee rate recommendation in the checkout page for the on-chain payment to be confirmed after 'x' blocks."
                     },
-                    "defaultLang": {
-                        "type": "string",
-                        "default": "en",
-                        "deprecated": true,
-                        "description": "Unused legacy checkout setting, retained for compatibility. Configure the storefront language in Store Settings instead."
-                    },
                     "htmlTitle": {
                         "type": "string",
                         "nullable": true,
@@ -661,12 +655,6 @@
                         "type": "boolean",
                         "default": false,
                         "description": "If true, payjoin will be proposed in the checkout page if possible. ([More information](https://docs.btcpayserver.org/Payjoin/))"
-                    },
-                    "autoDetectLanguage": {
-                        "type": "boolean",
-                        "default": false,
-                        "deprecated": true,
-                        "description": "Unused legacy checkout setting, retained for compatibility. Checkout no longer detects the customer's browser language."
                     },
                     "showPayInWalletButton": {
                         "type": "boolean",

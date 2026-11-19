@@ -482,7 +482,7 @@ namespace BTCPayServer.Controllers
             {
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("Checkout", "UIInvoice", new { currentInvoice.Id });
+                    return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = currentInvoice.Id });
                 }
 
                 return Ok(currentInvoice.Id);

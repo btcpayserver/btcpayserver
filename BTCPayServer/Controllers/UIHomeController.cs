@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -16,11 +15,9 @@ using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.FileProviders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -28,15 +25,12 @@ namespace BTCPayServer.Controllers
 {
     public class UIHomeController(
         ThemeSettings theme,
-        LanguageService languageService,
         StoreRepository storeRepository,
         SignInManager<ApplicationUser> signInManager,
         PermissionService permissionService)
         : Controller
     {
         private SignInManager<ApplicationUser> SignInManager { get; } = signInManager;
-
-        public LanguageService LanguageService { get; } = languageService;
 
         [HttpGet("home")]
         public Task<IActionResult> Home()
@@ -76,13 +70,6 @@ namespace BTCPayServer.Controllers
             }
 
             return Challenge();
-        }
-
-        [Route("misc/lang")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
-        public IActionResult Languages()
-        {
-            return Json(LanguageService.GetLanguages(), new JsonSerializerSettings { Formatting = Formatting.Indented });
         }
 
         [Route("misc/permissions")]

@@ -272,15 +272,22 @@ namespace BTCPayServer.Tests
                 var acc = tester.NewAccount();
                 await acc.GrantAccessAsync();
                 var unrestricted = await acc.CreateClient();
-                var langs = await unrestricted.GetAvailableLanguages();
-                Assert.NotEmpty(langs);
-                Assert.NotNull(langs[0].Code);
-                Assert.NotNull(langs[0].DisplayName);
-
                 var perms = await unrestricted.GetPermissionMetadata();
                 Assert.NotEmpty(perms);
                 var p = perms.First(p => p.PermissionName == "unrestricted");
                 Assert.True(p.SubPermissions.Count > 6);
+
+                using var http = new HttpClient();
+                using var removedLanguages = await http.GetAsync(new Uri(tester.PayTester.ServerUri, "misc/lang"));
+                Assert.Equal(HttpStatusCode.NotFound, removedLanguages.StatusCode);
+
+                var swagger = await unrestricted.SendHttpRequest<JObject>($"swagger/v1/swagger.json");
+                Assert.Null(swagger["paths"]!["/misc/lang"]);
+                Assert.DoesNotContain(swagger["paths"]!["/i/{invoiceId}"]!["parameters"]!,
+                    parameter => parameter["name"]?.Value<string>() == "lang");
+                var settings = swagger["components"]!["schemas"]!["StoreBaseData"]!["properties"]!;
+                Assert.True(settings["defaultLang"]!["deprecated"]!.Value<bool>());
+                Assert.True(settings["autoDetectLanguage"]!["deprecated"]!.Value<bool>());
             }
         }
 
@@ -2660,24 +2667,6 @@ namespace BTCPayServer.Tests
             var controller = tester.PayTester.GetController<UIInvoiceController>(user.UserId, user.StoreId);
             var model = (CheckoutModel)((ViewResult)await controller.Checkout(newInvoice.Id)).Model;
             Assert.Equal("http://toto.com/lol", model.MerchantRefLink);
-
-            var langs = tester.PayTester.GetService<LanguageService>();
-            foreach (var match in new[] { "it", "it-IT", "it-LOL" })
-            {
-                Assert.Equal("it-IT", langs.FindLanguage(match).Code);
-            }
-            foreach (var match in new[] { "pt-BR" })
-            {
-                Assert.Equal("pt-BR", langs.FindLanguage(match).Code);
-            }
-            foreach (var match in new[] { "en", "en-US" })
-            {
-                Assert.Equal("en", langs.FindLanguage(match).Code);
-            }
-            foreach (var match in new[] { "pt", "pt-pt", "pt-PT" })
-            {
-                Assert.Equal("pt-PT", langs.FindLanguage(match).Code);
-            }
 
             //payment method activation tests
             var store = await client.GetStore(user.StoreId);

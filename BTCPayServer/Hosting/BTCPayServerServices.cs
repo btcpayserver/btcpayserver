@@ -308,7 +308,6 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<TransactionLinkProviders>();
             services.TryAddSingleton<LightningConfigurationProvider>();
-            services.TryAddSingleton<LanguageService>();
             services.TryAddSingleton<ReportService>();
             services.TryAddSingleton<NBXplorerDashboard>();
             services.AddSingleton<ISyncSummaryProvider, NBXSyncSummaryProvider>();

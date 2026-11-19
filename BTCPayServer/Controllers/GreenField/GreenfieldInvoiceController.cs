@@ -48,10 +48,8 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly DefaultRulesCollection _defaultRules;
 
-        public LanguageService LanguageService { get; }
-
         public GreenfieldInvoiceController(UIInvoiceController invoiceController, InvoiceRepository invoiceRepository,
-            LinkGenerator linkGenerator, LanguageService languageService,
+            LinkGenerator linkGenerator,
             CurrencyNameTable currencyNameTable, RateFetcher rateProvider,
             InvoiceActivator invoiceActivator,
             PullPaymentHostedService pullPaymentService,
@@ -77,7 +75,6 @@ namespace BTCPayServer.Controllers.Greenfield
             _handlers = handlers;
             _networkProvider = networkProvider;
             _defaultRules = defaultRules;
-            LanguageService = languageService;
         }
 
         [Authorize(Policy = Policies.CanViewInvoices,

@@ -50,7 +50,6 @@ namespace BTCPayServer.Controllers
         private readonly DefaultRulesCollection _defaultRules;
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly PullPaymentHostedService _paymentHostedService;
-        private readonly LanguageService _languageService;
         private readonly ExplorerClientProvider _ExplorerClients;
         private readonly InvoiceActivator _invoiceActivator;
         private readonly LinkGenerator _linkGenerator;
@@ -79,7 +78,6 @@ namespace BTCPayServer.Controllers
             ApplicationDbContextFactory dbContextFactory,
             PullPaymentHostedService paymentHostedService,
             WebhookSender webhookNotificationManager,
-            LanguageService languageService,
             ExplorerClientProvider explorerClients,
             InvoiceActivator invoiceActivator,
             LinkGenerator linkGenerator,
@@ -107,7 +105,6 @@ namespace BTCPayServer.Controllers
             _dbContextFactory = dbContextFactory;
             _paymentHostedService = paymentHostedService;
             WebhookNotificationManager = webhookNotificationManager;
-            _languageService = languageService;
             this._ExplorerClients = explorerClients;
             _invoiceActivator = invoiceActivator;
             _linkGenerator = linkGenerator;

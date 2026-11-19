@@ -461,7 +461,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     return Json(data);
                 if (!isTopup && summary.PriceTaxIncludedWithTips is 0 && storeBlob.ReceiptOptions?.Enabled is true)
                     return RedirectToAction(nameof(UIInvoiceController.InvoiceReceipt), "UIInvoice", data);
-                return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", data);
+                return this.RedirectToInvoiceCheckout(invoice.Id);
             }
             catch (BitpayHttpException e)
             {

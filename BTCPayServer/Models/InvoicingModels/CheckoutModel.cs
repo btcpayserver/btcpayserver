@@ -29,7 +29,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string NfcReadSoundUrl { get; set; }
         public string ErrorSoundUrl { get; set; }
         public string HtmlTitle { get; set; }
-        public string DefaultLang { get; set; }
         public bool ShowPayInWalletButton { get; set; }
         public bool ShowStoreHeader { get; set; }
         public bool NfcEnabled { get; set; }

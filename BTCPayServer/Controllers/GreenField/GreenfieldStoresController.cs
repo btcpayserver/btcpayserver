@@ -228,7 +228,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 LazyPaymentMethods = storeBlob.LazyPaymentMethods,
                 ShowRecommendedFee = storeBlob.ShowRecommendedFee,
                 RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
-                DefaultLang = storeBlob.DefaultLang,
                 MonitoringExpiration = storeBlob.MonitoringExpiration,
                 InvoiceExpiration = storeBlob.InvoiceExpiration,
                 PublicInvoiceExpiration = storeBlob.PublicInvoiceExpiration,
@@ -238,7 +237,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate,
                 PaymentTolerance = storeBlob.PaymentTolerance,
                 PayJoinEnabled = storeBlob.PayJoinEnabled,
-                AutoDetectLanguage = storeBlob.AutoDetectLanguage,
                 ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
                 ShowStoreHeader = storeBlob.ShowStoreHeader,
                 CelebratePayment = storeBlob.CelebratePayment,
@@ -283,7 +281,6 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.RedirectAutomatically = restModel.RedirectAutomatically.Value;
             blob.ShowRecommendedFee = restModel.ShowRecommendedFee.Value;
             blob.RecommendedFeeBlockTarget = restModel.RecommendedFeeBlockTarget.Value;
-            blob.DefaultLang = restModel.DefaultLang;
             blob.StoreSupportUrl = restModel.SupportUrl;
             blob.MonitoringExpiration = restModel.MonitoringExpiration.Value;
             blob.InvoiceExpiration = restModel.InvoiceExpiration.Value;
@@ -299,8 +296,6 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.CssUrl = restModel.CssUrl is null ? null : UnresolvedUri.Create(restModel.CssUrl);
             blob.RefundBOLT11Expiration = restModel.RefundBOLT11Expiration.Value;
             blob.PaymentSoundUrl = restModel.PaymentSoundUrl is null ? null : UnresolvedUri.Create(restModel.PaymentSoundUrl);
-            if (restModel.AutoDetectLanguage.HasValue)
-                blob.AutoDetectLanguage = restModel.AutoDetectLanguage.Value;
             if (restModel.ShowPayInWalletButton.HasValue)
                 blob.ShowPayInWalletButton = restModel.ShowPayInWalletButton.Value;
             if (restModel.ShowStoreHeader.HasValue)

@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
+using NBitcoin;
 
 using static Microsoft.Playwright.Assertions;
 using Xunit;
@@ -618,38 +619,6 @@ namespace BTCPayServer.Tests
             await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id='Arabic'");
         }
 
-        [Fact(Timeout = TestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanAutoDetectLanguage()
-        {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var languageService = tester.PayTester.GetService<LanguageService>();
-
-            // Most common format. First option does not have a quality score. Others do in descending order.
-            // Result should be nl-NL (because the default weight is 1 for nl)
-            var lang1 = languageService.FindLanguageInAcceptLanguageHeader("nl,fr;q=0.7,en;q=0.5");
-            Assert.NotNull(lang1);
-            Assert.Equal("nl-NL", lang1?.Code);
-
-            // Most common format. First option does not have a quality score. Others do in descending order. This time the first option includes a country.
-            // Result should be nl-NL (because the default weight is 1 for nl-BE and it does not exist in BTCPay Server, but nl-NL does and applies too for language "nl")
-            var lang2 = languageService.FindLanguageInAcceptLanguageHeader("nl-BE,fr;q=0.7,en;q=0.5");
-            Assert.NotNull(lang2);
-            Assert.Equal("nl-NL", lang2?.Code);
-
-            // Unusual format, but still valid. All values have a quality score and not ordered.
-            // Result should be fr-FR (because 0.7 is the highest quality score)
-            var lang3 = languageService.FindLanguageInAcceptLanguageHeader("nl;q=0.1,fr;q=0.7,en;q=0.5");
-            Assert.NotNull(lang3);
-            Assert.Equal("fr-FR", lang3?.Code);
-
-            // Unusual format, but still valid. Some language is given that we don't have and a wildcard for everything else.
-            // Result should be NULL, because "xx" does not exist and * is a wildcard and has no meaning.
-            var lang4 = languageService.FindLanguageInAcceptLanguageHeader("xx,*;q=0.5");
-            Assert.Null(lang4);
-        }
-
         [Fact]
         [Trait("Fast", "Fast")]
         public void LocalizerService_ToSelectListItems_SortsByNameWithNameAsValue()
@@ -998,6 +967,45 @@ namespace BTCPayServer.Tests
             await tester.GoToProfile();
             await Expect(tester.Page.Locator("body")).ToContainTextAsync("Tweak your profile");
             await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English (Custom)");
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CheckoutUsesStoreLanguage()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            user.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit);
+            var client = await user.CreateClient();
+            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest
+            {
+                Amount = 0.01m,
+                Currency = "BTC"
+            });
+
+            var localizer = tester.PayTester.GetService<LocalizerService>();
+            var db = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext().Database.GetDbConnection();
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('French', 'English', 'Custom')");
+            var dict = await localizer.GetTranslation("French");
+            await localizer.Save(dict!, new Translations(new[]
+            {
+                KeyValuePair.Create("Powered by", "Fourni par")
+            }));
+            var stores = tester.PayTester.GetService<StoreRepository>();
+            var store = await stores.FindStore(user.StoreId);
+            var blob = store.GetStoreBlob();
+            blob.StorefrontLanguage = "French";
+            store.SetStoreBlob(blob);
+            await stores.UpdateStore(store);
+
+            using var http = new HttpClient
+            {
+                BaseAddress = tester.PayTester.ServerUri
+            };
+            var canonicalPage = await http.GetStringAsync($"i/{invoice.Id}");
+            Assert.Contains("Fourni par", canonicalPage);
         }
 
         [Fact(Timeout = TestTimeout)]

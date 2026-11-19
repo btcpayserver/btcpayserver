@@ -33,6 +33,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
@@ -745,22 +746,35 @@ namespace BTCPayServer.Controllers
             return new HashSet<string>(addresses);
         }
 
-        [HttpGet("i/{invoiceId}")]
-        [HttpGet("i/{invoiceId}/{paymentMethodId}")]
         [HttpGet("invoice")]
         [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
         [XFrameOptions(null)]
         [ReferrerPolicy("origin")]
-        public async Task<IActionResult> Checkout(string? invoiceId, string? id = null, string? paymentMethodId = null,
-            [FromQuery] string? view = null, [FromQuery] string? lang = null)
+        public IActionResult LegacyCheckout(string? invoiceId, string? id = null, string? paymentMethodId = null)
         {
             // Keep compatibility with Bitpay
             invoiceId ??= id;
-
             if (invoiceId is null)
                 return NotFound();
 
-            var model = await GetCheckoutModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
+            var url = Url.InvoiceCheckout(invoiceId, paymentMethodId);
+            var query = Request.Query.Where(p =>
+                !p.Key.Equals("invoiceId", StringComparison.OrdinalIgnoreCase) &&
+                !p.Key.Equals("id", StringComparison.OrdinalIgnoreCase) &&
+                !p.Key.Equals("paymentMethodId", StringComparison.OrdinalIgnoreCase));
+            return RedirectPermanent(QueryHelpers.AddQueryString(url, query));
+        }
+
+        [HttpGet("i/{invoiceId}")]
+        [HttpGet("i/{invoiceId}/{paymentMethodId}")]
+        [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
+        [XFrameOptions(null)]
+        [ReferrerPolicy("origin")]
+        [UseStoreLanguage]
+        public async Task<IActionResult> Checkout(string invoiceId, string? paymentMethodId = null,
+            [FromQuery] string? view = null)
+        {
+            var model = await GetCheckoutModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId));
             if (model == null)
             {
                 // see if the invoice actually exists and is in a state for which we do not display the checkout
@@ -786,7 +800,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private async Task<CheckoutModel?> GetCheckoutModel(string invoiceId, PaymentMethodId? paymentMethodId, string? lang, HashSet<PaymentMethodId>? excludedPaymentMethodIds = null)
+        private async Task<CheckoutModel?> GetCheckoutModel(string invoiceId, PaymentMethodId? paymentMethodId, HashSet<PaymentMethodId>? excludedPaymentMethodIds = null)
         {
             var originalPaymentMethodId = paymentMethodId;
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
@@ -868,30 +882,16 @@ namespace BTCPayServer.Controllers
             if (prompt is null)
                 return null;
             if (activated)
-                return await GetCheckoutModel(invoiceId, paymentMethodId, lang, excludedPaymentMethodIds);
+                return await GetCheckoutModel(invoiceId, paymentMethodId, excludedPaymentMethodIds);
 
             if (!prompt.Activated)
             {
                 // It failed to activate. Let's try to exclude it and retry
                 excludedPaymentMethodIds.Add(prompt.PaymentMethodId);
-                return await GetCheckoutModel(invoiceId, originalPaymentMethodId, lang, excludedPaymentMethodIds);
+                return await GetCheckoutModel(invoiceId, originalPaymentMethodId, excludedPaymentMethodIds);
             }
 
             var accounting = prompt.Calculate();
-
-            switch (lang?.ToLowerInvariant())
-            {
-                case "auto":
-                case null when storeBlob.AutoDetectLanguage:
-                    lang = _languageService.AutoDetectLanguageUsingHeader(HttpContext.Request.Headers, null)?.Code;
-                    break;
-                case { } langs when !string.IsNullOrEmpty(langs):
-                    {
-                        lang = _languageService.FindLanguage(langs)?.Code;
-                        break;
-                    }
-            }
-            lang ??= storeBlob.DefaultLang;
 
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, invoice.ReceiptOptions);
             var receiptUrl = receipt.Enabled is true && await ValidateAccessToInvoice(invoice, storeBlob, receipt)
@@ -923,7 +923,6 @@ namespace BTCPayServer.Controllers
                 RootPath = Request.PathBase.Value.WithTrailingSlash(),
                 OrderId = orderId,
                 InvoiceId = invoiceId,
-                DefaultLang = lang ?? "en",
                 ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
                 ShowStoreHeader = storeBlob.ShowStoreHeader,
                 NfcEnabled = storeBlob.NfcEnabled,
@@ -1044,11 +1043,11 @@ namespace BTCPayServer.Controllers
         [HttpGet("invoice/{invoiceId}/{implicitPaymentMethodId}/status")]
         [HttpGet("invoice/status")]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> GetStatus(string invoiceId, string? paymentMethodId = null, string? implicitPaymentMethodId = null, [FromQuery] string? lang = null)
+        public async Task<IActionResult> GetStatus(string invoiceId, string? paymentMethodId = null, string? implicitPaymentMethodId = null)
         {
             if (string.IsNullOrEmpty(paymentMethodId))
                 paymentMethodId = implicitPaymentMethodId;
-            var model = await GetCheckoutModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
+            var model = await GetCheckoutModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId));
             if (model == null)
                 return NotFound();
             return Json(model);

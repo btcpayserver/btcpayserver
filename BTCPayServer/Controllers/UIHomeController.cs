@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -16,11 +15,9 @@ using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.FileProviders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -28,18 +25,12 @@ namespace BTCPayServer.Controllers
 {
     public class UIHomeController(
         ThemeSettings theme,
-        LanguageService languageService,
         StoreRepository storeRepository,
-        IWebHostEnvironment environment,
         SignInManager<ApplicationUser> signInManager,
         PermissionService permissionService)
         : Controller
     {
         private SignInManager<ApplicationUser> SignInManager { get; } = signInManager;
-
-        private readonly IFileProvider _webRootFileProvider = environment.WebRootFileProvider;
-
-        public LanguageService LanguageService { get; } = languageService;
 
         [HttpGet("home")]
         public Task<IActionResult> Home()
@@ -81,13 +72,6 @@ namespace BTCPayServer.Controllers
             return Challenge();
         }
 
-        [Route("misc/lang")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
-        public IActionResult Languages()
-        {
-            return Json(LanguageService.GetLanguages(), new JsonSerializerSettings { Formatting = Formatting.Indented });
-        }
-
         [Route("misc/permissions")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie + "," + AuthenticationSchemes.Greenfield)]
         public IActionResult Permissions()
@@ -105,43 +89,6 @@ namespace BTCPayServer.Controllers
             }
             var metadata = nodes.Values.OrderBy(v => v.PermissionName, StringComparer.OrdinalIgnoreCase).ToArray();
             return Json(metadata, new JsonSerializerSettings { Formatting = Formatting.Indented });
-        }
-        [Route("misc/translations/{resource}/{lang}")]
-        [AllowAnonymous]
-        public IActionResult GetTranslations(string resource, string lang)
-        {
-            string path;
-            if (resource.StartsWith("checkout"))
-                path = "locales/checkout";
-            else
-                return NotFound();
-            var enLang = Lang(path + "/en.json");
-            var en = (enLang as JsonResult)?.Value as JObject;
-            if (en is null || lang == "en" || lang == "en-US")
-                return enLang;
-            lang = LanguageService.FindLanguage(lang)?.Code;
-            if (lang is null)
-                return enLang;
-            var oLang = Lang(path + $"/{lang}.json");
-            var o = (oLang as JsonResult)?.Value as JObject;
-            if (o is null)
-                return enLang;
-            en.Merge(o);
-            return Json(en);
-        }
-
-        private IActionResult Lang(string path)
-        {
-            var fi = _webRootFileProvider.GetFileInfo(path);
-            try
-            {
-                using var fs = fi.CreateReadStream();
-                return Json(JObject.Load(new JsonTextReader(new StreamReader(fs, leaveOpen: true))));
-            }
-            catch
-            {
-                return NotFound();
-            }
         }
 
         [Route("swagger/v1/swagger.json")]

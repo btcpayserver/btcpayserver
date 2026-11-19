@@ -277,9 +277,6 @@ public partial class UIStoresController
         vm.DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalMinutes;
         vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(storeBlob.ReceiptOptions);
         vm.PublicInvoiceExpiration = storeBlob.PublicInvoiceExpiration is { } expiration ? (int)expiration.TotalDays : null;
-        vm.AutoDetectLanguage = storeBlob.AutoDetectLanguage;
-        vm.SetLanguages(_langService, storeBlob.DefaultLang);
-
         return View(vm);
     }
 
@@ -296,7 +293,6 @@ public partial class UIStoresController
             CurrentStore.SetDefaultPaymentId(defaultPaymentMethodId);
         }
         SetCryptoCurrencies(model, CurrentStore);
-        model.SetLanguages(_langService, model.DefaultLang);
         model.PaymentMethodCriteria ??= new List<PaymentMethodCriteriaViewModel>();
         for (var index = 0; index < model.PaymentMethodCriteria.Count; index++)
         {
@@ -421,8 +417,6 @@ public partial class UIStoresController
         blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
         blob.CheckoutText = string.IsNullOrWhiteSpace(model.CheckoutText) ? null : model.CheckoutText;
         blob.DisplayExpirationTimer = TimeSpan.FromMinutes(model.DisplayExpirationTimer);
-        blob.AutoDetectLanguage = model.AutoDetectLanguage;
-        blob.DefaultLang = model.DefaultLang;
         if (CurrentStore.SetStoreBlob(blob))
         {
             needUpdate = true;

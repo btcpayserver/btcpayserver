@@ -230,17 +230,6 @@
                     <input asp-for="LightningAmountInSatoshi" type="checkbox" class="btcpay-toggle me-3" />
                     <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
                 </div>
-                <div class="form-group d-flex align-items-center">
-                    <input asp-for="AutoDetectLanguage" type="checkbox" class="btcpay-toggle me-3" />
-                    <div>
-                        <label asp-for="AutoDetectLanguage" class="form-check-label"></label>
-                        <div class="form-text" text-translate="true">Detects the language of the customer's browser.</div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label asp-for="DefaultLang" class="form-label"></label>
-                    <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-select w-auto"></select>
-                </div>
                 <div class="form-group">
                     <label asp-for="HtmlTitle" class="form-label"></label>
                     <input asp-for="HtmlTitle" class="form-control" />

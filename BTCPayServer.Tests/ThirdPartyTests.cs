@@ -495,18 +495,6 @@ retry:
             expected = (await (await client.GetAsync($"https://cdnjs.cloudflare.com/ajax/libs/vue/{version}/vue.min.js")).Content.ReadAsStringAsync()).Trim();
             EqualJsContent(expected, actual);
 
-            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "i18next.min.js").Trim();
-            expected = (await (await client.GetAsync("https://cdnjs.cloudflare.com/ajax/libs/i18next/22.0.6/i18next.min.js")).Content.ReadAsStringAsync()).Trim();
-            EqualJsContent(expected, actual);
-
-            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "i18nextHttpBackend.min.js").Trim();
-            expected = (await (await client.GetAsync("https://cdnjs.cloudflare.com/ajax/libs/i18next-http-backend/2.0.1/i18nextHttpBackend.min.js")).Content.ReadAsStringAsync()).Trim();
-            EqualJsContent(expected, actual);
-
-            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "vue-i18next.js").Trim();
-            expected = (await (await client.GetAsync("https://unpkg.com/@panter/vue-i18next@0.15.2/dist/vue-i18next.js")).Content.ReadAsStringAsync()).Trim();
-            EqualJsContent(expected, actual);
-
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vue-qrcode", "vue-qrcode.min.js").Trim();
             version = Regex.Match(actual, "vue-qrcode v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
             expected = (await (await client.GetAsync($"https://unpkg.com/@chenfengyuan/vue-qrcode@{version}/dist/vue-qrcode.min.js")).Content.ReadAsStringAsync()).Trim();

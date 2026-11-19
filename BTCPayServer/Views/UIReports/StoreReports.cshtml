@@ -122,9 +122,9 @@
                            ref="sort"
                            href="#"
                            :data-field="field.name"
-                           :data-sort="srv.fieldViews[field.name].sortBy"
+                           :data-sort="srv.fieldView(field.name).sortBy"
                            @@click.prevent="srv.sortBy(field.name, $event)"
-                           :title="srv.fieldViews[field.name].sortByTitle">
+                           :title="srv.fieldView(field.name).sortByTitle">
                             {{ titleCase(field.name) }}
                             <vc:icon symbol="actions-sort" />
                         </a>
@@ -146,8 +146,8 @@
                         </template>
                         <template
                             v-else-if="value && typeof value === 'string' && srv.result.fields[columnIndex].name.toLowerCase().endsWith('url')">
-                            <template v-if="value.startsWith('http')">
-                                <a :href="value" target="_blank">Link</a>
+                            <template v-if="httpUrl(value)">
+                                <a :href="httpUrl(value)" target="_blank">Link</a>
                             </template>
                             <template v-else>{{ displayValue(value) }}</template>
                         </template>
@@ -168,7 +168,7 @@
                             v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value < 0 || (typeof value === 'object' && value.v < 0))"
                             class="text-danger">{{ displayValue(value) }}</span>
                         <span v-else-if="typeof value === 'string' && ['State'].includes(srv.result.fields[columnIndex].name)" class="badge"
-                              :class="`badge-${value.toLowerCase()}`">{{ displayValue(value) }}</span>
+                              :class="stateBadgeClass(value)">{{ displayValue(value) }}</span>
                         <template v-else>{{ displayValue(value) }}</template>
                     </td>
                 </tr>

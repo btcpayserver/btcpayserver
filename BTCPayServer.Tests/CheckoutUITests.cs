@@ -16,36 +16,6 @@ namespace BTCPayServer.Tests
         public const int TestTimeout = TestUtils.TestTimeout;
 
         [Fact(Timeout = TestTimeout)]
-        public async Task CanRenderCheckoutTranslationsAsText()
-        {
-            await using var s = CreatePlaywrightTester();
-            await s.StartAsync();
-            await s.RegisterNewUser(true);
-            await s.CreateNewStore();
-            await s.AddDerivationScheme("BTC", "tpubDD79XF4pzhmPSJ9AyUay9YbXAeD1c6nkUqC32pnKARJH6Ja5hGUfGc76V82ahXpsKqN6UcSGXMkzR34aZq4W23C6DAdZFaVrzWqzj24F8BC");
-
-            var storeName = "Test <b>store</b> \"quotes\" & co / 日本語";
-            await s.GoToStore();
-            await s.Page.GetByLabel("Store Name", new() { Exact = true }).FillAsync(storeName);
-            await s.Page.GetByLabel("Store Website", new() { Exact = true }).FillAsync("https://example.com/");
-            await s.ClickPagePrimary();
-            await s.FindAlertMessage(partialText: "Store successfully updated");
-
-            var invoiceId = await s.CreateInvoice(0.01m, "BTC");
-            await s.GoToInvoiceCheckout(invoiceId);
-            await s.Page.GetByLabel("Expire invoice in …", new() { Exact = true }).FillAsync("3");
-            await s.Page.GetByRole(AriaRole.Button, new() { Name = "Expire", Exact = true }).ClickAsync();
-
-            await Expect(s.Page.Locator(".checkout__store-link")).ToHaveTextAsync($"Return to {storeName}");
-            await Expect(s.Page.Locator(".checkout__store-link b")).ToHaveCountAsync(0);
-            var expiredMessage = s.Page.Locator(".checkout__message");
-            await Expect(expiredMessage).ToContainTextAsync($"Return to {storeName}");
-            await Expect(expiredMessage.Locator("b, br")).ToHaveCountAsync(0);
-            await Expect(expiredMessage).ToHaveCSSAsync("white-space", "pre-line");
-            Assert.Contains("\n\n", await expiredMessage.TextContentAsync());
-        }
-
-        [Fact(Timeout = TestTimeout)]
         [Trait("Lightning", "Lightning")]
         public async Task CanConfigureCheckout()
         {

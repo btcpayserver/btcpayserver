@@ -1,8 +1,14 @@
 let app, origData;
+// Field names come from invoice metadata too, so the sort state of a field is kept
+// under a prefixed key. A bare __ob__ would collide with the key Vue adds to observed objects.
+const fieldViewKey = name => `field:${name}`;
+srv.fieldView = function (name) {
+    return this.fieldViews[fieldViewKey(name)];
+};
 srv.sortBy = function (field, event) {
     for (let key in this.fieldViews) {
         if (Object.prototype.hasOwnProperty.call(this.fieldViews, key)) {
-            const sortedField = field === key;
+            const sortedField = fieldViewKey(field) === key;
             const fieldView = this.fieldViews[key];
 
             if (sortedField && (fieldView.sortBy === "" || fieldView.sortBy === "desc")) {
@@ -34,7 +40,7 @@ srv.applySort = function () {
         if (Object.prototype.hasOwnProperty.call(this.fieldViews, key)) {
             fieldView = this.fieldViews[key];
             if (fieldView.sortBy !== "") {
-                fieldIndex = this.result.fields.findIndex((a) => a.name === key);
+                fieldIndex = this.result.fields.findIndex((a) => fieldViewKey(a.name) === key);
                 break;
             }
             fieldView = null;
@@ -65,16 +71,16 @@ srv.updateFieldViews = function () {
     // First we remove the fieldViews that doesn't apply anymore
     for (let key in this.fieldViews) {
         if (Object.prototype.hasOwnProperty.call(this.fieldViews, key)) {
-            if (!this.result.fields.find(i => i.name === key))
+            if (!this.result.fields.find(i => fieldViewKey(i.name) === key))
                 delete this.fieldViews[key];
         }
     }
 
     // Then we add those that are missing
     for (let i = 0; i < this.result.fields.length; i++) {
-        const field = this.result.fields[i];
-        if (!Object.prototype.hasOwnProperty.call(this.fieldViews, field.name)) {
-            this.fieldViews[field.name] =
+        const key = fieldViewKey(this.result.fields[i].name);
+        if (!Object.prototype.hasOwnProperty.call(this.fieldViews, key)) {
+            this.fieldViews[key] =
                 {
                     sortBy: "",
                     sortByTitle: ""
@@ -109,7 +115,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 return shorten && title.endsWith(' Amount') ? 'Amount' : title;
             },
             displayValue,
-            displayDate
+            displayDate,
+            httpUrl,
+            stateBadgeClass
         }
     });
 });
@@ -126,6 +134,25 @@ function displayDate(val) {
 
 function displayValue(val) {
     return val && typeof val === "object" && typeof val.d === "number" ? new Decimal(val.v).toFixed(val.d) : val;
+}
+
+// Url fields can hold any text from invoice metadata, so only http and https URLs become links
+function httpUrl(val) {
+    try {
+        const url = new URL(val);
+        return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+// Only invoice and payout states add a badge class, other values get a plain badge
+const stateBadges = ["new", "pending", "processing", "settled", "invalid", "expired", "unusual",
+    "awaitingapproval", "awaitingpayment", "inprogress", "completed", "cancelled"];
+
+function stateBadgeClass(val) {
+    const state = val.toLowerCase();
+    return stateBadges.includes(state) ? `badge-${state}` : null;
 }
 
 // This function modify all the fields of a given type

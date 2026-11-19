@@ -22,14 +22,10 @@ class NDEFReaderWrapper {
 
 const strings = window.checkoutStrings || {};
 
-function escapeHtml(value) {
-    return String(value).replace(/[&<>"'\/]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;' }[c]));
-}
-
-function translate(key, args, escape) {
+function translate(key, args) {
     const text = Object.prototype.hasOwnProperty.call(strings, key) ? strings[key] : key;
     if (!Array.isArray(args)) return text;
-    return text.replace(/\{(\d+)\}/g, (match, index) => index < args.length ? (escape ? escapeHtml(args[index]) : args[index]) : match);
+    return text.replace(/\{(\d+)\}/g, (match, index) => index < args.length ? args[index] : match);
 }
 
 function applyTranslation(el, binding) {
@@ -37,7 +33,7 @@ function applyTranslation(el, binding) {
     el.textContent = typeof value === 'string' ? translate(value) : translate(value.path, value.args);
 }
 
-Vue.prototype.$t = (key, args) => translate(key, args, true);
+Vue.prototype.$t = translate;
 Vue.directive('t', { bind: applyTranslation, update: applyTranslation });
 
 function asNumber(val) {
@@ -322,9 +318,6 @@ function initApp() {
 
                 // updating ui
                 this.srvModel = data;
-            },
-            replaceNewlines (value) {
-                return value ? value.replace(/\n/ig, '<br>') : '';
             },
             playSound (soundName) {
                 const audioBuffer = this[soundName + 'Sound'];

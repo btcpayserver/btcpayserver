@@ -1,6 +1,9 @@
 #Checkout {
     --wrap-max-width: 400px;
 }
+.checkout__message {
+    white-space: pre-line;
+}
 body {
     overflow-x: hidden;
 }

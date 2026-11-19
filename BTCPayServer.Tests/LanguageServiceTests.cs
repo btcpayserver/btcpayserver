@@ -27,6 +27,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.WebUtilities;
+using NBitcoin;
 
 using static Microsoft.Playwright.Assertions;
 using Xunit;
@@ -998,6 +1000,65 @@ namespace BTCPayServer.Tests
             await tester.GoToProfile();
             await Expect(tester.Page.Locator("body")).ToContainTextAsync("Tweak your profile");
             await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English (Custom)");
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CheckoutUsesStoreLanguage()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            user.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit);
+            var client = await user.CreateClient();
+            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest
+            {
+                Amount = 0.01m,
+                Currency = "BTC"
+            });
+
+            var localizer = tester.PayTester.GetService<LocalizerService>();
+            var db = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext().Database.GetDbConnection();
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('French', 'English', 'Custom')");
+            var dict = await localizer.GetTranslation("French");
+            await localizer.Save(dict!, new Translations(new[]
+            {
+                KeyValuePair.Create("Powered by", "Fourni par")
+            }));
+            var stores = tester.PayTester.GetService<StoreRepository>();
+            var store = await stores.FindStore(user.StoreId);
+            var blob = store.GetStoreBlob();
+            blob.StorefrontLanguage = "French";
+            store.SetStoreBlob(blob);
+            await stores.UpdateStore(store);
+
+            using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })
+            {
+                BaseAddress = tester.PayTester.ServerUri
+            };
+            var canonicalPage = await http.GetStringAsync($"i/{invoice.Id}");
+            Assert.Contains("Fourni par", canonicalPage);
+            foreach (var key in new[] { "id", "invoiceId" })
+            foreach (var paymentMethod in new[] { "", "&paymentMethodId=BTC-CHAIN" })
+            {
+                using var response = await http.GetAsync(
+                    $"invoice?{key}={invoice.Id}{paymentMethod}&view=modal&custom=a%26b&custom=c");
+                Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
+                var target = new Uri(http.BaseAddress, response.Headers.Location!);
+                Assert.Equal($"/i/{invoice.Id}{(paymentMethod.Length == 0 ? "" : "/BTC-CHAIN")}", target.AbsolutePath);
+                var query = QueryHelpers.ParseQuery(target.Query);
+                Assert.Equal("modal", query["view"].ToString());
+                Assert.Equal(new[] { "a&b", "c" }, query["custom"].ToArray());
+                Assert.False(query.ContainsKey("id"));
+                Assert.False(query.ContainsKey("invoiceId"));
+                Assert.False(query.ContainsKey("paymentMethodId"));
+                var page = await http.GetStringAsync(target);
+                Assert.Contains("Fourni par", page);
+                Assert.Contains("checkout-modal", page);
+            }
+            using var missingId = await http.GetAsync("invoice");
+            Assert.Equal(HttpStatusCode.NotFound, missingId.StatusCode);
         }
 
         [Fact(Timeout = TestTimeout)]

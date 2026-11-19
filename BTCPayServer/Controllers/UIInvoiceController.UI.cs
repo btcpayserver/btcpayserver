@@ -33,6 +33,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
@@ -745,22 +746,34 @@ namespace BTCPayServer.Controllers
             return new HashSet<string>(addresses);
         }
 
-        [HttpGet("i/{invoiceId}")]
-        [HttpGet("i/{invoiceId}/{paymentMethodId}")]
         [HttpGet("invoice")]
         [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
         [XFrameOptions(null)]
         [ReferrerPolicy("origin")]
-        [UseStoreLanguage]
-        public async Task<IActionResult> Checkout(string? invoiceId, string? id = null, string? paymentMethodId = null,
-            [FromQuery] string? view = null)
+        public IActionResult LegacyCheckout(string? invoiceId, string? id = null, string? paymentMethodId = null)
         {
             // Keep compatibility with Bitpay
             invoiceId ??= id;
-
             if (invoiceId is null)
                 return NotFound();
 
+            var url = Url.Action(nameof(Checkout), new { invoiceId, paymentMethodId })!;
+            var query = Request.Query.Where(p =>
+                !p.Key.Equals("invoiceId", StringComparison.OrdinalIgnoreCase) &&
+                !p.Key.Equals("id", StringComparison.OrdinalIgnoreCase) &&
+                !p.Key.Equals("paymentMethodId", StringComparison.OrdinalIgnoreCase));
+            return RedirectPermanent(QueryHelpers.AddQueryString(url, query));
+        }
+
+        [HttpGet("i/{invoiceId}")]
+        [HttpGet("i/{invoiceId}/{paymentMethodId}")]
+        [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
+        [XFrameOptions(null)]
+        [ReferrerPolicy("origin")]
+        [UseStoreLanguage]
+        public async Task<IActionResult> Checkout(string invoiceId, string? paymentMethodId = null,
+            [FromQuery] string? view = null)
+        {
             var model = await GetCheckoutModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId));
             if (model == null)
             {

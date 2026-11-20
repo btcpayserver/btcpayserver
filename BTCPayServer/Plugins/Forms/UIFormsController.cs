@@ -141,7 +141,7 @@ public class UIFormsController(
     [AllowAnonymous]
     [HttpGet("~/forms/{formId}")]
     [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
-    [UseStoreLanguage]
+    [StorefrontRoute]
     public async Task<IActionResult> ViewPublicForm(string? formId)
     {
         FormData? formData = await formDataService.GetForm(formId);
@@ -179,7 +179,7 @@ public class UIFormsController(
     [HttpPost("~/forms/{formId}")]
     [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
     [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
-    [UseStoreLanguage]
+    [StorefrontRoute]
     public async Task<IActionResult> SubmitForm(string formId)
     {
         var formData = await formDataService.GetForm(formId);

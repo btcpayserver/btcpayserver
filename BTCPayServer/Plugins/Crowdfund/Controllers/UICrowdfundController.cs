@@ -62,7 +62,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [HttpGet("/apps/{appId}/crowdfund")]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         [DomainMappingConstraint(CrowdfundAppType.AppType)]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         public async Task<IActionResult> ViewCrowdfund(string appId)
         {
             var app = await appService.GetApp(appId, CrowdfundAppType.AppType, true);
@@ -97,7 +97,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraint(CrowdfundAppType.AppType)]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request, string formResponse = null, CancellationToken cancellationToken = default)
         {
             // Throttled here rather than with a filter, as AppHub.CreateInvoice and CrowdfundFormSubmit call this action directly
@@ -278,7 +278,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [HttpGet("/apps/{appId}/crowdfund/form")]
         [IgnoreAntiforgeryToken]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         public async Task<IActionResult> CrowdfundForm(string appId, decimal? amount=0, string choiceKey="")
         {
             var app = await appService.GetApp(appId, CrowdfundAppType.AppType);
@@ -318,7 +318,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [HttpPost("/apps/{appId}/crowdfund/form/submit")]
         [IgnoreAntiforgeryToken]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         public async Task<IActionResult> CrowdfundFormSubmit(string appId, decimal amount, string choiceKey, FormViewModel viewModel)
         {
             var app = await appService.GetApp(appId, CrowdfundAppType.AppType);

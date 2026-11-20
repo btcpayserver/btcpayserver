@@ -19,7 +19,7 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
 
 [AllowAnonymous]
-[UseStoreLanguage]
+[StorefrontRoute]
 [Area(SubscriptionsPlugin.Area)]
 [Route("plan-checkout/{planCheckoutId}")]
 public class UIPlanCheckoutController(

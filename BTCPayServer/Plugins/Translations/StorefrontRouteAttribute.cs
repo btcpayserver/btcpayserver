@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 namespace BTCPayServer.Plugins.Translations;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-public class UseStoreLanguageAttribute() : TypeFilterAttribute(typeof(StoreLanguageFilter));
+public class StorefrontRouteAttribute() : TypeFilterAttribute(typeof(StoreLanguageFilter));
 
 internal class StoreLanguageFilter(TranslationsAccessor translationsAccessor, StoreRepository storeRepository,
     RouteStoreResolver routeStoreResolver) : IAsyncActionFilter

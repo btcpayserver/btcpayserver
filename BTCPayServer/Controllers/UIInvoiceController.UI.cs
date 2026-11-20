@@ -197,7 +197,7 @@ namespace BTCPayServer.Controllers
         }
 
         [XFrameOptions(null)]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         [HttpGet("i/{invoiceId}/receipt")]
         public async Task<IActionResult> InvoiceReceipt(string invoiceId, [FromQuery] bool print = false)
         {
@@ -770,7 +770,7 @@ namespace BTCPayServer.Controllers
         [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
         [XFrameOptions(null)]
         [ReferrerPolicy("origin")]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         public async Task<IActionResult> Checkout(string invoiceId, string? paymentMethodId = null,
             [FromQuery] string? view = null)
         {

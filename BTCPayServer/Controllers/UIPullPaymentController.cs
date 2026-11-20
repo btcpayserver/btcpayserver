@@ -41,7 +41,7 @@ namespace BTCPayServer.Controllers
         public IStringLocalizer StringLocalizer { get; } = stringLocalizer;
 
         [AllowAnonymous]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         [HttpGet("pull-payments/{pullPaymentId}")]
         public async Task<IActionResult> ViewPullPayment(string pullPaymentId)
         {
@@ -169,7 +169,7 @@ namespace BTCPayServer.Controllers
         }
 
         [AllowAnonymous]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         [HttpPost("pull-payments/{pullPaymentId}")]
         public async Task<IActionResult> ClaimPullPayment(string pullPaymentId, ViewPullPaymentModel vm, CancellationToken cancellationToken)
         {

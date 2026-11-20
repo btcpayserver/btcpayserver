@@ -721,7 +721,7 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation("Editing a parent language drops cached children");
             await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('Quebecois', 'French', 'Custom')");
             var quebec = await localizer.GetUserTranslations("Quebecois");
-            Assert.Equal("Bonjour", quebec!.Translations["Hello"]); 
+            Assert.Equal("Bonjour", quebec!.Translations["Hello"]);
             await SetHello("Allo");
             var quebecAgain = await localizer.GetUserTranslations("Quebecois");
             Assert.NotSame(quebec, quebecAgain);
@@ -1038,7 +1038,7 @@ namespace BTCPayServer.Tests
             var client = await user.CreateClient();
             var app = await client.CreatePointOfSaleApp(user.StoreId, new PointOfSaleAppRequest { AppName = "Lang test" });
 
-            var filter = (IAsyncActionFilter)new UseStoreLanguageAttribute().CreateInstance(tester.PayTester.ServiceProvider);
+            var filter = (IAsyncActionFilter)new StorefrontRouteAttribute().CreateInstance(tester.PayTester.ServiceProvider);
             async Task<string> RenderPage(bool withAttribute)
             {
                 return await Task.Run(async () =>

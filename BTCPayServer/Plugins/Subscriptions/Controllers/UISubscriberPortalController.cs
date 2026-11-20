@@ -24,7 +24,7 @@ using static BTCPayServer.Plugins.Subscriptions.SubscriptionHostedService;
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
 [AllowAnonymous]
-[UseStoreLanguage]
+[StorefrontRoute]
 [Area(SubscriptionsPlugin.Area)]
 [Route("subscriber-portal/{portalSessionId}")]
 public class UISubscriberPortalController(

@@ -29,7 +29,7 @@ namespace BTCPayServer.Controllers
     {
         [HttpGet]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         public async Task<IActionResult> ShowLightningNodeInfo(string storeId, string cryptoCode, bool showLocal = false)
         {
             showLocal &= env.CheatMode;

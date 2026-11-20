@@ -1,27 +1,16 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
     public class CheckoutAppearanceViewModel
     {
         public SelectList PaymentMethods { get; set; }
-
-        public void SetLanguages(LanguageService langService, string defaultLang)
-        {
-            defaultLang = langService.GetLanguages().Any(language => language.Code == defaultLang) ? defaultLang : "en";
-            var choices = langService.GetLanguages().Select(o => new PaymentMethodOptionViewModel.Format() { Name = o.DisplayName, Value = o.Code }).ToArray().OrderBy(o => o.Name);
-            var chosen = choices.FirstOrDefault(f => f.Value == defaultLang) ?? choices.FirstOrDefault();
-            Languages = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
-            DefaultLang = chosen.Value;
-        }
-
-        public SelectList Languages { get; set; }
 
         [Display(Name = "Unify payment methods into one payment URL/QR code")]
         public bool OnChainWithLnInvoiceFallback { get; set; }
@@ -56,12 +45,6 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public bool RedirectAutomatically { get; set; }
 
-        [Display(Name = "Auto-detect language on checkout")]
-        public bool AutoDetectLanguage { get; set; }
-
-        [Display(Name = "Default language on checkout")]
-        public string DefaultLang { get; set; }
-
         [Display(Name = "Custom sound file for successful payment")]
         public IFormFile SoundFile { get; set; }
         public string PaymentSoundUrl { get; set; }
@@ -81,11 +64,22 @@ namespace BTCPayServer.Models.StoreViewModels
         [Range(1, 60 * 24 * 24)]
         public int DisplayExpirationTimer { get; set; }
 
+        [Display(Name = "Public invoice link expiration")]
+        [Range(0, LengthLimits.MaxExpirationDays)]
+        public int? PublicInvoiceExpiration { get; set; }
+
         public class ReceiptOptionsViewModel
         {
             public static ReceiptOptionsViewModel Create(Client.Models.InvoiceDataBase.ReceiptOptions opts)
             {
-                return JObject.FromObject(opts).ToObject<ReceiptOptionsViewModel>();
+                opts = Client.Models.InvoiceDataBase.ReceiptOptions.Merge(opts, null);
+                return new ReceiptOptionsViewModel
+                {
+                    Enabled = opts.Enabled.Value,
+                    ShowQR = opts.ShowQR.Value,
+                    ShowPayments = opts.ShowPayments.Value,
+                    PublicReceiptExpiration = opts.PublicReceiptExpiration is { } expiration ? (int)expiration.TotalDays : null
+                };
             }
             [Display(Name = "Enable public receipt page for settled invoices")]
             public bool Enabled { get; set; }
@@ -95,9 +89,19 @@ namespace BTCPayServer.Models.StoreViewModels
 
             [Display(Name = "Show the payment list in the public receipt page")]
             public bool ShowPayments { get; set; }
+
+            [Display(Name = "Public receipt link expiration")]
+            [Range(0, LengthLimits.MaxExpirationDays)]
+            public int? PublicReceiptExpiration { get; set; }
             public Client.Models.InvoiceDataBase.ReceiptOptions ToDTO()
             {
-                return JObject.FromObject(this).ToObject<Client.Models.InvoiceDataBase.ReceiptOptions>();
+                return new Client.Models.InvoiceDataBase.ReceiptOptions
+                {
+                    Enabled = Enabled,
+                    ShowQR = ShowQR,
+                    ShowPayments = ShowPayments,
+                    PublicReceiptExpiration = PublicReceiptExpiration is { } days ? TimeSpan.FromDays(days) : null
+                };
             }
         }
         public ReceiptOptionsViewModel ReceiptOptions { get; set; } = ReceiptOptionsViewModel.Create(Client.Models.InvoiceDataBase.ReceiptOptions.CreateDefault());

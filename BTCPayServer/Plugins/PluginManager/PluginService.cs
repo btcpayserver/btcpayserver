@@ -144,7 +144,14 @@ namespace BTCPayServer.Plugins
 
         public async Task<AvailablePlugin> DownloadRemotePlugin(string pluginIdentifier, string version, VersionCondition condition = null)
         {
-            // The identifier comes from the catalog and names the files written below
+            var manifest = await ResolveRemotePlugin(pluginIdentifier, version, condition);
+            await DownloadResolvedPlugin(pluginIdentifier, manifest);
+            return manifest;
+        }
+
+        internal async Task<AvailablePlugin> ResolveRemotePlugin(string pluginIdentifier, string version, VersionCondition condition)
+        {
+            // Fail before any request. DownloadResolvedPlugin checks it again before it writes files.
             if (!IsSafePluginName(pluginIdentifier))
                 throw new InvalidOperationException("Invalid plugin identifier");
             string btcpayVersion = GetShortBtcpayVersion();
@@ -154,13 +161,8 @@ namespace BTCPayServer.Plugins
                 .Select(v => v.ManifestInfo?.ToObject<AvailablePlugin>());
             var selectedVersion = SelectCompatiblePluginVersion(pluginIdentifier, version, condition, compatiblePlugins);
 
-            var dest = _dataDirectories.Value.PluginDir;
-            var filedest = Path.Join(dest, pluginIdentifier + ".btcpay");
-            var filemanifestdest = Path.Join(dest, pluginIdentifier + ".json");
             var pluginSelector = $"[{Uri.EscapeDataString(pluginIdentifier)}]";
             var selectedVersionParameter = Uri.EscapeDataString(selectedVersion.ToString());
-            Directory.CreateDirectory(Path.GetDirectoryName(filedest));
-            var url = $"api/v1/plugins/{pluginSelector}/versions/{selectedVersionParameter}/download";
             var publishedVersion = await _pluginBuilderClient.GetPlugin(pluginSelector, selectedVersionParameter);
             if (publishedVersion is null)
                 throw new InvalidDataException($"Plugin version not found for {pluginIdentifier} {selectedVersion}.");
@@ -172,13 +174,27 @@ namespace BTCPayServer.Plugins
                 throw new InvalidDataException($"Plugin manifest identifier {manifest.Identifier} does not match requested plugin {pluginIdentifier}.");
             if (!selectedVersion.Equals(manifest.Version))
                 throw new InvalidDataException($"Plugin manifest version {manifest.Version} does not match requested version {selectedVersion}.");
+            return manifest;
+        }
+
+        internal async Task DownloadResolvedPlugin(string pluginIdentifier, AvailablePlugin manifest)
+        {
+            // The identifier comes from the catalog and names the files written below
+            if (!IsSafePluginName(pluginIdentifier))
+                throw new InvalidOperationException("Invalid plugin identifier");
+            var dest = _dataDirectories.Value.PluginDir;
+            var filedest = Path.Join(dest, pluginIdentifier + ".btcpay");
+            var filemanifestdest = Path.Join(dest, pluginIdentifier + ".json");
+            var pluginSelector = $"[{Uri.EscapeDataString(pluginIdentifier)}]";
+            var selectedVersionParameter = Uri.EscapeDataString(manifest.Version.ToString());
+            var url = $"api/v1/plugins/{pluginSelector}/versions/{selectedVersionParameter}/download";
             using var resp2 = await _pluginBuilderClient.HttpClient.GetAsync(url);
             resp2.EnsureSuccessStatusCode();
+            Directory.CreateDirectory(dest);
             await using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);
             await resp2.Content.CopyToAsync(fs);
             await fs.FlushAsync();
             await File.WriteAllTextAsync(filemanifestdest, JsonConvert.SerializeObject(manifest, Formatting.Indented));
-            return manifest;
         }
 
         internal static Version SelectCompatiblePluginVersion(

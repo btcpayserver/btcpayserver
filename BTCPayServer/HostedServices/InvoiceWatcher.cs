@@ -84,9 +84,9 @@ namespace BTCPayServer.HostedServices
                 context.MarkDirty();
                 invoice.Status = InvoiceStatus.Expired;
                 var paidPartial = invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial;
-                context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Expired) { PaidPartial = paidPartial });
+                context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Expired) { PaidPartial = paidPartial, PreviousStatus = InvoiceStatus.New });
                 if (invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
-                    context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.ExpiredPaidPartial) { PaidPartial = paidPartial });
+                    context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.ExpiredPaidPartial) { PaidPartial = paidPartial, PreviousStatus = InvoiceStatus.New });
             }
 
             var hasPayment = invoice.GetPayments(true).Any();
@@ -99,7 +99,7 @@ namespace BTCPayServer.HostedServices
                 {
                     if (invoice.Status == InvoiceStatus.New)
                     {
-                        context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.PaidInFull));
+                        context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.PaidInFull) { PreviousStatus = invoice.Status });
                         invoice.Status = InvoiceStatus.Processing;
                         if (invoice.IsUnsetTopUp())
                         {
@@ -165,15 +165,16 @@ namespace BTCPayServer.HostedServices
                    // And not enough amount confirmed
                    (minimumDue > 0.0m))
                 {
-                    context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.FailedToConfirm));
+                    context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.FailedToConfirm) { PreviousStatus = invoice.Status });
                     invoice.Status = InvoiceStatus.Invalid;
                     context.MarkDirty();
                 }
                 else if (minimumDue <= 0.0m)
                 {
+                    var previousStatus = invoice.Status;
                     invoice.Status = InvoiceStatus.Settled;
-                    context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Confirmed));
-                    context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Completed));
+                    context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Confirmed) { PreviousStatus = previousStatus });
+                    context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Completed) { PreviousStatus = previousStatus });
                     context.MarkDirty();
                 }
             }

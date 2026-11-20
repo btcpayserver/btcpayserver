@@ -399,30 +399,6 @@ namespace BTCPayServer.Tests
             payUrl = await s.Page.Locator("#PayInWallet").GetAttributeAsync("href");
             Assert.StartsWith("bitcoin:", payUrl);
             Assert.Contains("&lightning=lnbcrt", payUrl);
-
-            // Language Switch
-            var languageSelect = s.Page.Locator("#DefaultLang");
-            await Expect(languageSelect.Locator("option:checked")).ToHaveTextAsync("English");
-            await Expect(s.Page.Locator("#DetailsToggle")).ToHaveTextAsync("View Details");
-            Assert.DoesNotContain("lang=", s.Page.Url);
-            await languageSelect.SelectOptionAsync(new SelectOptionValue { Label = "Deutsch" });
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                Assert.Contains("lang=de", s.Page.Url);
-                await Expect(s.Page.Locator("#DetailsToggle")).ToHaveTextAsync("Details anzeigen");
-            });
-
-            await s.Page.ReloadAsync();
-            languageSelect = s.Page.Locator("#DefaultLang");
-            await Expect(languageSelect.Locator("option:checked")).ToHaveTextAsync("Deutsch");
-            await Expect(s.Page.Locator("#DetailsToggle")).ToHaveTextAsync("Details anzeigen");
-
-            await languageSelect.SelectOptionAsync(new SelectOptionValue { Label = "English" });
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                Assert.Contains("lang=en", s.Page.Url);
-                await Expect(s.Page.Locator("#DetailsToggle")).ToHaveTextAsync("View Details");
-            });
         }
 
         [Fact(Timeout = TestTimeout)]

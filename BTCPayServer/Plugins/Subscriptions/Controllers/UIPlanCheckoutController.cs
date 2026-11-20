@@ -19,9 +19,9 @@ namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
 
 [AllowAnonymous]
-[UseStoreLanguage]
+[StorefrontRoute]
 [Area(SubscriptionsPlugin.Area)]
-[Route("plan-checkout/{checkoutId}")]
+[Route("plan-checkout/{planCheckoutId}")]
 public class UIPlanCheckoutController(
     ApplicationDbContextFactory dbContextFactory,
     LinkGenerator linkGenerator,
@@ -33,10 +33,10 @@ public class UIPlanCheckoutController(
     : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
     [HttpGet]
-    public async Task<IActionResult> PlanCheckout(string checkoutId)
+    public async Task<IActionResult> PlanCheckout(string planCheckoutId)
     {
         await using var ctx = DbContextFactory.CreateContext();
-        var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
+        var checkout = await ctx.PlanCheckouts.GetCheckout(planCheckoutId);
         var plan = checkout?.Plan;
         if (plan is null || checkout is null)
             return NotFound();
@@ -47,7 +47,7 @@ public class UIPlanCheckoutController(
             prefilledEmail = checkout.NewSubscriberEmail;
         var vm = new PlanCheckoutViewModel()
         {
-            CheckoutId = checkoutId,
+            CheckoutId = planCheckoutId,
             BaseUrl = callbackGenerator.GetRequestBaseUrl(),
             StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, uriResolver, plan.Offering.App.StoreData.GetStoreBlob()),
             StoreName = plan.Offering.App.StoreData.StoreName,
@@ -61,12 +61,12 @@ public class UIPlanCheckoutController(
     }
 
     [HttpGet("~/plan-checkout/default-redirect")]
-    public async Task<IActionResult> PlanCheckoutDefaultRedirect(string? checkoutPlanId = null)
+    public async Task<IActionResult> PlanCheckoutDefaultRedirect(string? planCheckoutId = null)
     {
-        if (checkoutPlanId is null)
+        if (planCheckoutId is null)
             return NotFound();
         await using var ctx = DbContextFactory.CreateContext();
-        var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutPlanId);
+        var checkout = await ctx.PlanCheckouts.GetCheckout(planCheckoutId);
         if (checkout is null)
             return NotFound();
 
@@ -80,13 +80,13 @@ public class UIPlanCheckoutController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> PlanCheckout(string checkoutId, PlanCheckoutViewModel vm,
+    public async Task<IActionResult> PlanCheckout(string planCheckoutId, PlanCheckoutViewModel vm,
         [FromServices] MonetizationSettings monetizationSettings,
         [FromServices] IRateLimitService rateLimitService,
         CancellationToken cancellationToken = default)
     {
         await using var ctx = DbContextFactory.CreateContext();
-        var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutId);
+        var checkout = await ctx.PlanCheckouts.GetCheckout(planCheckoutId);
         if (checkout is null)
             return NotFound();
         var checkoutInvoice = checkout.InvoiceId is null ? null : await ctx.Invoices.FindAsync([checkout.InvoiceId], cancellationToken);
@@ -109,7 +109,7 @@ public class UIPlanCheckoutController(
                 if (!vm.Email.IsValidEmail())
                     ModelState.AddModelError(nameof(vm.Email), "Invalid email format");
                 if (!ModelState.IsValid)
-                    return await PlanCheckout(checkoutId);
+                    return await PlanCheckout(planCheckoutId);
 
                 if (checkout.NewSubscriber && checkout.Plan.OfferingId == monetizationSettings.OfferingId &&
                     !await rateLimitService.Throttle(ZoneLimits.Register, HttpContext.Connection.RemoteIpAddress, cancellationToken))
@@ -126,7 +126,7 @@ public class UIPlanCheckoutController(
                 if (sub is not null)
                 {
                     ModelState.AddModelError(nameof(vm.Email), "This email already has a subscription to this offering");
-                    return await PlanCheckout(checkoutId);
+                    return await PlanCheckout(planCheckoutId);
                 }
             }
         }
@@ -134,6 +134,6 @@ public class UIPlanCheckoutController(
         {
             ModelState.Remove(nameof(vm.Email));
         }
-        return await RedirectToPlanCheckoutPayment(checkoutId, cancellationToken);
+        return await RedirectToPlanCheckoutPayment(planCheckoutId, cancellationToken);
     }
 }

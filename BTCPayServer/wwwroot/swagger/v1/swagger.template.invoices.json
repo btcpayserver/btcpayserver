@@ -568,7 +568,7 @@
                         "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
-                "description": "Refund invoice. The store is resolved automatically from the invoice.",
+                "description": "Refund invoice. The store is resolved automatically from the invoice. Unless the `refundVariant` is `Custom`, this fails if the invoice already has a refund which is not archived.",
                 "operationId": "Invoices_Refund",
                 "requestBody": {
                     "required": true,
@@ -1203,11 +1203,6 @@
                         "type": "boolean",
                         "nullable": true,
                         "description": "When the customer has paid the invoice, and a `redirectURL` is set, the checkout is redirected to `redirectURL` automatically if `redirectAutomatically` is true. Defaults to the store's settings. (The default store settings is false)"
-                    },
-                    "defaultLanguage": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "The language code (eg. en-US, en, fr-FR...) of the language presented to your customer in the checkout page. BTCPay Server tries to match the best language available. If null or not set, will fallback on the store's default language. You can see the list of language codes with [this operation](#operation/langCodes)."
                     }
                 }
             },
@@ -1215,6 +1210,14 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
+                    "publicReceiptExpiration": {
+                        "type": "integer",
+                        "nullable": true,
+                        "default": null,
+                        "minimum": 0,
+                        "maximum": 36500,
+                        "description": "Days public receipts remain accessible after payment monitoring ends. Null or omission uses the store setting for invoices, or the default of 90 days for stores. Use 0 for indefinite access."
+                    },
                     "enabled": {
                         "type": "boolean",
                         "nullable": true,

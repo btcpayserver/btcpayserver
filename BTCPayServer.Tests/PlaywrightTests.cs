@@ -127,6 +127,7 @@ namespace BTCPayServer.Tests
             await s.Page.Locator("[name='FormConfig']").ClearAsync();
             await s.Page.FillAsync("[name='FormConfig']", config.Replace("Enter your email", "CustomFormInputTest"));
             await s.ClickPagePrimary();
+            await Expect(s.Page).ToHaveURLAsync(new Regex(@"/forms/[^/]+/edit$"));
             await s.Page.ClickAsync("#ViewForm");
             var formUrl = s.Page.Url;
             Assert.Contains("CustomFormInputTest", await s.Page.ContentAsync());
@@ -140,6 +141,8 @@ namespace BTCPayServer.Tests
             await s.GoToStore(StoreNavPages.Forms);
             await s.Page.WaitForLoadStateAsync();
             await Expect(s.Page.Locator("text=Custom Form 1")).ToBeVisibleAsync();
+            await Expect(s.Page.GetByRole(AriaRole.Link, new() { Name = "Remove" }))
+                .ToHaveAttributeAsync("href", new Regex(@"^/forms/[^/]+/remove$"));
             await s.Page.GetByRole(AriaRole.Link, new() { Name = "Remove" }).ClickAsync();
             await s.ConfirmDeleteModal();
             await s.Page.WaitForLoadStateAsync();
@@ -161,6 +164,7 @@ namespace BTCPayServer.Tests
             await s.GoToStore();
             await s.GoToStore(StoreNavPages.Forms);
             await s.Page.GetByRole(AriaRole.Link, new() { Name = "Custom Form 2" }).ClickAsync();
+            await Expect(s.Page).ToHaveURLAsync(new Regex(@"/forms/[^/]+/edit$"));
             await s.Page.Locator("[name='Name']").ClearAsync();
             await s.Page.FillAsync("[name='Name']", "Custom Form 3");
             await s.ClickPagePrimary();
@@ -1094,7 +1098,6 @@ namespace BTCPayServer.Tests
                 Name = "Can Use Store?",
                 Website = "https://test.com/",
                 CelebratePayment = false,
-                DefaultLang = "fr-FR",
                 NetworkFeeMode = NetworkFeeMode.MultiplePaymentsOnly,
                 ShowStoreHeader = false,
                 AllowZeroAmountInvoices = true
@@ -1108,7 +1111,6 @@ namespace BTCPayServer.Tests
             Assert.Equal("https://test.com/", newStore.Website);
             Assert.False(newStore.CelebratePayment);
             Assert.True(newStore.AllowZeroAmountInvoices);
-            Assert.Equal("fr-FR", newStore.DefaultLang);
             Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
             Assert.False(newStore.ShowStoreHeader);
 
@@ -1116,7 +1118,6 @@ namespace BTCPayServer.Tests
             Assert.Equal("Yes you can also customize", newStore.Name);
             Assert.Equal("https://test.com/", newStore.Website);
             Assert.False(newStore.CelebratePayment);
-            Assert.Equal("fr-FR", newStore.DefaultLang);
             Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
             Assert.False(newStore.ShowStoreHeader);
 
@@ -1132,7 +1133,6 @@ namespace BTCPayServer.Tests
             Assert.Equal("Just changed it!", newStore.Name);
             Assert.Equal("https://test.com/", newStore.Website);
             Assert.False(newStore.CelebratePayment);
-            Assert.Equal("fr-FR", newStore.DefaultLang);
             Assert.Equal(NetworkFeeMode.MultiplePaymentsOnly, newStore.NetworkFeeMode);
             Assert.False(newStore.ShowStoreHeader);
 
@@ -1156,14 +1156,12 @@ namespace BTCPayServer.Tests
             {
                 ["blob"] = new JObject
                 {
-                    ["defaultCurrency"] = "AAA",
-                    ["defaultLang"] = "de-DE"
+                    ["defaultCurrency"] = "AAA"
                 }
             };
             await settings.UpdateSetting(policies);
             newStore = await client.CreateStore(new() { Name = "Test2"});
             Assert.Equal("AAA", newStore.DefaultCurrency);
-            Assert.Equal("de-DE", newStore.DefaultLang);
             Assert.Equal(TimeSpan.FromDays(30), newStore.RefundBOLT11Expiration);
             Assert.Equal(TimeSpan.FromDays(1), newStore.MonitoringExpiration);
             Assert.Equal(TimeSpan.FromMinutes(5), newStore.DisplayExpirationTimer);
@@ -2508,6 +2506,99 @@ namespace BTCPayServer.Tests
             var ownerEmail = await s.RegisterNewUser(true);
             await s.CreateNewStore();
             await s.AddDerivationScheme();
+            await s.GoToUrl($"/stores/{s.StoreId}/checkout");
+            await Expect(s.Page.Locator(".public-link-settings__invoice-expiration")).ToHaveValueAsync("");
+            await Expect(s.Page.Locator(".public-link-settings__receipt-expiration")).ToHaveValueAsync("");
+            var api = await s.AsTestAccount().CreateClient();
+            var storeSettings = await api.GetStore(s.StoreId);
+            Assert.Null(storeSettings.PublicInvoiceExpiration);
+            Assert.Null(storeSettings.Receipt.PublicReceiptExpiration);
+            foreach (var value in new[] { "12:00:00", "-12:00:00" })
+            {
+                foreach (var payload in new[]
+                         {
+                             new JObject { ["publicInvoiceExpiration"] = value },
+                             new JObject { ["receipt"] = new JObject { ["publicReceiptExpiration"] = value } }
+                         })
+                {
+                    await Assert.ThrowsAsync<GreenfieldValidationException>(() =>
+                        api.SendHttpRequest($"api/v1/stores/{s.StoreId}", bodyPayload: payload, method: HttpMethod.Put));
+                    await Assert.ThrowsAsync<GreenfieldValidationException>(() =>
+                        api.SendHttpRequest($"api/v1/stores", bodyPayload: payload, method: HttpMethod.Post));
+                }
+                await Assert.ThrowsAsync<GreenfieldValidationException>(() =>
+                    api.SendHttpRequest($"api/v1/stores/{s.StoreId}/invoices",
+                        bodyPayload: new JObject
+                        {
+                            ["amount"] = 1,
+                            ["currency"] = "USD",
+                            ["receipt"] = new JObject { ["publicReceiptExpiration"] = value }
+                        }, method: HttpMethod.Post));
+            }
+            foreach (var days in new[] { -1, LengthLimits.MaxExpirationDays + 1 })
+            {
+                storeSettings.Receipt.PublicReceiptExpiration = null;
+                storeSettings.PublicInvoiceExpiration = TimeSpan.FromDays(days);
+                await AssertEx.AssertValidationError(["PublicInvoiceExpiration"],
+                    () => api.UpdateStore(s.StoreId, storeSettings));
+                storeSettings.PublicInvoiceExpiration = null;
+                storeSettings.Receipt.PublicReceiptExpiration = TimeSpan.FromDays(days);
+                await AssertEx.AssertValidationError(["Receipt.PublicReceiptExpiration"],
+                    () => api.UpdateStore(s.StoreId, storeSettings));
+                await AssertEx.AssertValidationError(["Receipt.PublicReceiptExpiration"],
+                    () => api.CreateInvoice(s.StoreId, new CreateInvoiceRequest
+                    {
+                        Amount = 1,
+                        Currency = "USD",
+                        Receipt = new() { PublicReceiptExpiration = TimeSpan.FromDays(days) }
+                    }));
+            }
+            storeSettings.PublicInvoiceExpiration = TimeSpan.FromDays(60);
+            storeSettings.Receipt.PublicReceiptExpiration = TimeSpan.FromDays(45);
+            storeSettings.AllowZeroAmountInvoices = true;
+            await api.UpdateStore(s.StoreId, storeSettings);
+            storeSettings = await api.GetStore(s.StoreId);
+            Assert.Equal(TimeSpan.FromDays(60), storeSettings.PublicInvoiceExpiration);
+            Assert.Equal(TimeSpan.FromDays(45), storeSettings.Receipt.PublicReceiptExpiration);
+            storeSettings.PublicInvoiceExpiration = null;
+            storeSettings.Receipt.PublicReceiptExpiration = null;
+            storeSettings = await api.UpdateStore(s.StoreId, storeSettings);
+            Assert.Null(storeSettings.PublicInvoiceExpiration);
+            Assert.Null(storeSettings.Receipt.PublicReceiptExpiration);
+            storeSettings.PublicInvoiceExpiration = TimeSpan.FromDays(60);
+            storeSettings.Receipt.PublicReceiptExpiration = TimeSpan.FromDays(45);
+            await api.UpdateStore(s.StoreId, storeSettings);
+            storeSettings = await api.UpdateStore(s.StoreId, new UpdateStoreRequest());
+            Assert.Null(storeSettings.PublicInvoiceExpiration);
+            Assert.Null(storeSettings.Receipt.PublicReceiptExpiration);
+            storeSettings.PublicInvoiceExpiration = TimeSpan.Zero;
+            storeSettings.Receipt.PublicReceiptExpiration = TimeSpan.Zero;
+            await api.UpdateStore(s.StoreId, storeSettings);
+            storeSettings = await api.GetStore(s.StoreId);
+            Assert.Equal(TimeSpan.Zero, storeSettings.PublicInvoiceExpiration);
+            Assert.Equal(TimeSpan.Zero, storeSettings.Receipt.PublicReceiptExpiration);
+            await s.GoToUrl($"/stores/{s.StoreId}/checkout");
+            await s.Page.Locator(".public-link-settings__invoice-expiration").FillAsync("");
+            await s.Page.Locator(".public-link-settings__receipt-expiration").FillAsync("");
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Store successfully updated");
+            await s.Page.ReloadAsync();
+            storeSettings = await api.GetStore(s.StoreId);
+            Assert.Null(storeSettings.PublicInvoiceExpiration);
+            Assert.Null(storeSettings.Receipt.PublicReceiptExpiration);
+            var shortReceiptInvoice = await api.CreateInvoice(s.StoreId, new CreateInvoiceRequest
+            {
+                Amount = 1,
+                Currency = "USD",
+                Receipt = new() { PublicReceiptExpiration = TimeSpan.FromDays(7) }
+            });
+            Assert.Equal(TimeSpan.FromDays(7), shortReceiptInvoice.Receipt.PublicReceiptExpiration);
+            var zeroInvoice = await api.CreateInvoice(s.StoreId, new CreateInvoiceRequest
+            {
+                Amount = 0,
+                Currency = "USD",
+                Checkout = new() { RedirectURL = s.Link("/register") }
+            });
             await s.GoToInvoices();
             var invoiceId = await s.CreateInvoice();
             await s.GoToInvoiceCheckout(invoiceId);
@@ -2554,11 +2645,149 @@ namespace BTCPayServer.Tests
                 var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
                 Assert.NotNull(invoiceData);
                 var invoice = invoiceData.GetBlob();
-                invoice.MonitoringExpiration = DateTimeOffset.UtcNow.AddMonths(-1).AddSeconds(-1);
+                invoice.MonitoringExpiration = DateTimeOffset.UtcNow.AddDays(-31);
+                invoiceData.SetBlob(invoice);
+                var shortReceiptData = await ctx.Invoices.FindAsync(shortReceiptInvoice.Id);
+                var shortReceipt = shortReceiptData.GetBlob();
+                shortReceipt.MonitoringExpiration = invoice.MonitoringExpiration;
+                shortReceiptData.SetBlob(shortReceipt);
+                var zeroInvoiceData = await ctx.Invoices.FindAsync(zeroInvoice.Id);
+                var zeroInvoiceBlob = zeroInvoiceData.GetBlob();
+                zeroInvoiceBlob.MonitoringExpiration = invoice.MonitoringExpiration;
+                zeroInvoiceData.SetBlob(zeroInvoiceBlob);
+                await ctx.SaveChangesAsync();
+            }
+
+            async Task AssertReceiptRedirect()
+            {
+                await AssertStatus(publicPaths[0], HttpStatusCode.OK);
+                await Expect(s.Page).ToHaveURLAsync(s.Link(publicPaths[2]));
+            }
+
+            await AssertReceiptRedirect();
+            await AssertStatus($"/i/{zeroInvoice.Id}", HttpStatusCode.OK);
+            await Expect(s.Page).ToHaveURLAsync(s.Link($"/i/{zeroInvoice.Id}/receipt"));
+            await AssertStatus(publicPaths[1], HttpStatusCode.NotFound);
+            await AssertStatus(publicPaths[2], HttpStatusCode.OK);
+            await AssertStatus($"/i/{shortReceiptInvoice.Id}", HttpStatusCode.NotFound);
+            await AssertStatus($"/i/{shortReceiptInvoice.Id}/receipt", HttpStatusCode.NotFound);
+            Assert.False(await CanOpenStatusWebSocket());
+
+            await s.GoToLogin();
+            await s.LogIn(ownerEmail, s.Password);
+            await AssertStatus(publicPaths[0], HttpStatusCode.OK);
+            await Expect(s.Page).ToHaveURLAsync(s.Link(publicPaths[0]));
+            await s.GoToHome();
+            await s.Logout();
+
+            async Task SetPublicLinkExpiration(int invoiceDays, int receiptDays, bool receiptEnabled = true)
+            {
+                await s.GoToLogin();
+                await s.LogIn(ownerEmail, s.Password);
+                await s.GoToUrl($"/stores/{s.StoreId}/checkout");
+                var invoiceInput = s.Page.Locator(".public-link-settings__invoice-expiration");
+                var receiptInput = s.Page.Locator(".public-link-settings__receipt-expiration");
+                await invoiceInput.FillAsync(invoiceDays.ToString());
+                await receiptInput.FillAsync(receiptDays.ToString());
+                await s.Page.Locator(".receipt-settings__enabled").SetCheckedAsync(receiptEnabled);
+                await s.ClickPagePrimary();
+                await s.FindAlertMessage(partialText: "Store successfully updated");
+                await s.Page.ReloadAsync();
+                await Expect(invoiceInput).ToHaveValueAsync(invoiceDays.ToString());
+                await Expect(receiptInput).ToHaveValueAsync(receiptDays.ToString());
+                await s.GoToHome();
+                await s.Logout();
+            }
+
+            await SetPublicLinkExpiration(30, 30);
+            foreach (var path in publicPaths)
+                await AssertStatus(path, HttpStatusCode.NotFound);
+
+            // Extending receipts redirects checkout without exposing status or its WebSocket.
+            await SetPublicLinkExpiration(30, 90);
+            await AssertReceiptRedirect();
+            await AssertStatus(publicPaths[1], HttpStatusCode.NotFound);
+            await AssertStatus(publicPaths[2], HttpStatusCode.OK);
+            Assert.False(await CanOpenStatusWebSocket());
+
+            // Disabled receipts must not be used as a fallback.
+            await SetPublicLinkExpiration(30, 90, receiptEnabled: false);
+            foreach (var path in publicPaths)
+                await AssertStatus(path, HttpStatusCode.NotFound);
+
+            // Disabled receipts may redirect only while receipt access is allowed.
+            await AssertStatus($"/i/{zeroInvoice.Id}/receipt", HttpStatusCode.OK);
+            await Expect(s.Page).ToHaveURLAsync(s.Link("/register"));
+            await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(s.StoreId, zeroInvoice.Id, true);
+            await AssertStatus($"/i/{zeroInvoice.Id}/receipt", HttpStatusCode.NotFound);
+
+            await s.GoToLogin();
+            await s.LogIn(ownerEmail, s.Password);
+            await AssertStatus($"/i/{zeroInvoice.Id}/receipt", HttpStatusCode.OK);
+            await Expect(s.Page).ToHaveURLAsync(s.Link("/register"));
+            var disabledStatus = await s.Page.GotoAsync(s.Link(publicPaths[1]));
+            Assert.Null((string)JsonParser.ParseObject(await disabledStatus.TextAsync())["receiptLink"]);
+            await s.GoToHome();
+            await s.Logout();
+            await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(s.StoreId, zeroInvoice.Id, false);
+            await SetPublicLinkExpiration(30, 30, receiptEnabled: false);
+            await AssertStatus($"/i/{zeroInvoice.Id}/receipt", HttpStatusCode.NotFound);
+
+            // The invoice policy is independent from the receipt policy.
+            await SetPublicLinkExpiration(90, 30);
+            await AssertStatus(publicPaths[0], HttpStatusCode.OK);
+            await AssertStatus(publicPaths[1], HttpStatusCode.OK);
+            await AssertStatus(publicPaths[2], HttpStatusCode.NotFound);
+            Assert.True(await CanOpenStatusWebSocket());
+            var statusResponse = await s.Page.GotoAsync(s.Link(publicPaths[1]));
+            Assert.Null((string)JsonParser.ParseObject(await statusResponse.TextAsync())["receiptLink"]);
+            await AssertStatus($"/i/{zeroInvoice.Id}", HttpStatusCode.OK);
+            await Expect(s.Page).ToHaveURLAsync(s.Link("/register"));
+
+            await s.GoToLogin();
+            await s.LogIn(ownerEmail, s.Password);
+            statusResponse = await s.Page.GotoAsync(s.Link(publicPaths[1]));
+            Assert.NotNull((string)JsonParser.ParseObject(await statusResponse.TextAsync())["receiptLink"]);
+            await AssertStatus($"/i/{zeroInvoice.Id}", HttpStatusCode.OK);
+            await Expect(s.Page).ToHaveURLAsync(s.Link($"/i/{zeroInvoice.Id}/receipt"));
+            await s.GoToHome();
+            await s.Logout();
+
+            await using (var ctx = s.Server.PayTester.GetService<ApplicationDbContextFactory>().CreateContext())
+            {
+                var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
+                var invoice = invoiceData.GetBlob();
+                invoice.MonitoringExpiration = DateTimeOffset.UtcNow.AddDays(-120);
                 invoiceData.SetBlob(invoice);
                 await ctx.SaveChangesAsync();
             }
 
+            await SetPublicLinkExpiration(90, 90);
+            foreach (var path in publicPaths)
+                await AssertStatus(path, HttpStatusCode.NotFound);
+            Assert.False(await CanOpenStatusWebSocket());
+
+            await SetPublicLinkExpiration(365, 365);
+            foreach (var path in publicPaths)
+                await AssertStatus(path, HttpStatusCode.OK);
+            Assert.True(await CanOpenStatusWebSocket());
+
+            await using (var ctx = s.Server.PayTester.GetService<ApplicationDbContextFactory>().CreateContext())
+            {
+                var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
+                var invoice = invoiceData.GetBlob();
+                invoice.MonitoringExpiration = DateTimeOffset.UtcNow.AddYears(-2);
+                invoiceData.SetBlob(invoice);
+                await ctx.SaveChangesAsync();
+            }
+
+            await SetPublicLinkExpiration(0, 0);
+            foreach (var path in publicPaths)
+                await AssertStatus(path, HttpStatusCode.OK);
+            Assert.True(await CanOpenStatusWebSocket());
+
+            // Unlimited retention must not make archived invoices public.
+            await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(s.StoreId, invoiceId, true);
             foreach (var path in publicPaths)
                 await AssertStatus(path, HttpStatusCode.NotFound);
             Assert.False(await CanOpenStatusWebSocket());

@@ -1,8 +1,14 @@
 let app, origData;
+// Field names come from invoice metadata too, so the sort state of a field is kept
+// under a prefixed key. A bare __ob__ would collide with the key Vue adds to observed objects.
+const fieldViewKey = name => `field:${name}`;
+srv.fieldView = function (name) {
+    return this.fieldViews[fieldViewKey(name)];
+};
 srv.sortBy = function (field, event) {
     for (let key in this.fieldViews) {
-        if (this.fieldViews.hasOwnProperty(key)) {
-            const sortedField = field === key;
+        if (Object.prototype.hasOwnProperty.call(this.fieldViews, key)) {
+            const sortedField = fieldViewKey(field) === key;
             const fieldView = this.fieldViews[key];
 
             if (sortedField && (fieldView.sortBy === "" || fieldView.sortBy === "desc")) {
@@ -31,10 +37,10 @@ srv.sortBy = function (field, event) {
 srv.applySort = function () {
     let fieldIndex, fieldView;
     for (let key in this.fieldViews) {
-        if (this.fieldViews.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(this.fieldViews, key)) {
             fieldView = this.fieldViews[key];
             if (fieldView.sortBy !== "") {
-                fieldIndex = this.result.fields.findIndex((a) => a.name === key);
+                fieldIndex = this.result.fields.findIndex((a) => fieldViewKey(a.name) === key);
                 break;
             }
             fieldView = null;
@@ -59,21 +65,22 @@ srv.dataUpdated = function () {
     this.applySort();
 };
 srv.updateFieldViews = function () {
-    this.fieldViews = this.fieldViews || {};
+    // Keyed by field name, which can be any invoice metadata key, so it has no prototype
+    this.fieldViews = this.fieldViews || Object.create(null);
 
     // First we remove the fieldViews that doesn't apply anymore
     for (let key in this.fieldViews) {
-        if (this.fieldViews.hasOwnProperty(key)) {
-            if (!this.result.fields.find(i => i.name === key))
+        if (Object.prototype.hasOwnProperty.call(this.fieldViews, key)) {
+            if (!this.result.fields.find(i => fieldViewKey(i.name) === key))
                 delete this.fieldViews[key];
         }
     }
 
     // Then we add those that are missing
     for (let i = 0; i < this.result.fields.length; i++) {
-        const field = this.result.fields[i];
-        if (!this.fieldViews.hasOwnProperty(field.name)) {
-            this.fieldViews[field.name] =
+        const key = fieldViewKey(this.result.fields[i].name);
+        if (!Object.prototype.hasOwnProperty.call(this.fieldViews, key)) {
+            this.fieldViews[key] =
                 {
                     sortBy: "",
                     sortByTitle: ""
@@ -108,7 +115,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 return shorten && title.endsWith(' Amount') ? 'Amount' : title;
             },
             displayValue,
-            displayDate
+            displayDate,
+            httpUrl,
+            stateBadgeClass
         }
     });
 });
@@ -127,6 +136,25 @@ function displayValue(val) {
     return val && typeof val === "object" && typeof val.d === "number" ? new Decimal(val.v).toFixed(val.d) : val;
 }
 
+// Url fields can hold any text from invoice metadata, so only http and https URLs become links
+function httpUrl(val) {
+    try {
+        const url = new URL(val);
+        return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+// Only invoice and payout states add a badge class, other values get a plain badge
+const stateBadges = ["new", "pending", "processing", "settled", "invalid", "expired", "unusual",
+    "awaitingapproval", "awaitingpayment", "inprogress", "completed", "cancelled"];
+
+function stateBadgeClass(val) {
+    const state = val.toLowerCase();
+    return stateBadges.includes(state) ? `badge-${state}` : null;
+}
+
 // This function modify all the fields of a given type
 function modifyFields(fields, data, type, action) {
     const fieldIndices = fields
@@ -142,6 +170,9 @@ function modifyFields(fields, data, type, action) {
     }
 }
 
+// Text a spreadsheet would run as a formula, but not numbers such as negative amounts
+const csvFormulaPattern = /^(?![+-]?\d+(\.\d+)?$)([\t\r\n]|\s*[=+\-@＝＋－＠])/;
+
 function downloadCSV() {
     if (!origData) return;
     const data = clone(origData);
@@ -149,7 +180,7 @@ function downloadCSV() {
     // Convert ISO8601 dates to YYYY-MM-DD HH:mm:ss so the CSV easily integrate with Excel
     modifyFields(srv.result.fields, data, 'amount', displayValue)
     modifyFields(srv.result.fields, data, 'datetime', v => v ? moment(v).format('YYYY-MM-DD HH:mm:ss') : v);
-    const csv = Papa.unparse({fields: srv.result.fields.map(f => f.name), data});
+    const csv = Papa.unparse({fields: srv.result.fields.map(f => f.name), data}, {escapeFormulae: csvFormulaPattern});
     const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     saveAs(blob, "export.csv");
 }

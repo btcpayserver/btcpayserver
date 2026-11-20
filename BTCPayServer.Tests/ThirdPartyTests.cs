@@ -265,18 +265,37 @@ namespace BTCPayServer.Tests
             Assert.InRange(skipped, 0, 5);
         }
 
+        // Only literal href attributes, not Vue bindings (:href / v-bind:href) or data attributes.
+        private static readonly Regex LiteralHttpLinkRegex = new Regex("\\shref=\"(http.*?)\"");
+
+        [Theory]
+        [InlineData("<a href=\"https://example.com\">Link</a>", "https://example.com")]
+        [InlineData("<a\nhref=\"http://example.com\">Link</a>", "http://example.com")]
+        [InlineData("<a :href=\"httpUrl(value)\">Link</a>", null)]
+        [InlineData("<a v-bind:href=\"httpUrl(value)\">Link</a>", null)]
+        [InlineData("<a data-href=\"https://example.com\">Link</a>", null)]
+        [InlineData("<a href=\"/relative\">Link</a>", null)]
+        [InlineData("<a :href=\"httpUrl(value)\" href=\"https://example.com\">Link</a>", "https://example.com")]
+        public void DeadLinkCheckerOnlyMatchesLiteralLinks(string html, string expectedUrl)
+        {
+            var matches = LiteralHttpLinkRegex.Matches(html).OfType<Match>();
+            if (expectedUrl is null)
+                Assert.Empty(matches);
+            else
+                Assert.Equal(expectedUrl, Assert.Single(matches).Groups[1].Value);
+        }
+
         [Fact]
         public async Task CheckNoDeadLink()
         {
             var views = Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "Views");
             var viewFiles = Directory.EnumerateFiles(views, "*.cshtml", SearchOption.AllDirectories).ToArray();
             Assert.NotEmpty(viewFiles);
-            Regex regex = new Regex("href=\"(http.*?)\"");
             var httpClient = new HttpClient();
             List<Task> checkLinks = new List<Task>();
             foreach (var file in viewFiles)
             {
-                checkLinks.Add(CheckDeadLinks(regex, httpClient, file));
+                checkLinks.Add(CheckDeadLinks(LiteralHttpLinkRegex, httpClient, file));
             }
 
             await Task.WhenAll(checkLinks);
@@ -493,18 +512,6 @@ retry:
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vuejs", "vue.min.js").Trim();
             version = Regex.Match(actual, "Vue\\.js v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
             expected = (await (await client.GetAsync($"https://cdnjs.cloudflare.com/ajax/libs/vue/{version}/vue.min.js")).Content.ReadAsStringAsync()).Trim();
-            EqualJsContent(expected, actual);
-
-            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "i18next.min.js").Trim();
-            expected = (await (await client.GetAsync("https://cdnjs.cloudflare.com/ajax/libs/i18next/22.0.6/i18next.min.js")).Content.ReadAsStringAsync()).Trim();
-            EqualJsContent(expected, actual);
-
-            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "i18nextHttpBackend.min.js").Trim();
-            expected = (await (await client.GetAsync("https://cdnjs.cloudflare.com/ajax/libs/i18next-http-backend/2.0.1/i18nextHttpBackend.min.js")).Content.ReadAsStringAsync()).Trim();
-            EqualJsContent(expected, actual);
-
-            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "i18next", "vue-i18next.js").Trim();
-            expected = (await (await client.GetAsync("https://unpkg.com/@panter/vue-i18next@0.15.2/dist/vue-i18next.js")).Content.ReadAsStringAsync()).Trim();
             EqualJsContent(expected, actual);
 
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vue-qrcode", "vue-qrcode.min.js").Trim();

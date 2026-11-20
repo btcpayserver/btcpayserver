@@ -42,7 +42,7 @@ public class SubscriptionsPlugin : BaseBTCPayServerPlugin
         ));
 
         services.AddSingleton(new BuiltInPermissionScopeProvider.RouteValueToStoreIdQuery(
-            "checkoutId", "SELECT a.\"StoreDataId\" FROM \"Apps\" a JOIN subs_offerings o ON o.app_id=a.\"Id\" JOIN subs_plans p ON p.offering_id=o.id JOIN subs_plan_checkouts c ON c.plan_id=p.id WHERE c.id=@id"
+            "planCheckoutId", "SELECT a.\"StoreDataId\" FROM \"Apps\" a JOIN subs_offerings o ON o.app_id=a.\"Id\" JOIN subs_plans p ON p.offering_id=o.id JOIN subs_plan_checkouts c ON c.plan_id=p.id WHERE c.id=@id"
         ));
         services.AddSingleton(new BuiltInPermissionScopeProvider.RouteValueToStoreIdQuery(
             "portalSessionId", "SELECT a.\"StoreDataId\" FROM \"Apps\" a JOIN subs_offerings o ON o.app_id=a.\"Id\" JOIN subs_subscribers s ON s.offering_id=o.id JOIN subs_portal_sessions ps ON ps.subscriber_id=s.id WHERE ps.id=@id"

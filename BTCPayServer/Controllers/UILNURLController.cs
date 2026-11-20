@@ -17,6 +17,7 @@ using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.LNURLPay;
@@ -38,9 +39,11 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NicolasDorier.RateLimits;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
 
 namespace BTCPayServer
@@ -64,6 +67,8 @@ namespace BTCPayServer
         private readonly PayoutProcessorService _payoutProcessorService;
         private readonly CurrencyNameTable _currencies;
         private readonly DisplayFormatter _displayFormatter;
+        private readonly IRateLimitService _rateLimitService;
+        public Logs Logs { get; }
         public IStringLocalizer StringLocalizer { get; }
 
         public UILNURLController(InvoiceRepository invoiceRepository,
@@ -80,10 +85,14 @@ namespace BTCPayServer
             IPluginHookService pluginHookService,
             IStringLocalizer stringLocalizer,
             InvoiceActivator invoiceActivator,
-            CurrencyNameTable currencies, DisplayFormatter displayFormatter)
+            CurrencyNameTable currencies, DisplayFormatter displayFormatter,
+            IRateLimitService rateLimitService,
+            Logs logs)
         {
+            Logs = logs;
             _currencies = currencies;
             _displayFormatter = displayFormatter;
+            _rateLimitService = rateLimitService;
             _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
             _payoutHandlers = payoutHandlers;
@@ -836,13 +845,18 @@ namespace BTCPayServer
                 string replacedInvoiceId = null;
                 if (string.IsNullOrEmpty(lightningPaymentMethod.Destination) || promptDetails.GeneratedBoltAmount != amt)
                 {
-                    replacementClient = _handlers.GetLightningHandler(network).CreateLightningClient(lnConfig);
-                    if (!string.IsNullOrEmpty(lightningPaymentMethod.Destination))
-                        replacedInvoiceId = promptDetails.InvoiceId;
+                    if (!await _rateLimitService.Throttle(ZoneLimits.PublicInvoices, $"lnurl-invoice:{invoiceId}", HttpContext.RequestAborted))
+                        return BadRequest(new LNUrlStatusResponse
+                        {
+                            Status = "ERROR",
+                            Reason = "Too many requests, please try again later."
+                        });
+                    replacedInvoiceId = promptDetails.InvoiceId;
 
                     LightningInvoice invoice;
                     try
                     {
+                        replacementClient = _handlers.GetLightningHandler(network).CreateLightningClient(lnConfig);
                         var expiry = i.ExpirationTime.ToUniversalTime() - DateTimeOffset.UtcNow;
                         HttpContext.Items.Add(nameof(invoiceId), invoiceId);
                         var description = (await _pluginHookService.ApplyFilter("modify-lnurlp-description", lnurlPayRequest.Metadata)) as string;
@@ -858,11 +872,11 @@ namespace BTCPayServer
                     }
                     catch (Exception ex)
                     {
+                        Logs.PayServer.LogError(ex, "Could not generate a lightning invoice for invoice {InvoiceId}", invoiceId);
                         return BadRequest(new LNUrlStatusResponse
                         {
                             Status = "ERROR",
-                            Reason = "Lightning node could not generate invoice" + (
-                                string.IsNullOrEmpty(ex.Message) ? "" : $": {ex.Message}")
+                            Reason = "Lightning node could not generate invoice"
                         });
                     }
 

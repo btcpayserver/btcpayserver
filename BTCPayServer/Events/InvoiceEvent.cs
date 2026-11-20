@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Events
@@ -76,6 +77,10 @@ namespace BTCPayServer.Events
         /// Only set for Refund event
         /// </summary>
         public string PullPaymentId { get; set; }
+        /// <summary>
+        /// Status before the transition represented by this event; null for events that do not change status.
+        /// </summary>
+        public InvoiceStatus? PreviousStatus { get; set; }
 
         public override string ToString()
         {

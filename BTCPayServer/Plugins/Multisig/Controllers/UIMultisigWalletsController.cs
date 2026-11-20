@@ -179,26 +179,35 @@ public class UIMultisigWalletsController(
         if (network is null)
             return NotFound();
 
+        if (await ValidateSignersReady(pending) is { } error)
+            return error;
+
         return vm.Confirmation
-            ? await ConfirmMultisigSetup(vm, store, network)
-            : await FinalizeMultisigRequest(pending, network);
+            ? await ConfirmMultisigSetup(vm, store, network, pending)
+            : FinalizeMultisigRequest(pending, network);
     }
 
-    private async Task<IActionResult> ConfirmMultisigSetup(MultisigSetupViewModel vm, StoreData store, BTCPayNetwork network)
+    private async Task<IActionResult?> ValidateSignersReady(MultisigSetupData pending)
     {
-        if (string.IsNullOrEmpty(vm.MultisigRequestId))
+        if (pending.Participants.Count != pending.TotalSigners || pending.Participants.Any(p => string.IsNullOrWhiteSpace(p.AccountKey)))
         {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), StringLocalizer["The multisig request was not found or has expired."].Value);
-            return View("MultisigConfirm", vm);
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Complete signer collection before creating the multisig wallet."].Value;
+            return RedirectToMultisigSetup(pending.RequestId);
         }
 
-        var pending = await multisigService.GetPendingMultisigSetupContext(vm.StoreId, vm.MultisigRequestId);
-        if (pending is null)
+        var eligibleParticipants = await multisigService.GetStoreUsers(pending.StoreId, pending.Participants.Select(p => p.UserId));
+        var eligibleParticipantIds = eligibleParticipants.Select(p => p.UserId).ToHashSet(StringComparer.Ordinal);
+        if (pending.Participants.Any(p => !eligibleParticipantIds.Contains(p.UserId)))
         {
-            ModelState.AddModelError(nameof(vm.MultisigRequestId), StringLocalizer["The multisig request was not found or has expired."].Value);
-            return View("MultisigConfirm", vm);
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["One or more signers no longer have wallet signing permission."].Value;
+            return RedirectToMultisigSetup(pending.RequestId);
         }
 
+        return null;
+    }
+
+    private async Task<IActionResult> ConfirmMultisigSetup(MultisigSetupViewModel vm, StoreData store, BTCPayNetwork network, MultisigSetupData pending)
+    {
         var strategy = pending.GetDerivationSchemeSettings(network);
         var wallet = walletProvider.GetWallet(network);
         if (wallet is null)
@@ -216,32 +225,14 @@ public class UIMultisigWalletsController(
         await storeRepository.UpdateStore(store);
         eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(store.Id, network.CryptoCode) });
 
-        var finalizedPendingSetting = await multisigService.GetPendingMultisigSetupContext(vm.StoreId, vm.MultisigRequestId);
-        if (finalizedPendingSetting is not null)
-        {
-            await multisigService.DeletePendingMultisigSetup(vm.StoreId, vm.MultisigRequestId);
-            multisigNotificationService.PublishWalletCreatedEvent(finalizedPendingSetting);
-        }
+        await multisigService.DeletePendingMultisigSetup(pending.StoreId, pending.RequestId);
+        multisigNotificationService.PublishWalletCreatedEvent(pending);
         TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Wallet settings for {0} have been updated.", network.CryptoCode].Value;
         return RedirectToAction(nameof(BTCPayServer.Controllers.UIStoreOnChainWalletsController.WalletSettings), "UIStoreOnChainWallets", new { area = WalletsPlugin.Area, storeId = vm.StoreId, cryptoCode = vm.CryptoCode });
     }
 
-    private async Task<IActionResult> FinalizeMultisigRequest(MultisigSetupData pending, BTCPayNetwork network)
+    private IActionResult FinalizeMultisigRequest(MultisigSetupData pending, BTCPayNetwork network)
     {
-        if (pending.Participants.Count != pending.TotalSigners || pending.Participants.Any(p => string.IsNullOrWhiteSpace(p.AccountKey)))
-        {
-            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Complete signer collection before creating the multisig wallet."].Value;
-            return RedirectToMultisigSetup(pending.RequestId);
-        }
-
-        var eligibleParticipants = await multisigService.GetStoreUsers(pending.StoreId, pending.Participants.Select(p => p.UserId));
-        var eligibleParticipantIds = eligibleParticipants.Select(p => p.UserId).ToHashSet(StringComparer.Ordinal);
-        if (pending.Participants.Any(p => !eligibleParticipantIds.Contains(p.UserId)))
-        {
-            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["One or more signers no longer have wallet signing permission."].Value;
-            return RedirectToMultisigSetup(pending.RequestId);
-        }
-
         var strategy = pending.GetDerivationSchemeSettings(network);
         var vm = new MultisigSetupViewModel
         {

@@ -256,7 +256,7 @@ public class BitpayInvoiceController : ControllerBase
         mappings.Add("low", SpeedPolicy.LowSpeed);
         mappings.Add("low-medium", SpeedPolicy.LowMediumSpeed);
         mappings.Add("medium", SpeedPolicy.MediumSpeed);
-        mappings.Add("high", SpeedPolicy.HighSpeed);
+        mappings.Add("high", SpeedPolicy.MediumSpeed);
         if (!mappings.TryGetValue(transactionSpeed, out SpeedPolicy policy))
             policy = defaultPolicy;
         return policy;

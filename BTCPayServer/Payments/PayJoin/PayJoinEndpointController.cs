@@ -200,8 +200,8 @@ namespace BTCPayServer.Payments.PayJoin
                 psbt = PSBT.FromTransaction(tx, network.NBitcoinNetwork);
                 for (int i = 0; i < tx.Inputs.Count; i++)
                 {
-                    psbt.Inputs[i].FinalScriptSig = tx.Inputs[i].ScriptSig;
-                    psbt.Inputs[i].FinalScriptWitness = tx.Inputs[i].WitScript;
+                    psbt.Inputs[i].FinalScriptSig = ctx.OriginalTransaction.Inputs[i].ScriptSig;
+                    psbt.Inputs[i].FinalScriptWitness = ctx.OriginalTransaction.Inputs[i].WitScript;
                 }
             }
 
@@ -401,7 +401,8 @@ namespace BTCPayServer.Payments.PayJoin
                 return CreatePayjoinErrorAndLog(503, PayjoinReceiverWellknownErrors.Unavailable, "We do not have any UTXO available for contributing to a payjoin");
             }
 
-            await _broadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0), ctx.OriginalTransaction, network);
+            if (invoice is not null)
+                await _broadcaster.Schedule(DateTimeOffset.UtcNow + OriginalBroadcastDelay, ctx.OriginalTransaction, network);
 
             var extKeyStr = await explorer.GetMetadataAsync<string>(
                 accountDerivation,
@@ -551,7 +552,6 @@ namespace BTCPayServer.Payments.PayJoin
                 }
                 _eventAggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
             }
-
             await _btcPayWalletProvider.GetWallet(network).SaveOffchainTransactionAsync(ctx.OriginalTransaction);
 
             foreach (var utxo in selectedUTXOs)
@@ -560,6 +560,9 @@ namespace BTCPayServer.Payments.PayJoin
             }
             await _walletRepository.AddWalletTransactionAttachment(walletId, details.PayjoinInformation.CoinjoinTransactionHash, Attachment.Payjoin());
 
+            if (invoice is null)
+                await _broadcaster.Schedule(DateTimeOffset.UtcNow + OriginalBroadcastDelay, ctx.OriginalTransaction, network,
+                    details.PayjoinInformation.CoinjoinTransactionHash, details.PayjoinInformation.ContributedOutPoints);
 
             ctx.Success();
             // BTCPay Server support PSBT set as hex
@@ -581,6 +584,8 @@ namespace BTCPayServer.Payments.PayJoin
             return BadRequest(CreatePayjoinError("invoice-not-fully-paid",
                                 "The transaction must pay the whole invoice"));
         }
+
+        private static readonly TimeSpan OriginalBroadcastDelay = TimeSpan.FromMinutes(2.0);
 
         private uint256 GetExpectedHash(PSBT psbt, Coin?[] coins)
         {

@@ -40,8 +40,17 @@ namespace BTCPayServer.Client.Models
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public TimeSpan? MonitoringExpiration { get; set; }
 
+        [JsonConverter(typeof(TimeSpanJsonConverter.WholeDays))]
+        public TimeSpan? PublicInvoiceExpiration { get; set; }
+
+        private SpeedPolicy? _speedPolicy;
+
         [JsonConverter(typeof(StringEnumConverter))]
-        public SpeedPolicy? SpeedPolicy { get; set; }
+        public SpeedPolicy? SpeedPolicy
+        {
+            get => _speedPolicy?.Normalize();
+            set => _speedPolicy = value?.Normalize();
+        }
         public string LightningDescriptionTemplate { get; set; }
         public double? PaymentTolerance { get; set; }
         public bool? AnyoneCanCreateInvoice { get; set; }
@@ -65,9 +74,6 @@ namespace BTCPayServer.Client.Models
 
         public string DefaultPaymentMethod { get; set; }
 
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string DefaultLang { get; set; }
-
         public string HtmlTitle { get; set; }
 
         [JsonConverter(typeof(StringEnumConverter))]
@@ -79,8 +85,6 @@ namespace BTCPayServer.Client.Models
 
         public bool? PayJoinEnabled { get; set; }
 
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public bool? AutoDetectLanguage { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public bool? ShowPayInWalletButton { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
@@ -106,9 +110,16 @@ namespace BTCPayServer.Client.Models
 
     public enum SpeedPolicy
     {
+        // Retained for stored data and older clients; Normalize maps it to MediumSpeed.
         HighSpeed = 0,
         MediumSpeed = 1,
         LowSpeed = 2,
         LowMediumSpeed = 3
+    }
+
+    public static class SpeedPolicyExtensions
+    {
+        public static SpeedPolicy Normalize(this SpeedPolicy speedPolicy)
+            => speedPolicy == SpeedPolicy.HighSpeed ? SpeedPolicy.MediumSpeed : speedPolicy;
     }
 }

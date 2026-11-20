@@ -76,7 +76,6 @@ namespace BTCPayServer.Data
             return string.Join(',', DefaultCurrencyPairs.Select(c => c.ToString()));
         }
 
-        public string DefaultLang { get; set; }
         public string StorefrontLanguage { get; set; }
         [DefaultValue(typeof(TimeSpan), "1.00:00:00")]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -175,11 +174,11 @@ namespace BTCPayServer.Data
         public string HtmlTitle { get; set; }
         public string CheckoutText { get; set; }
 
-        public bool AutoDetectLanguage { get; set; }
-
 #nullable enable
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public InvoiceDataBase.ReceiptOptions ReceiptOptions { get; set; }
+        [JsonConverter(typeof(TimeSpanJsonConverter.Days))]
+        public TimeSpan? PublicInvoiceExpiration { get; set; }
 #nullable restore
 
         public bool AnyoneCanInvoice { get; set; }

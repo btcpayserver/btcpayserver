@@ -527,6 +527,18 @@
                             }
                         ]
                     },
+                    "publicInvoiceExpiration": {
+                        "nullable": true,
+                        "default": null,
+                        "minimum": 0,
+                        "maximum": 36500,
+                        "description": "Days public invoice links remain accessible after payment monitoring ends. Null or omission uses the default of 30 days; use 0 for indefinite access.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanDays"
+                            }
+                        ]
+                    },
                     "refundBOLT11Expiration": {
                         "default": 30,
                         "minimum": 0,
@@ -631,11 +643,6 @@
                         "default": 1,
                         "description": "The fee rate recommendation in the checkout page for the on-chain payment to be confirmed after 'x' blocks."
                     },
-                    "defaultLang": {
-                        "type": "string",
-                        "default": "en",
-                        "description": "The default language to use in the checkout page. (The different translations available are listed [here](https://github.com/btcpayserver/btcpayserver/tree/master/BTCPayServer/wwwroot/locales)"
-                    },
                     "htmlTitle": {
                         "type": "string",
                         "nullable": true,
@@ -648,11 +655,6 @@
                         "type": "boolean",
                         "default": false,
                         "description": "If true, payjoin will be proposed in the checkout page if possible. ([More information](https://docs.btcpayserver.org/Payjoin/))"
-                    },
-                    "autoDetectLanguage": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "If true, the language on the checkout page will adapt to the language defined by the user's browser settings"
                     },
                     "showPayInWalletButton": {
                         "type": "boolean",

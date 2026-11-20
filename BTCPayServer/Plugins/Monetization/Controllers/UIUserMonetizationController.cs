@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
+using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Plugins.Monetization.Controllers;
 
@@ -31,6 +32,7 @@ public class UIUserMonetizationController(
 
     [HttpGet("~/monetization/new-user")]
     [AllowAnonymous]
+    [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
     public async Task<IActionResult> NewUser()
     {
         if (settings is not { OfferingId: { } offeringId, DefaultPlanId: { } defaultPlanId })

@@ -48,10 +48,8 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly DefaultRulesCollection _defaultRules;
 
-        public LanguageService LanguageService { get; }
-
         public GreenfieldInvoiceController(UIInvoiceController invoiceController, InvoiceRepository invoiceRepository,
-            LinkGenerator linkGenerator, LanguageService languageService,
+            LinkGenerator linkGenerator,
             CurrencyNameTable currencyNameTable, RateFetcher rateProvider,
             InvoiceActivator invoiceActivator,
             PullPaymentHostedService pullPaymentService,
@@ -77,7 +75,6 @@ namespace BTCPayServer.Controllers.Greenfield
             _handlers = handlers;
             _networkProvider = networkProvider;
             _defaultRules = defaultRules;
-            LanguageService = languageService;
         }
 
         [Authorize(Policy = Policies.CanViewInvoices,
@@ -181,6 +178,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.Amount), $"The amount should less than {GreenfieldConstants.MaxAmount}.");
             }
             request.Checkout ??= new CreateInvoiceRequest.CheckoutOptions();
+            if (request.Receipt?.PublicReceiptExpiration < TimeSpan.Zero ||
+                request.Receipt?.PublicReceiptExpiration > TimeSpan.FromDays(LengthLimits.MaxExpirationDays))
+                request.AddModelError(r => r.Receipt.PublicReceiptExpiration,
+                    $"PublicReceiptExpiration must be between 0 and {LengthLimits.MaxExpirationDays} days", this);
             if (!string.IsNullOrEmpty(request.Checkout.RedirectURL) &&
                 (!Uri.TryCreate(request.Checkout.RedirectURL, UriKind.Absolute, out var redirectUri) ||
                  redirectUri.Scheme is not ("http" or "https")))
@@ -214,21 +215,6 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 request.AddModelError(invoiceRequest => invoiceRequest.Checkout.PaymentTolerance,
                     "PaymentTolerance can only be between 0 and 100 percent", this);
-            }
-
-            if (request.Checkout.DefaultLanguage != null)
-            {
-                var lang = LanguageService.FindLanguage(request.Checkout.DefaultLanguage);
-                if (lang == null)
-                {
-                    request.AddModelError(invoiceRequest => invoiceRequest.Checkout.DefaultLanguage,
-                    "The requested defaultLang does not exists, Browse the ~/misc/lang page of your BTCPay Server instance to see the list of supported languages.", this);
-                }
-                else
-                {
-                    // Ensure this is good case
-                    request.Checkout.DefaultLanguage = lang.Code;
-                }
             }
 
             if (!ModelState.IsValid)
@@ -522,7 +508,12 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             createPullPayment.AutoApproveClaims = createPullPayment.AutoApproveClaims && (await _authorizationService.AuthorizeAsync(User, storeId ,Policies.CanCreatePullPayments)).Succeeded;
-            var ppId = await _pullPaymentService.CreateRefundPullPayment(store, createPullPayment, invoice.Id);
+            var ppId = await _pullPaymentService.CreateRefundPullPayment(store, createPullPayment, invoice.Id, request.RefundVariant is RefundVariant.Custom);
+            if (ppId is null)
+            {
+                ModelState.AddModelError(nameof(request.RefundVariant), "This invoice already has a refund which is not archived");
+                return this.CreateValidationError(ModelState);
+            }
 
             var pp = await _pullPaymentService.GetPullPayment(ppId, false);
             return this.Ok(CreatePullPaymentData(pp));
@@ -699,7 +690,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 PaidAmount = Math.Round(entity.PaidAmount.Net, currencyNameTable.GetNumberFormatInfo(entity.Currency)?.CurrencyDecimalDigits ?? 2),
                 Type = entity.Type,
                 Id = entity.Id,
-                CheckoutLink = request is null ? null : linkGenerator.CheckoutLink(entity.Id, request.Scheme, request.Host, request.PathBase),
+                CheckoutLink = request is null ? null : linkGenerator.InvoiceCheckoutLink(entity.Id, request.GetRequestBaseUrl()),
                 Status = entity.Status,
                 AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.Currency,
@@ -714,8 +705,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     PaymentMethods =
                         entity.GetPaymentPrompts().Select(method => method.PaymentMethodId.ToString()).ToArray(),
                     DefaultPaymentMethod = entity.DefaultPaymentMethod?.ToString(),
-                    SpeedPolicy = entity.SpeedPolicy,
-                    DefaultLanguage = entity.DefaultLanguage,
+                    SpeedPolicy = entity.SpeedPolicy.Normalize(),
                     RedirectAutomatically = entity.RedirectAutomatically,
                     RedirectURL = entity.RedirectURLTemplate
                 },

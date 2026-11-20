@@ -104,70 +104,10 @@
                 "security": []
             }
         },
-        "/misc/lang": {
-            "get": {
-                "tags": [
-                    "Miscelleneous"
-                ],
-                "summary": "Language codes",
-                "description": "The supported language codes",
-                "operationId": "langCodes",
-                "responses": {
-                    "200": {
-                        "description": "The supported language codes",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "code": {
-                                                "type": "string",
-                                                "description": "The language code",
-                                                "nullable": false
-                                            },
-                                            "currentLanguage": {
-                                                "type": "string",
-                                                "description": "The language name",
-                                                "nullable": false
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "If you are authenticated but forbidden to get the data"
-                    },
-                    "default": {
-                        "description": "Unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ProblemDetails"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": []
-            }
-        },
         "/i/{invoiceId}": {
             "parameters": [
                 {
                     "$ref": "#/components/parameters/InvoiceId"
-                },
-                {
-                    "name": "lang",
-                    "in": "query",
-                    "required": false,
-                    "description": "The preferred language of the checkout page. You can use \"auto\" to use the language of the customer's browser or see the list of language codes with [this operation](#operation/langCodes).",
-                    "schema": {
-                        "type": "string"
-                    }
                 }
             ],
             "get": {

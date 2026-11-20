@@ -102,37 +102,76 @@ namespace BTCPayServer.HostedServices
         }
         public async Task<string> CreatePullPayment(Data.StoreData store, CreatePullPaymentRequest create)
         {
-            return (await CreatePullPaymentCore(store, create)).Id;
-        }
-
-        public async Task<string> CreateRefundPullPayment(Data.StoreData store, CreatePullPaymentRequest create, string invoiceId)
-        {
-            var pullPayment = await CreatePullPaymentCore(store, create);
             await using var ctx = _dbContextFactory.CreateContext();
-            ctx.Refunds.Add(new RefundData()
-            {
-                InvoiceDataId = invoiceId,
-                PullPaymentDataId = pullPayment.Id
-            });
+            var pullPayment = BuildPullPayment(store, create);
+            ctx.PullPayments.Add(pullPayment);
             await ctx.SaveChangesAsync();
-            var invoice = await _invoiceRepository.GetInvoice(invoiceId);
-            if (invoice is not null)
-                _eventAggregator.Publish(new Events.InvoiceEvent(invoice, Events.InvoiceEvent.Refund) { PullPaymentId = pullPayment.Id });
             return pullPayment.Id;
         }
 
-        private async Task<Data.PullPaymentData> CreatePullPaymentCore(Data.StoreData store, CreatePullPaymentRequest create)
+        public Task<string> CreateRefundPullPayment(Data.StoreData store, CreatePullPaymentRequest create, string invoiceId)
+            => CreateRefundPullPayment(store, create, invoiceId, allowAdditionalRefund: true);
+
+        /// <summary>
+        /// Creates the refund pull payment of an invoice. Returns null when <paramref name="allowAdditionalRefund"/>
+        /// is false and the invoice already has a refund pull payment which is not archived.
+        /// </summary>
+        public async Task<string> CreateRefundPullPayment(Data.StoreData store, CreatePullPaymentRequest create, string invoiceId, bool allowAdditionalRefund)
         {
+            var (id, created) = await GetOrCreateRefundPullPayment(store, create, invoiceId, allowAdditionalRefund);
+            return created ? id : null;
+        }
+
+        internal static Task<string> FindOpenRefundId(ApplicationDbContext ctx, string invoiceId, CancellationToken cancellationToken = default)
+            => ctx.Refunds.Where(r => r.InvoiceDataId == invoiceId && !r.PullPaymentData.Archived)
+                          .OrderByDescending(r => r.PullPaymentData.StartDate)
+                          .Select(r => r.PullPaymentDataId)
+                          .FirstOrDefaultAsync(cancellationToken);
+
+        internal async Task<(string Id, bool Created)> GetOrCreateRefundPullPayment(Data.StoreData store, CreatePullPaymentRequest create,
+            string invoiceId, bool allowAdditionalRefund = false)
+        {
+            Data.PullPaymentData pullPayment = null;
+            await using var strategyContext = _dbContextFactory.CreateContext();
+            var result = await strategyContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+            {
+                await using var ctx = _dbContextFactory.CreateContext();
+                await using var transaction = await ctx.Database.BeginTransactionAsync(System.Data.IsolationLevel.ReadCommitted);
+                await ctx.Database.ExecuteSqlInterpolatedAsync($"""
+                    SELECT 1 FROM "Invoices" WHERE "Id" = {invoiceId} FOR UPDATE
+                    """);
+                if (pullPayment is not null && await ctx.Refunds.AnyAsync(r => r.PullPaymentDataId == pullPayment.Id))
+                    return (Id: pullPayment.Id, Created: true);
+                if (!allowAdditionalRefund && await FindOpenRefundId(ctx, invoiceId) is { } existingId)
+                    return (Id: existingId, Created: false);
+
+                pullPayment ??= BuildPullPayment(store, create);
+                ctx.PullPayments.Add(pullPayment);
+                ctx.Refunds.Add(new RefundData()
+                {
+                    InvoiceDataId = invoiceId,
+                    PullPaymentDataId = pullPayment.Id
+                });
+                await ctx.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return (Id: pullPayment.Id, Created: true);
+            });
+            if (result.Created && await _invoiceRepository.GetInvoice(invoiceId) is { } invoice)
+                _eventAggregator.Publish(new Events.InvoiceEvent(invoice, Events.InvoiceEvent.Refund) { PullPaymentId = result.Id });
+            return result;
+        }
+
+        private Data.PullPaymentData BuildPullPayment(Data.StoreData store, CreatePullPaymentRequest create)
+        {
+            ArgumentNullException.ThrowIfNull(create);
             var supported = this._handlers.GetSupportedPayoutMethods(store);
             create.PayoutMethods ??= supported.Select(s => s.ToString()).ToArray();
             create.PayoutMethods = create.PayoutMethods.Where(pm => _handlers.Support(PayoutMethodId.Parse(pm))).ToArray();
             if (create.PayoutMethods.Length == 0)
                 throw new InvalidOperationException("request.PayoutMethods should have at least one payout method");
 
-            ArgumentNullException.ThrowIfNull(create);
             if (create.Amount <= 0.0m)
                 throw new ArgumentException("Amount out of bound", nameof(create));
-            using var ctx = this._dbContextFactory.CreateContext();
             var o = new Data.PullPaymentData();
             o.StartDate = create.StartsAt is DateTimeOffset date
                 ? date
@@ -157,8 +196,6 @@ namespace BTCPayServer.HostedServices
                 },
                 BOLT11Expiration = create.BOLT11Expiration ?? store.GetStoreBlob().RefundBOLT11Expiration
             });
-            ctx.PullPayments.Add(o);
-            await ctx.SaveChangesAsync();
             return o;
         }
 
@@ -480,8 +517,8 @@ namespace BTCPayServer.HostedServices
                 if (explicitRateRule is null)
                 {
                     var storeBlob = payout.StoreData.GetStoreBlob();
-                    var rules = storeBlob.GetRateRules(_defaultRules);
                     storeBlob.Spread = 0.0m;
+                    var rules = storeBlob.GetRateRules(_defaultRules);
                     rule = rules.GetRuleFor(currencyPair);
                 }
                 else
@@ -601,7 +638,8 @@ namespace BTCPayServer.HostedServices
 
                 if (req.Request.ExpectedState is { } expectedState &&
                     (payout.State != expectedState ||
-                     !JToken.DeepEquals(payout.GetProofBlobJson(), req.Request.ExpectedProof)))
+                     (req.Request.MatchExpectedProof &&
+                      !JToken.DeepEquals(payout.GetProofBlobJson(), req.Request.ExpectedProof))))
                 {
                     req.Completion.SetResult(MarkPayoutRequest.PayoutPaidResult.InvalidState);
                     return;
@@ -623,7 +661,7 @@ namespace BTCPayServer.HostedServices
                         payout.SetProofBlob(req.Request.Proof);
                         break;
                     default:
-                        payout.SetProofBlob(null);
+                        payout.SetProofBlob(req.Request.RestoreProof ? req.Request.Proof : null);
                         break;
                 }
                 payout.State = req.Request.State;
@@ -989,7 +1027,18 @@ namespace BTCPayServer.HostedServices
         public PayoutState State { get; set; } = PayoutState.Completed;
         public PayoutBlob UpdateBlob { get; internal set; }
         public PayoutState? ExpectedState { get; internal set; }
-        public JObject ExpectedProof { get; internal set; }
+        private JObject _expectedProof;
+        public JObject ExpectedProof
+        {
+            get => _expectedProof;
+            internal set
+            {
+                _expectedProof = value;
+                MatchExpectedProof = true;
+            }
+        }
+        internal bool MatchExpectedProof { get; private set; }
+        internal bool RestoreProof { get; set; }
 
         public static string GetErrorMessage(PayoutPaidResult result)
         {

@@ -52,11 +52,11 @@ public class UIFormsController(
         return View("Modify", vm);
     }
 
-    [HttpGet("~/stores/{storeId}/forms/modify/{id}")]
+    [HttpGet("~/forms/{formId}/edit")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> Modify(string storeId, string id)
+    public async Task<IActionResult> Modify(string formId)
     {
-        var form = await formDataService.GetForm(storeId, id);
+        var form = await formDataService.GetForm(HttpContext.GetStoreData().Id, formId);
         if (form is null)
             return NotFound();
 
@@ -64,13 +64,15 @@ public class UIFormsController(
         return View(new ModifyForm { Name = form.Name, FormConfig = config.ToString(), Public = form.Public });
     }
 
-    [HttpPost("~/stores/{storeId}/forms/modify/{id?}")]
+    [HttpPost("~/forms/{formId}/edit")]
+    [HttpPost("~/stores/{storeId}/forms/new", Order = 1)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> Modify(string storeId, string? id, ModifyForm modifyForm)
+    public async Task<IActionResult> Modify(string? formId, ModifyForm modifyForm)
     {
-        if (id is not null)
+        var storeId = HttpContext.GetStoreData().Id;
+        if (formId is not null)
         {
-            if (await formDataService.GetForm(storeId, id) is null)
+            if (await formDataService.GetForm(storeId, formId) is null)
             {
                 return NotFound();
             }
@@ -94,13 +96,13 @@ public class UIFormsController(
         {
             var formData = new FormData
             {
-                Id = id,
+                Id = formId,
                 StoreId = storeId,
                 Name = modifyForm.Name,
                 Config = modifyForm.FormConfig,
                 Public = modifyForm.Public
             };
-            var isNew = id is null;
+            var isNew = formId is null;
             await formDataService.AddOrUpdateForm(formData);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
@@ -111,7 +113,7 @@ public class UIFormsController(
             });
             if (isNew)
             {
-                return RedirectToAction("Modify", new { storeId, id = formData.Id });
+                return RedirectToAction("Modify", new { formId = formData.Id });
             }
         }
         catch (Exception e)
@@ -122,11 +124,12 @@ public class UIFormsController(
         return View(modifyForm);
     }
 
-    [HttpPost("~/stores/{storeId}/forms/{id}/remove")]
+    [HttpPost("~/forms/{formId}/remove")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> Remove(string storeId, string id)
+    public async Task<IActionResult> Remove(string formId)
     {
-        await formDataService.RemoveForm(id, storeId);
+        var storeId = HttpContext.GetStoreData().Id;
+        await formDataService.RemoveForm(formId, storeId);
         TempData.SetStatusMessageModel(new StatusMessageModel
         {
             Severity = StatusMessageModel.StatusSeverity.Success,
@@ -138,7 +141,7 @@ public class UIFormsController(
     [AllowAnonymous]
     [HttpGet("~/forms/{formId}")]
     [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
-    [UseStoreLanguage]
+    [StorefrontRoute]
     public async Task<IActionResult> ViewPublicForm(string? formId)
     {
         FormData? formData = await formDataService.GetForm(formId);
@@ -176,7 +179,7 @@ public class UIFormsController(
     [HttpPost("~/forms/{formId}")]
     [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
     [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
-    [UseStoreLanguage]
+    [StorefrontRoute]
     public async Task<IActionResult> SubmitForm(string formId)
     {
         var formData = await formDataService.GetForm(formId);
@@ -219,7 +222,7 @@ public class UIFormsController(
             {
                 return RedirectToAction("InvoiceReceipt", "UIInvoice", new { invoiceId = inv.Id });
             }
-            return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = inv.Id });
+            return this.RedirectToInvoiceCheckout(inv.Id);
         }
         catch (Exception e)
         {

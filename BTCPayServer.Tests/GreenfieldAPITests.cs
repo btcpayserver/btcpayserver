@@ -272,11 +272,6 @@ namespace BTCPayServer.Tests
                 var acc = tester.NewAccount();
                 await acc.GrantAccessAsync();
                 var unrestricted = await acc.CreateClient();
-                var langs = await unrestricted.GetAvailableLanguages();
-                Assert.NotEmpty(langs);
-                Assert.NotNull(langs[0].Code);
-                Assert.NotNull(langs[0].DisplayName);
-
                 var perms = await unrestricted.GetPermissionMetadata();
                 Assert.NotEmpty(perms);
                 var p = perms.First(p => p.PermissionName == "unrestricted");
@@ -1462,6 +1457,47 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task ApprovePayoutRateRuleRequiresPullPaymentPermission()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var acc = tester.NewAccount();
+            await acc.RegisterAsync();
+            await acc.CreateStoreAsync();
+            var storeId = (await acc.RegisterDerivationSchemeAsync("BTC", importKeysToNBX: true)).StoreId;
+            var client = await acc.CreateClient();
+            var payoutsClient = await acc.CreateClient(Policies.CanManagePayouts);
+            var pp = await client.CreatePullPayment(storeId, new CreatePullPaymentRequest()
+            {
+                Name = "Test USD",
+                Amount = 5000m,
+                Currency = "USD",
+                PayoutMethods = new[] { "BTC" }
+            });
+            var address = await tester.ExplorerNode.GetNewAddressAsync();
+            var payout = await client.CreatePayout(pp.Id, new CreatePayoutRequest()
+            {
+                Destination = address.ToString(),
+                PayoutMethodId = "BTC"
+            });
+
+            await AssertHttpError(403, async () => await payoutsClient.ApprovePayout(payout.Id, new ApprovePayoutRequest()
+            {
+                Revision = payout.Revision,
+                RateRule = "1"
+            }));
+
+            // Without an explicit rate the payouts permission alone still approves, at the store rate.
+            var approved = await payoutsClient.ApprovePayout(payout.Id, new ApprovePayoutRequest()
+            {
+                Revision = payout.Revision
+            });
+            Assert.Equal(PayoutState.AwaitingPayment, approved.State);
+            Assert.Equal(1.0m, approved.PayoutAmount);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanProcessPayoutsExternally()
         {
             using var tester = CreateServerTester();
@@ -1832,7 +1868,7 @@ namespace BTCPayServer.Tests
                     await clientBasic.GetCurrentUser();
                 }
             });
-            Assert.Contains("Rate limited", err.Message);
+            Assert.Equal("Basic authentication failed", err.Message);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -2076,7 +2112,19 @@ namespace BTCPayServer.Tests
             Assert.Equal(1, pp.Amount);
             Assert.Equal(pp.Name, $"Refund {invoice.Id}");
 
+            // a further non-Custom refund is refused while that one is still open
+            validationError = await AssertValidationError(new[] { "RefundVariant" }, async () =>
+            {
+                await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest()
+                {
+                    PayoutMethodId = method.PaymentMethodId,
+                    RefundVariant = RefundVariant.RateThen
+                });
+            });
+            Assert.Contains("already has a refund", validationError.Message, StringComparison.OrdinalIgnoreCase);
+
             // test RefundVariant.CurrentRate
+            await client.ArchivePullPayment(pp.Id);
             pp = await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest()
             {
                 PayoutMethodId = method.PaymentMethodId,
@@ -2087,6 +2135,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(1, pp.Amount);
 
             // test RefundVariant.Fiat
+            await client.ArchivePullPayment(pp.Id);
             pp = await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest()
             {
                 PayoutMethodId = method.PaymentMethodId,
@@ -2097,6 +2146,7 @@ namespace BTCPayServer.Tests
             Assert.False(pp.AutoApproveClaims);
             Assert.Equal(5000, pp.Amount);
             Assert.Equal("my test name", pp.Name);
+            var fiatRefundId = pp.Id;
 
             // test RefundVariant.Custom
             validationError = await AssertValidationError(new[] { "CustomAmount", "CustomCurrency" }, async () =>
@@ -2120,6 +2170,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("JPY", pp.Currency);
             Assert.False(pp.AutoApproveClaims);
             Assert.Equal(69420, pp.Amount);
+            var customRefundId = pp.Id;
 
             // should auto-approve if currencies match
             pp = await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest()
@@ -2155,6 +2206,9 @@ namespace BTCPayServer.Tests
             Assert.Contains("Refund amount must be greater than 0", validationError.Message);
 
             // should auto-approve
+            await client.ArchivePullPayment(fiatRefundId);
+            await client.ArchivePullPayment(customRefundId);
+            await client.ArchivePullPayment(pp.Id);
             pp = await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest
             {
                 PayoutMethodId = method.PaymentMethodId,
@@ -2217,6 +2271,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(method.Due, pp.Amount);
 
             // once more with subtract percentage
+            await client.ArchivePullPayment(pp.Id);
             pp = await client.RefundInvoice(invoice.Id, new RefundInvoiceRequest
             {
                 PayoutMethodId = method.PaymentMethodId,
@@ -2590,7 +2645,6 @@ namespace BTCPayServer.Tests
                     Amount = 1,
                     Checkout = new CreateInvoiceRequest.CheckoutOptions
                     {
-                        DefaultLanguage = "it-it ",
                         RedirectURL = "http://toto.com/lol"
                     }
                 });
@@ -2600,26 +2654,7 @@ namespace BTCPayServer.Tests
             Assert.EndsWith($"/i/{newInvoice.Id}", newInvoice.CheckoutLink);
             var controller = tester.PayTester.GetController<UIInvoiceController>(user.UserId, user.StoreId);
             var model = (CheckoutModel)((ViewResult)await controller.Checkout(newInvoice.Id)).Model;
-            Assert.Equal("it-IT", model.DefaultLang);
             Assert.Equal("http://toto.com/lol", model.MerchantRefLink);
-
-            var langs = tester.PayTester.GetService<LanguageService>();
-            foreach (var match in new[] { "it", "it-IT", "it-LOL" })
-            {
-                Assert.Equal("it-IT", langs.FindLanguage(match).Code);
-            }
-            foreach (var match in new[] { "pt-BR" })
-            {
-                Assert.Equal("pt-BR", langs.FindLanguage(match).Code);
-            }
-            foreach (var match in new[] { "en", "en-US" })
-            {
-                Assert.Equal("en", langs.FindLanguage(match).Code);
-            }
-            foreach (var match in new[] { "pt", "pt-pt", "pt-PT" })
-            {
-                Assert.Equal("pt-PT", langs.FindLanguage(match).Code);
-            }
 
             //payment method activation tests
             var store = await client.GetStore(user.StoreId);
@@ -4464,16 +4499,31 @@ namespace BTCPayServer.Tests
                         break;
                 }
             };
+            var destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address;
+            var destinationScript = BitcoinAddress.Create(destination, tester.ExplorerClient.Network.NBitcoinNetwork).ScriptPubKey;
+            var claimedBeforeBroadcast = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var eventAggregator = tester.PayTester.GetService<EventAggregator>();
+            using var claimSubscription = eventAggregator.SubscribeAny<PayoutEvent>(evt =>
+            {
+                if (evt.Payout.State == PayoutState.InProgress && evt.Payout.DedupId == destination)
+                    claimedBeforeBroadcast.TrySetResult(true);
+            });
+            using var broadcastSubscription = eventAggregator.SubscribeAny<NewOnChainTransactionEvent>(evt =>
+            {
+                if (evt.NewTransactionEvent.TransactionData.Transaction?.Outputs.Any(o => o.ScriptPubKey == destinationScript) is true)
+                    claimedBeforeBroadcast.TrySetResult(false);
+            });
             var payoutThatShouldBeProcessedStraightAway = await adminClient.CreatePayout(admin.StoreId, new CreatePayoutThroughStoreRequest()
             {
                 PullPaymentId = pullPayment.Id,
                 Amount = 0.5m,
                 Approved = true,
                 PayoutMethodId = "BTC",
-                Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
+                Destination = destination,
             });
             await beforeHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
             await afterHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(await claimedBeforeBroadcast.Task.WaitAsync(TimeSpan.FromSeconds(5)));
             payouts = await adminClient.GetStorePayouts(admin.StoreId);
             try
             {

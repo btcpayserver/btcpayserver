@@ -87,14 +87,14 @@
             }
             @if (!Model.Started && Model.StartDate.HasValue)
             {
-                <h6 class="text-muted fst-italic mt-3" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate" v-text="`Starts in ${startDiff}`" data-test="time-state">
-                    @StringLocalizer["Starts {0}", TimeZoneInfo.ConvertTimeFromUtc(Model.StartDate.Value, TimeZoneInfo.Local)]
+                <h6 class="text-muted fst-italic mt-3" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate" data-test="time-state">
+                    <span text-translate="true">Starts in</span> <span v-text="startDiff"></span>
                 </h6>
             }
             else if (Model.Started && !Model.Ended && Model.EndDate.HasValue)
             {
-                <h6 class="text-muted fst-italic mt-3" v-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate" v-text="`Ends in ${endDiff}`" data-test="time-state">
-                    @StringLocalizer["Ends {0}", TimeZoneInfo.ConvertTimeFromUtc(Model.EndDate.Value, TimeZoneInfo.Local)]
+                <h6 class="text-muted fst-italic mt-3" v-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate" data-test="time-state">
+                    <span text-translate="true">Ends in</span> <span v-text="endDiff"></span>
                 </h6>
             }
             else if (Model.Started && !Model.Ended && !Model.EndDate.HasValue)
@@ -136,7 +136,7 @@
         <div class="row py-2 text-center crowdfund-stats">
             <div class="col-sm border-end p-3 text-center" id="crowdfund-body-raised-amount">
                 <h3 v-text="`${raisedAmount} ${targetCurrency}`">@Math.Round(Model.Info.CurrentAmount + Model.Info.CurrentPendingAmount, Model.CurrencyData.Divisibility) @Model.TargetCurrency</h3>
-                <h5 class="text-muted fst-italic mb-0">Raised</h5>
+                <h5 class="text-muted fst-italic mb-0" text-translate="true">Raised</h5>
                 <b-tooltip target="crowdfund-body-raised-amount" v-if="paymentStats && paymentStats.length > 0" class="only-for-js">
                     <ul class="p-0 text-uppercase">
                         <li v-for="stat of paymentStats" class="list-unstyled">
@@ -148,7 +148,7 @@
 
             <div class="col-sm border-end p-3 text-center" id="crowdfund-body-goal-raised">
                 <h3 v-text="`${percentageRaisedAmount}%`">@Math.Round(Model.Info.PendingProgressPercentage.GetValueOrDefault(0) + Model.Info.ProgressPercentage.GetValueOrDefault(0))%</h3>
-                <h5 class="text-muted fst-italic mb-0">Of Goal</h5>
+                <h5 class="text-muted fst-italic mb-0" text-translate="true">Of Goal</h5>
                 <b-tooltip target="crowdfund-body-goal-raised" v-if="srvModel.resetEvery !== 'Never'" class="only-for-js">
                     Goal resets every {{srvModel.resetEveryAmount}} {{srvModel.resetEvery}} {{srvModel.resetEveryAmount>1?'s': ''}}
                 </b-tooltip>
@@ -241,7 +241,7 @@
             </contribute>
         </b-modal>
         <footer class="store-footer">
-            <p class="text-muted" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</p>
+            <p class="text-muted"><span text-translate="true">Updated</span> <span v-text="lastUpdated">@Model.Info.LastUpdated</span></p>
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                 <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
             </a>
@@ -328,7 +328,7 @@
                 </div>
                 <div class="card-footer d-flex justify-content-between" v-if="perk.sold || perk.inventory != null">
                     <span v-if="perk.inventory != null && perk.inventory > 0" class="text-center text-muted">{{new Intl.NumberFormat().format(perk.inventory)}} left</span>
-                    <span v-if="perk.inventory != null && perk.inventory <= 0" class="text-center text-muted">Sold out</span>
+                    <span v-if="perk.inventory != null && perk.inventory <= 0" class="text-center text-muted" text-translate="true">Sold out</span>
                     <span v-if="perk.sold">{{new Intl.NumberFormat().format(perk.sold)}} Contributor{{perk.sold === 1 ? "": "s"}}</span>
                     <span v-if="perk.value">{{formatAmount(perk.value, srvModel.currencyData.divisibility)}} {{targetCurrency}} total</span>
                 </div>

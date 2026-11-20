@@ -258,37 +258,51 @@ namespace BTCPayServer.Services
             if (user is null)
                 return new SetDisabledResult.Unchanged();
 
-            await using var ctx = _applicationDbContextFactory.CreateContext();
-            var existing = await ctx.UserAccessRestrictions.FindAsync(userId, type);
-            if (restricted == (existing is not null))
-                return new SetDisabledResult.Unchanged();
-
+            await using var strategyContext = _applicationDbContextFactory.CreateContext();
+            var commitAttempted = false;
             try
             {
-                if (restricted)
+                var result = await strategyContext.Database.CreateExecutionStrategy().ExecuteAsync<SetDisabledResult>(async () =>
                 {
-                    ctx.UserAccessRestrictions.Add(new UserAccessRestriction
+                    await using var ctx = _applicationDbContextFactory.CreateContext();
+                    await using var transaction = await ctx.Database.BeginTransactionAsync();
+                    var existing = await ctx.UserAccessRestrictions.FindAsync(userId, type);
+                    if (restricted == (existing is not null))
+                        // A lost commit response may leave the requested change persisted.
+                        return commitAttempted ? new SetDisabledResult.Success { User = user } : new SetDisabledResult.Unchanged();
+
+                    if (restricted)
                     {
-                        ApplicationUserId = userId,
-                        Type = type,
-                        CreatedAt = DateTimeOffset.UtcNow
-                    });
-                }
-                else
-                {
-                    ctx.UserAccessRestrictions.Remove(existing!);
-                }
+                        ctx.UserAccessRestrictions.Add(new UserAccessRestriction
+                        {
+                            ApplicationUserId = userId,
+                            Type = type,
+                            CreatedAt = DateTimeOffset.UtcNow
+                        });
+                    }
+                    else
+                    {
+                        ctx.UserAccessRestrictions.Remove(existing!);
+                    }
 
-                await ctx.SaveChangesAsync();
+                    await ctx.SaveChangesAsync();
 
-                if (restricted)
-                {
-                    await userManager.UpdateSecurityStampAsync(user);
-                    // Force immediate cookie revalidation instead of waiting for the stamp validation interval.
-                    _securityStampInvalidator.Invalidate(user.Id);
-                }
-                await ctx.Users.UpdateStoreNoActiveUserForUsers([userId]);
-                return new SetDisabledResult.Success { User = user };
+                    if (restricted)
+                    {
+                        var securityStamp = Guid.NewGuid().ToString();
+                        var concurrencyStamp = Guid.NewGuid().ToString();
+                        await ctx.Users.Where(u => u.Id == userId).ExecuteUpdateAsync(setters => setters
+                            .SetProperty(u => u.SecurityStamp, securityStamp)
+                            .SetProperty(u => u.ConcurrencyStamp, concurrencyStamp));
+                    }
+                    await ctx.Users.UpdateStoreNoActiveUserForUsers([userId]);
+                    commitAttempted = true;
+                    await transaction.CommitAsync();
+                    return new SetDisabledResult.Success { User = user };
+                });
+                if (restricted && result is SetDisabledResult.Success)
+                    _securityStampInvalidator.Invalidate(userId);
+                return result;
             }
             catch (DbUpdateException ex)
             {

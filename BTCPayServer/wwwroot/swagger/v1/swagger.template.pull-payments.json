@@ -668,7 +668,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmanagepullpayments"
+                            "btcpay.store.canviewpayouts"
                         ],
                         "Basic": []
                     }
@@ -692,7 +692,7 @@
                                         "type": "string",
                                         "nullable": true,
                                         "example": "kraken(BTC_USD)",
-                                        "description": "The rate rule to calculate the rate of the payout. This can also be a fixed decimal. (if null or unspecified, will use the same rate setting as the store's settings)"
+                                        "description": "The rate rule to calculate the rate of the payout. This can also be a fixed decimal. (if null or unspecified, will use the same rate setting as the store's settings). Specifying it additionally requires the `btcpay.store.cancreatepullpayments` permission."
                                     }
                                 }
                             }
@@ -740,7 +740,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmanagepullpayments"
+                            "btcpay.store.canmanagepayouts"
                         ],
                         "Basic": []
                     }
@@ -764,7 +764,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmanagepullpayments"
+                            "btcpay.store.canmanagepayouts"
                         ],
                         "Basic": []
                     }
@@ -821,7 +821,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmanagepullpayments"
+                            "btcpay.store.canmanagepayouts"
                         ],
                         "Basic": []
                     }
@@ -895,7 +895,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmanagepullpayments"
+                            "btcpay.store.canmanagepayouts"
                         ],
                         "Basic": []
                     }

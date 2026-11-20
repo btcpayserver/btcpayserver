@@ -270,17 +270,21 @@ namespace BTCPayServer.Payments.Lightning
         {
             lock (_InstanceListeners)
             {
-                foreach (var key in _InstanceListeners.Keys)
+                foreach (var (key, instance) in _InstanceListeners.ToArray())
                 {
                     CheckConnection(key.Item1, key.Item2, key.Item3);
+                    if (instance is { Empty: true, IsListening: false })
+                        _InstanceListeners.Remove(key);
                 }
             }
         }
 
         public void CheckConnection(string cryptoCode, string connStr, bool allowUnsafe)
         {
-            if (_InstanceListeners.TryGetValue((cryptoCode, connStr, allowUnsafe), out var instance))
+            lock (_InstanceListeners)
             {
+                if (!_InstanceListeners.TryGetValue((cryptoCode, connStr, allowUnsafe), out var instance))
+                    return;
                 instance.RemoveExpiredInvoices();
                 if (!instance.Empty)
                     instance.EnsureListening(_Cts.Token);

@@ -104,6 +104,8 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
 
 	private async Task Act()
     {
+        // Capture before processing so approvals received while processing also skip the next interval.
+        using var intervalCts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken, _timerCTs.Token);
         var store = await _storeRepository.FindStore(PayoutProcessorSettings.StoreId);
         var paymentMethod = store?.GetPaymentMethodConfig(PaymentMethodId, _paymentHandlers, true);
 
@@ -150,8 +152,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
             blob.Interval = TimeSpan.FromMinutes(AutomatedPayoutConstants.MaxIntervalMinutes);
         try
         {
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken, _timerCTs.Token);
-            await Task.Delay(blob.Interval, cts.Token);
+            await Task.Delay(blob.Interval, intervalCts.Token);
         }
         catch (TaskCanceledException)
         {

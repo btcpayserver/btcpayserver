@@ -12,6 +12,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.InvoicingModels;
@@ -32,6 +33,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
@@ -134,9 +136,8 @@ namespace BTCPayServer.Controllers
                 Id = invoice.Id,
                 Entity = invoice,
                 State = invoiceState,
-                TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" :
-                                   invoice.SpeedPolicy == SpeedPolicy.MediumSpeed ? "medium" :
-                                   invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed ? "low-medium" :
+                TransactionSpeed = invoice.SpeedPolicy.Normalize() == SpeedPolicy.MediumSpeed ? "medium" :
+                                   invoice.SpeedPolicy.Normalize() == SpeedPolicy.LowMediumSpeed ? "low-medium" :
                                    "low",
                 CreatedDate = invoice.InvoiceTime,
                 ExpirationDate = invoice.ExpirationTime,
@@ -196,7 +197,7 @@ namespace BTCPayServer.Controllers
         }
 
         [XFrameOptions(null)]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         [HttpGet("i/{invoiceId}/receipt")]
         public async Task<IActionResult> InvoiceReceipt(string invoiceId, [FromQuery] bool print = false)
         {
@@ -206,18 +207,17 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.GetStoreByInvoiceId(i.Id);
             if (store is null)
                 return NotFound();
-            if (!await ValidateAccessToInvoice(i))
+            var storeBlob = store.GetStoreBlob();
+            var receipt = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, i.ReceiptOptions);
+            if (!await ValidateAccessToInvoice(i, storeBlob, receipt))
                 return NotFound();
 
-            var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, i.ReceiptOptions);
             if (receipt.Enabled is not true)
             {
                 return i.RedirectURL is not null
                     ? Redirect(i.RedirectURL.ToString())
                     : NotFound();
             }
-
-            var storeBlob = store.GetStoreBlob();
             var vm = new InvoiceReceiptViewModel
             {
                 InvoiceId = i.Id,
@@ -290,12 +290,13 @@ namespace BTCPayServer.Controllers
                                             .FirstOrDefaultAsync(cancellationToken);
             if (invoice is null)
                 return NotFound();
-            var currentRefund = invoice.Refunds.OrderByDescending(r => r.PullPaymentData.StartDate).FirstOrDefault();
+            var currentRefund = invoice.Refunds.Where(r => !r.PullPaymentData.Archived)
+                .OrderByDescending(r => r.PullPaymentData.StartDate).FirstOrDefault();
             if (currentRefund?.PullPaymentDataId is null && User.GetIdOrNull() is null)
                 return NotFound();
             if (!invoice.GetInvoiceState().CanRefund())
                 return NotFound();
-            if (currentRefund?.PullPaymentDataId is string ppId && !currentRefund.PullPaymentData.Archived)
+            if (currentRefund?.PullPaymentDataId is string ppId)
             {
                 // TODO: Having dedicated UI later on
                 return RedirectToAction(nameof(UIPullPaymentController.ViewPullPayment),
@@ -343,6 +344,13 @@ namespace BTCPayServer.Controllers
 
             if (invoice?.GetInvoiceState().CanRefund() is not true)
                 return NotFound();
+
+            if (await PullPaymentHostedService.FindOpenRefundId(ctx, invoiceId, cancellationToken) is { } currentPpId)
+            {
+                return RedirectToAction(nameof(UIPullPaymentController.ViewPullPayment),
+                                "UIPullPayment",
+                                new { pullPaymentId = currentPpId });
+            }
 
             var store = HttpContext.GetStoreData();
             var pmi = PayoutMethodId.Parse(model.SelectedPayoutMethod);
@@ -548,12 +556,15 @@ namespace BTCPayServer.Controllers
                 return View("_RefundModal", model);
             }
 
-            var ppId = await _paymentHostedService.CreateRefundPullPayment(store, createPullPayment, invoice.Id);
-            TempData.SetStatusMessageModel(new StatusMessageModel
+            var (ppId, created) = await _paymentHostedService.GetOrCreateRefundPullPayment(store, createPullPayment, invoice.Id);
+            if (created)
             {
-                Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Store > Payouts.",
-                Severity = StatusMessageModel.StatusSeverity.Success
-            });
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Store > Payouts.",
+                    Severity = StatusMessageModel.StatusSeverity.Success
+                });
+            }
 
             // TODO: Having dedicated UI later on
             return RedirectToAction(nameof(UIPullPaymentController.ViewPullPayment),
@@ -735,35 +746,52 @@ namespace BTCPayServer.Controllers
             return new HashSet<string>(addresses);
         }
 
-        [HttpGet("i/{invoiceId}")]
-        [HttpGet("i/{invoiceId}/{paymentMethodId}")]
         [HttpGet("invoice")]
         [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
         [XFrameOptions(null)]
         [ReferrerPolicy("origin")]
-        public async Task<IActionResult> Checkout(string? invoiceId, string? id = null, string? paymentMethodId = null,
-            [FromQuery] string? view = null, [FromQuery] string? lang = null)
+        public IActionResult LegacyCheckout(string? invoiceId, string? id = null, string? paymentMethodId = null)
         {
             // Keep compatibility with Bitpay
             invoiceId ??= id;
-
             if (invoiceId is null)
                 return NotFound();
 
-            var model = await GetCheckoutModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
+            var url = Url.InvoiceCheckout(invoiceId, paymentMethodId);
+            var query = Request.Query.Where(p =>
+                !p.Key.Equals("invoiceId", StringComparison.OrdinalIgnoreCase) &&
+                !p.Key.Equals("id", StringComparison.OrdinalIgnoreCase) &&
+                !p.Key.Equals("paymentMethodId", StringComparison.OrdinalIgnoreCase));
+            return RedirectPermanent(QueryHelpers.AddQueryString(url, query));
+        }
+
+        [HttpGet("i/{invoiceId}")]
+        [HttpGet("i/{invoiceId}/{paymentMethodId}")]
+        [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
+        [XFrameOptions(null)]
+        [ReferrerPolicy("origin")]
+        [StorefrontRoute]
+        public async Task<IActionResult> Checkout(string invoiceId, string? paymentMethodId = null,
+            [FromQuery] string? view = null)
+        {
+            var model = await GetCheckoutModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId));
             if (model == null)
             {
                 // see if the invoice actually exists and is in a state for which we do not display the checkout
                 // TODO: Can happen if the invoice has lazy activation which failed for all payment methods. We should display error instead...
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-                if (invoice is null || !await ValidateAccessToInvoice(invoice))
+                if (invoice is null)
                     return NotFound();
                 var store = await _StoreRepository.GetStoreByInvoiceId(invoice.Id);
-                var receipt = store != null ? InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, invoice.ReceiptOptions) : null;
-                var redirectUrl = invoice.RedirectURL?.ToString();
-                return receipt?.Enabled is true
-                    ? RedirectToAction(nameof(InvoiceReceipt), new { invoiceId })
-                    : !string.IsNullOrEmpty(redirectUrl) ? Redirect(redirectUrl) : NotFound();
+                if (store is null)
+                    return NotFound();
+                var storeBlob = store.GetStoreBlob();
+                var receipt = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, invoice.ReceiptOptions);
+                if (receipt.Enabled is true && await ValidateAccessToInvoice(invoice, storeBlob, receipt))
+                    return RedirectToAction(nameof(InvoiceReceipt), new { invoiceId });
+                return !await ValidateAccessToInvoice(invoice, storeBlob) || string.IsNullOrEmpty(invoice.RedirectURL?.ToString()) ?
+                    NotFound() :
+                    Redirect(invoice.RedirectURL.ToString());
             }
 
             if (view == "modal")
@@ -772,22 +800,21 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private async Task<CheckoutModel?> GetCheckoutModel(string invoiceId, PaymentMethodId? paymentMethodId, string? lang, HashSet<PaymentMethodId>? excludedPaymentMethodIds = null)
+        private async Task<CheckoutModel?> GetCheckoutModel(string invoiceId, PaymentMethodId? paymentMethodId, HashSet<PaymentMethodId>? excludedPaymentMethodIds = null)
         {
             var originalPaymentMethodId = paymentMethodId;
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null)
                 return null;
 
-            if (!await ValidateAccessToInvoice(invoice))
-                return null;
-
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             if (store == null)
                 return null;
+            var storeBlob = store.GetStoreBlob();
+            if (!await ValidateAccessToInvoice(invoice, storeBlob))
+                return null;
             excludedPaymentMethodIds ??= new HashSet<PaymentMethodId>();
             bool isDefaultPaymentId = false;
-            var storeBlob = store.GetStoreBlob();
 
             var displayedPaymentMethods = invoice.GetPaymentPrompts()
                 .Where(p => !excludedPaymentMethodIds.Contains(p.PaymentMethodId))
@@ -855,33 +882,21 @@ namespace BTCPayServer.Controllers
             if (prompt is null)
                 return null;
             if (activated)
-                return await GetCheckoutModel(invoiceId, paymentMethodId, lang, excludedPaymentMethodIds);
+                return await GetCheckoutModel(invoiceId, paymentMethodId, excludedPaymentMethodIds);
 
             if (!prompt.Activated)
             {
                 // It failed to activate. Let's try to exclude it and retry
                 excludedPaymentMethodIds.Add(prompt.PaymentMethodId);
-                return await GetCheckoutModel(invoiceId, originalPaymentMethodId, lang, excludedPaymentMethodIds);
+                return await GetCheckoutModel(invoiceId, originalPaymentMethodId, excludedPaymentMethodIds);
             }
 
             var accounting = prompt.Calculate();
 
-            switch (lang?.ToLowerInvariant())
-            {
-                case "auto":
-                case null when storeBlob.AutoDetectLanguage:
-                    lang = _languageService.AutoDetectLanguageUsingHeader(HttpContext.Request.Headers, null)?.Code;
-                    break;
-                case { } langs when !string.IsNullOrEmpty(langs):
-                    {
-                        lang = _languageService.FindLanguage(langs)?.Code;
-                        break;
-                    }
-            }
-            lang ??= storeBlob.DefaultLang;
-
-            var receiptEnabled = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, invoice.ReceiptOptions).Enabled is true;
-            var receiptUrl = receiptEnabled ? _linkGenerator.ReceiptLink(invoiceId, Request.GetRequestBaseUrl()) : null;
+            var receipt = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, invoice.ReceiptOptions);
+            var receiptUrl = receipt.Enabled is true && await ValidateAccessToInvoice(invoice, storeBlob, receipt)
+                ? _linkGenerator.ReceiptLink(invoiceId, Request.GetRequestBaseUrl())
+                : null;
 
             var orderId = invoice.Metadata.OrderId;
             var supportUrl = !string.IsNullOrEmpty(storeBlob.StoreSupportUrl)
@@ -908,7 +923,6 @@ namespace BTCPayServer.Controllers
                 RootPath = Request.PathBase.Value.WithTrailingSlash(),
                 OrderId = orderId,
                 InvoiceId = invoiceId,
-                DefaultLang = lang ?? invoice.DefaultLanguage ?? storeBlob.DefaultLang ?? "en",
                 ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
                 ShowStoreHeader = storeBlob.ShowStoreHeader,
                 NfcEnabled = storeBlob.NfcEnabled,
@@ -1029,11 +1043,11 @@ namespace BTCPayServer.Controllers
         [HttpGet("invoice/{invoiceId}/{implicitPaymentMethodId}/status")]
         [HttpGet("invoice/status")]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> GetStatus(string invoiceId, string? paymentMethodId = null, string? implicitPaymentMethodId = null, [FromQuery] string? lang = null)
+        public async Task<IActionResult> GetStatus(string invoiceId, string? paymentMethodId = null, string? implicitPaymentMethodId = null)
         {
             if (string.IsNullOrEmpty(paymentMethodId))
                 paymentMethodId = implicitPaymentMethodId;
-            var model = await GetCheckoutModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
+            var model = await GetCheckoutModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId));
             if (model == null)
                 return NotFound();
             return Json(model);
@@ -1050,7 +1064,7 @@ namespace BTCPayServer.Controllers
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-            if (invoice == null || invoice.Status == InvoiceStatus.Settled || invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired)
+            if (invoice is not { Status: not InvoiceStatus.Settled and not InvoiceStatus.Invalid and not InvoiceStatus.Expired })
                 return NotFound();
 
             if (!await ValidateAccessToInvoice(invoice))
@@ -1337,10 +1351,18 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListInvoices), new { storeId });
         }
 
-        private async Task<bool> ValidateAccessToInvoice(InvoiceEntity invoice)
+        private async Task<bool> ValidateAccessToInvoice(InvoiceEntity invoice, StoreBlob? storeBlob = null, InvoiceDataBase.ReceiptOptions? receiptOpts = null)
         {
-            if (!invoice.Archived && DateTimeOffset.UtcNow < invoice.MonitoringExpiration.AddMonths(1))
-                return true;
+            if (!invoice.Archived)
+            {
+                storeBlob ??= (await _StoreRepository.FindStore(invoice.StoreId))?.GetStoreBlob() ?? new();
+                var expiration = receiptOpts is not null
+                    ? receiptOpts.PublicReceiptExpiration ??
+                      TimeSpan.FromDays(90)
+                    : storeBlob.PublicInvoiceExpiration ?? TimeSpan.FromDays(30);
+                if (expiration == TimeSpan.Zero || DateTimeOffset.UtcNow - invoice.MonitoringExpiration < expiration)
+                    return true;
+            }
             var authorizationResult = await _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanViewInvoices);
             return authorizationResult.Succeeded;
         }

@@ -76,19 +76,18 @@ public class MonetizationHostedService(
             }
         }
 
-        if (evt is SubscriptionEvent.SubscriberActivated or SubscriptionEvent.SubscriberDisabled)
+        if (evt is SubscriptionEvent.SubscriberActivated or SubscriptionEvent.SubscriberDisabled ||
+            (evt is SubscriptionEvent.PlanStarted ps && ps.PreviousPlan.Id != ps.Subscriber.Plan.Id))
         {
-            await UpdateUserAccessRestriction((SubscriptionEvent.SubscriberEvent)evt, userManager, evt is SubscriptionEvent.SubscriberActivated);
+            var subscriber = ((SubscriptionEvent.SubscriberEvent)evt).Subscriber;
+            if (subscriber.GetApplicationUserId() is { } subscriberUserId)
+            {
+                await using var ctx = dbContextFactory.CreateContext();
+                await UpdateUserAccessRestrictions(ctx, subscriber.OfferingId, [subscriberUserId]);
+            }
         }
 
-        if (evt is SubscriptionEvent.PlanStarted ps && ps.PreviousPlan.Id != ps.Subscriber.Plan.Id)
-        {
-            await using var ctx = dbContextFactory.CreateContext();
-            var canAccess = await ctx.Plans.HasFeature(ps.Subscriber.PlanId, MonetizationFeatures.CanAccess);
-            await UpdateUserAccessRestriction(ps, userManager, canAccess);
-        }
-
-        if (evt is SubscriptionEvent.PlanUpdated pu)
+        if (evt is SubscriptionEvent.PlanUpdated pu && monetizationSettingsAccessor.Settings.OfferingId == pu.Plan.OfferingId)
         {
             await using var ctx = dbContextFactory.CreateContext();
             await UpdateUserAccessRestrictions(ctx, pu.Plan);
@@ -101,41 +100,25 @@ public class MonetizationHostedService(
                 DefaultPlanId: { } byPassDefaultPlanId
             })
         {
-            if (changed.Bypass)
+            await using var ctx = dbContextFactory.CreateContext();
+            var userSub = await ctx.Subscribers.GetBySelector(byPassOfferingId, CustomerSelector.ByIdentity(SubscriberDataExtensions.IdentityType, changed.User.Id));
+            if (userSub is not null)
             {
-                await using var ctx = dbContextFactory.CreateContext();
-                var userSub = await ctx.Subscribers.GetBySelector(byPassOfferingId, CustomerSelector.ByIdentity(SubscriberDataExtensions.IdentityType, changed.User.Id));
-                if (userSub is not null)
-                {
-                    await userService.SetAccessRestriction(changed.User.Id, UserAccessRestrictionConstants.Monetization, false);
-                    EventAggregator.Publish(new MonetizationAccessUpdated([(changed.User.Id, false)]));
-                }
+                await UpdateUserAccessRestrictions(ctx, byPassOfferingId, [changed.User.Id]);
             }
-            else
+            else if (!changed.Bypass)
             {
-                await using var ctx = dbContextFactory.CreateContext();
-                var userSub = await ctx.Subscribers.GetBySelector(byPassOfferingId, CustomerSelector.ByIdentity(SubscriberDataExtensions.IdentityType, changed.User.Id));
-                if (userSub is not null)
+                var inserted = await MigrateUsers(byPassOfferingId, byPassDefaultPlanId, OneUserQuery, parameters =>
                 {
-                    var restricted = (!userSub.IsActive || userSub.Phase == SubscriberData.PhaseTypes.Expired) &&
-                                     !await userService.IsAdminUser(changed.User);
-                    await userService.SetAccessRestriction(changed.User.Id, UserAccessRestrictionConstants.Monetization, restricted);
-                    EventAggregator.Publish(new MonetizationAccessUpdated([(changed.User.Id, restricted)]));
-                }
-                else
+                    parameters.Add("userId", changed.User.Id);
+                    parameters.Add("email", changed.User.Email);
+                    parameters.Add("customerId", CustomerData.GenerateId());
+                });
+                if (inserted.Length == 1)
                 {
-                    var inserted = await MigrateUsers(byPassOfferingId, byPassDefaultPlanId, OneUserQuery, parameters =>
-                    {
-                        parameters.Add("userId", changed.User.Id);
-                        parameters.Add("email", changed.User.Email);
-                        parameters.Add("customerId", CustomerData.GenerateId());
-                    });
-                    if (inserted.Length == 1)
-                    {
-                        var s = await ctx.Subscribers.GetByCustomerId(inserted[0].CustomerId, byPassOfferingId);
-                        if (s is not null)
-                            EventAggregator.Publish(new SubscriptionEvent.NewSubscriber(s, changed.RequestBaseUrl));
-                    }
+                    var s = await ctx.Subscribers.GetByCustomerId(inserted[0].CustomerId, byPassOfferingId);
+                    if (s is not null)
+                        EventAggregator.Publish(new SubscriptionEvent.NewSubscriber(s, changed.RequestBaseUrl));
                 }
             }
         }
@@ -193,20 +176,6 @@ public class MonetizationHostedService(
                               DELETE FROM customers_identities ci
                               WHERE ci.type = @type AND ci.value = @id;
                               """, new { type = Monetization.SubscriberDataExtensions.IdentityType, id = deleted.User.Id });
-        }
-    }
-
-    private async Task UpdateUserAccessRestriction(SubscriptionEvent.SubscriberEvent evt, UserManager<ApplicationUser> userManager, bool activated)
-    {
-        var userId = evt.Subscriber.GetApplicationUserId();
-        var user = await userManager.FindByIdAsync(userId ?? "");
-        if (user is null)
-            return;
-
-        var restricted = !activated && !user.BypassMonetization && !await userService.IsAdminUser(user);
-        if (await userService.SetAccessRestriction(user.Id, UserAccessRestrictionConstants.Monetization, restricted) is not UserService.SetDisabledResult.Error)
-        {
-            EventAggregator.Publish(new MonetizationAccessUpdated([(user.Id, restricted)]));
         }
     }
 
@@ -356,20 +325,20 @@ public class MonetizationHostedService(
         if (userIds.Length != 0)
         {
             await SubscriptionHostedService.UpdatePlanStats(ctx, plan.Id);
-            await UpdateUserAccessRestrictions(ctx, plan, userIds.Select(c => c.UserId).ToArray());
+            await UpdateUserAccessRestrictions(ctx, plan.OfferingId, userIds.Select(c => c.UserId).ToArray());
             // We expect the caller to call NewSubscriberEvent.
         }
 
         return userIds;
     }
 
-    private async Task UpdateUserAccessRestrictions(ApplicationDbContext ctx, PlanData plan, string[]? userIds = null)
+    private async Task UpdateUserAccessRestrictions(ApplicationDbContext ctx, PlanData plan)
+        => await UpdateUserAccessRestrictions(ctx, plan.OfferingId, await GetUserIdsInPlan(ctx, plan));
+
+    private async Task UpdateUserAccessRestrictions(ApplicationDbContext ctx, string offeringId, string[] userIds)
     {
-        if (userIds is null)
-            userIds = await GetUserIdsInPlan(ctx, plan);
         if (userIds.Length == 0)
             return;
-        var canAccess = await ctx.Plans.HasFeature(plan.Id, MonetizationFeatures.CanAccess);
         var updated = (await ctx.Database.GetDbConnection()
             .QueryAsync<(string UserId, bool Restricted)>("""
                           WITH exempt_users AS (
@@ -383,14 +352,17 @@ public class MonetizationHostedService(
                               WHERE role."Name" = @adminRole
                           ),
                           desired AS (
-                              SELECT requested.user_id, NOT (ss.active AND @canAccess) AS restricted
+                              SELECT requested.user_id, exempt.user_id IS NULL AND NOT (ss.active AND EXISTS (
+                                  SELECT 1 FROM subs_plans_features plan_feature
+                                  JOIN subs_features feature ON feature.id = plan_feature.feature_id
+                                  WHERE plan_feature.plan_id = ss.plan_id AND feature.custom_id = @canAccessFeature
+                              )) AS restricted
                               FROM unnest(@userIds) AS requested(user_id)
                               JOIN customers_identities ci ON ci.type = @applicationUserId AND ci.value = requested.user_id
                               JOIN subs_subscribers ss ON ss.customer_id = ci.customer_id
-                              JOIN "AspNetUsers" ON "AspNetUsers"."Id" = requested.user_id
                               LEFT JOIN exempt_users exempt ON exempt.user_id = requested.user_id
-                              WHERE ss.plan_id = @planId
-                                AND exempt.user_id IS NULL
+                              JOIN "AspNetUsers" ON "AspNetUsers"."Id" = requested.user_id
+                              WHERE ss.offering_id = @offeringId
                           ),
                           deleted AS (
                               DELETE FROM user_access_restrictions restriction
@@ -408,23 +380,15 @@ public class MonetizationHostedService(
                               ON CONFLICT DO NOTHING
                               RETURNING user_id, true AS restricted
                           ),
-                          exempt_deleted AS (
-                              DELETE FROM user_access_restrictions restriction
-                              USING exempt_users exempt
-                              WHERE restriction.user_id = exempt.user_id
-                                AND restriction.type = @restrictionType
-                              RETURNING restriction.user_id, false AS restricted
-                          ),
                           changed AS (
                               SELECT * FROM deleted
                               UNION ALL
                               SELECT * FROM inserted
-                              UNION ALL
-                              SELECT * FROM exempt_deleted
                           ),
                           stamps AS (
                               UPDATE "AspNetUsers" users
-                              SET "SecurityStamp" = translate(encode(decode(md5(users."Id" || @salt), 'hex'), 'base64'), '/=+-', '')
+                              SET "SecurityStamp" = translate(encode(decode(md5(users."Id" || @salt), 'hex'), 'base64'), '/=+-', ''),
+                                  "ConcurrencyStamp" = md5(users."Id" || @salt || 'concurrency')
                               FROM changed
                               WHERE users."Id" = changed.user_id AND changed.restricted
                               RETURNING users."Id"
@@ -435,9 +399,9 @@ public class MonetizationHostedService(
                 new
                 {
                     userIds,
-                    planId = plan.Id,
+                    offeringId,
                     applicationUserId = SubscriberDataExtensions.IdentityType,
-                    canAccess,
+                    canAccessFeature = MonetizationFeatures.CanAccess,
                     adminRole = Roles.ServerAdmin,
                     restrictionType = UserAccessRestrictionConstants.Monetization,
                     salt = RandomUtils.GetUInt256().ToString()

@@ -26,6 +26,8 @@ namespace BTCPayServer.Client.Models
             public bool? Enabled { get; set; }
             public bool? ShowQR { get; set; }
             public bool? ShowPayments { get; set; }
+            [JsonConverter(typeof(TimeSpanJsonConverter.WholeDays))]
+            public TimeSpan? PublicReceiptExpiration { get; set; }
             [JsonExtensionData]
             public IDictionary<string, JToken> AdditionalData { get; set; }
 
@@ -63,9 +65,14 @@ namespace BTCPayServer.Client.Models
         }
         public class CheckoutOptions
         {
+            private SpeedPolicy? _speedPolicy;
 
             [JsonConverter(typeof(StringEnumConverter))]
-            public SpeedPolicy? SpeedPolicy { get; set; }
+            public SpeedPolicy? SpeedPolicy
+            {
+                get => _speedPolicy?.Normalize();
+                set => _speedPolicy = value?.Normalize();
+            }
 
             public string[] PaymentMethods { get; set; }
             public string DefaultPaymentMethod { get; set; }
@@ -82,7 +89,6 @@ namespace BTCPayServer.Client.Models
             public string RedirectURL { get; set; }
 
             public bool? RedirectAutomatically { get; set; }
-            public string DefaultLanguage { get; set; }
             public bool? LazyPaymentMethods { get; set; }
         }
     }

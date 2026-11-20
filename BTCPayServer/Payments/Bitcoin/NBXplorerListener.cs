@@ -379,13 +379,11 @@ namespace BTCPayServer.Payments.Bitcoin
         }
 
         public static int ConfirmationRequired(InvoiceEntity invoice, BitcoinLikePaymentData paymentData)
-        => (invoice, paymentData) switch
+        => invoice.SpeedPolicy.Normalize() switch
         {
-            ({ SpeedPolicy: SpeedPolicy.HighSpeed }, { RBF: true }) => 1,
-            ({ SpeedPolicy: SpeedPolicy.HighSpeed }, _) => 0,
-            ({ SpeedPolicy: SpeedPolicy.MediumSpeed }, _) => 1,
-            ({ SpeedPolicy: SpeedPolicy.LowMediumSpeed }, _) => 2,
-            ({ SpeedPolicy: SpeedPolicy.LowSpeed }, _) => 6,
+            SpeedPolicy.MediumSpeed => 1,
+            SpeedPolicy.LowMediumSpeed => 2,
+            SpeedPolicy.LowSpeed => 6,
             _ => 6,
         };
 

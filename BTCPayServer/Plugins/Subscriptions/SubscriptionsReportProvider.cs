@@ -105,7 +105,7 @@ public class SubscriberCreditHistoryReportProvider(ApplicationDbContextFactory d
             .Include(h => h.SubscriberCredit).ThenInclude(c => c.Subscriber).ThenInclude(s => s.Customer).ThenInclude(c => c.CustomerIdentities)
             .Where(h => h.SubscriberCredit.Subscriber.Plan.Offering.App.StoreDataId == queryContext.StoreId)
             .Where(h => h.CreatedAt >= queryContext.From && h.CreatedAt <= queryContext.To)
-            .OrderBy(h => h.CreatedAt).ToListAsync(cancellation);
+            .OrderBy(h => h.CreatedAt).ThenBy(h => h.Id).ToListAsync(cancellation);
 
         foreach (var entry in history)
         {

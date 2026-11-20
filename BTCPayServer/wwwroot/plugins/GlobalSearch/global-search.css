@@ -68,6 +68,11 @@
     outline: none;
 }
 
+#globalNav .globalSearch-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
 #globalNav .globalSearch-clear,
 #globalNav .globalSearch-back {
     display: inline-flex;

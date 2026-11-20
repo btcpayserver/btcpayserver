@@ -13,6 +13,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace BTCPayServer.Plugins.Subscriptions;
 
@@ -24,6 +25,7 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
     public ApplicationDbContext Context => ctx;
     public void AddEvent(object evt) => _evts.Add(evt);
     public IReadOnlyList<object> Events => _evts;
+    internal void DiscardEvents(int fromIndex = 0) => _evts.RemoveRange(fromIndex, _evts.Count - fromIndex);
 
     public decimal RoundAmount(decimal amount, string currency)
         => RoundAmount(amount, currency, MidpointRounding.ToEven);
@@ -36,11 +38,17 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
         // If the subscriber settled more than expected, we credit the subscriber with the difference.
         => RoundAmount(invoice.Status is InvoiceStatus.Processing ? invoice.PaidAmount.Net : invoice.NetSettled, invoice.Currency, MidpointRounding.ToZero);
 
-    public async Task<decimal> CreditSubscriber(SubscriberData sub, string description, decimal credit)
-    => (await TryCreditDebitSubscriber(sub, description, credit, 0m, true))!.Value;
+    public Task<decimal> CreditSubscriber(SubscriberData sub, string description, decimal credit)
+        => CreditSubscriber(sub, description, credit, null);
 
-    public async Task<bool> TryChargeSubscriber(SubscriberData sub, string description, decimal charge, bool allowOverdraft = false)
-    => (await TryCreditDebitSubscriber(sub, description, 0m, charge, allowOverdraft)) is not null;
+    public async Task<decimal> CreditSubscriber(SubscriberData sub, string description, decimal credit, string? currency)
+    => (await TryCreditDebitSubscriber(sub, description, credit, 0m, true, currency))!.Value;
+
+    public Task<bool> TryChargeSubscriber(SubscriberData sub, string description, decimal charge, bool allowOverdraft = false)
+        => TryChargeSubscriber(sub, description, charge, allowOverdraft, null);
+
+    public async Task<bool> TryChargeSubscriber(SubscriberData sub, string description, decimal charge, bool allowOverdraft, string? currency)
+    => (await TryCreditDebitSubscriber(sub, description, 0m, charge, allowOverdraft, currency)) is not null;
 
     private static async Task<decimal?> UpdateCredit(BalanceTransaction tx, bool force, ApplicationDbContext ctx)
     {
@@ -83,11 +91,11 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
             {
                 id = tx.SubscriberId, currency = tx.Currency, diff, force, desc = tx.Description,
                 credit = tx.Credit, minBalance = -GreenfieldConstants.MaxAmount, maxBalance = GreenfieldConstants.MaxAmount
-            });
+            }, ctx.Database.CurrentTransaction?.GetDbTransaction());
         return amount;
     }
 
-    private static async Task ReloadCredits(SubscriberData sub, ApplicationDbContext ctx)
+    internal async Task ReloadCredits(SubscriberData sub)
     {
         foreach (var c in sub.Credits)
             ctx.Entry(c).State = EntityState.Detached;
@@ -103,7 +111,7 @@ public class SubscriptionContext(ApplicationDbContext ctx, EventAggregator aggre
         credit = RoundAmount(credit, currency);
         var tx = new BalanceTransaction(sub.Id, currency, credit, charge, description);
         var amount = await UpdateCredit(tx, allowOverdraft, ctx);
-        await ReloadCredits(sub, ctx);
+        await ReloadCredits(sub);
         if (amount is { } newTotal)
         {
             if (tx.Credit != 0)

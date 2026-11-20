@@ -13,6 +13,16 @@ namespace Microsoft.AspNetCore.Mvc
     public static class UrlHelperExtensions
     {
 #nullable enable
+        private static object InvoiceCheckoutRouteValues(string invoiceId, string? paymentMethodId = null, string? view = null)
+            => new { invoiceId, paymentMethodId, view };
+
+        public static string InvoiceCheckout(this IUrlHelper urlHelper, string invoiceId, string? paymentMethodId = null, string? view = null)
+            => urlHelper.Action(nameof(UIInvoiceController.Checkout), "UIInvoice", InvoiceCheckoutRouteValues(invoiceId, paymentMethodId, view))
+               ?? throw new InvalidOperationException("Unable to generate checkout URL.");
+
+        public static RedirectToActionResult RedirectToInvoiceCheckout(this Controller controller, string invoiceId, string? paymentMethodId = null, string? view = null)
+            => controller.RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", InvoiceCheckoutRouteValues(invoiceId, paymentMethodId, view));
+
         public static Uri ActionAbsolute(this IUrlHelper helper, HttpRequest request, string? action, string? controller, object? values)
         => request.GetAbsoluteUriNoPathBase(new Uri(helper.Action(action, controller, values) ?? "", UriKind.Relative));
         public static Uri ActionAbsolute(this IUrlHelper helper, HttpRequest request, string? action, string? controller)
@@ -84,13 +94,7 @@ namespace Microsoft.AspNetCore.Mvc
         }
 
         public static string CheckoutLink(this LinkGenerator urlHelper, string invoiceId, string scheme, HostString host, string pathbase)
-        {
-            return urlHelper.GetUriByAction(
-                action: nameof(UIInvoiceController.Checkout),
-                controller: "UIInvoice",
-                values: new { invoiceId },
-                scheme, host, pathbase);
-        }
+            => urlHelper.InvoiceCheckoutLink(invoiceId, new RequestBaseUrl(scheme, host, pathbase));
 #nullable enable
         public static string ReceiptLink(this LinkGenerator urlHelper, string invoiceId, RequestBaseUrl baseUrl)
             => urlHelper.GetUriByAction(
@@ -104,7 +108,7 @@ namespace Microsoft.AspNetCore.Mvc
             => urlHelper.GetUriByAction(
                     action: nameof(UIInvoiceController.Checkout),
                     controller: "UIInvoice",
-                    values: new { invoiceId },
+                    values: InvoiceCheckoutRouteValues(invoiceId),
                     baseUrl
                 );
 

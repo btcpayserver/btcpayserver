@@ -26,6 +26,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.Payment;
+using NBitcoin.RPC;
 using NBXplorer;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
@@ -46,7 +47,6 @@ namespace BTCPayServer.Controllers.Greenfield
         PoliciesSettings policiesSettings,
         UIWalletsController walletsController,
         PayjoinClient payjoinClient,
-        DelayedTransactionBroadcaster delayedTransactionBroadcaster,
         WalletReceiveService walletReceiveService,
         IFeeProviderFactory feeProviderFactory,
         WalletHistogramService walletHistogramService,
@@ -609,47 +609,50 @@ namespace BTCPayServer.Controllers.Greenfield
             psbt.PSBT.Finalize();
             var transaction = psbt.PSBT.ExtractTransaction();
             var transactionHash = transaction.GetHash();
-            BroadcastResult broadcastResult;
-            if (!string.IsNullOrEmpty(signingContext?.PayJoinBIP21))
-            {
-                signingContext.OriginalPSBT = psbt.PSBT.ToBase64();
-                try
-                {
-                    await delayedTransactionBroadcaster.Schedule(DateTimeOffset.UtcNow + TimeSpan.FromMinutes(2.0),
-                        transaction, network);
-                    payjoinClient.MinimumFeeRate = minRelayFee;
-                    var payjoinPSBT = await payjoinClient.RequestPayjoin(
-                        new BitcoinUrlBuilder(signingContext.PayJoinBIP21, network.NBitcoinNetwork),
-                        new PayjoinWallet(derivationScheme),
-                        signedPSBT, CancellationToken.None);
-                    payjoinPSBT.Settings.SigningOptions =
-                        new SigningOptions() { EnforceLowR = !(signingContext?.EnforceLowR is false) };
-                    payjoinPSBT = payjoinPSBT.SignAll(derivationScheme.AccountDerivation, accountKey, rootedKeyPath);
-                    payjoinPSBT.Finalize();
-                    var payjoinTransaction = payjoinPSBT.ExtractTransaction();
-                    var hash = payjoinTransaction.GetHash();
-                    await walletRepository.AddWalletTransactionAttachment(new WalletId(Store.Id, network.CryptoCode),
-                        hash, Attachment.Payjoin());
-                    broadcastResult = await explorerClient.BroadcastAsync(payjoinTransaction);
-                    if (broadcastResult.Success)
-                    {
-                        return await GetOnChainWalletTransaction(storeId, paymentMethodId, hash.ToString());
-                    }
-                }
-                catch (PayjoinException)
-                {
-                    //not a critical thing, payjoin is great if possible, fine if not
-                }
-            }
-
             if (!request.ProceedWithBroadcast)
             {
                 return Ok(new JValue(transaction.ToHex()));
             }
 
-            broadcastResult = await explorerClient.BroadcastAsync(transaction);
-            if (broadcastResult.Success)
+            if (!string.IsNullOrEmpty(signingContext?.PayJoinBIP21))
             {
+                try
+                {
+                    payjoinClient.MinimumFeeRate = minRelayFee;
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                    var payjoinPSBT = await payjoinClient.RequestPayjoin(
+                        new BitcoinUrlBuilder(signingContext.PayJoinBIP21, network.NBitcoinNetwork),
+                        new PayjoinWallet(derivationScheme),
+                        signedPSBT, cts.Token);
+                    payjoinPSBT.Settings.SigningOptions =
+                        new SigningOptions() { EnforceLowR = !(signingContext?.EnforceLowR is false) };
+                    payjoinPSBT = payjoinPSBT.SignAll(derivationScheme.AccountDerivation, accountKey, rootedKeyPath);
+                    var balanceChange = payjoinPSBT.GetBalance(derivationScheme.AccountDerivation, signingKey, rootedKeyPath);
+                    payjoinPSBT.Finalize();
+                    var payjoinTransaction = payjoinPSBT.ExtractTransaction();
+                    var hash = payjoinTransaction.GetHash();
+                    await walletRepository.AddWalletTransactionAttachment(new WalletId(Store.Id, network.CryptoCode),
+                        hash, Attachment.Payjoin());
+                    var payjoinBroadcast = await explorerClient.BroadcastAsync(payjoinTransaction, cts.Token);
+                    if (IsAcceptedBroadcast(payjoinBroadcast))
+                    {
+                        return BroadcastTransactionResult(hash, balanceChange.GetValue(network));
+                    }
+                }
+                catch (Exception)
+                {
+                    //not a critical thing, payjoin is great if possible, fine if not
+                }
+            }
+
+            var broadcastResult = await explorerClient.BroadcastAsync(transaction);
+            if (IsAcceptedBroadcast(broadcastResult))
+            {
+                if (signingContext?.PayJoinBIP21 is not null)
+                {
+                    var balanceChange = signedPSBT.GetBalance(derivationScheme.AccountDerivation, signingKey, rootedKeyPath);
+                    return BroadcastTransactionResult(transactionHash, balanceChange.GetValue(network));
+                }
                 return await GetOnChainWalletTransaction(storeId, paymentMethodId, transactionHash.ToString());
             }
             else
@@ -657,6 +660,19 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateAPIError("broadcast-error", broadcastResult.RPCMessage);
             }
         }
+
+        private static bool IsAcceptedBroadcast(BroadcastResult result) =>
+            result.Success || result.RPCCode == RPCErrorCode.RPC_TRANSACTION_ALREADY_IN_CHAIN;
+
+        private IActionResult BroadcastTransactionResult(uint256 hash, decimal balanceChange) =>
+            Ok(new OnChainWalletTransactionData
+            {
+                TransactionHash = hash,
+                Amount = balanceChange,
+                Timestamp = DateTimeOffset.UtcNow,
+                Status = TransactionStatus.Unconfirmed,
+                Comment = string.Empty
+            });
 
         [Authorize(Policy = WalletPolicies.CanBroadcastWalletTransactions, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions/broadcast")]

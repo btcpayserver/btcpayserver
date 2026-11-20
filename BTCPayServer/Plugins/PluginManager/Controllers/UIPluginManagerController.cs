@@ -139,9 +139,8 @@ public class UIPluginManagerController(
         string version = null,
         string returnTo = null)
     {
-        var ctx = new DownloadPluginContext(plugin, version, new(), new(), null);
-        await DownloadPluginAndDependencies(ctx);
-        if (ctx.DependencyFailed.Count == 0)
+        var error = await DownloadPluginAndDependencies(plugin, version);
+        if (error is null)
         {
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
@@ -151,8 +150,6 @@ public class UIPluginManagerController(
         }
         else
         {
-            var error = String.Join(" \n", ctx.DependencyFailed
-                .Select(d => $"{d.Key}: {d.Value}"));
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Message = stringLocalizer["The plugin could not be downloaded. Try again later."].Value + " \n" + error,
@@ -197,59 +194,83 @@ public class UIPluginManagerController(
         return RedirectToAction(nameof(ListPlugins));
     }
 
-    private record DownloadPluginContext(string Plugin, string Version, HashSet<string> Downloaded, Dictionary<string, string> DependencyFailed, VersionCondition VersionCondition);
-
-    private async Task DownloadPluginAndDependencies(DownloadPluginContext ctx)
+    internal async Task<string> DownloadPluginAndDependencies(string plugin, string version)
     {
-        if (ctx.Downloaded.Contains(ctx.Plugin)
-            ||
-            ctx.DependencyFailed.ContainsKey(ctx.Plugin))
-            return;
-        AvailablePlugin manifest;
+        var selected = new Dictionary<string, AvailablePlugin>(StringComparer.OrdinalIgnoreCase);
+        var resolving = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         try
         {
-            manifest = await pluginService.DownloadRemotePlugin(ctx.Plugin, ctx.Version, ctx.VersionCondition);
+            await ResolvePlugin(plugin, version, null);
+            var installOrder = GetPluginInstallOrder(selected);
+            foreach (var candidate in installOrder)
+                await pluginService.DownloadResolvedPlugin(candidate.Identifier, candidate);
+            foreach (var candidate in installOrder)
+                pluginService.InstallPlugin(candidate.Identifier);
+            return null;
         }
         catch (Exception ex)
         {
-            ctx.DependencyFailed.Add(ctx.Plugin, ex.Message);
-            return;
+            return $"{plugin}: {ex.Message}";
         }
 
-        foreach (var dep in manifest.Dependencies)
+        async Task ResolvePlugin(string identifier, string requestedVersion, VersionCondition condition)
         {
-            if (!PluginManager.DependencyMet(dep, pluginService.Installed))
+            if (selected.TryGetValue(identifier, out var resolved))
             {
-                if (dep.Identifier.Equals("BTCPayServer", StringComparison.OrdinalIgnoreCase))
-                {
-                    ctx.DependencyFailed.Add(ctx.Plugin, $"This condition can't be satisfied {dep}");
-                    return;
-                }
-
-                var cond = dep.ParseCondition();
-                var childCtx = ctx with
-                {
-                    Plugin = dep.Identifier,
-                    Version = null,
-                    VersionCondition = cond
-                };
-                if (childCtx.VersionCondition is VersionCondition.Not)
-                {
-                    ctx.DependencyFailed.Add(ctx.Plugin, $"The currently installed plugin {dep.Identifier} is incompatible with this plugin.");
-                    return;
-                }
-
-                await DownloadPluginAndDependencies(childCtx);
-                if (childCtx.DependencyFailed.ContainsKey(childCtx.Plugin))
-                {
-                    ctx.DependencyFailed.Add(ctx.Plugin, $"Failed to download dependency {dep.Identifier}");
-                    return;
-                }
+                if (condition?.IsFulfilled(resolved.Version) == false)
+                    throw new InvalidOperationException($"The selected version of {identifier} does not satisfy {condition}.");
+                return;
             }
+
+            if (!resolving.Add(identifier))
+                throw new InvalidOperationException($"Plugin dependency cycle involving {identifier}.");
+
+            var manifest = await pluginService.ResolveRemotePlugin(identifier, requestedVersion, condition);
+            foreach (var dep in manifest.Dependencies ?? [])
+            {
+                if (PluginManager.DependencyMet(dep, pluginService.Installed))
+                    continue;
+
+                if (dep.Identifier.Equals("BTCPayServer", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException($"This condition can't be satisfied {dep}");
+
+                var dependencyCondition = dep.ParseCondition();
+                if (dependencyCondition is VersionCondition.Not)
+                    throw new InvalidOperationException($"The currently installed plugin {dep.Identifier} is incompatible with this plugin.");
+
+                await ResolvePlugin(dep.Identifier, null, dependencyCondition);
+            }
+            resolving.Remove(identifier);
+            selected.Add(identifier, manifest);
+        }
+    }
+
+    private AvailablePlugin[] GetPluginInstallOrder(Dictionary<string, AvailablePlugin> selected)
+    {
+        var projected = pluginService.LoadedPlugins.ToDictionary(
+            plugin => plugin.Identifier, plugin => (plugin.Version, plugin.Dependencies), StringComparer.OrdinalIgnoreCase);
+        foreach (var (command, identifier) in pluginService.GetPendingCommands())
+        {
+            if (command is "delete" or "disable")
+                projected.Remove(identifier);
+            else if (pluginService.GetPendingPluginManifest(command, identifier) is { } pending)
+                projected[identifier] = (pending.Version, pending.Dependencies);
+        }
+        foreach (var (identifier, candidate) in selected)
+            projected[identifier] = (candidate.Version, candidate.Dependencies);
+
+        var versions = projected.ToDictionary(pair => pair.Key, pair => pair.Value.Version, StringComparer.OrdinalIgnoreCase);
+        foreach (var candidate in selected.Values)
+        {
+            if (!PluginManager.DependenciesMet(candidate.Dependencies ?? [], versions))
+                throw new InvalidOperationException($"The selected plugin versions do not meet the dependencies of {candidate.Identifier}.");
         }
 
-        pluginService.InstallPlugin(ctx.Plugin);
-        ctx.Downloaded.Add(ctx.Plugin);
+        return projected.Keys.Select(identifier => identifier.ToUpperInvariant()).ToArray()
+            .TopologicalSort(identifier => (projected[identifier].Dependencies ?? []).Select(dep => dep.Identifier.ToUpperInvariant()))
+            .Where(selected.ContainsKey)
+            .Select(identifier => selected[identifier])
+            .ToArray();
     }
 
     internal async Task<InstalledPluginsViewModel> CreateInstalledPluginsViewModel(

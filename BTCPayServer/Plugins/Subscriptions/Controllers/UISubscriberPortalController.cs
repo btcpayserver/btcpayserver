@@ -24,7 +24,7 @@ using static BTCPayServer.Plugins.Subscriptions.SubscriptionHostedService;
 namespace BTCPayServer.Plugins.Subscriptions.Controllers;
 
 [AllowAnonymous]
-[UseStoreLanguage]
+[StorefrontRoute]
 [Area(SubscriptionsPlugin.Area)]
 [Route("subscriber-portal/{portalSessionId}")]
 public class UISubscriberPortalController(
@@ -36,12 +36,12 @@ public class UISubscriberPortalController(
     UriResolver uriResolver) : UISubscriptionControllerBase(dbContextFactory, linkGenerator, stringLocalizer, subsService)
 {
     [HttpGet]
-    public async Task<IActionResult> SubscriberPortal(string portalSessionId, string? checkoutPlanId = null, string? anchor = null, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> SubscriberPortal(string portalSessionId, string? planCheckoutId = null, string? anchor = null, CancellationToken cancellationToken = default)
     {
         await using var ctx = DbContextFactory.CreateContext();
-        if (checkoutPlanId is not null)
+        if (planCheckoutId is not null)
         {
-            var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutPlanId);
+            var checkout = await ctx.PlanCheckouts.GetCheckout(planCheckoutId);
 
             var message = checkout switch
             {
@@ -100,6 +100,7 @@ public class UISubscriberPortalController(
         var creditHist = await ctx.SubscriberCreditHistory
             .Where(s => s.SubscriberId == session.SubscriberId && s.Currency == session.Subscriber.Plan.Currency)
             .OrderByDescending(s => s.CreatedAt)
+            .ThenByDescending(s => s.Id)
             .Take(50)
             .ToArrayAsync(cancellationToken);
         foreach (var hist in creditHist)

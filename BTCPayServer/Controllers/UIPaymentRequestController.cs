@@ -330,7 +330,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}")]
         [AllowAnonymous]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         public async Task<IActionResult> ViewPaymentRequest(string payReqId)
         {
             var vm = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());
@@ -357,7 +357,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("{payReqId}/form")]
         [HttpPost("{payReqId}/form")]
         [AllowAnonymous]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> ViewPaymentRequestForm(string payReqId, FormViewModel viewModel)
         {
@@ -418,7 +418,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}/pay")]
         [AllowAnonymous]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         public async Task<IActionResult> PayPaymentRequest(string payReqId, bool redirectToInvoice = true,
             decimal? amount = null, CancellationToken cancellationToken = default)
         {
@@ -482,7 +482,7 @@ namespace BTCPayServer.Controllers
             {
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("Checkout", "UIInvoice", new { currentInvoice.Id });
+                    return this.RedirectToInvoiceCheckout(currentInvoice.Id);
                 }
 
                 return Ok(currentInvoice.Id);
@@ -495,7 +495,7 @@ namespace BTCPayServer.Controllers
                 var newInvoice = await _InvoiceController.CreatePaymentRequestInvoice(prData, amount, result.AmountDue, store!, Request, cancellationToken);
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = newInvoice.Id });
+                    return this.RedirectToInvoiceCheckout(newInvoice.Id);
                 }
 
                 return Ok(newInvoice.Id);
@@ -508,7 +508,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{payReqId}/cancel")]
         [AllowAnonymous]
-        [UseStoreLanguage]
+        [StorefrontRoute]
         public async Task<IActionResult> CancelUnpaidPendingInvoice(string payReqId, bool redirect = true)
         {
             var result = await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId());

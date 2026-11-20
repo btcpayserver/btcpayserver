@@ -59,6 +59,35 @@ namespace BTCPayServer.Tests
             Assert.Equal(1, await broadcaster.ProcessAll());
             Assert.Equal(0, await broadcaster.ProcessAll());
         }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task DelayedPayjoinReleasesThePersistedLockAfterBroadcast()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
+            var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
+            var locks = tester.PayTester.GetService<UTXOLocker>();
+            var address = new Key().PubKey.GetAddress(ScriptPubKeyType.Segwit, network.NBitcoinNetwork);
+            var txid = await tester.ExplorerNode.SendToAddressAsync(address, Money.Coins(0.01m));
+            var original = await tester.ExplorerNode.GetRawTransactionAsync(txid);
+            await tester.ExplorerNode.GenerateAsync(1);
+
+            var outpoint = RandomOutpoint();
+            Assert.True(await locks.TryLock(outpoint));
+            var broadcastAt = DateTimeOffset.UtcNow.AddSeconds(-1);
+            await broadcaster.Schedule(broadcastAt, original, network);
+            await broadcaster.Schedule(broadcastAt, original, network, RandomOutpoint().Hash, [outpoint]);
+            var restartedBroadcaster = new DelayedTransactionBroadcaster(tester.NetworkProvider,
+                tester.PayTester.GetService<ExplorerClientProvider>(),
+                tester.PayTester.GetService<ApplicationDbContextFactory>(), broadcaster.Logs);
+            Assert.Contains(outpoint, await locks.FindLocks([outpoint]));
+            Assert.Equal(1, await restartedBroadcaster.ProcessAll());
+            Assert.Empty(await locks.FindLocks([outpoint]));
+            Assert.Equal(0, await restartedBroadcaster.ProcessAll());
+        }
+
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanUsePayjoinRepository()

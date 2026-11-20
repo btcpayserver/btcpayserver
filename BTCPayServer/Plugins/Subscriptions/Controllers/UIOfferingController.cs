@@ -351,7 +351,7 @@ public partial class UIOfferingController(
 
     [HttpGet("stores/{storeId}/offerings/{offeringId}/{section}")]
     public async Task<IActionResult> Offering(string storeId, string offeringId, SubscriptionSection section = SubscriptionSection.Plans,
-        string? checkoutPlanId = null, string? searchTerm = null)
+        string? planCheckoutId = null, string? searchTerm = null)
     {
         if (section == SubscriptionSection.Subscribers &&
             !(await authorizationService.AuthorizeAsync(User, storeId, SubscriptionsPolicies.CanManageSubscribers)).Succeeded)
@@ -364,9 +364,9 @@ public partial class UIOfferingController(
             .Where(p => p.OfferingId == offeringId)
             .ToListAsync();
 
-        if (checkoutPlanId is not null)
+        if (planCheckoutId is not null)
         {
-            var checkout = await ctx.PlanCheckouts.GetCheckout(checkoutPlanId);
+            var checkout = await ctx.PlanCheckouts.GetCheckout(planCheckoutId);
             if (checkout is not null && checkout.Subscriber is { Customer: { } cust })
                 TempData.SetStatusSuccess(StringLocalizer["Subscriber '{0}' successfully created", cust.GetPrimaryIdentity() ?? ""]);
         }

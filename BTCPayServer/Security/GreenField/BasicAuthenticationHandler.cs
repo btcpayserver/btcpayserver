@@ -66,29 +66,38 @@ namespace BTCPayServer.Security.Greenfield
             // Give new accounts time to create API keys via the Greenfield API.
             TimeSpan? accountAge = user?.Created is { } created ? DateTimeOffset.UtcNow - created : null;
             var isNewAccount = accountAge >= TimeSpan.Zero && accountAge <= TimeSpan.FromMinutes(5);
-            if (!isNewAccount)
-            {
-                if (Context.Connection.RemoteIpAddress?.ToString() is string ip)
-                    if (!await rateLimitService.Throttle(ZoneLimits.Login, ip))
-                        return Fail($"Basic authentication failed: Rate limited. Please use authentication with API Keys to avoid throttling.");
-            }
+            const string invalidCredentials = "Basic authentication failed";
+            var ip = Context.Connection.RemoteIpAddress?.ToString();
+            if (!isNewAccount && ip is not null && !await rateLimitService.Throttle(ZoneLimits.Login, ip))
+                return Fail(invalidCredentials);
+
+            if (user is null)
+                return Fail(invalidCredentials);
 
             var loggingContext = new UserService.CanLoginContext(user, baseUrl: Request.GetRequestBaseUrl());
-            if (!await userService.CanLogin(loggingContext))
+            var canLogin = await userService.CanLogin(loggingContext);
+            var allowsBasic = isNewAccount || user.GetBlob()?.AllowGreenfieldBasicAuth is true;
+            var requiresTwoFactor = canLogin && allowsBasic && await signInManager.IsTwoFactorEnabledAsync(user);
+            var canUseBasic = canLogin && allowsBasic && !requiresTwoFactor;
+            if (isNewAccount && !canUseBasic && ip is not null && !await rateLimitService.Throttle(ZoneLimits.Login, ip))
+                return Fail(invalidCredentials);
+
+            var passwordVerified = canUseBasic
+                ? (await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true)).Succeeded
+                : await userManager.CheckPasswordAsync(user, password);
+            if (!passwordVerified)
+                return Fail(invalidCredentials);
+
+            if (!canLogin)
             {
                 return Fail($"Basic authentication failed: {loggingContext.Failures[0].Text.Value}");
             }
-            if (user is null)
-                return Fail($"Basic authentication failed");
-            if (!isNewAccount && user.GetBlob()?.AllowGreenfieldBasicAuth is not true)
+            if (!allowsBasic)
                 return Fail("Basic authentication for the Greenfield API is not enabled for this user.");
-            if (await signInManager.IsTwoFactorEnabledAsync(user))
+            if (requiresTwoFactor)
             {
                 return Fail("Cannot use Basic authentication when multi-factor is enabled.");
             }
-            var result = await signInManager.CheckPasswordSignInAsync(user, password, true);
-            if (!result.Succeeded)
-                return Fail(result.ToString());
             var claims = new List<Claim>()
             {
                 new Claim(identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, user.Id),

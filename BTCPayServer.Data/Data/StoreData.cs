@@ -26,7 +26,13 @@ namespace BTCPayServer.Data
 
         public string StoreName { get; set; }
 
-        public SpeedPolicy SpeedPolicy { get; set; } = SpeedPolicy.MediumSpeed;
+        private SpeedPolicy _speedPolicy = SpeedPolicy.MediumSpeed;
+
+        public SpeedPolicy SpeedPolicy
+        {
+            get => _speedPolicy.Normalize();
+            set => _speedPolicy = value.Normalize();
+        }
 
         public string StoreWebsite { get; set; }
 

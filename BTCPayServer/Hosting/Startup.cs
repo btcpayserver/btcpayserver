@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Blazor;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
@@ -17,6 +18,7 @@ using BTCPayServer.Storage;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -205,6 +207,7 @@ namespace BTCPayServer.Hosting
                 // easily too big to get signed without this.
                 o.MaximumReceiveMessageSize = BlazorMaximumReceiveMessageSize;
             });
+            services.AddScoped<AuthenticationStateProvider, RevalidatingAuthenticationStateProvider>();
 
             LowercaseTransformer.Register(services);
             ValidateControllerNameTransformer.Register(services);

@@ -85,13 +85,13 @@
                                     </div>
                                 }
                                 <div class="d-flex flex-column">
-                                    <dd class="text-muted mb-0 fw-semibold">Date</dd>
+                                    <dd class="text-muted mb-0 fw-semibold" text-translate="true">Date</dd>
                                     <dt class="fs-5 mb-0 text-nowrap fw-semibold">@Model.Timestamp.ToBrowserDate()</dt>
                                 </div>
                                 @if (!string.IsNullOrEmpty(Model.OrderId))
                                 {
                                     <div class="d-flex flex-column">
-                                        <dd class="text-muted mb-0 fw-semibold">Order ID</dd>
+                                        <dd class="text-muted mb-0 fw-semibold" text-translate="true">Order ID</dd>
                                         <dt class="fs-5 mb-0 text-break fw-semibold">@Model.OrderId</dt>
                                     </div>
                                 }
@@ -197,9 +197,9 @@
         </main>
         <footer class="store-footer">
             <p permission="@Policies.CanViewInvoices" class="d-print-none">
-                <a asp-action="Invoice" asp-route-invoiceId="@Model.InvoiceId">
-                    Admin details
-                </a>
+                <a asp-action="Invoice" asp-route-invoiceId="@Model.InvoiceId" text-translate="true">
+                     Admin details
+                 </a>
             </p>
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                 <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />

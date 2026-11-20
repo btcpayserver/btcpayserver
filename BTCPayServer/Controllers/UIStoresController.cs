@@ -42,7 +42,6 @@ public partial class UIStoresController : Controller
         BTCPayNetworkProvider networkProvider,
         RateFetcher rateFactory,
         ExplorerClientProvider explorerProvider,
-        LanguageService langService,
         LocalizerService localizer,
         PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
         PoliciesSettings policiesSettings,
@@ -70,7 +69,6 @@ public partial class UIStoresController : Controller
         _rateFactory = rateFactory;
         _storeRepo = storeRepo;
         _userManager = userManager;
-        _langService = langService;
         _localizer = localizer;
         _walletProvider = walletProvider;
         _handlers = paymentMethodHandlerDictionary;
@@ -110,7 +108,6 @@ public partial class UIStoresController : Controller
     private readonly RateFetcher _rateFactory;
     private readonly CurrencyNameTable _currencyNameTable;
     private readonly ExplorerClientProvider _explorerProvider;
-    private readonly LanguageService _langService;
     private readonly LocalizerService _localizer;
     private readonly PaymentMethodHandlerDictionary _handlers;
     private readonly DefaultRulesCollection _defaultRules;

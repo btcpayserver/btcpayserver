@@ -1,6 +1,9 @@
 #Checkout {
     --wrap-max-width: 400px;
 }
+.checkout__message {
+    white-space: pre-line;
+}
 body {
     overflow-x: hidden;
 }
@@ -153,19 +156,6 @@ section dl > div dd {
 #result #unpaid .top .icn .icon {
     color: var(--btcpay-body-text-muted);
 }
-#DefaultLang {
-    width: calc(var(--text-width, 110px) + 4rem);
-    color: var(--btcpay-body-text-muted);
-    background-color: var(--btcpay-body-bg);
-    box-shadow: none;
-    border: none;
-    cursor: pointer;
-    font-size: var(--btcpay-body-font-size);
-}
-#DefaultLang:hover {
-    color: var(--btcpay-body-text-hover);
-}
-
 /* Modal adjustments */
 .checkout-modal body {
     background: rgba(var(--btcpay-black-rgb), 0.85);

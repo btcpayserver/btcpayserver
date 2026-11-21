@@ -34,7 +34,7 @@
     <PackageReference Include="HtmlSanitizer" Version="11.0.26" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="10.0.15" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.15" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />

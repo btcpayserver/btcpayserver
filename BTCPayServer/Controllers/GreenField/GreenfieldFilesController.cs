@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Services;
+using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services;
+using BTCPayServer.Storage.Services.Providers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
@@ -19,7 +23,9 @@ namespace BTCPayServer.Controllers.Greenfield;
 [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
 public class GreenfieldFilesController(
     IFileService fileService,
-    StoredFileRepository fileRepository)
+    StoredFileRepository fileRepository,
+    SettingsRepository settingsRepository,
+    IEnumerable<IStorageProviderService> storageProviders)
     : ControllerBase
 {
     [HttpGet("~/api/v1/files")]
@@ -68,7 +74,22 @@ public class GreenfieldFilesController(
     {
         var file = await fileRepository.GetFile(fileId);
         if (file == null) return this.CreateAPIError(404, "file-not-found", "The file does not exist.");
-        await fileRepository.RemoveFile(file);
+        var settings = await settingsRepository.GetSettingAsync<StorageSettings>();
+        // Without settings, or with legacy ones such as Amazon S3 that no provider handles anymore,
+        // the stored file can't be reached: only remove the row, as this endpoint always did
+        if (settings is null || !storageProviders.Any(provider => provider.StorageProvider() == settings.Provider))
+        {
+            await fileRepository.RemoveFile(file);
+            return Ok();
+        }
+        try
+        {
+            await fileService.RemoveFile(file.Id, null);
+        }
+        catch (Exception e)
+        {
+            return this.CreateAPIError("file-delete-failed", e.Message);
+        }
         return Ok();
     }
 

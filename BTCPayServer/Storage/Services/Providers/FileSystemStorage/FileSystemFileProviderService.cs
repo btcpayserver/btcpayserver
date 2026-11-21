@@ -46,5 +46,22 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
                 r = r.Replace(Path.DirectorySeparatorChar, '/');
             return r;
         }
+
+        public override async Task RemoveFile(StoredFile storedFile, StorageSettings configuration)
+        {
+            var providerConfiguration = GetProviderConfiguration(configuration);
+            var provider = await GetStorageProvider(providerConfiguration);
+            try
+            {
+                // Unlike File.Exists, GetAttributes tells a missing file from one that can't be reached
+                File.GetAttributes(provider.GetBlobUrl(providerConfiguration.ContainerName, storedFile.StorageFileName));
+            }
+            catch (FileNotFoundException)
+            {
+                // The local provider throws if the file is already gone, so there is nothing left to remove
+                return;
+            }
+            await provider.DeleteBlobAsync(providerConfiguration.ContainerName, storedFile.StorageFileName);
+        }
     }
 }

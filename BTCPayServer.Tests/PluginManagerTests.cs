@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Plugins;
@@ -14,7 +15,10 @@ using BTCPayServer.Plugins.PluginManagement;
 using BTCPayServer.Plugins.PluginManagement.Controllers;
 using BTCPayServer.Plugins.PluginManagement.Models;
 using BTCPayServer.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -505,6 +509,102 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
+        public async Task PluginManager_RejectsUnsafeIdentifiersInCommands()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-commands-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                foreach (var identifier in new[] { "Plugin\ndelete:BTCPayServer.Plugins.Test", "Plugin\nTest", "Plugin\rTest", "Plugin:Test", "Plugin\0Test", "Plugin/Test", "Plugin\\Test", "./", "../Plugin", "..", ".", "", "commands", "Disabled", "disabled. " })
+                {
+                    Assert.Throws<InvalidOperationException>(() => PluginManager.QueueCommands(pluginDir, ("enable", identifier)));
+                }
+                Assert.Empty(PluginManager.GetPendingCommands(pluginDir));
+                Assert.Throws<InvalidOperationException>(() => PluginManager.QueueCommands(pluginDir, ("enable", new string('a', 256))));
+                // A name never resolves to the plugins folder itself, even at the file system root
+                Assert.False(PluginManager.IsSafeName(Path.GetPathRoot(pluginDir)!, "."));
+
+                // Any plugin folder name that loads can be disabled after a crash
+                foreach (var identifier in new[] { "My Plugin", "Plugín" })
+                {
+                    Directory.CreateDirectory(Path.Combine(pluginDir, identifier));
+                    PluginManager.DisablePlugin(pluginDir, identifier);
+                }
+                PluginManager.QueueCommands(pluginDir, ("install", "BTCPayServer.Plugins.Test"));
+                var expected = new[] { ("disable", "My Plugin"), ("disable", "Plugín"), ("install", "BTCPayServer.Plugins.Test") };
+                Assert.Equal(expected, PluginManager.GetPendingCommands(pluginDir));
+
+                // Unsafe entries already in the commands file are ignored
+                File.AppendAllLines(Path.Combine(pluginDir, "commands"), ["delete:..", "delete:./", "delete:disabled", "enable:", "install:Plugin:Test"]);
+                Assert.Equal(expected, PluginManager.GetPendingCommands(pluginDir));
+
+                // Catalog identifiers are checked before anything is downloaded or written
+                var requested = false;
+                using var httpClient = new HttpClient(new TestHttpMessageHandler(_ =>
+                {
+                    requested = true;
+                    return new HttpResponseMessage(HttpStatusCode.NotFound);
+                })) { BaseAddress = new Uri("https://plugins.example/") };
+                var pluginService = CreatePluginService(pluginDir, [], httpClient);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => pluginService.DownloadRemotePlugin("../Plugin", null));
+                Assert.False(requested);
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
+        [Fact]
+        public async Task UploadPlugin_NamesRejectedFile()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-upload-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                using var httpClient = new HttpClient { BaseAddress = new Uri("https://plugins.example/") };
+                var controller = new UIPluginManagerController(
+                    CreatePluginService(pluginDir, [], httpClient), new PoliciesSettings(), new FormatStringLocalizer())
+                {
+                    TempData = new TempDataDictionary(new DefaultHttpContext(), new MemoryTempDataProvider())
+                };
+                static IFormFile Upload(string name, int length = 1) => new FormFile(new MemoryStream(new byte[length]), 0, length, "file", name);
+                const string uploaded = "File uploaded, restart server to load plugin";
+                const string rejected = "Not uploaded due to an invalid plugin file: ";
+
+                // A missing file does not schedule an install
+                Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestResult>(await controller.UploadPlugin(null));
+
+                // Reject invalid plugin names, file names and empty files without scheduling an install
+                foreach (var file in new[] { Upload("commands.btcpay"), Upload("Disabled.btcpay"), Upload("Plugin:Test.btcpay"), Upload("Empty.btcpay", 0), Upload(".btcpay") })
+                {
+                    await controller.UploadPlugin(file);
+                    var warning = controller.TempData.GetStatusMessageModel();
+                    Assert.Equal(StatusMessageModel.StatusSeverity.Warning, warning.Severity);
+                    Assert.Equal(rejected + file.FileName, warning.Message);
+                    Assert.Empty(Directory.EnumerateFileSystemEntries(pluginDir));
+                    Assert.Empty(PluginManager.GetPendingCommands(pluginDir));
+                }
+
+                // Long names are cut, so the message stays small
+                await controller.UploadPlugin(Upload(new string('a', 2000) + ".btcpay"));
+                Assert.Equal(rejected + new string('a', 300) + "...", controller.TempData.GetStatusMessageModel().Message);
+
+                // A valid file is uploaded and scheduled for installation
+                await controller.UploadPlugin(Upload("BTCPayServer.Plugins.Test.btcpay"));
+                var status = controller.TempData.GetStatusMessageModel();
+                Assert.Equal(StatusMessageModel.StatusSeverity.Success, status.Severity);
+                Assert.Equal(uploaded, status.Message);
+                Assert.True(File.Exists(Path.Combine(pluginDir, "BTCPayServer.Plugins.Test.btcpay")));
+                Assert.Equal(new[] { ("install", "BTCPayServer.Plugins.Test") }, PluginManager.GetPendingCommands(pluginDir));
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
         [Theory]
         [InlineData("install")]
         [InlineData("enable")]
@@ -939,6 +1039,19 @@ namespace BTCPayServer.Tests
                 await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
                 throw new InvalidOperationException("The request should have been cancelled.");
             }
+        }
+
+        private sealed class FormatStringLocalizer : IStringLocalizer
+        {
+            public LocalizedString this[string name] => new(name, name);
+            public LocalizedString this[string name, params object[] arguments] => new(name, string.Format(name, arguments));
+            public IEnumerable<LocalizedString> GetAllStrings(bool includeParentCultures) => [];
+        }
+
+        private sealed class MemoryTempDataProvider : ITempDataProvider
+        {
+            public IDictionary<string, object> LoadTempData(HttpContext context) => new Dictionary<string, object>();
+            public void SaveTempData(HttpContext context, IDictionary<string, object> values) { }
         }
 
         private sealed class TestPlugin(

@@ -2006,6 +2006,63 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CannotDeleteLastAdminFromUI()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var dbFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            async Task<bool> UserExists(string userId)
+            {
+                await using var ctx = dbFactory.CreateContext();
+                return await ctx.Users.FindAsync(userId) is not null;
+            }
+
+            var admin = tester.NewAccount();
+            await admin.RegisterAsync(true);
+            var serverController = admin.GetController<UIServerController>();
+            Assert.IsType<RedirectToActionResult>(await serverController.DeleteUserPost(admin.UserId));
+            Assert.True(await UserExists(admin.UserId));
+
+            // The account page hides the delete button and refuses the delete too
+            var manageController = admin.GetController<UIManageController>();
+            Assert.True((await manageController.Index()).AssertViewModel<IndexViewModel>().IsLastAdmin);
+            Assert.IsType<RedirectToActionResult>(await manageController.DeleteUserPost());
+            Assert.True(await UserExists(admin.UserId));
+
+            // An admin who can't log in, for example after an unconfirmed email change, is still the last one
+            await using (var ctx = dbFactory.CreateContext())
+            {
+                var adminUser = await ctx.Users.FindAsync(admin.UserId);
+                adminUser.RequiresEmailConfirmation = true;
+                adminUser.EmailConfirmed = false;
+                await ctx.SaveChangesAsync();
+            }
+            manageController = admin.GetController<UIManageController>();
+            Assert.True((await manageController.Index()).AssertViewModel<IndexViewModel>().IsLastAdmin);
+            Assert.IsType<RedirectToActionResult>(await manageController.DeleteUserPost());
+            Assert.IsType<RedirectToActionResult>(await serverController.DeleteUserPost(admin.UserId));
+            Assert.True(await UserExists(admin.UserId));
+
+            // Once there is another admin, the first one can be deleted
+            var admin2 = tester.NewAccount();
+            await admin2.RegisterAsync(true);
+            Assert.True(admin2.IsAdmin);
+            serverController = admin2.GetController<UIServerController>();
+            Assert.IsType<RedirectToActionResult>(await serverController.DeleteUserPost(admin.UserId));
+            Assert.False(await UserExists(admin.UserId));
+
+            // and an admin who is not the last one can delete their own account
+            var admin3 = tester.NewAccount();
+            await admin3.RegisterAsync(true);
+            Assert.True(admin3.IsAdmin);
+            manageController = admin3.GetController<UIManageController>();
+            Assert.False((await manageController.Index()).AssertViewModel<IndexViewModel>().IsLastAdmin);
+            Assert.IsType<RedirectToActionResult>(await manageController.DeleteUserPost());
+            Assert.False(await UserExists(admin3.UserId));
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Playwright", "Playwright")]
         public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
         {

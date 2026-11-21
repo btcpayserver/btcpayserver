@@ -336,8 +336,7 @@ namespace BTCPayServer.Controllers
             var roles = await _UserManager.GetRolesAsync(user);
             if (Roles.HasServerAdmin(roles))
             {
-                var loginContext = CreateLoginContext(user);
-                if (await _userService.IsUserTheOnlyOneAdmin(loginContext))
+                if (await _userService.IsLastAdmin(user))
                 {
                     return View("Confirm", new ConfirmModel(StringLocalizer["Delete admin"],
                         StringLocalizer["Unable to proceed: As the user <strong>{0}</strong> is the last enabled admin, it cannot be removed.", Html.Encode(user.Email)]));
@@ -357,6 +356,12 @@ namespace BTCPayServer.Controllers
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
+
+            if (await _userService.IsLastAdmin(user))
+            {
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["User was the last enabled admin and could not be deleted."].Value;
+                return RedirectToAction(nameof(ListUsers));
+            }
 
             await _userService.DeleteUserAndAssociatedData(user);
 

@@ -177,7 +177,21 @@ public class MonetizationHostedService(
                               WHERE ci.type = @type AND ci.value = @id;
                               """, new { type = Monetization.SubscriberDataExtensions.IdentityType, id = deleted.User.Id });
         }
+        else if (evt is ResetUserAccessRestrictionsRequest)
+        {
+            // The settings at the time it runs, so the last reset in the queue matches the last settings saved
+            await ResetUserAccessRestrictions(monetizationSettingsAccessor.Settings.OfferingId);
+        }
     }
+
+    record ResetUserAccessRestrictionsRequest;
+
+    /// <summary>
+    /// Recomputes the monetization access restrictions of the subscribers of the current offering and removes all the others.
+    /// Without an offering, all of them are removed, so users don't stay locked out once monetization is deactivated.
+    /// </summary>
+    public Task ResetUserAccessRestrictions()
+        => RunEvent(new ResetUserAccessRestrictionsRequest());
 
     private async Task AttachUserIdToSubscriber(string id, SubscriptionEvent.NewSubscriber newSub)
     {
@@ -337,9 +351,57 @@ public class MonetizationHostedService(
 
     private async Task UpdateUserAccessRestrictions(ApplicationDbContext ctx, string offeringId, string[] userIds)
     {
-        if (userIds.Length == 0)
+        var updated = await UpdateUserAccessRestrictionsCore(ctx, offeringId, userIds);
+        InvalidateSecurityStamps(updated);
+        if (updated.Length == 0)
             return;
-        var updated = (await ctx.Database.GetDbConnection()
+
+        await ctx.Users.UpdateStoreNoActiveUserForUsers(updated.Select(update => update.UserId).ToArray());
+        EventAggregator.Publish(new MonetizationAccessUpdated(updated));
+    }
+
+    private async Task ResetUserAccessRestrictions(string? offeringId)
+    {
+        await using var strategyContext = dbContextFactory.CreateContext();
+        (string UserId, bool Restricted)[] committing = [];
+        var updated = await strategyContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var ctx = dbContextFactory.CreateContext();
+            await using var transaction = await ctx.Database.BeginTransactionAsync();
+            string[] userIds = offeringId is null ? [] : await GetUserIdsInOffering(ctx, offeringId);
+            (string UserId, bool Restricted)[] recomputed = offeringId is null ? [] : await UpdateUserAccessRestrictionsCore(ctx, offeringId, userIds);
+            var removed = await ctx.Database.GetDbConnection()
+                .QueryAsync<string>("""
+                                    DELETE FROM user_access_restrictions
+                                    WHERE type = @restrictionType AND user_id <> ALL(@userIds)
+                                    RETURNING user_id
+                                    """, new { restrictionType = UserAccessRestrictionConstants.Monetization, userIds });
+            (string UserId, bool Restricted)[] changes = [.. recomputed, .. removed.Select(userId => (userId, false))];
+            if (changes.Length != 0)
+                await ctx.Users.UpdateStoreNoActiveUserForUsers(changes.Select(update => update.UserId).ToArray());
+            // A retry after a lost commit response finds nothing left to change, so it reports the changes of the commit
+            if (changes.Length == 0)
+                return committing;
+            committing = changes;
+            await transaction.CommitAsync();
+            return changes;
+        });
+        InvalidateSecurityStamps(updated);
+        if (updated.Length != 0)
+            EventAggregator.Publish(new MonetizationAccessUpdated(updated));
+    }
+
+    private void InvalidateSecurityStamps((string UserId, bool Restricted)[] updated)
+    {
+        foreach (var update in updated.Where(update => update.Restricted))
+            securityStampInvalidator.Invalidate(update.UserId);
+    }
+
+    private static async Task<(string UserId, bool Restricted)[]> UpdateUserAccessRestrictionsCore(ApplicationDbContext ctx, string offeringId, string[] userIds)
+    {
+        if (userIds.Length == 0)
+            return [];
+        return (await ctx.Database.GetDbConnection()
             .QueryAsync<(string UserId, bool Restricted)>("""
                           WITH exempt_users AS (
                               SELECT "Id" AS user_id
@@ -406,15 +468,6 @@ public class MonetizationHostedService(
                     restrictionType = UserAccessRestrictionConstants.Monetization,
                     salt = RandomUtils.GetUInt256().ToString()
                 })).ToArray();
-
-        foreach (var update in updated.Where(update => update.Restricted))
-            securityStampInvalidator.Invalidate(update.UserId);
-
-        if (updated.Length == 0)
-            return;
-
-        await ctx.Users.UpdateStoreNoActiveUserForUsers(updated.Select(update => update.UserId).ToArray());
-        EventAggregator.Publish(new MonetizationAccessUpdated(updated));
     }
 
     private static async Task<string[]> GetUserIdsInPlan(ApplicationDbContext ctx, PlanData plan)
@@ -425,5 +478,15 @@ public class MonetizationHostedService(
                                     JOIN customers_identities ci ON ci.customer_id = s.customer_id
                                     WHERE s.offering_id=@offeringId AND s.plan_id = @planId AND ci.type = @applicationUserId
                                     """, new { planId = plan.Id, offeringId = plan.OfferingId, applicationUserId = SubscriberDataExtensions.IdentityType }))
+            .ToArray();
+
+    private static async Task<string[]> GetUserIdsInOffering(ApplicationDbContext ctx, string offeringId)
+        => (await ctx.Database.GetDbConnection()
+                .QueryAsync<string>("""
+                                    SELECT ci.value
+                                    FROM subs_subscribers s
+                                    JOIN customers_identities ci ON ci.customer_id = s.customer_id
+                                    WHERE s.offering_id = @offeringId AND ci.type = @applicationUserId
+                                    """, new { offeringId, applicationUserId = SubscriberDataExtensions.IdentityType }))
             .ToArray();
 }

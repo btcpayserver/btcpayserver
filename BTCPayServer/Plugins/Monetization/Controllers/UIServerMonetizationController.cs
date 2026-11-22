@@ -273,6 +273,7 @@ public class UIServerMonetizationController(
             if (await ctx.GetOfferingAndPlan(settings) is { } v)
             {
                 await settingsRepository.UpdateSetting(settings);
+                await monetizationService.ResetUserAccessRestrictions();
                 await UpdatePoliciesSettings(true);
                 TempData.SetStatusMessageModel(new()
                 {
@@ -304,6 +305,7 @@ public class UIServerMonetizationController(
             settings.DefaultPlanId = null;
             settings.OfferingId = null;
             await settingsRepository.UpdateSetting(settings);
+            await monetizationService.ResetUserAccessRestrictions();
             await UpdatePoliciesSettings(false);
             TempData.SetStatusMessageModel(new()
             {

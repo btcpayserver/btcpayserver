@@ -2157,6 +2157,58 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CannotRevokeLoginOfLastActiveAdmin()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var dbFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            var admin = tester.NewAccount();
+            await admin.RegisterAsync(true);
+            var adminClient = await admin.CreateClient(Policies.Unrestricted);
+            async Task<ApplicationUser> GetAdmin()
+            {
+                await using var ctx = dbFactory.CreateContext();
+                return await ctx.Users.FindAsync(admin.UserId);
+            }
+            async Task<IActionResult> EditAdmin(Action<UsersViewModel.UserViewModel> edit)
+            {
+                var model = (await admin.GetController<UIServerController>().User(admin.UserId)).AssertViewModel<UsersViewModel.UserViewModel>();
+                edit(model);
+                return await admin.GetController<UIServerController>().User(admin.UserId, model);
+            }
+
+            // The admin's account requires approval and a confirmed email, and has both
+            await using (var ctx = dbFactory.CreateContext())
+            {
+                var user = await ctx.Users.FindAsync(admin.UserId);
+                user.RequiresApproval = true;
+                user.Approved = true;
+                user.RequiresEmailConfirmation = true;
+                user.EmailConfirmed = true;
+                await ctx.SaveChangesAsync();
+            }
+
+            Assert.IsType<RedirectToActionResult>(await admin.GetController<UIServerController>().ApproveUserPost(admin.UserId, false));
+            Assert.True((await GetAdmin()).Approved);
+            Assert.IsType<ViewResult>(await EditAdmin(model => model.Approved = false));
+            Assert.True((await GetAdmin()).Approved);
+            Assert.IsType<ViewResult>(await EditAdmin(model => model.EmailConfirmed = false));
+            Assert.True((await GetAdmin()).EmailConfirmed);
+            await AssertEx.AssertApiError(403, "cannot-unapprove-only-admin", () => adminClient.ApproveUser(admin.UserId, false));
+            Assert.True((await GetAdmin()).Approved);
+
+            // Once there is another active admin, the first one can be unapproved and unconfirmed
+            var admin2 = tester.NewAccount();
+            await admin2.RegisterAsync(true);
+            Assert.True(admin2.IsAdmin);
+            Assert.True(await adminClient.ApproveUser(admin.UserId, false));
+            Assert.False((await GetAdmin()).Approved);
+            Assert.IsType<RedirectToActionResult>(await EditAdmin(model => model.EmailConfirmed = false));
+            Assert.False((await GetAdmin()).EmailConfirmed);
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Playwright", "Playwright")]
         public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
         {

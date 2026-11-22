@@ -474,7 +474,7 @@
                     "Users"
                 ],
                 "summary": "Toggle user approval",
-                "description": "Approve or unapprove a user.\n\nMust be an admin to perform this operation.\n\nAttempting to (un)approve a user for which this requirement does not exist will not succeed.",
+                "description": "Approve or unapprove a user.\n\nMust be an admin to perform this operation.\n\nAttempting to (un)approve a user for which this requirement does not exist will not succeed.\n\nAttempting to unapprove the only admin user will not succeed.",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/UserIdOrEmail"
@@ -498,7 +498,7 @@
                         "description": "Missing authorization for approving the user"
                     },
                     "403": {
-                        "description": "Authorized but forbidden to approve the user. Can happen if you attempt to set the status of a user that does not have the approval requirement."
+                        "description": "Authorized but forbidden to approve the user. Can happen if you attempt to set the status of a user that does not have the approval requirement, or to unapprove the only admin user."
                     },
                     "404": {
                         "description": "User with provided ID was not found"

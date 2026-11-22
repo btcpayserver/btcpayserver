@@ -121,8 +121,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.UserNotFound();
             }
 
+            await using var adminLock = await _userService.LockAdminChanges();
             if (user.RequiresApproval)
             {
+                if (!request.Approved && await _userService.IsUserTheOnlyOneAdmin(new UserService.CanLoginContext(user)))
+                {
+                    return this.CreateAPIError(403, "cannot-unapprove-only-admin", "This is the only enabled administrator and cannot be unapproved.");
+                }
                 var loginLink = _callbackGenerator.ForLogin(user);
                 return await _userService.SetUserApproval(user.Id, request.Approved, loginLink)
                     ? Ok()

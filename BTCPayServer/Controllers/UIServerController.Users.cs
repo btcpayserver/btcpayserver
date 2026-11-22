@@ -118,6 +118,14 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             await using var adminLock = await _userService.LockAdminChanges();
+            var revokesLogin = (user is { RequiresApproval: true, Approved: true } && viewModel.Approved is false) ||
+                               (user is { RequiresEmailConfirmation: true, EmailConfirmed: true } && viewModel.EmailConfirmed is false);
+            if (revokesLogin && await _userService.IsUserTheOnlyOneAdmin(CreateLoginContext(user)))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This is the only enabled admin, so their approval or email confirmation can't be revoked until another admin is added."].Value;
+                return View(viewModel);
+            }
+
             var emailConfirmationRevoked = false;
             bool? propertiesChanged = null;
             bool? adminStatusChanged = null;
@@ -438,6 +446,13 @@ namespace BTCPayServer.Controllers
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
+
+            await using var adminLock = await _userService.LockAdminChanges();
+            if (!approved && user.RequiresApproval && await _userService.IsUserTheOnlyOneAdmin(CreateLoginContext(user)))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["User was the last enabled admin and could not be unapproved."].Value;
+                return RedirectToAction(nameof(ListUsers));
+            }
 
             var loginLink = _callbackGenerator.ForLogin(user);
             await _userService.SetUserApproval(userId, approved, loginLink);

@@ -113,17 +113,28 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/users/{userId}")]
         public new async Task<IActionResult> User(string userId, UsersViewModel.UserViewModel viewModel, [FromForm] bool RemoveImageFile = false)
         {
+            // Before loading the user, so the checks below see the state that other admin changes left
+            await using var adminLock = await _userService.LockAdminChanges();
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
 
-            await using var adminLock = await _userService.LockAdminChanges();
+            // Refusals come before any change is saved, and show the user as stored
+            var roles = await _UserManager.GetRolesAsync(user);
+            var wasAdmin = Roles.HasServerAdmin(roles);
+            if (!viewModel.IsAdmin && wasAdmin && await _userService.IsLastAdmin(user))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This is the only admin, so their role can't be removed until another admin is added."].Value;
+                ModelState.Clear();
+                return await User(userId);
+            }
             var revokesLogin = (user is { RequiresApproval: true, Approved: true } && viewModel.Approved is false) ||
                                (user is { RequiresEmailConfirmation: true, EmailConfirmed: true } && viewModel.EmailConfirmed is false);
             if (revokesLogin && await _userService.IsUserTheOnlyOneAdmin(CreateLoginContext(user)))
             {
                 TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This is the only enabled admin, so their approval or email confirmation can't be revoked until another admin is added."].Value;
-                return View(viewModel);
+                ModelState.Clear();
+                return await User(userId);
             }
 
             var emailConfirmationRevoked = false;
@@ -187,14 +198,6 @@ namespace BTCPayServer.Controllers
                 propertiesChanged = true;
             }
             user.SetBlob(blob);
-            var roles = await _UserManager.GetRolesAsync(user);
-            var wasAdmin = Roles.HasServerAdmin(roles);
-            if (!viewModel.IsAdmin && wasAdmin && await _userService.IsLastAdmin(user))
-            {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This is the only admin, so their role can't be removed until another admin is added."].Value;
-                return View(viewModel);
-            }
-
             if (viewModel.IsAdmin != wasAdmin)
             {
                 adminStatusChanged = await _userService.SetAdminUser(user.Id, viewModel.IsAdmin);

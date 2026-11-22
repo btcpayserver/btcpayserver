@@ -203,7 +203,7 @@ namespace BTCPayServer.Plugins
             });
             logger.LogInformation($"Loading plugins from {pluginsFolder}");
             Directory.CreateDirectory(pluginsFolder);
-            ExecuteCommands(pluginsFolder);
+            ExecuteCommands(pluginsFolder, logger);
 
             var disabledPluginIdentifiers = GetDisabledPluginIdentifiers(pluginsFolder);
             var systemAssembly = typeof(Program).Assembly;
@@ -475,7 +475,7 @@ namespace BTCPayServer.Plugins
             };
         }
 
-        private static bool ExecuteCommands(string pluginsFolder)
+        internal static bool ExecuteCommands(string pluginsFolder, ILogger logger)
         {
             var pendingCommands = GetPendingCommands(pluginsFolder);
             if (!pendingCommands.Any())
@@ -483,7 +483,24 @@ namespace BTCPayServer.Plugins
                 return false;
             }
 
-            var remainingCommands = (from command in pendingCommands where !ExecuteCommand(command, pluginsFolder) select $"{command.command}:{command.plugin}").ToList();
+            var remainingCommands = new List<string>();
+            // After a command fails, the later commands for the same plugin wait too, so they still run in order
+            var failedPlugins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var command in pendingCommands)
+            {
+                try
+                {
+                    if (failedPlugins.Contains(command.plugin) || !ExecuteCommand(command, pluginsFolder))
+                        remainingCommands.Add($"{command.command}:{command.plugin}");
+                }
+                catch (Exception e)
+                {
+                    // Kept, so it shows as pending and runs again at the next start. A failed install has lost its package by then, so it does nothing.
+                    logger.LogError(e, $"Error when executing the {command.command} command for plugin {command.plugin}, the command stays pending.");
+                    remainingCommands.Add($"{command.command}:{command.plugin}");
+                    failedPlugins.Add(command.plugin);
+                }
+            }
             if (remainingCommands.Any())
             {
                 File.WriteAllLines(Path.Join(pluginsFolder, "commands"), remainingCommands);
@@ -540,31 +557,39 @@ namespace BTCPayServer.Plugins
             switch (command.command)
             {
                 case "delete":
-                    ExecuteCommand(("enable", command.extension), pluginsFolder);
                     if (File.Exists(dirName))
                         File.Delete(dirName);
                     if (Directory.Exists(dirName))
                         Directory.Delete(dirName, true);
+                    // After the delete, so a failed delete doesn't enable what's left of the plugin
+                    ExecuteCommand(("enable", command.extension), pluginsFolder);
                     ClearPluginFailure(pluginsFolder, command.extension);
                     break;
 
                 case "install":
                     var fileName = dirName + BTCPayPluginSuffix;
                     var manifestFileName = dirName + ".json";
-                    ExecuteCommand(("enable", command.extension), pluginsFolder);
                     if (File.Exists(fileName))
                     {
-                        if (File.Exists(dirName))
-                            File.Delete(dirName);
-                        if (Directory.Exists(dirName))
-                            Directory.Delete(dirName, true);
-
-                        ZipFile.ExtractToDirectory(fileName, dirName, true);
-                        File.Delete(fileName);
-                        if (File.Exists(manifestFileName))
+                        // Unique, so it can't be another plugin's folder
+                        var stagingDirName = Path.Join(pluginsFolder, $"install-{Guid.NewGuid():N}");
+                        var oldDirName = Path.Join(stagingDirName, "old");
+                        try
                         {
-                            File.Move(manifestFileName, Path.Join(dirName, Path.GetFileName(manifestFileName)), true);
+                            var extractedDirName = Path.Join(stagingDirName, "new");
+                            ZipFile.ExtractToDirectory(fileName, extractedDirName, true);
+                            if (File.Exists(manifestFileName))
+                                File.Move(manifestFileName, Path.Join(extractedDirName, Path.GetFileName(manifestFileName)), true);
+                            if (File.Exists(dirName))
+                                File.Delete(dirName);
+                            ReplaceDirectory(dirName, extractedDirName, oldDirName);
                         }
+                        finally
+                        {
+                            CleanUpInstall(fileName, manifestFileName, stagingDirName, dirName, oldDirName);
+                        }
+                        // Only after a successful install, so a failed one doesn't enable the old version
+                        ExecuteCommand(("enable", command.extension), pluginsFolder);
                     }
                     break;
 
@@ -601,6 +626,44 @@ namespace BTCPayServer.Plugins
             }
 
             return true;
+        }
+
+        // Best effort, so a cleanup failure doesn't hide the result of the install
+        private static void CleanUpInstall(string fileName, string manifestFileName, string stagingDirName, string dirName, string oldDirName)
+        {
+            // Also on failure, as a leftover manifest would be picked up by the next upload
+            TryCleanUp(() => File.Delete(manifestFileName));
+            TryCleanUp(() => File.Delete(fileName));
+            // Unless it holds the only copy of the installed version, because moving it back failed
+            if (Directory.Exists(dirName) || !Directory.Exists(oldDirName))
+                TryCleanUp(() => Directory.Delete(stagingDirName, true));
+        }
+
+        private static void TryCleanUp(Action cleanUp)
+        {
+            try
+            {
+                cleanUp();
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+            }
+        }
+
+        // Renames rather than deletes, so the installed version is either fully replaced or left as it was
+        private static void ReplaceDirectory(string dirName, string newDirName, string oldDirName)
+        {
+            if (Directory.Exists(dirName))
+                Directory.Move(dirName, oldDirName);
+            try
+            {
+                Directory.Move(newDirName, dirName);
+            }
+            catch when (Directory.Exists(oldDirName))
+            {
+                Directory.Move(oldDirName, dirName);
+                throw;
+            }
         }
 
         public static (string command, string plugin)[] GetPendingCommands(string pluginsFolder)

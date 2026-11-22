@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -19,6 +20,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -598,6 +600,93 @@ namespace BTCPayServer.Tests
                 Assert.Equal(uploaded, status.Message);
                 Assert.True(File.Exists(Path.Combine(pluginDir, "BTCPayServer.Plugins.Test.btcpay")));
                 Assert.Equal(new[] { ("install", "BTCPayServer.Plugins.Test") }, PluginManager.GetPendingCommands(pluginDir));
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void ExecuteCommands_KeepsInstalledPluginWhenPackageIsBroken(bool extractsPartly)
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-install-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                static void WritePackage(string path, params string[] entries)
+                {
+                    using var package = ZipFile.Open(path, ZipArchiveMode.Create);
+                    foreach (var entry in entries)
+                        package.CreateEntry(entry);
+                }
+
+                // Two disabled plugins with an update each, the one for PluginA can't be extracted
+                foreach (var plugin in new[] { "PluginA", "PluginB" })
+                {
+                    Directory.CreateDirectory(Path.Combine(pluginDir, plugin));
+                    File.WriteAllText(Path.Combine(pluginDir, plugin, plugin + ".dll"), "installed");
+                    File.WriteAllText(Path.Combine(pluginDir, plugin + ".json"), "{}");
+                }
+                File.WriteAllText(Path.Combine(pluginDir, "PluginB", "Removed.dll"), "installed");
+                File.WriteAllLines(Path.Combine(pluginDir, "disabled"), ["PluginA", "PluginB"]);
+                var package = Path.Combine(pluginDir, "PluginA.btcpay");
+                // Either not a zip, or a zip whose second entry points outside the folder, so extraction stops halfway
+                if (extractsPartly)
+                    WritePackage(package, "PluginA.dll", "../PluginA.dll");
+                else
+                    File.WriteAllText(package, "not a zip");
+                WritePackage(Path.Combine(pluginDir, "PluginB.btcpay"), "PluginB.dll");
+                PluginManager.QueueCommands(pluginDir, ("install", "PluginA"), ("install", "PluginB"));
+                var logger = LoggerFactory.CreateLogger(typeof(PluginManager));
+
+                PluginManager.ExecuteCommands(pluginDir, logger);
+
+                // The installed version stays as it was, and stays disabled
+                Assert.Equal("installed", File.ReadAllText(Path.Combine(pluginDir, "PluginA", "PluginA.dll")));
+                Assert.Equal(new[] { "PluginA" }, File.ReadAllLines(Path.Combine(pluginDir, "disabled")));
+                // The next command still runs, and replaces the installed version as a whole
+                Assert.Equal(new[] { "PluginB.dll", "PluginB.json" }, Directory.GetFiles(Path.Combine(pluginDir, "PluginB")).Select(file => Path.GetFileName(file)).Order(StringComparer.Ordinal));
+                Assert.Equal("", File.ReadAllText(Path.Combine(pluginDir, "PluginB", "PluginB.dll")));
+                // The broken package is removed, and its command stays pending
+                Assert.Equal(new[] { "PluginA", "PluginB", "commands", "disabled" }, Directory.GetFileSystemEntries(pluginDir).Select(entry => Path.GetFileName(entry)).Order(StringComparer.Ordinal));
+                Assert.Equal(new[] { ("install", "PluginA") }, PluginManager.GetPendingCommands(pluginDir));
+                // At the next start it finds no package, so it does nothing and doesn't enable the old version
+                Assert.True(PluginManager.ExecuteCommands(pluginDir, logger));
+                Assert.Equal(new[] { "PluginA" }, File.ReadAllLines(Path.Combine(pluginDir, "disabled")));
+                Assert.Equal(new[] { "PluginA", "PluginB", "disabled" }, Directory.GetFileSystemEntries(pluginDir).Select(entry => Path.GetFileName(entry)).Order(StringComparer.Ordinal));
+                Assert.False(PluginManager.ExecuteCommands(pluginDir, logger));
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
+        [Fact]
+        public void ExecuteCommands_KeepsLaterCommandsOfAFailedPluginInOrder()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-order-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(pluginDir, "PluginA"));
+                File.WriteAllText(Path.Combine(pluginDir, "PluginA", "PluginA.dll"), "installed");
+                File.WriteAllText(Path.Combine(pluginDir, "PluginA.btcpay"), "not a zip");
+                PluginManager.QueueCommands(pluginDir, ("install", "PluginA"), ("delete", "PluginA"));
+                var logger = LoggerFactory.CreateLogger(typeof(PluginManager));
+
+                // The delete waits for the failed install, so it can't run before a later retry of it
+                PluginManager.ExecuteCommands(pluginDir, logger);
+                Assert.Equal(new[] { ("install", "PluginA"), ("delete", "PluginA") }, PluginManager.GetPendingCommands(pluginDir));
+                Assert.True(Directory.Exists(Path.Combine(pluginDir, "PluginA")));
+
+                // At the next start the install has no package, and the delete runs after it
+                PluginManager.ExecuteCommands(pluginDir, logger);
+                Assert.Empty(PluginManager.GetPendingCommands(pluginDir));
+                Assert.False(Directory.Exists(Path.Combine(pluginDir, "PluginA")));
             }
             finally
             {

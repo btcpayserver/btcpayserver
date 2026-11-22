@@ -117,6 +117,7 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
 
+            await using var adminLock = await _userService.LockAdminChanges();
             var emailConfirmationRevoked = false;
             bool? propertiesChanged = null;
             bool? adminStatusChanged = null;
@@ -178,10 +179,9 @@ namespace BTCPayServer.Controllers
                 propertiesChanged = true;
             }
             user.SetBlob(blob);
-            var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             var roles = await _UserManager.GetRolesAsync(user);
             var wasAdmin = Roles.HasServerAdmin(roles);
-            if (!viewModel.IsAdmin && admins.Count == 1 && wasAdmin)
+            if (!viewModel.IsAdmin && wasAdmin && await _userService.IsLastAdmin(user))
             {
                 TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This is the only admin, so their role can't be removed until another admin is added."].Value;
                 return View(viewModel);

@@ -2109,6 +2109,54 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CannotRemoveAdminRoleOfLastActiveAdmin()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var userService = tester.PayTester.GetService<UserService>();
+            var dbFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            var admin = tester.NewAccount();
+            await admin.RegisterAsync(true);
+            var otherAdmin = tester.NewAccount();
+            await otherAdmin.RegisterAsync(true);
+            Assert.True(otherAdmin.IsAdmin);
+
+            async Task<IActionResult> RemoveAdminRole()
+            {
+                var model = (await admin.GetController<UIServerController>().User(admin.UserId)).AssertViewModel<UsersViewModel.UserViewModel>();
+                model.IsAdmin = false;
+                return await admin.GetController<UIServerController>().User(admin.UserId, model);
+            }
+            async Task<bool> IsAdmin() =>
+                Roles.HasServerAdmin((await userService.GetUsersWithRoles()).Single(u => u.User.Id == admin.UserId).Roles);
+            async Task SetApproved(bool approved)
+            {
+                await using var ctx = dbFactory.CreateContext();
+                var user = await ctx.Users.FindAsync(otherAdmin.UserId);
+                user.RequiresApproval = true;
+                user.Approved = approved;
+                await ctx.SaveChangesAsync();
+            }
+
+            // A disabled admin doesn't count
+            await userService.SetDisabled(otherAdmin.UserId, true);
+            Assert.IsType<ViewResult>(await RemoveAdminRole());
+            Assert.True(await IsAdmin());
+
+            // and neither does one who isn't approved
+            await userService.SetDisabled(otherAdmin.UserId, false);
+            await SetApproved(false);
+            Assert.IsType<ViewResult>(await RemoveAdminRole());
+            Assert.True(await IsAdmin());
+
+            // Once the other admin can log in, the role can be removed
+            await SetApproved(true);
+            Assert.IsType<RedirectToActionResult>(await RemoveAdminRole());
+            Assert.False(await IsAdmin());
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Playwright", "Playwright")]
         public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
         {

@@ -477,9 +477,15 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         }
 
         private async Task<bool> Throttle(string appId) =>
-            !(await _authorizationService.AuthorizeAsync(HttpContext.User, appId, Policies.CanViewInvoices)).Succeeded &&
+            !await CanViewInvoices(appId) &&
             HttpContext.Connection is { RemoteIpAddress: { } addr } &&
             !await _rateLimitService.Throttle(ZoneLimits.PublicInvoices, addr.ToString(), HttpContext.RequestAborted);
+
+        // The permission is on the app's store. Anonymous callers never have it, so they skip the app lookup.
+        private async Task<bool> CanViewInvoices(string appId) =>
+            HttpContext.User.Identity?.IsAuthenticated is true &&
+            await _appService.GetApp(appId, PointOfSaleAppType.AppType) is { } app &&
+            (await _authorizationService.AuthorizeAsync(HttpContext.User, app.StoreDataId, Policies.CanViewInvoices)).Succeeded;
 
         private JObject TryParseJObject(string posData)
         {

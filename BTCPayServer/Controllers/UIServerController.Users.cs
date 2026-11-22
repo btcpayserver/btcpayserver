@@ -357,6 +357,7 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
 
+            await using var adminLock = await _userService.LockAdminChanges();
             if (await _userService.IsLastAdmin(user))
             {
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["User was the last enabled admin and could not be deleted."].Value;
@@ -396,6 +397,7 @@ namespace BTCPayServer.Controllers
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
+            await using var adminLock = await _userService.LockAdminChanges();
             var loginContext = CreateLoginContext(user);
             if (!enable && await _userService.IsUserTheOnlyOneAdmin(loginContext))
             {

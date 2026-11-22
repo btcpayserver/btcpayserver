@@ -2064,6 +2064,51 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task AdminsDeletingEachOtherKeepOneAdmin()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var admin1 = tester.NewAccount();
+            await admin1.RegisterAsync(true);
+            var admin2 = tester.NewAccount();
+            await admin2.RegisterAsync(true);
+            Assert.True(admin2.IsAdmin);
+
+            // Hold back the first write of both deletes, so both pass the last admin check before either one deletes
+            var dbFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            await using var ctx = dbFactory.CreateContext();
+            var connection = ctx.Database.GetDbConnection();
+            await connection.OpenAsync();
+            await using var writesHeld = await connection.BeginTransactionAsync();
+            await connection.ExecuteAsync("LOCK TABLE user_access_restrictions IN EXCLUSIVE MODE", transaction: writesHeld);
+            var deletes = Task.WhenAll(
+                admin1.GetController<UIServerController>().DeleteUserPost(admin2.UserId),
+                admin2.GetController<UIServerController>().DeleteUserPost(admin1.UserId));
+            // pg_stat_activity doesn't change within a transaction, so poll it from another connection
+            await using var monitorCtx = dbFactory.CreateContext();
+            var monitor = monitorCtx.Database.GetDbConnection();
+            try
+            {
+                await TestUtils.EventuallyAsync(async () => Assert.NotEqual(0, await monitor.QuerySingleAsync<int>("""
+                    SELECT COUNT(*)::int FROM pg_stat_activity
+                    WHERE datname = current_database() AND backend_type = 'client backend' AND wait_event_type = 'Lock'
+                    """)));
+                // Without the admin lock, the second delete passes its check and blocks on the table in this time too
+                await Task.Delay(TimeSpan.FromSeconds(2));
+            }
+            finally
+            {
+                await writesHeld.RollbackAsync();
+                await deletes;
+            }
+
+            Assert.Equal(1, await monitor.QuerySingleAsync<int>("""
+                SELECT COUNT(*)::int FROM "AspNetUsers" WHERE "Id" = ANY(@ids)
+                """, new { ids = new[] { admin1.UserId, admin2.UserId } }));
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Playwright", "Playwright")]
         public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
         {

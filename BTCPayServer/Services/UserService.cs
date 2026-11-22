@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions;
 using BTCPayServer.Abstractions.Extensions;
@@ -359,6 +360,27 @@ namespace BTCPayServer.Services
             if (res.Succeeded)
             {
                 _eventAggregator.Publish(new UserEvent.Deleted(user));
+            }
+        }
+
+        private readonly SemaphoreSlim _adminChangesLock = new(1, 1);
+
+        // A change that could leave the server without an admin holds this lock from its last admin check
+        // until it's done, so two such changes can't both pass the check
+        public async Task<IAsyncDisposable> LockAdminChanges()
+        {
+            await _adminChangesLock.WaitAsync();
+            return new AdminChangesLock(_adminChangesLock);
+        }
+
+        private sealed class AdminChangesLock(SemaphoreSlim semaphore) : IAsyncDisposable
+        {
+            private int _released;
+            public ValueTask DisposeAsync()
+            {
+                if (Interlocked.Exchange(ref _released, 1) == 0)
+                    semaphore.Release();
+                return ValueTask.CompletedTask;
             }
         }
 

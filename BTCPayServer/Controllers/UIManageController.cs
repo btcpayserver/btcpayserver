@@ -367,6 +367,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
+            await using var adminLock = await _userService.LockAdminChanges();
             if (await _userService.IsLastAdmin(user))
             {
                 TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["You are the last enabled admin. Add another admin before you delete your account."].Value;

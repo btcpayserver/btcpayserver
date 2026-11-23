@@ -10,7 +10,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.15" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
-    <PackageReference Include="NBitcoin.Altcoins" Version="6.0.12" />
+    <PackageReference Include="NBitcoin.Altcoins" Version="6.0.13" />
     <PackageReference Include="Dapper" Version="2.1.100" />
   </ItemGroup>
   <ItemGroup>

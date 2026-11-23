@@ -24,7 +24,7 @@ namespace BTCPayServer.Plugins.Translations
             string File,
             string Sha,
             bool Rtl,
-            string? Bcp47)
+            string? Code)
         {
             internal static LanguageManifestEntry FromDto(ManifestLanguageDto dto)
             {
@@ -42,7 +42,7 @@ namespace BTCPayServer.Plugins.Translations
                     dto.File ?? string.Empty,
                     dto.Sha ?? string.Empty,
                     dto.Rtl ?? false,
-                    dto.Bcp47);
+                    dto.Code);
             }
 
             private static (string? Handle, string? Url) SplitMaintainer(string? raw)
@@ -61,7 +61,7 @@ namespace BTCPayServer.Plugins.Translations
             string? File,
             string? Sha,
             bool? Rtl,
-            string? Bcp47);
+            string? Code);
 
         internal record ManifestRootDto(ManifestLanguageDto[]? Languages, string? Redirect);
         private sealed record ManifestSnapshot(LanguageManifestEntry[] Entries, Uri ManifestUri);

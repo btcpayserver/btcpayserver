@@ -495,7 +495,7 @@ namespace BTCPayServer.Plugins
                 }
                 catch (Exception e)
                 {
-                    // Kept, so it shows as pending and runs again at the next start. A failed install has lost its package by then, so it does nothing.
+                    // Kept, so it shows as pending and runs again at the next start. An install that failed before its enable has lost its package by then, so it does nothing.
                     logger.LogError(e, $"Error when executing the {command.command} command for plugin {command.plugin}, the command stays pending.");
                     remainingCommands.Add($"{command.command}:{command.plugin}");
                     failedPlugins.Add(command.plugin);
@@ -578,18 +578,29 @@ namespace BTCPayServer.Plugins
                         {
                             var extractedDirName = Path.Join(stagingDirName, "new");
                             ZipFile.ExtractToDirectory(fileName, extractedDirName, true);
+                            // Copied, so a retry still has it
                             if (File.Exists(manifestFileName))
-                                File.Move(manifestFileName, Path.Join(extractedDirName, Path.GetFileName(manifestFileName)), true);
+                                File.Copy(manifestFileName, Path.Join(extractedDirName, Path.GetFileName(manifestFileName)), true);
                             if (File.Exists(dirName))
                                 File.Delete(dirName);
                             ReplaceDirectory(dirName, extractedDirName, oldDirName);
                         }
+                        catch
+                        {
+                            // So the pending install does nothing at the next start, and the next upload doesn't pick up this manifest
+                            RemovePackage(fileName, manifestFileName);
+                            throw;
+                        }
                         finally
                         {
-                            CleanUpInstall(fileName, manifestFileName, stagingDirName, dirName, oldDirName);
+                            // Unless it holds the only copy of the installed version, because moving it back failed
+                            if (Directory.Exists(dirName) || !Directory.Exists(oldDirName))
+                                TryCleanUp(() => Directory.Delete(stagingDirName, true));
                         }
                         // Only after a successful install, so a failed one doesn't enable the old version
                         ExecuteCommand(("enable", command.extension), pluginsFolder);
+                        // Only once it's enabled, so after a failed enable the install runs again at the next start
+                        RemovePackage(fileName, manifestFileName);
                     }
                     break;
 
@@ -628,17 +639,13 @@ namespace BTCPayServer.Plugins
             return true;
         }
 
-        // Best effort, so a cleanup failure doesn't hide the result of the install
-        private static void CleanUpInstall(string fileName, string manifestFileName, string stagingDirName, string dirName, string oldDirName)
+        private static void RemovePackage(string fileName, string manifestFileName)
         {
-            // Also on failure, as a leftover manifest would be picked up by the next upload
             TryCleanUp(() => File.Delete(manifestFileName));
             TryCleanUp(() => File.Delete(fileName));
-            // Unless it holds the only copy of the installed version, because moving it back failed
-            if (Directory.Exists(dirName) || !Directory.Exists(oldDirName))
-                TryCleanUp(() => Directory.Delete(stagingDirName, true));
         }
 
+        // Best effort, so a cleanup failure doesn't hide the result of the install
         private static void TryCleanUp(Action cleanUp)
         {
             try

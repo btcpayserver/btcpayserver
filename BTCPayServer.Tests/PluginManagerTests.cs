@@ -694,6 +694,46 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
+        public void ExecuteCommands_KeepsPackageUntilPluginIsEnabled()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-enable-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                // A disabled plugin with an update
+                Directory.CreateDirectory(Path.Combine(pluginDir, "PluginA"));
+                File.WriteAllText(Path.Combine(pluginDir, "PluginA", "PluginA.dll"), "installed");
+                File.WriteAllText(Path.Combine(pluginDir, "PluginA.json"), "{}");
+                using (var package = ZipFile.Open(Path.Combine(pluginDir, "PluginA.btcpay"), ZipArchiveMode.Create))
+                    package.CreateEntry("PluginA.dll");
+                var disabledFileName = Path.Combine(pluginDir, "disabled");
+                File.WriteAllLines(disabledFileName, ["PluginA"]);
+                PluginManager.QueueCommands(pluginDir, ("install", "PluginA"));
+                var logger = LoggerFactory.CreateLogger(typeof(PluginManager));
+
+                // Locked, so the enable fails. Unlike a read-only file, a lock also stops root
+                using (File.Open(disabledFileName, FileMode.Open, FileAccess.Read, FileShare.None))
+                    PluginManager.ExecuteCommands(pluginDir, logger);
+
+                // The update is in place but still disabled, and its package and manifest stay with the pending command
+                Assert.Equal("", File.ReadAllText(Path.Combine(pluginDir, "PluginA", "PluginA.dll")));
+                Assert.Equal(new[] { "PluginA" }, File.ReadAllLines(disabledFileName));
+                Assert.Equal(new[] { "PluginA", "PluginA.btcpay", "PluginA.json", "commands", "disabled" }, Directory.GetFileSystemEntries(pluginDir).Select(entry => Path.GetFileName(entry)).Order(StringComparer.Ordinal));
+                Assert.Equal(new[] { ("install", "PluginA") }, PluginManager.GetPendingCommands(pluginDir));
+
+                // At the next start it installs the package again and enables it
+                Assert.True(PluginManager.ExecuteCommands(pluginDir, logger));
+                Assert.Empty(File.ReadAllLines(disabledFileName));
+                Assert.Equal(new[] { "PluginA.dll", "PluginA.json" }, Directory.GetFiles(Path.Combine(pluginDir, "PluginA")).Select(file => Path.GetFileName(file)).Order(StringComparer.Ordinal));
+                Assert.Equal(new[] { "PluginA", "disabled" }, Directory.GetFileSystemEntries(pluginDir).Select(entry => Path.GetFileName(entry)).Order(StringComparer.Ordinal));
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
         [Theory]
         [InlineData("install")]
         [InlineData("enable")]

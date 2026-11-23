@@ -76,9 +76,10 @@ link from their account page:
 
 Plans support these lifecycle options:
 
-- **Optimistic activation** activates the subscriber as soon as payment is
-  detected instead of waiting for settlement. If the invoice later fails or is
-  cancelled, the subscriber is deactivated.
+- **Optimistic activation** activates the subscriber while the invoice is
+  **Processing**, before settlement. If that invoice later becomes **Invalid**
+  or **Expired** after starting the plan, the subscriber is suspended and the
+  credit added by that invoice is reversed.
 - A **trial period** grants temporary access before payment is required.
 - A **grace period** keeps a subscriber active temporarily when there is not
   enough credit to renew. A payment during the grace period applies

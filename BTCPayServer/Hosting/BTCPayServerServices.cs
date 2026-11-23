@@ -228,10 +228,9 @@ namespace BTCPayServer.Hosting
                         if (lightning.Length != 0)
                         {
                             string error = null;
-                            ILightningClient lightningClient = null;
                             try
                             {
-                                lightningClient = lightningClientFactoryService.Create(lightning, net);
+                                lightningClientFactoryService.Create(lightning, net);
                             }
                             catch (Exception e)
                             {
@@ -261,7 +260,7 @@ namespace BTCPayServer.Hosting
                             }
                             else
                             {
-                                options.InternalLightningByCryptoCode.Add(net.CryptoCode, lightningClient);
+                                options.InternalLightningByCryptoCode.Add(net.CryptoCode, lightning);
                             }
                         }
                     }

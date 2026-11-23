@@ -28,7 +28,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 if (!supportedPaymentMethod.IsInternalNode || !options.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode, out var connectionString))
                     throw new PaymentMethodUnavailableException("No internal node configured");
-                return connectionString;
+                return lightningClientFactory.Create(connectionString, network, true);
             }
         }
         public static uint256? GetPaymentHash(this LightningInvoice lightningInvoice, Network btcpayNetwork)

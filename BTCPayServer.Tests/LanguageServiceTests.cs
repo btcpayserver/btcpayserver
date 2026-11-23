@@ -68,7 +68,7 @@ namespace BTCPayServer.Tests
                   "Languages": [
                     {
                       "Name": "French",
-                      "Bcp47": "fr-FR",
+                      "Code": "fr-FR",
                       "Native": "Francais",
                       "File": "translations/french.json",
                       "Sha": "sha-fr",
@@ -93,7 +93,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(2, languages.Length);
 
             var french = languages.Single(l => l.Name == "French");
-            Assert.Equal("fr-FR", french.Bcp47);
+            Assert.Equal("fr-FR", french.Code);
             Assert.Equal("Francais", french.Native);
             Assert.Equal("alice", french.MaintainerHandle);
             Assert.Equal("https://github.com/alice", french.MaintainerUrl);
@@ -177,8 +177,7 @@ namespace BTCPayServer.Tests
                   "Languages": [
                     {
                       "Name": "French",
-                      "Code": "fr",
-                      "Bcp47": "fr-FR",
+                      "Code": "fr-FR",
                       "File": "translations/french.json",
                       "Sha": "{{expectedSha}}"
                     }
@@ -190,7 +189,7 @@ namespace BTCPayServer.Tests
             var service = CreateLanguageService(handler);
             var languages = await service.GetManifestLanguages();
             var french = Assert.Single(languages);
-            Assert.Equal("fr-FR", french.Bcp47);
+            Assert.Equal("fr-FR", french.Code);
             var (translationsJson, version, rtl) = await service.FetchLanguagePackFromRepository("French");
             Assert.Equal(expectedSha, version, ignoreCase: true);
             Assert.False(rtl);

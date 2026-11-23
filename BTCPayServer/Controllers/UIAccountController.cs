@@ -81,16 +81,16 @@ namespace BTCPayServer.Controllers
         {
             var vm = new CheatPermissionsViewModel();
             vm.StoreId = storeId;
-            var results = new System.Collections.Generic.List<(string, Task<AuthorizationResult>)>();
+            var results = new List<(string, AuthorizationResult)>();
+            // Authorization handlers update HttpContext.Items, which is not thread-safe.
             foreach (var p in permissionService.Definitions.Values)
             {
-                results.Add((p.Policy, authorizationService.AuthorizeAsync(User, storeId, new PolicyRequirement(p.Policy))));
-                results.Add((p.Policy + ":", authorizationService.AuthorizeAsync(User, storeId, new PolicyRequirement(p.Policy, requireUnscoped: true))));
+                results.Add((p.Policy, await authorizationService.AuthorizeAsync(User, storeId, new PolicyRequirement(p.Policy))));
+                results.Add((p.Policy + ":", await authorizationService.AuthorizeAsync(User, storeId, new PolicyRequirement(p.Policy, requireUnscoped: true))));
             }
 
-            await Task.WhenAll(results.Select(r => r.Item2));
             results = results.OrderBy(r => r.Item1).ToList();
-            vm.Permissions = results.Select(r => (r.Item1, r.Item2.Result)).ToArray();
+            vm.Permissions = results.ToArray();
             return View(vm);
         }
 

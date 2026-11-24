@@ -334,7 +334,7 @@ namespace BTCPayServer
             if (item != null)
             {
                 posAppData.Cart = new PosAppCartItem[] { new() { Id = item.Id, Count = 1, Price = item.Price ?? 0 } };
-                order.AddLine(new(item.Id ?? "", 1, item.Price ?? 0m, item.TaxRate ?? posS?.DefaultTaxRate ?? 0m));
+                order.AddLine(new(item.Id ?? "", 1, item.Price ?? 0m, item.TaxRate ?? posS?.DefaultTaxRate ?? 0m, posS?.TaxIncludedInPrice ?? false));
             }
 
             var isTopup = item is null or { PriceType: AppItemPriceType.Topup } or { Price: null };

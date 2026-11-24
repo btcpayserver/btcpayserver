@@ -18,21 +18,15 @@ namespace BTCPayServer.Controllers.Greenfield
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [LightningUnavailableExceptionFilter]
     [EnableCors(CorsPolicies.All)]
-    public class GreenfieldInternalLightningNodeApiController : GreenfieldLightningNodeApiController
+    public class GreenfieldInternalLightningNodeApiController(
+        PoliciesSettings policiesSettings,
+        IOptions<LightningNetworkOptions> lightningNetworkOptions,
+        LightningClientFactoryService lightningClientFactoryService,
+        IAuthorizationService authorizationService,
+        PaymentMethodHandlerDictionary handlers,
+        LightningHistogramService lnHistogramService)
+        : GreenfieldLightningNodeApiController(policiesSettings, authorizationService, handlers, lnHistogramService)
     {
-        private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
-
-        public GreenfieldInternalLightningNodeApiController(
-            PoliciesSettings policiesSettings,
-            IOptions<LightningNetworkOptions> lightningNetworkOptions,
-            IAuthorizationService authorizationService,
-            PaymentMethodHandlerDictionary handlers,
-            LightningHistogramService lnHistogramService
-            ) : base(policiesSettings, authorizationService, handlers, lnHistogramService)
-        {
-            _lightningNetworkOptions = lightningNetworkOptions;
-        }
-
         [Authorize(Policy = Policies.CanUseInternalLightningNode,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/server/lightning/{cryptoCode}/info")]
@@ -142,7 +136,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var network = GetNetwork(cryptoCode);
             if (network is null)
                 throw ErrorCryptoCodeNotFound();
-            if (!_lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,
+            if (!lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,
                 out var internalLightningNode))
             {
                 throw ErrorInternalLightningNodeNotConfigured();
@@ -152,7 +146,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 throw ErrorShouldBeAdminForInternalNode();
             }
 
-            return internalLightningNode;
+            return lightningClientFactoryService.Create(internalLightningNode, network, true);
         }
     }
 }

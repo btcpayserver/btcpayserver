@@ -258,8 +258,6 @@ namespace BTCPayServer
             return endpoint != null;
         }
 
-        [Obsolete("Use GetServerUri(this ILightningClient client, string connectionString) instead")]
-        public static Uri? GetServerUri(this ILightningClient client) => GetServerUri(client, client.ToString()!);
         public static Uri? GetServerUri(this ILightningClient client, string connectionString)
         {
             if (client is IExtendedLightningClient { ServerUri: { } uri })
@@ -267,9 +265,6 @@ namespace BTCPayServer
             var kv = ExtractValues(connectionString);
             return !kv.TryGetValue("server", out var server) ? null : new Uri(server, UriKind.Absolute);
         }
-
-        [Obsolete("Use GetDisplayName(this ILightningClient client, string connectionString) instead")]
-        public static string GetDisplayName(this ILightningClient client) => GetDisplayName(client, client.ToString()!);
 
         public static string GetDisplayName(this ILightningClient client, string connectionString)
             => client switch
@@ -313,9 +308,6 @@ namespace BTCPayServer
             return values.TryGetValue("type", out var type) && !string.IsNullOrWhiteSpace(type);
         }
 
-        [Obsolete("Use IsSafe(this ILightningClient client, string connectionString) instead")]
-        public static bool IsSafe(this ILightningClient client) => IsSafe(client, client.ToString()!);
-        public static bool IsSafe(this ILightningClient client, string connectionString) => IsSafeLightningConnectionString(connectionString);
         public static bool IsSafeLightningConnectionString(string connectionString)
         {
             var kv = ExtractValues(connectionString);

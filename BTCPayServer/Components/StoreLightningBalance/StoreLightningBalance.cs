@@ -103,7 +103,7 @@ public class StoreLightningBalance(
         {
             var result = await authorizationService.AuthorizeAsync(HttpContext.User, null,
                 new PolicyRequirement(Policies.CanUseInternalLightningNode));
-            return result.Succeeded ? internalLightningNode : null;
+            return result.Succeeded ? lightningClientFactory.Create(internalLightningNode, network, true) : null;
         }
 
         return null;

@@ -12,6 +12,7 @@ using BTCPayServer.Plugins.Wallets;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +27,7 @@ namespace BTCPayServer.Controllers
         PaymentMethodHandlerDictionary handlers,
         BTCPayNetworkProvider networkProvider,
         StoreRepository storeRepository,
-        IFileService fileService,
+        FileService fileService,
         AppService appService,
         IStringLocalizer stringLocalizer,
         ViewLocalizer viewLocalizer,

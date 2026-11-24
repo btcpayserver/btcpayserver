@@ -127,7 +127,7 @@ namespace BTCPayServer.Hosting
             });
 
             services.AddBTCPayServer(Configuration, Logs);
-            services.AddProviderStorage();
+            services.AddFileStorage();
             services.AddSession();
             services.AddSignalR().AddNewtonsoftJsonProtocol(options =>
             {
@@ -359,7 +359,7 @@ namespace BTCPayServer.Hosting
                 });
             }
 
-            app.UseProviderStorage(dataDirectories);
+            app.UseFileStorage(dataDirectories);
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseMiddleware<UserLanguageMiddleware>();

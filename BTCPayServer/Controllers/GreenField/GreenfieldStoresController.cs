@@ -15,6 +15,7 @@ using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
@@ -35,7 +36,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly StoreRepository _storeRepository;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IFileService _fileService;
+        private readonly FileService _fileService;
         private readonly UriResolver _uriResolver;
         private readonly JsonSerializerSettings _serializedSettings;
         private readonly PoliciesSettings _policiesSettings;
@@ -45,7 +46,7 @@ namespace BTCPayServer.Controllers.Greenfield
             StoreRepository storeRepository,
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
-            IFileService fileService,
+            FileService fileService,
             IOptions<MvcNewtonsoftJsonOptions> jsonOptions,
             UriResolver uriResolver,
             PoliciesSettings policiesSettings,

@@ -1,17 +1,14 @@
 @using System.Globalization
-@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
 @using BTCPayServer.Forms
 @using BTCPayServer.Plugins.Crowdfund
 @inject FormDataService FormDataService
-@inject IFileService FileService
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.Crowdfund.Models.UpdateCrowdfundViewModel
 @{
     Layout = "_Layout";
     ViewData.SetLayoutModel(new LayoutModel($"{nameof(CrowdfundPlugin)}-{Model.AppId}", StringLocalizer["Update Crowdfund"]));
 	Csp.UnsafeEval();
-    var canUpload = await FileService.IsAvailable();
     var checkoutFormOptions = await FormDataService.GetSelect(Context.GetStoreData().Id, Model.FormId);
 }
 
@@ -82,22 +79,14 @@
                     </button>
                 }
             </div>
-            @if (canUpload)
-            {
-                <div class="d-flex align-items-center gap-3">
-                    <input asp-for="MainImageFile" type="file" class="form-control flex-grow">
-                    @if (!string.IsNullOrEmpty(Model.MainImageUrl))
-                    {
-                        <img src="@Model.MainImageUrl" alt="Logo" style="height:2.1rem;max-width:10.5rem;" />
-                    }
-                </div>
-                <span asp-validation-for="MainImageFile" class="text-danger"></span>
-            }
-            else
-            {
-                <input asp-for="MainImageFile" type="file" class="form-control" disabled>
-                <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
-            }
+            <div class="d-flex align-items-center gap-3">
+                <input asp-for="MainImageFile" type="file" class="form-control flex-grow">
+                @if (!string.IsNullOrEmpty(Model.MainImageUrl))
+                {
+                    <img src="@Model.MainImageUrl" alt="Logo" style="height:2.1rem;max-width:10.5rem;" />
+                }
+            </div>
+            <span asp-validation-for="MainImageFile" class="text-danger"></span>
         </div>
         <div class="form-group">
             <div class="d-flex align-items-center">

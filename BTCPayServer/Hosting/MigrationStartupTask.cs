@@ -11,8 +11,6 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Storage.Models;
-using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -42,14 +40,6 @@ namespace BTCPayServer.Hosting
                     foreach (var prop in settings.GetType().GetProperties().Where(p => p.CanWrite && p.PropertyType == typeof(bool)))
                     {
                         prop.SetValue(settings, true);
-                    }
-                    if (await settingsRepository.GetSettingAsync<StorageSettings>() is null)
-                    {
-                        await settingsRepository.UpdateSetting(new StorageSettings
-                        {
-                            Provider = StorageProvider.FileSystem,
-                            Configuration = JObject.FromObject(new FileSystemStorageConfiguration())
-                        });
                     }
                     await settingsRepository.UpdateSetting(new ThemeSettings());
                     await settingsRepository.UpdateSetting(settings);

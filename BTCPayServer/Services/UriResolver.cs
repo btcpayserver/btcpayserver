@@ -1,15 +1,15 @@
 #nullable enable
 using System;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Storage.Services;
 
 namespace BTCPayServer.Services
 {
     public class UriResolver
     {
-        private readonly IFileService _fileService;
+        private readonly FileService _fileService;
 
-        public UriResolver(IFileService fileService)
+        public UriResolver(FileService fileService)
         {
             _fileService = fileService;
         }

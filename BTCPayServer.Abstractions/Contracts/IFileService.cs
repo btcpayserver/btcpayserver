@@ -1,11 +1,12 @@
 #nullable enable
 using System;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using BTCPayServer.Abstractions.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.Abstractions.Contracts;
 
+[Obsolete("Inject FileService instead.")]
 public interface IFileService
 {
     Task<bool> IsAvailable();

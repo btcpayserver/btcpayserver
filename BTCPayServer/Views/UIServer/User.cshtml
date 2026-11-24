@@ -1,13 +1,10 @@
-@using BTCPayServer.Abstractions.Contracts
 @model UsersViewModel.UserViewModel
-@inject IFileService FileService
 @{
     ViewData.SetLayoutModel(new(nameof(ServerNavPages.Users), Model.Email));
     ViewData.SetBreadcrumbs([
         new(StringLocalizer["Users"], Action: nameof(BTCPayServer.Controllers.UIServerController.ListUsers)),
         new(StringLocalizer["User"], Active: true)
     ]);
-    var canUpload = await FileService.IsAvailable();
 }
 
 <form method="post" enctype="multipart/form-data">
@@ -51,22 +48,14 @@
             </button>
             }
         </div>
-        @if (canUpload)
-        {
-            <div class="d-flex align-items-center gap-3">
-                <input asp-for="ImageFile" type="file" class="form-control flex-grow">
-                @if (!string.IsNullOrEmpty(Model.ImageUrl))
-                {
-                    <img src="@Model.ImageUrl" alt="Profile picture" class="profile-picture" />
-                }
-            </div>
-            <span asp-validation-for="ImageFile" class="text-danger"></span>
-        }
-        else
-        {
-            <input asp-for="ImageFile" type="file" class="form-control" disabled>
-            <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
-        }
+        <div class="d-flex align-items-center gap-3">
+            <input asp-for="ImageFile" type="file" class="form-control flex-grow">
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" alt="Profile picture" class="profile-picture" />
+            }
+        </div>
+        <span asp-validation-for="ImageFile" class="text-danger"></span>
     </div>
     <div class="form-check my-3">
         <input asp-for="IsAdmin" type="checkbox" class="form-check-input" />

@@ -17,6 +17,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
+using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
@@ -45,7 +46,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly IAuthorizationService _authorizationService;
         private readonly UserService _userService;
         private readonly UriResolver _uriResolver;
-        private readonly IFileService _fileService;
+        private readonly FileService _fileService;
 
         public GreenfieldUsersController(UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
@@ -59,7 +60,7 @@ namespace BTCPayServer.Controllers.Greenfield
             IAuthorizationService authorizationService,
             UserService userService,
             UriResolver uriResolver,
-            IFileService fileService,
+            FileService fileService,
             Logs logs)
         {
             this.Logs = logs;

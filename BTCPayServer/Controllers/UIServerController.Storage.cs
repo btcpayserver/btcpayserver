@@ -1,25 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Models.ServerViewModels;
-using BTCPayServer.Storage.Models;
-using BTCPayServer.Storage.Services.Providers.AmazonS3Storage;
-using BTCPayServer.Storage.Services.Providers.AmazonS3Storage.Configuration;
-using BTCPayServer.Storage.Services.Providers.AzureBlobStorage;
-using BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration;
-using BTCPayServer.Storage.Services.Providers.FileSystemStorage;
-using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
-using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage;
-using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration;
-using BTCPayServer.Storage.Services.Providers.Models;
-using BTCPayServer.Storage.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
@@ -31,8 +17,7 @@ namespace BTCPayServer.Controllers
             var model = new ViewFilesViewModel()
             {
                 Files = await _StoredFileRepository.GetFiles(),
-                DirectUrlByFiles = null,
-                StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
+                DirectUrlByFiles = null
             };
 
             if (fileIds != null && fileIds.Length > 0)
@@ -145,134 +130,5 @@ namespace BTCPayServer.Controllers
 
         private string GetUserId() => ControllerContext.HttpContext.User.GetIdOrNull();
 
-        [HttpGet("server/storage")]
-        public async Task<IActionResult> Storage(bool forceChoice = false)
-        {
-            var savedSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
-            if (forceChoice || savedSettings == null)
-            {
-                var providersList = _StorageProviderServices.Select(a =>
-                    new SelectListItem(typeof(StorageProvider).DisplayName(a.StorageProvider().ToString()), a.StorageProvider().ToString())
-                );
-
-                return View(new ChooseStorageViewModel
-                {
-                    ProvidersList = providersList,
-                    ShowChangeWarning = savedSettings != null,
-                    Provider = savedSettings?.Provider ?? BTCPayServer.Storage.Models.StorageProvider.FileSystem
-                });
-            }
-
-            return RedirectToAction(nameof(StorageProvider), new
-            {
-                provider = savedSettings.Provider
-            });
-        }
-
-        [HttpPost("server/storage")]
-        public IActionResult Storage(StorageSettings viewModel)
-        {
-            return RedirectToAction("StorageProvider", "UIServer", new
-            {
-                provider = viewModel.Provider.ToString()
-            });
-        }
-
-        [HttpGet("server/storage/{provider}")]
-        public async Task<IActionResult> StorageProvider(string provider)
-        {
-            if (!Enum.TryParse(typeof(StorageProvider), provider, out var storageProvider))
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = StringLocalizer["{0} provider is not supported", provider].Value
-                });
-                return RedirectToAction(nameof(Storage));
-            }
-
-            var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
-
-            var storageProviderService =
-                _StorageProviderServices.SingleOrDefault(service => service.StorageProvider().Equals(storageProvider));
-
-            switch (storageProviderService)
-            {
-                case null:
-                    TempData.SetStatusMessageModel(new StatusMessageModel
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = StringLocalizer["{0} provider is not supported", storageProvider].Value
-                    });
-                    return RedirectToAction(nameof(Storage));
-                case AzureBlobStorageFileProviderService fileProviderService:
-                    return View(nameof(EditAzureBlobStorageStorageProvider),
-                        fileProviderService.GetProviderConfiguration(data));
-
-                case AmazonS3FileProviderService fileProviderService:
-                    return View(nameof(EditAmazonS3StorageProvider),
-                        fileProviderService.GetProviderConfiguration(data));
-                case GoogleCloudStorageFileProviderService fileProviderService:
-                    return View(nameof(EditGoogleCloudStorageStorageProvider),
-                        fileProviderService.GetProviderConfiguration(data));
-                case FileSystemFileProviderService fileProviderService:
-                    if (data.Provider != BTCPayServer.Storage.Models.StorageProvider.FileSystem)
-                    {
-                        _ = await SaveStorageProvider(new FileSystemStorageConfiguration(),
-                            BTCPayServer.Storage.Models.StorageProvider.FileSystem);
-                    }
-
-                    return View(nameof(EditFileSystemStorageProvider),
-                        fileProviderService.GetProviderConfiguration(data));
-            }
-
-            return NotFound();
-        }
-
-
-        [HttpPost("server/storage/AzureBlobStorage")]
-        public async Task<IActionResult> EditAzureBlobStorageStorageProvider(AzureBlobStorageConfiguration viewModel)
-        {
-            return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.AzureBlobStorage);
-        }
-
-        [HttpPost("server/storage/AmazonS3")]
-        public async Task<IActionResult> EditAmazonS3StorageProvider(AmazonS3StorageConfiguration viewModel)
-        {
-            return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.AmazonS3);
-        }
-
-        [HttpPost("server/storage/GoogleCloudStorage")]
-        public async Task<IActionResult> EditGoogleCloudStorageStorageProvider(
-            GoogleCloudStorageConfiguration viewModel)
-        {
-            return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.GoogleCloudStorage);
-        }
-
-        [HttpPost("server/storage/FileSystem")]
-        public async Task<IActionResult> EditFileSystemStorageProvider(FileSystemStorageConfiguration viewModel)
-        {
-            return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.FileSystem);
-        }
-
-        private async Task<IActionResult> SaveStorageProvider(IBaseStorageConfiguration viewModel,
-            StorageProvider storageProvider)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(viewModel);
-            }
-
-            var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
-            data.Provider = storageProvider;
-            data.Configuration = JObject.FromObject(viewModel);
-            await _SettingsRepository.UpdateSetting(data);
-            TempData.SetStatusMessageModel(new StatusMessageModel
-            {
-                Severity = StatusMessageModel.StatusSeverity.Success,
-                Message = StringLocalizer["Storage settings updated successfully"].Value
-            });
-            return View(viewModel);
-        }
     }
 }

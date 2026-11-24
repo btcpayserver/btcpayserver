@@ -3,9 +3,6 @@ using System.IO;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
 using BTCPayServer.Storage.Services;
-using BTCPayServer.Storage.Services.Providers;
-using BTCPayServer.Storage.Services.Providers.AzureBlobStorage;
-using BTCPayServer.Storage.Services.Providers.FileSystemStorage;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
@@ -19,16 +16,16 @@ namespace BTCPayServer.Storage
 {
     public static class StorageExtensions
     {
-        public static void AddProviderStorage(this IServiceCollection serviceCollection)
+        public static void AddFileStorage(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<StoredFileRepository>();
             serviceCollection.AddSingleton<FileService>();
-            serviceCollection.AddSingleton<IFileService>(provider => provider.GetRequiredService<FileService>());
-            serviceCollection.AddSingleton<IStorageProviderService, AzureBlobStorageFileProviderService>();
-            serviceCollection.AddSingleton<IStorageProviderService, FileSystemFileProviderService>();
+#pragma warning disable CS0618 // Keep legacy plugin injection working; application code uses FileService.
+            serviceCollection.AddSingleton<IFileService, LegacyFileService>();
+#pragma warning restore CS0618
         }
 
-        public static void UseProviderStorage(this IApplicationBuilder builder, IOptions<DataDirectories> datadirs)
+        public static void UseFileStorage(this IApplicationBuilder builder, IOptions<DataDirectories> datadirs)
         {
             try
             {
@@ -44,7 +41,7 @@ namespace BTCPayServer.Storage
                 builder.UseStaticFiles(new StaticFileOptions
                 {
                     ServeUnknownFileTypes = true,
-                    RequestPath = new PathString($"/{FileSystemFileProviderService.LocalStorageDirectoryName}"),
+                    RequestPath = new PathString($"/{FileService.LocalStorageDirectoryName}"),
                     FileProvider = new PhysicalFileProvider(dirInfo.FullName),
                     OnPrepareResponse = HandleStaticFileResponse()
                 });

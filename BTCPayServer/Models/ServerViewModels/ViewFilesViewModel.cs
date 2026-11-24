@@ -7,6 +7,5 @@ namespace BTCPayServer.Models.ServerViewModels
     {
         public List<StoredFile> Files { get; set; }
         public Dictionary<string, string> DirectUrlByFiles { get; set; }
-        public bool StorageConfigured { get; set; }
     }
 }

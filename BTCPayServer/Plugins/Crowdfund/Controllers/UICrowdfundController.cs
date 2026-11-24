@@ -25,6 +25,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -46,7 +47,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         EventAggregator eventAggregator,
         UriResolver uriResolver,
         StoreRepository storeRepository,
-        IFileService fileService,
+        FileService fileService,
         UIInvoiceController invoiceController,
         FormDataService formDataService,
         IStringLocalizer stringLocalizer,

@@ -28,7 +28,6 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
-using BTCPayServer.Storage.Services.Providers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -66,8 +65,7 @@ namespace BTCPayServer.Controllers
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
         private readonly Logs Logs;
         private readonly StoredFileRepository _StoredFileRepository;
-        private readonly IFileService _fileService;
-        private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
+        private readonly FileService _fileService;
         private readonly CallbackGenerator _callbackGenerator;
         private readonly UriResolver _uriResolver;
         private readonly TransactionLinkProviders _transactionLinkProviders;
@@ -80,9 +78,8 @@ namespace BTCPayServer.Controllers
             UserManager<ApplicationUser> userManager,
             UserService userService,
             StoredFileRepository storedFileRepository,
-            IFileService fileService,
+            FileService fileService,
             EmailSenderFactory emailSenderFactory,
-            IEnumerable<IStorageProviderService> storageProviderServices,
             BTCPayServerOptions options,
             SettingsRepository settingsRepository,
             PoliciesSettings policiesSettings,
@@ -112,7 +109,6 @@ namespace BTCPayServer.Controllers
             _Options = options;
             _StoredFileRepository = storedFileRepository;
             _fileService = fileService;
-            _StorageProviderServices = storageProviderServices;
             _UserManager = userManager;
             _userService = userService;
             _SettingsRepository = settingsRepository;

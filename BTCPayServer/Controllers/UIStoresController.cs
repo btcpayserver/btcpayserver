@@ -18,6 +18,7 @@ using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -47,7 +48,7 @@ public partial class UIStoresController : Controller
         PoliciesSettings policiesSettings,
         IAuthorizationService authorizationService,
         AppService appService,
-        IFileService fileService,
+        FileService fileService,
         IDataProtectionProvider dataProtector,
         IOptions<LightningNetworkOptions> lightningNetworkOptions,
         IOptions<ExternalServicesOptions> externalServiceOptions,
@@ -114,7 +115,7 @@ public partial class UIStoresController : Controller
     private readonly PoliciesSettings _policiesSettings;
     private readonly IAuthorizationService _authorizationService;
     private readonly AppService _appService;
-    private readonly IFileService _fileService;
+    private readonly FileService _fileService;
     private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
     private readonly EmailSenderFactory _emailSenderFactory;
     private readonly WalletFileParsers _onChainWalletParsers;

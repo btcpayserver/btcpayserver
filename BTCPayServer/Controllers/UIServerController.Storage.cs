@@ -56,7 +56,7 @@ namespace BTCPayServer.Controllers
         {
             try
             {
-                await _fileService.RemoveFile(fileId, null);
+                await _fileService.RemoveFileAsAdmin(fileId);
                 return RedirectToAction(nameof(Files), new
                 {
                     fileIds = Array.Empty<string>(),

@@ -68,7 +68,14 @@ public class GreenfieldFilesController(
     {
         var file = await fileRepository.GetFile(fileId);
         if (file == null) return this.CreateAPIError(404, "file-not-found", "The file does not exist.");
-        await fileRepository.RemoveFile(file);
+        try
+        {
+            await fileService.RemoveFileAsAdmin(file.Id);
+        }
+        catch (Exception e)
+        {
+            return this.CreateAPIError("file-delete-failed", e.Message);
+        }
         return Ok();
     }
 

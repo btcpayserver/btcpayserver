@@ -2785,7 +2785,7 @@ namespace BTCPayServer.Tests
             var repository = tester.PayTester.GetService<StoredFileRepository>();
             var root = tester.PayTester.GetService<Microsoft.Extensions.Options.IOptions<DataDirectories>>().Value.StorageDir;
             using var http = new HttpClient();
-            foreach (var deletingUserId in new[] { user.UserId, null })
+            foreach (var deletingAsAdmin in new[] { false, true })
             {
                 var name = "Photo 日本語 #100%.TXT";
                 var file = await fileService.AddFile(TestUtils.GetFormFile(name, "local content"), user.UserId);
@@ -2806,17 +2806,66 @@ namespace BTCPayServer.Tests
                 Assert.Equal("https://example.com/btcpay/LocalStorage/" +
                     Uri.EscapeDataString(storedFile.StorageFileName), prefixedUrl);
 
+                foreach (var invalidUserId in new[] { null, "" })
+                {
+                    await Assert.ThrowsAnyAsync<ArgumentException>(() => fileService.RemoveFile(file.Id, invalidUserId));
+#pragma warning disable CS0618 // Verify that the compatibility adapter also rejects ownership bypasses.
+                    var legacyFileService = tester.PayTester.GetService<IFileService>();
+#pragma warning restore CS0618
+                    await Assert.ThrowsAnyAsync<ArgumentException>(() => legacyFileService.RemoveFile(file.Id, invalidUserId));
+                    Assert.True(File.Exists(path));
+                    Assert.NotNull(await repository.GetFile(file.Id));
+                }
+
                 await fileService.RemoveFile(file.Id, "another-user");
                 Assert.True(File.Exists(path));
                 Assert.NotNull(await repository.GetFile(file.Id));
-                await fileService.RemoveFile(file.Id, deletingUserId);
+                if (deletingAsAdmin)
+                    await fileService.RemoveFileAsAdmin(file.Id);
+                else
+                    await fileService.RemoveFile(file.Id, user.UserId);
                 Assert.False(File.Exists(path));
+                Assert.Null(await repository.GetFile(file.Id));
+
+                // Both deletion paths can clean up a record when the physical file is already gone.
+                file = await fileService.AddFile(TestUtils.GetFormFile(name, "local content"), user.UserId);
+                storedFile = await repository.GetFile(file.Id);
+                File.Delete(Path.Combine(root, storedFile.StorageFileName));
+                if (deletingAsAdmin)
+                    await fileService.RemoveFileAsAdmin(file.Id);
+                else
+                    await fileService.RemoveFile(file.Id, user.UserId);
                 Assert.Null(await repository.GetFile(file.Id));
             }
 
             // Reject invalid input before writing files.
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 fileService.AddFile(new FormFile(Stream.Null, 0, 0, "file", "../outside.txt"), user.UserId));
+
+            // A failed copy must not leave a partial file or a database record.
+            var filesBefore = Directory.GetFiles(root).OrderBy(path => path).ToArray();
+            var failedUpload = new FailingFormFile();
+            var error = await Assert.ThrowsAsync<IOException>(() => fileService.AddFile(failedUpload, user.UserId));
+            Assert.Same(failedUpload.Error, error);
+            Assert.Equal(filesBefore, Directory.GetFiles(root).OrderBy(path => path).ToArray());
+            Assert.Empty(await repository.GetFiles());
+
+            // A failed database insert must not leave the completed file behind either.
+            await Assert.ThrowsAsync<DbUpdateException>(() =>
+                fileService.AddFile(TestUtils.GetFormFile("orphan.txt", "local content"), "nonexistent-user"));
+            Assert.Equal(filesBefore, Directory.GetFiles(root).OrderBy(path => path).ToArray());
+            Assert.Empty(await repository.GetFiles());
+        }
+
+        private class FailingFormFile() : FormFile(Stream.Null, 0, 0, "file", "partial.txt"), IFormFile
+        {
+            public IOException Error { get; } = new IOException("Upload interrupted");
+
+            async Task IFormFile.CopyToAsync(Stream target, CancellationToken cancellationToken)
+            {
+                await target.WriteAsync(Encoding.UTF8.GetBytes("partial content"), cancellationToken);
+                throw Error;
+            }
         }
 
         internal static async Task<string> CanUploadFile(UIServerController controller)

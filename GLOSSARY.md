@@ -31,6 +31,13 @@ A wallet's transactions are not necessarily associated with invoices.
 A store's request for payment that fixes an amount and exchange rate for a
 limited period and tracks the resulting payments.
 
+**Payment**:
+Funds received toward an invoice. An invoice can receive multiple payments;
+detecting a payment does not necessarily mean the invoice is settled.
+
+**Payment method**:
+A way a customer can pay an invoice, such as on-chain Bitcoin or Lightning.
+
 **Lightning invoice**:
 A request for payment over the Lightning Network, distinct from a BTCPay Server
 invoice.
@@ -42,6 +49,10 @@ Unlike an invoice, it does not fix an exchange rate or receiving address at crea
 
 **Checkout**:
 The customer-facing flow for selecting a payment method and paying an invoice.
+
+**Settlement**:
+The point at which a payment meets the store's required acceptance conditions,
+such as on-chain confirmations.
 
 **Invoice status**:
 An invoice's base payment and settlement state: New, Processing, Settled,
@@ -70,6 +81,10 @@ payment, resulting in a payout.
 An outgoing payment requested through a claim, with approval and sending as
 separate steps.
 Approval alone does not mean funds have been sent.
+
+**Payout method**:
+A way a store can send a payout, determining the kind of destination a
+recipient can submit.
 
 **Refund**:
 An invoice-linked return of funds to a customer, arranged through a pull payment
@@ -100,3 +115,7 @@ start of each billing period.
 **Plan checkout**:
 The customer-facing flow for joining a plan or adding credit to an existing
 subscriber's balance.
+
+**Subscriber portal**:
+The customer-facing area for reviewing and managing a subscription, its credits,
+and its invoices.

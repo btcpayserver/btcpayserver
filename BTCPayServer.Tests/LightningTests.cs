@@ -802,7 +802,23 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
         //BTCPay will attempt to cancel previous bolt11 invoices so that there are less weird edge case scenarios
         TestLogs.LogInformation($"Attempting to pay invoice {invoice.Id} original full amount bolt11 invoice");
         var res = await tester.SendLightningPaymentAsync(invoice);
-        Assert.Equal(PayResult.Error, res.Result);
+        if (res.Result == PayResult.Unknown)
+        {
+            // xpay can report the rejection before listpays records the final failure.
+            // Observe the existing payment rather than trying to pay the invoice again.
+            var bolt11 = invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
+            var paymentHash = BOLT11PaymentRequest.Parse(bolt11, Network.RegTest).PaymentHash.ToString();
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var payment = await tester.CustomerLightningD.GetPayment(paymentHash);
+                Assert.NotNull(payment);
+                Assert.Equal(LightningPaymentStatus.Failed, payment.Status);
+            }, 5000);
+        }
+        else
+        {
+            Assert.Equal(PayResult.Error, res.Result);
+        }
 
         //NOTE: Eclair does not support cancelling invoice so the below test case would make sense for it
         // TestLogs.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice ");

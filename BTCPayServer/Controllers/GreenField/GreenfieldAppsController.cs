@@ -16,6 +16,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
@@ -34,7 +35,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly UriResolver _uriResolver;
         private readonly StoreRepository _storeRepository;
         private readonly CurrencyNameTable _currencies;
-        private readonly IFileService _fileService;
+        private readonly FileService _fileService;
 
         public Safe Safe { get; }
 
@@ -43,7 +44,7 @@ namespace BTCPayServer.Controllers.Greenfield
             UriResolver uriResolver,
             StoreRepository storeRepository,
             CurrencyNameTable currencies,
-            IFileService fileService,
+            FileService fileService,
             Safe safe
         )
         {

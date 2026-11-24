@@ -1,54 +1,34 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
+using BTCPayServer.Data;
 using BTCPayServer.Services;
-using BTCPayServer.Storage.Models;
-using BTCPayServer.Storage.Services.Providers;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Storage.Services
 {
-    public class FileService : IFileService
+    public class FileService
     {
+        public const string LocalStorageDirectoryName = "LocalStorage";
+
         private readonly StoredFileRepository _fileRepository;
-        private readonly IEnumerable<IStorageProviderService> _providers;
-        private readonly SettingsRepository _settingsRepository;
         private readonly IOptions<DataDirectories> _dataDirectories;
-        private readonly IHttpClientFactory _httpClientFactory;
         private IStringLocalizer StringLocalizer { get; }
 
         public FileService(StoredFileRepository fileRepository,
-            SettingsRepository settingsRepository,
-            IEnumerable<IStorageProviderService> providers,
-            IHttpClientFactory httpClientFactory,
             IStringLocalizer stringLocalizer,
             IOptions<DataDirectories> dataDirectories)
         {
             _fileRepository = fileRepository;
-            _providers = providers;
-            _settingsRepository = settingsRepository;
-            _httpClientFactory = httpClientFactory;
             _dataDirectories = dataDirectories;
             StringLocalizer = stringLocalizer;
-        }
-
-        public async Task<bool> IsAvailable()
-        {
-            var settings = await _settingsRepository.GetSettingAsync<StorageSettings>();
-            return settings is not null;
         }
 
         public async Task<UploadImageResultModel> UploadImage(IFormFile file, string userId, long maxFileSizeInBytes = 1_000_000)
@@ -91,68 +71,60 @@ namespace BTCPayServer.Storage.Services
 
         public async Task<IStoredFile> AddFile(IFormFile file, string userId)
         {
-            var settings = await _settingsRepository.GetSettingAsync<StorageSettings>();
-            if (settings is null)
-                throw new InvalidOperationException("StoreSettings not configured");
             if (!file.FileName.IsValidFileName())
                 throw new InvalidOperationException("Invalid file name");
 
-            var provider = GetProvider(settings);
-            var storedFile = await provider.AddFile(file, settings);
-            storedFile.ApplicationUserId = userId;
+            var storedFile = new StoredFile
+            {
+                Timestamp = DateTime.UtcNow,
+                FileName = file.FileName,
+                StorageFileName = $"{Guid.NewGuid()}-{file.FileName.ToLowerInvariant()}",
+                ApplicationUserId = userId
+            };
+            var path = GetFilePath(storedFile);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            await using (var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, true))
+            {
+                await file.CopyToAsync(output);
+            }
             await _fileRepository.AddFile(storedFile);
             return storedFile;
         }
 
         public async Task<string?> GetFileUrl(Uri baseUri, string fileId)
         {
-            var settings = await _settingsRepository.GetSettingAsync<StorageSettings>();
-            if (settings is null)
-                return null;
-            var provider = GetProvider(settings);
             var storedFile = await _fileRepository.GetFile(fileId);
-            return storedFile == null ? null : await provider.GetFileUrl(baseUri, storedFile, settings);
+            if (storedFile is null)
+                return null;
+
+            var escapedPath = Uri.EscapeDataString(Path.GetFileName(GetFilePath(storedFile)));
+            return new Uri(baseUri, $"{baseUri.AbsolutePath.TrimEnd('/')}/{LocalStorageDirectoryName}/{escapedPath}").AbsoluteUri;
         }
 
         public async Task RemoveFile(string fileId, string userId)
         {
-            var settings = await _settingsRepository.GetSettingAsync<StorageSettings>();
-            if (settings is null)
-                return;
-            var provider = GetProvider(settings);
             var storedFile = await _fileRepository.GetFile(fileId);
             if (storedFile != null && (string.IsNullOrEmpty(userId) ||
                 storedFile.ApplicationUserId.Equals(userId, StringComparison.InvariantCultureIgnoreCase)))
             {
-                await provider.RemoveFile(storedFile, settings);
+                var path = GetFilePath(storedFile);
+                if (!File.Exists(path))
+                    throw new FileNotFoundException("The stored file was not found.", path);
+                File.Delete(path);
                 await _fileRepository.RemoveFile(storedFile);
             }
         }
 
-        private IStorageProviderService GetProvider(StorageSettings storageSettings)
+        private string GetFilePath(StoredFile storedFile)
         {
-            return _providers.First(service => service.StorageProvider().Equals(storageSettings.Provider));
-        }
-
-        private static string GetContentType(string filePath)
-        {
-            var mimeProvider = new FileExtensionContentTypeProvider();
-            if (!mimeProvider.TryGetContentType(filePath, out string? contentType))
-            {
-                contentType = "application/octet-stream";
-            }
-
-            return contentType;
-        }
-
-        private static string Sanitize(string fileName)
-        {
-            var invalid = Path.GetInvalidFileNameChars().Concat(":").ToArray();
-            // replace invalid chars in url-decoded filename
-            var name = string.Join("_", HttpUtility.UrlDecode(fileName)
-                .Split(invalid, StringSplitOptions.RemoveEmptyEntries)).TrimEnd('.');
-            // replace multiple underscores with just one
-            return Regex.Replace(name, @"_+", "_");
+            if (!storedFile.StorageFileName.IsValidFileName())
+                throw new InvalidOperationException("Invalid file name");
+            var root = Path.GetFullPath(_dataDirectories.Value.StorageDir);
+            var path = Path.GetFullPath(Path.Combine(root, storedFile.StorageFileName));
+            var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            if (!path.StartsWith(Path.TrimEndingDirectorySeparator(root) + Path.DirectorySeparatorChar, comparison))
+                throw new InvalidOperationException("Invalid storage path");
+            return path;
         }
     }
 }

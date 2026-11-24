@@ -46,9 +46,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Notifications;
-using BTCPayServer.Storage.Models;
-using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
-using BTCPayServer.Storage.ViewModels;
+using BTCPayServer.Storage.Services;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -2758,134 +2756,67 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestUtils.TestTimeout)]
         [Trait("Integration", "Integration")]
-        public async Task CanInitializeStorageOnFirstRun()
+        public async Task CanViewFiles()
         {
             using var tester = CreateServerTester(newDb: true);
-            await tester.StartAsync();
-            var settings = tester.PayTester.GetService<SettingsRepository>();
-            var storage = await settings.GetSettingAsync<StorageSettings>();
-            Assert.NotNull(storage);
-            Assert.Equal(StorageProvider.FileSystem, storage.Provider);
-            Assert.Equal(JObject.FromObject(new FileSystemStorageConfiguration()), storage.Configuration);
-
-            storage = new StorageSettings
-            {
-                Provider = StorageProvider.AmazonS3,
-                Configuration = new JObject { ["BucketName"] = "existing-bucket" }
-            };
-            await settings.UpdateSetting(storage);
-            await settings.UpdateSetting<MigrationSettings>(null, SettingsRepository.KeyNameByType(typeof(MigrationSettings)));
-            await tester.PayTester.RestartStartupTask<MigrationStartupTask>();
-            var existingStorage = await settings.GetSettingAsync<StorageSettings>();
-            Assert.Equal(StorageProvider.AmazonS3, existingStorage.Provider);
-            Assert.Equal(storage.Configuration, existingStorage.Configuration);
-        }
-
-        [Fact(Timeout = TestUtils.TestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanConfigureStorage()
-        {
-            using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             user.GrantAccess();
             var controller = tester.PayTester.GetController<UIServerController>(user.UserId, user.StoreId);
-
-
-            //Once we select a provider, redirect to its view
-            var localResult = Assert
-                .IsType<RedirectToActionResult>(controller.Storage(new StorageSettings()
-                {
-                    Provider = StorageProvider.FileSystem
-                }));
-            Assert.Equal(nameof(UIServerController.StorageProvider), localResult.ActionName);
-            Assert.Equal(StorageProvider.FileSystem.ToString(), localResult.RouteValues["provider"]);
-
-
-            var AmazonS3result = Assert
-                .IsType<RedirectToActionResult>(controller.Storage(new StorageSettings()
-                {
-                    Provider = StorageProvider.AmazonS3
-                }));
-            Assert.Equal(nameof(UIServerController.StorageProvider), AmazonS3result.ActionName);
-            Assert.Equal(StorageProvider.AmazonS3.ToString(), AmazonS3result.RouteValues["provider"]);
-
-            var GoogleResult = Assert
-                .IsType<RedirectToActionResult>(controller.Storage(new StorageSettings()
-                {
-                    Provider = StorageProvider.GoogleCloudStorage
-                }));
-            Assert.Equal(nameof(UIServerController.StorageProvider), GoogleResult.ActionName);
-            Assert.Equal(StorageProvider.GoogleCloudStorage.ToString(), GoogleResult.RouteValues["provider"]);
-
-
-            var AzureResult = Assert
-                .IsType<RedirectToActionResult>(controller.Storage(new StorageSettings()
-                {
-                    Provider = StorageProvider.AzureBlobStorage
-                }));
-            Assert.Equal(nameof(UIServerController.StorageProvider), AzureResult.ActionName);
-            Assert.Equal(StorageProvider.AzureBlobStorage.ToString(), AzureResult.RouteValues["provider"]);
-
-            //Cool, we get redirected to the config pages
-            //Let's configure this stuff
-
-            //Let's try and cheat and go to an invalid storage provider config
-            Assert.Equal(nameof(Storage), (Assert
-                .IsType<RedirectToActionResult>(await controller.StorageProvider("I am not a real provider"))
-                .ActionName));
-
-            //ok no more messing around, let's configure this shit.
-            var fileSystemStorageConfiguration = Assert.IsType<FileSystemStorageConfiguration>(Assert
-                .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.FileSystem.ToString()))
-                .Model);
-
-            //local file system does not need config, easy days!
-            Assert.IsType<ViewResult>(
-                await controller.EditFileSystemStorageProvider(fileSystemStorageConfiguration));
-
-            //ok cool, let's see if this got set right
-            var shouldBeRedirectingToLocalStorageConfigPage =
-                Assert.IsType<RedirectToActionResult>(await controller.Storage());
-            Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToLocalStorageConfigPage.ActionName);
-            Assert.Equal(StorageProvider.FileSystem,
-                shouldBeRedirectingToLocalStorageConfigPage.RouteValues["provider"]);
-
-
-            //if we tell the settings page to force, it should allow us to select a new provider
-            Assert.IsType<ChooseStorageViewModel>(Assert.IsType<ViewResult>(await controller.Storage(true)).Model);
-
-            //awesome, now let's see if the files result says we're all set up
             var viewFilesViewModel =
                 Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files()).Model);
-            Assert.True(viewFilesViewModel.StorageConfigured);
             Assert.Empty(viewFilesViewModel.Files);
         }
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public async Task CanUseLocalProviderFiles()
+        public async Task CanUseLocalFiles()
         {
-            using var tester = CreateServerTester();
+            using var tester = CreateServerTester(newDb: true);
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
             var controller = tester.PayTester.GetController<UIServerController>(user.UserId, user.StoreId);
 
-            var fileSystemStorageConfiguration = Assert.IsType<FileSystemStorageConfiguration>(Assert
-                .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.FileSystem.ToString()))
-                .Model);
-            Assert.IsType<ViewResult>(
-                await controller.EditFileSystemStorageProvider(fileSystemStorageConfiguration));
-
-            var shouldBeRedirectingToLocalStorageConfigPage =
-                Assert.IsType<RedirectToActionResult>(await controller.Storage());
-            Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToLocalStorageConfigPage.ActionName);
-            Assert.Equal(StorageProvider.FileSystem,
-                shouldBeRedirectingToLocalStorageConfigPage.RouteValues["provider"]);
-
             var fileId = await CanUploadFile(controller);
             await CanRemoveFile(controller, fileId);
+
+            var fileService = tester.PayTester.GetService<FileService>();
+            var repository = tester.PayTester.GetService<StoredFileRepository>();
+            var root = tester.PayTester.GetService<Microsoft.Extensions.Options.IOptions<DataDirectories>>().Value.StorageDir;
+            using var http = new HttpClient();
+            foreach (var deletingUserId in new[] { user.UserId, null })
+            {
+                var name = "Photo 日本語 #100%.TXT";
+                var file = await fileService.AddFile(TestUtils.GetFormFile(name, "local content"), user.UserId);
+                var storedFile = await repository.GetFile(file.Id);
+                Assert.Equal(name, storedFile.FileName);
+                Assert.True(Guid.TryParse(storedFile.StorageFileName[..36], out _));
+                Assert.EndsWith("-" + name.ToLowerInvariant(), storedFile.StorageFileName);
+                var path = Path.Combine(root, storedFile.StorageFileName);
+                Assert.Equal("local content", await File.ReadAllTextAsync(path));
+                var url = await fileService.GetFileUrl(tester.PayTester.ServerUri, file.Id);
+                Assert.Equal("local content", await http.GetStringAsync(url));
+                using (var response = await http.GetAsync(url + "?download"))
+                {
+                    Assert.Equal("attachment", response.Content.Headers.ContentDisposition?.DispositionType);
+                    Assert.Equal("nosniff", Assert.Single(response.Headers.GetValues("X-Content-Type-Options")));
+                }
+                var prefixedUrl = await fileService.GetFileUrl(new Uri("https://example.com/btcpay/"), file.Id);
+                Assert.Equal("https://example.com/btcpay/LocalStorage/" +
+                    Uri.EscapeDataString(storedFile.StorageFileName), prefixedUrl);
+
+                await fileService.RemoveFile(file.Id, "another-user");
+                Assert.True(File.Exists(path));
+                Assert.NotNull(await repository.GetFile(file.Id));
+                await fileService.RemoveFile(file.Id, deletingUserId);
+                Assert.False(File.Exists(path));
+                Assert.Null(await repository.GetFile(file.Id));
+            }
+
+            // Reject invalid input before writing files.
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                fileService.AddFile(new FormFile(Stream.Null, 0, 0, "file", "../outside.txt"), user.UserId));
         }
 
         internal static async Task<string> CanUploadFile(UIServerController controller)

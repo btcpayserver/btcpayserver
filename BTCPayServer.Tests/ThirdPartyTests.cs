@@ -15,8 +15,6 @@ using BTCPayServer.Plugins.Wallets.Views.ViewModels;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Rates;
-using BTCPayServer.Storage.Models;
-using BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,41 +33,6 @@ namespace BTCPayServer.Tests
         public ThirdPartyTests(ITestOutputHelper helper) : base(helper)
         {
 
-        }
-
-        [FactWithSecret("AzureBlobStorageConnectionString")]
-        public async Task CanUseAzureBlobStorage()
-        {
-            using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            user.GrantAccess();
-            var controller = tester.PayTester.GetController<UIServerController>(user.UserId, user.StoreId);
-            var azureBlobStorageConfiguration = Assert.IsType<AzureBlobStorageConfiguration>(Assert
-                .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
-                .Model);
-
-            azureBlobStorageConfiguration.ConnectionString = FactWithSecretAttribute.GetFromSecrets("AzureBlobStorageConnectionString");
-            azureBlobStorageConfiguration.ContainerName = "testscontainer";
-            Assert.IsType<ViewResult>(
-                await controller.EditAzureBlobStorageStorageProvider(azureBlobStorageConfiguration));
-
-            var shouldBeRedirectingToAzureStorageConfigPage =
-                Assert.IsType<RedirectToActionResult>(await controller.Storage());
-            Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToAzureStorageConfigPage.ActionName);
-            Assert.Equal(StorageProvider.AzureBlobStorage,
-                shouldBeRedirectingToAzureStorageConfigPage.RouteValues["provider"]);
-
-            //seems like azure config worked, let's see if the conn string was actually saved
-
-            Assert.Equal(azureBlobStorageConfiguration.ConnectionString, Assert
-                .IsType<AzureBlobStorageConfiguration>(Assert
-                    .IsType<ViewResult>(
-                        await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
-                    .Model).ConnectionString);
-
-            var fileId = await UnitTest1.CanUploadFile(controller);
-            await UnitTest1.CanRemoveFile(controller, fileId);
         }
 
         [Fact(Skip = "Fail on CI")]

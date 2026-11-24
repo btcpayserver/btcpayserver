@@ -983,7 +983,7 @@ namespace BTCPayServer
             var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(networkType);
             dataDirectories.DataDir = configuration["datadir"] ?? defaultSettings.DefaultDataDirectory;
             dataDirectories.PluginDir = configuration["plugindir"] ?? defaultSettings.DefaultPluginDirectory;
-            dataDirectories.StorageDir = Path.Combine(dataDirectories.DataDir, Storage.Services.Providers.FileSystemStorage.FileSystemFileProviderService.LocalStorageDirectoryName);
+            dataDirectories.StorageDir = Path.Combine(dataDirectories.DataDir, Storage.Services.FileService.LocalStorageDirectoryName);
             dataDirectories.TempStorageDir = Path.Combine(dataDirectories.StorageDir, "tmp");
             dataDirectories.TempDir = Path.Combine(dataDirectories.DataDir, "tmp");
             dataDirectories.LangsDir = Path.Combine(dataDirectories.DataDir, "Langs");

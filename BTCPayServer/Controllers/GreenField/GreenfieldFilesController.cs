@@ -18,7 +18,7 @@ namespace BTCPayServer.Controllers.Greenfield;
 [EnableCors(CorsPolicies.All)]
 [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
 public class GreenfieldFilesController(
-    IFileService fileService,
+    FileService fileService,
     StoredFileRepository fileRepository)
     : ControllerBase
 {

@@ -1,12 +1,9 @@
 @using BTCPayServer.Payments
-@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
-@inject IFileService FileService
 @inject BTCPayServer.Services.PrettyNameProvider PrettyName
 @model CheckoutAppearanceViewModel
 @{
     ViewData.SetLayoutModel(new LayoutModel(nameof(StoreNavPages.CheckoutAppearance), StringLocalizer["Checkout Experience"]).SetCategory(WellKnownCategories.Store));
-    var canUpload = await FileService.IsAvailable();
     var unifiedQrApplies = Model.PaymentMethods.Any(o => o.Value == PaymentTypes.CHAIN.GetPaymentMethodId("BTC").ToString()) &&
                            Model.PaymentMethods.Any(o => o.Value == PaymentTypes.LN.GetPaymentMethodId("BTC").ToString() || o.Value == PaymentTypes.LNURL.GetPaymentMethodId("BTC").ToString());
 }
@@ -191,19 +188,11 @@
                                         </button>
                                     }
                                 </div>
-                                @if (canUpload)
-                                {
-                                    <div class="d-flex align-items-center gap-3">
-                                        <input asp-for="SoundFile" type="file" class="form-control flex-grow">
-                                        <audio controls src="@Model.PaymentSoundUrl" style="height:2.1rem;max-width:10.5rem;"></audio>
-                                    </div>
-                                    <span asp-validation-for="SoundFile" class="text-danger"></span>
-                                }
-                                else
-                                {
-                                    <input asp-for="SoundFile" type="file" class="form-control" disabled>
-                                    <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
-                                }
+                                <div class="d-flex align-items-center gap-3">
+                                    <input asp-for="SoundFile" type="file" class="form-control flex-grow">
+                                    <audio controls src="@Model.PaymentSoundUrl" style="height:2.1rem;max-width:10.5rem;"></audio>
+                                </div>
+                                <span asp-validation-for="SoundFile" class="text-danger"></span>
                             </div>
                         </div>
                     </div>

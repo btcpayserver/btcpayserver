@@ -14,6 +14,7 @@ using BTCPayServer.Plugins.Translations;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Storage.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -39,7 +40,7 @@ namespace BTCPayServer.Controllers
         private readonly IHtmlHelper Html;
         private readonly UserService _userService;
         private readonly UriResolver _uriResolver;
-        private readonly IFileService _fileService;
+        private readonly FileService _fileService;
         private readonly EventAggregator _eventAggregator;
         private readonly PermissionService _permissionService;
         readonly StoreRepository _StoreRepository;
@@ -59,7 +60,7 @@ namespace BTCPayServer.Controllers
           CallbackGenerator callbackGenerator,
           UserService userService,
           UriResolver uriResolver,
-          IFileService fileService,
+          FileService fileService,
           IStringLocalizer stringLocalizer,
           IHtmlHelper htmlHelper,
           EventAggregator eventAggregator,

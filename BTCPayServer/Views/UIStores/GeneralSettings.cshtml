@@ -1,11 +1,8 @@
-@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
-@inject IFileService FileService;
 @model GeneralSettingsViewModel
 @{
 	ViewData.SetLayoutModel(new LayoutModel("General", StringLocalizer["General"]).SetCategory(WellKnownCategories.Store));
-	var canUpload = await FileService.IsAvailable();
     Csp.UnsafeEval();
 }
 <form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
@@ -95,22 +92,14 @@
 	                        </button>
 	                    }
                     </div>
-                    @if (canUpload)
-                    {
-                        <div class="d-flex align-items-center gap-3">
-                            <input asp-for="LogoFile" type="file" class="form-control flex-grow">
-                            @if (!string.IsNullOrEmpty(Model.LogoUrl))
-                            {
-                                <img src="@Model.LogoUrl" alt="@Model.StoreName Logo" style="height:2.1rem;max-width:10.5rem;"/>
-                            }
-                        </div>
-                        <span asp-validation-for="LogoFile" class="text-danger"></span>
-                    }
-                    else
-                    {
-                        <input asp-for="LogoFile" type="file" class="form-control" disabled>
-                        <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
-                    }
+                    <div class="d-flex align-items-center gap-3">
+                        <input asp-for="LogoFile" type="file" class="form-control flex-grow">
+                        @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                        {
+                            <img src="@Model.LogoUrl" alt="@Model.StoreName Logo" style="height:2.1rem;max-width:10.5rem;"/>
+                        }
+                    </div>
+                    <span asp-validation-for="LogoFile" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-0">
                     <div class="d-flex align-items-center justify-content-between gap-2">
@@ -122,22 +111,14 @@
 	                        </button>
 	                    }
                     </div>
-                    @if (canUpload)
-                    {
-                        <div class="d-flex align-items-center gap-3">
-                            <input asp-for="CssFile" type="file" class="form-control flex-grow">
-                            @if (Uri.TryCreate(Model.CssUrl, UriKind.Absolute, out var cssUri) && cssUri.Scheme is ("http" or "https"))
-                            {
-                                <a href="@Model.CssUrl" target="_blank" rel="noreferrer noopener" class="text-nowrap" text-translate="true">Custom CSS</a>
-                            }
-                        </div>
-                        <span asp-validation-for="CssFile" class="text-danger"></span>
-                    }
-                    else
-                    {
-                        <input asp-for="CssFile" type="file" class="form-control" disabled>
-                        <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
-                    }
+                    <div class="d-flex align-items-center gap-3">
+                        <input asp-for="CssFile" type="file" class="form-control flex-grow">
+                        @if (Uri.TryCreate(Model.CssUrl, UriKind.Absolute, out var cssUri) && cssUri.Scheme is ("http" or "https"))
+                        {
+                            <a href="@Model.CssUrl" target="_blank" rel="noreferrer noopener" class="text-nowrap" text-translate="true">Custom CSS</a>
+                        }
+                    </div>
+                    <span asp-validation-for="CssFile" class="text-danger"></span>
                 </div>
             </div>
 

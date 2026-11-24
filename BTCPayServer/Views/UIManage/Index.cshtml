@@ -1,10 +1,7 @@
-@using BTCPayServer.Abstractions.Contracts
-@inject IFileService FileService
 @model IndexViewModel
 @{
     ViewData.SetLayoutModel(new LayoutModel("Account", StringLocalizer["Update your account"])
         .SetCategory(nameof(ManageNavPages)));
-    var canUpload = await FileService.IsAvailable();
 }
 
 <form method="post" enctype="multipart/form-data">
@@ -56,29 +53,26 @@
             <div class="form-text" text-translate="true">Your personal language for the BTCPay administration UI.</div>
             <span asp-validation-for="LangTranslation" class="text-danger"></span>
         </div>
-        @if (canUpload)
-        {
-            <div class="form-group">
-                <div class="d-flex align-items-center justify-content-between gap-2">
-                    <label asp-for="ImageFile" class="form-label"></label>
-                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
-                    {
-                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveImageFile" value="true">
-                            <vc:icon symbol="cross" />
-                            <span text-translate="true">Remove</span>
-                        </button>
-                    }
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    <input asp-for="ImageFile" type="file" class="form-control flex-grow">
-                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
-                    {
-                        <img src="@Model.ImageUrl" alt="@StringLocalizer["Profile Picture"]" class="profile-picture"/>
-                    }
-                </div>
-                <span asp-validation-for="ImageFile" class="text-danger"></span>
+        <div class="form-group">
+            <div class="d-flex align-items-center justify-content-between gap-2">
+                <label asp-for="ImageFile" class="form-label"></label>
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveImageFile" value="true">
+                        <vc:icon symbol="cross" />
+                        <span text-translate="true">Remove</span>
+                    </button>
+                }
             </div>
-        }
+            <div class="d-flex align-items-center gap-3">
+                <input asp-for="ImageFile" type="file" class="form-control flex-grow">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl" alt="@StringLocalizer["Profile Picture"]" class="profile-picture"/>
+                }
+            </div>
+            <span asp-validation-for="ImageFile" class="text-danger"></span>
+        </div>
         <div class="form-group">
             <div class="form-check">
                 <input asp-for="AllowGreenfieldBasicAuth" class="form-check-input" />

@@ -1,11 +1,8 @@
-@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Services
 @model BrandingViewModel;
-@inject IFileService FileService
 @{
     ViewData.SetLayoutModel(new LayoutModel(nameof(ServerNavPages.Branding), StringLocalizer["Branding"])
         .SetCategory(WellKnownCategories.Server));
-    var canUpload = await FileService.IsAvailable();
     var themeExtension = ((ThemeExtension[])Enum.GetValues(typeof(ThemeExtension))).Select(t =>
         new SelectListItem(typeof(ThemeExtension).DisplayName(t.ToString()), t.ToString()));
 }
@@ -62,22 +59,14 @@
                         </button>
                     }
                 </div>
-                @if (canUpload)
-                {
-                    <div class="d-flex align-items-center gap-3">
-                        <input asp-for="LogoFile" type="file" class="form-control flex-grow">
-                        @if (!string.IsNullOrEmpty(Model.LogoUrl))
-                        {
-                            <img src="@Model.LogoUrl" alt="Logo" style="height:2.1rem;max-width:10.5rem;"/>
-                        }
-                    </div>
-                    <span asp-validation-for="LogoFile" class="text-danger"></span>
-                }
-                else
-                {
-                    <input asp-for="LogoFile" type="file" class="form-control" disabled>
-                    <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
-                }
+                <div class="d-flex align-items-center gap-3">
+                    <input asp-for="LogoFile" type="file" class="form-control flex-grow">
+                    @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                    {
+                        <img src="@Model.LogoUrl" alt="Logo" style="height:2.1rem;max-width:10.5rem;"/>
+                    }
+                </div>
+                <span asp-validation-for="LogoFile" class="text-danger"></span>
             </div>
 
             </div>
@@ -113,22 +102,14 @@
                             </button>
                         }
                     </div>
-                    @if (canUpload)
-                    {
-                        <div class="d-flex align-items-center gap-3">
-                            <input asp-for="CustomThemeFile" type="file" class="form-control flex-grow">
-                            @if (!string.IsNullOrEmpty(Model.CustomThemeCssUrl))
-                            {
-                                <a href="@Model.CustomThemeCssUrl" target="_blank" rel="noreferrer noopener" class="text-nowrap" text-translate="true">Custom CSS</a>
-                            }
-                        </div>
-                        <span asp-validation-for="CustomThemeFile" class="text-danger"></span>
-                    }
-                    else
-                    {
-                        <input asp-for="CustomThemeFile" type="file" class="form-control" disabled>
-                        <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
-                    }
+                    <div class="d-flex align-items-center gap-3">
+                        <input asp-for="CustomThemeFile" type="file" class="form-control flex-grow">
+                        @if (!string.IsNullOrEmpty(Model.CustomThemeCssUrl))
+                        {
+                            <a href="@Model.CustomThemeCssUrl" target="_blank" rel="noreferrer noopener" class="text-nowrap" text-translate="true">Custom CSS</a>
+                        }
+                    </div>
+                    <span asp-validation-for="CustomThemeFile" class="text-danger"></span>
                 </div>
             </div>
             </div>

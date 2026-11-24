@@ -892,6 +892,9 @@ inventoryitem:
 
             await GoToLNUrlCheckout(s, appId, "black-tea");
             await AssertInvoiceAmount(s, "1.00000000 BTC");
+            // The tax is carved out of the price (1 * 10 / 110), not dropped
+            var taxIncludedInvoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(s.InvoiceId);
+            Assert.Equal(0.09090909m, taxIncludedInvoice.Metadata.TaxIncluded);
 
             await GoToLNUrlCheckout(s, appId, "fruit-tea");
             await AssertInvoiceAmount(s, "Any amount");

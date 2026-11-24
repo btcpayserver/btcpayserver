@@ -54,6 +54,15 @@ The customer-facing flow for selecting a payment method and paying an invoice.
 The point at which a payment meets the store's required acceptance conditions,
 such as on-chain confirmations.
 
+**Payment status**:
+An individual payment's state: Processing while awaiting settlement, Settled
+when its settlement conditions are met, or Unaccounted
+when it is excluded from the invoice's payment totals.
+It is separate from invoice status: a settled payment does not necessarily
+pay an invoice in full.
+The Greenfield API uses the legacy name Invalid for Unaccounted payments;
+this does not mean the invoice has Invalid status.
+
 **Invoice status**:
 An invoice's base payment and settlement state: New, Processing, Settled,
 Expired, or Invalid.

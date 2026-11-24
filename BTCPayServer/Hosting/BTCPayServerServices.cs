@@ -121,8 +121,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<ISwaggerProvider, DefaultSwaggerProvider>();
             services.TryAddSingleton<SocketFactory>();
 
-            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(_ =>
-                new CLightningConnectionStringHandler());
+            services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
+                new CLightningConnectionStringHandler(client));
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>
                 new EclairConnectionStringHandler(client));
             services.AddSingleton<Func<HttpClient, ILightningConnectionStringHandler>>(client =>

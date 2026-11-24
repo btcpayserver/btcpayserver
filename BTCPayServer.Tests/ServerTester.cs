@@ -152,7 +152,7 @@ namespace BTCPayServer.Tests
             else if (connectionType == LightningTestImplementation.LND)
             {
                 if (isMerchant)
-                    connectionString = $"type=lnd-rest;server={MerchantLnd.Swagger.BaseUrl};allowinsecure=true";
+                    connectionString = $"type=lnd-rest;server={MerchantLnd.Swagger.BaseUrl}";
                 else
                     throw new NotSupportedException();
             }

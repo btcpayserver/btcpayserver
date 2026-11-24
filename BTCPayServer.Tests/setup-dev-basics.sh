@@ -122,7 +122,7 @@ wallet_enabled_nakamoto_nuggets=$(curl -s -k -X PUT -H 'Content-Type: applicatio
 
 # Connect Nakamoto Nuggets with Merchant LND Lightning node
 curl -s -k -X PUT -H 'Content-Type: application/json' \
-    -d "{'enabled': true, 'config': { 'connectionString': 'type=lnd-rest;server=http://lnd:lnd@127.0.0.1:35531/;allowinsecure=true' }}" \
+    -d "{'enabled': true, 'config': { 'connectionString': 'type=lnd-rest;server=http://lnd:lnd@127.0.0.1:35531/' }}" \
     -H "Authorization: token $admin_api_key" \
     "$API_BASE/stores/$store_id_nakamoto_nuggets/payment-methods/BTC-LN" >/dev/null 2>&1
 
@@ -183,7 +183,7 @@ printf "External Lightning Store ID: %s\n" "$store_id_externalln"
 
 # Connect External Lightning based store with Customer LND Lightning node
 curl -s -k -X PUT -H 'Content-Type: application/json' \
-    -d "{'enabled': true, 'config': { 'connectionString': 'type=lnd-rest;server=http://lnd:lnd@127.0.0.1:35532/;allowinsecure=true' } }" \
+    -d "{'enabled': true, 'config': { 'connectionString': 'type=lnd-rest;server=http://lnd:lnd@127.0.0.1:35532/' } }" \
     -H "Authorization: token $admin_api_key" \
     "$API_BASE/stores/$store_id_externalln/payment-methods/BTC-LN" >/dev/null 2>&1
 

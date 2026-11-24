@@ -514,7 +514,7 @@ namespace BTCPayServer.Tests
                 LightningTestImplementation.CoreLightning =>
                     $"type=clightning;server={((CLightningClient)Server.MerchantLightningD).Address.AbsoluteUri}",
                 LightningTestImplementation.LND =>
-                    $"type=lnd-rest;server={Server.MerchantLnd.Swagger.BaseUrl};allowinsecure=true",
+                    $"type=lnd-rest;server={Server.MerchantLnd.Swagger.BaseUrl}",
                 _ => null
             };
 

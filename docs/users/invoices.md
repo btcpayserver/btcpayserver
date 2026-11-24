@@ -41,7 +41,7 @@ The status can also include an exception:
 | **Marked** | A store user manually marked the invoice settled or invalid. This does not prove that a blockchain payment confirmed. |
 
 Review the amount, payment method, transaction, and business context before
-manually changing a status. A partial payment can happen when the payer sends
+manually changing a status. A partial payment can happen when the customer sends
 the wrong amount or when a service deducts a fee from the withdrawal.
 
 ## Invoice filtering
@@ -49,7 +49,7 @@ the wrong amount or when a service deducts a fee from the withdrawal.
 The invoice list is scoped to the selected store and is ordered by invoice
 creation date, newest first. Use its search and filters to narrow the list:
 
-- Search by invoice ID, order ID, buyer email, amount, payment destination, or
+- Search by invoice ID, order ID, customer email, amount, payment destination, or
   other indexed invoice information.
 - Use `orderid:value` or `itemcode:value` for an exact field-oriented search.
 - Filter by base status, payment exception, application or plugin, and invoice
@@ -82,7 +82,7 @@ payment before marking an unusual invoice settled.
 ## Invoice metadata
 
 Apps and integrations can attach metadata such as an order ID, item details,
-or buyer information to an invoice. BTCPay Server can display, search, and
+or customer information to an invoice. BTCPay Server can display, search, and
 include recognized fields in reports. See the developer guide to
 [invoice metadata](https://docs.btcpayserver.org/Developers/api/invoice-metadata/) for supported fields,
 privacy considerations, and examples.

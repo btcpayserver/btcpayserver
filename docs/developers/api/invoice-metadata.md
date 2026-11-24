@@ -20,15 +20,15 @@ third-party host is compromised.
 | `.paymentRequestId` | Associates the invoice with a payment request and displays a link on the invoice details page. |
 | `.posData` | Custom JSON object displayed as additional information on the invoice details page. Older integrations may supply a string containing a JSON object. |
 | `.receiptData` | Custom JSON object displayed on the customer-facing receipt and the invoice details page. |
-| `.buyerName` | Buyer name displayed in invoice details and BitPay-compatible API responses. |
-| `.buyerEmail` | Buyer email displayed in invoice details and BitPay-compatible API responses. |
-| `.buyerAddress1` | First buyer address line displayed in invoice details and BitPay-compatible API responses. |
-| `.buyerAddress2` | Second buyer address line displayed in invoice details and BitPay-compatible API responses. |
-| `.buyerCity` | Buyer city displayed in invoice details and BitPay-compatible API responses. |
-| `.buyerState` | Buyer state or region displayed in invoice details and BitPay-compatible API responses. |
-| `.buyerZip` | Buyer postal code displayed in invoice details and BitPay-compatible API responses. |
-| `.buyerCountry` | Buyer country displayed in invoice details and BitPay-compatible API responses. |
-| `.buyerPhone` | Buyer phone number displayed in invoice details and BitPay-compatible API responses. |
+| `.buyerName` | Customer name displayed in invoice details and BitPay-compatible API responses. |
+| `.buyerEmail` | Customer email displayed in invoice details and BitPay-compatible API responses. |
+| `.buyerAddress1` | First customer address line displayed in invoice details and BitPay-compatible API responses. |
+| `.buyerAddress2` | Second customer address line displayed in invoice details and BitPay-compatible API responses. |
+| `.buyerCity` | Customer city displayed in invoice details and BitPay-compatible API responses. |
+| `.buyerState` | Customer state or region displayed in invoice details and BitPay-compatible API responses. |
+| `.buyerZip` | Customer postal code displayed in invoice details and BitPay-compatible API responses. |
+| `.buyerCountry` | Customer country displayed in invoice details and BitPay-compatible API responses. |
+| `.buyerPhone` | Customer phone number displayed in invoice details and BitPay-compatible API responses. |
 | `.comment` | Store-user comment displayed on the invoice details page. |
 | `.itemDesc` | Product description displayed in invoice details and included in the invoice report. Point of Sale can set it automatically. |
 | `.itemCode` | Product code displayed in invoice details, included in the invoice report, and indexed for `itemcode:` searches. Point of Sale can set it automatically. |

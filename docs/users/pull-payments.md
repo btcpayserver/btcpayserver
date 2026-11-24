@@ -59,7 +59,7 @@ recipient.
 
 The recipient opens the shared page, selects an allowed payout method, enters a
 destination and amount, and selects **Claim Funds**. The page shows the claim
-limit, amounts already claimed, remaining amount, and claim statuses.
+limit, amounts already claimed, remaining amount, and payout statuses.
 
 ![Pull payment claim form](https://raw.githubusercontent.com/btcpayserver/btcpayserver-doc/10976f0368522fad9abad4bf13bd5780093a708e/docs/img/pull-payments/4.png)
 
@@ -74,7 +74,7 @@ the available limit, although the store can reject an unapproved payout.
 ## Approve and Pay Payouts
 
 BTCPay Server notifies the store when a payout awaits approval. Open
-**Payouts**, select the claims to process, and choose an action:
+**Payouts**, select the payouts to process, and choose an action:
 
 - **Approve selected payouts** fixes their amounts and moves them to awaiting
   payment without sending funds.

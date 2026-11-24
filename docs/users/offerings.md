@@ -6,7 +6,7 @@
 
 The Subscriptions app lets merchants sell products and services through
 recurring cryptocurrency payments. Unlike a card processor, BTCPay Server
-cannot charge a customer's wallet automatically. Instead, subscribers prepay a
+cannot charge a customer's wallet automatically. Instead, customers prepay a
 credit balance, and BTCPay Server deducts each period's cost from that balance
 to renew the subscriber's plan.
 
@@ -92,7 +92,7 @@ Plans support these lifecycle options:
 
 ## Email Rules
 
-Configure email rules to notify the subscriber or merchant about events such as
+Configure email rules to notify the customer or merchant about events such as
 an ending trial, payment due, payment reminders, or an ending grace period.
 
 <img src="https://github.com/user-attachments/assets/229c10d7-111b-4f2c-97d7-1852ed9f177e" alt="Subscriber email rules">

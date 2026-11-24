@@ -30,7 +30,7 @@
 			if (response.ok) {
 				document.getElementById(`AppTopItems-${appId}`).outerHTML = await response.text();
 				const data = document.querySelector(`#AppTopItems-${appId} template`);
-				if (data) window.appTopItems.dataLoaded(JSON.parse(data.innerHTML));
+				if (data) window.appTopItems.dataLoaded(JSON.parse(data.content.textContent));
 			}
 		})();
 	    </script>

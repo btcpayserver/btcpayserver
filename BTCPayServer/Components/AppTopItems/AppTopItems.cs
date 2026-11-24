@@ -1,24 +1,18 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Apps;
+using Ganss.Xss;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewComponents;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace BTCPayServer.Components.AppTopItems;
 
-public class AppTopItems : ViewComponent
+public class AppTopItems(AppService appService, HtmlSanitizer htmlSanitizer) : ViewComponent
 {
-    private readonly AppService _appService;
-
-    public AppTopItems(AppService appService)
-    {
-        _appService = appService;
-    }
-
     public async Task<IViewComponentResult> InvokeAsync(string appId, string appType)
     {
-        var type = _appService.GetAppType(appType);
+        var type = appService.GetAppType(appType);
         if (type is not (IHasItemStatsAppType and AppBaseType appBaseType))
             return new HtmlContentViewComponentResult(new StringHtmlContent(string.Empty));
 
@@ -33,9 +27,11 @@ public class AppTopItems : ViewComponent
             return View(vm);
 
         var app = HttpContext.GetAppDataOrNull();
-        var entries = await _appService.GetItemStats(app);
+        var entries = await appService.GetItemStats(app);
         vm.SalesCount = entries.Select(e => e.SalesCount).ToList();
         vm.Entries = entries.Take(5).ToList();
+        foreach (var entry in vm.Entries)
+            entry.Title = htmlSanitizer.Sanitize(entry.Title ?? "");
         vm.AppType = app.AppType;
         vm.AppUrl = await appBaseType.ConfigureLink(app);
         vm.Name = app.Name;

@@ -1,27 +1,4 @@
 @model (string templateId, string template, string title, string currency)
-@inject Ganss.Xss.HtmlSanitizer HtmlSanitizer
-@{
-    var initialConfig = Model.template;
-    if (!string.IsNullOrWhiteSpace(Model.template))
-    {
-        try
-        {
-            var items = JsonParser.ParseArray(Model.template);
-            foreach (var item in items.OfType<Newtonsoft.Json.Linq.JObject>())
-            {
-                if (item["title"] is { Type: Newtonsoft.Json.Linq.JTokenType.String } title)
-                {
-                    item["title"] = HtmlSanitizer.Sanitize((string)title);
-                }
-            }
-            initialConfig = items.ToString(Newtonsoft.Json.Formatting.None);
-        }
-        catch (Newtonsoft.Json.JsonException)
-        {
-            // Keep invalid JSON available in the code editor so it can be corrected.
-        }
-    }
-}
 
 <template id="item-editor-upload">
     <div class="form-group">
@@ -130,7 +107,7 @@
                         <img :src="getImage(item)" :alt="item.title" :style="(item.image ? null : { opacity: 0.5 })">
                     </div>
                     <div class="d-flex flex-column gap-2">
-                        <h5 class="card-title m-0" v-html="item.title"></h5>
+                        <h5 class="card-title m-0">{{ item.title }}</h5>
                         <div class="d-flex gap-2 align-items-center">
                             <span class="fw-semibold badge text-bg-info" v-if="item.priceType === 'Topup' || item.price == 0">{{ item.priceType === 'Topup' ? 'Any amount' : 'Free' }}</span>
                             <span class="fw-semibold text-muted" v-else>{{ item.price }} @Model.currency{{ item.priceType === 'Minimum' ? ' minimum' : '' }}</span>
@@ -204,7 +181,7 @@
 </div>
 
 <script>
-    var initialConfig = @Safe.Json(initialConfig);
+    var initialConfig = @Safe.Json(Model.template);
 </script>
 <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
 <link href="~/main/editor.css" rel="stylesheet" asp-append-version="true" />

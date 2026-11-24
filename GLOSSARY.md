@@ -117,5 +117,5 @@ The customer-facing flow for joining a plan or adding credit to an existing
 subscriber's balance.
 
 **Subscriber portal**:
-The customer-facing area for reviewing and managing a subscription, its credits,
-and its invoices.
+The customer-facing area for reviewing and managing a subscriber's plan, credits,
+and invoices.

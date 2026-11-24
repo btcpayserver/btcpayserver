@@ -32,7 +32,7 @@ hold funds as a payment intermediary.
   the resulting payout must be approved, if needed, and sent. See
   [Pull payments](pull-payments.md).
 - An **offering** represents a product or service sold through recurring
-  payments. It groups subscription plans, entitlements, and subscribers. See
+  payments. It groups plans, entitlements, and subscribers. See
   [Offerings and recurring payments](offerings.md).
 
 Most pages in the navigation apply to the currently selected store. Features

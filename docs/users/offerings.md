@@ -2,13 +2,13 @@
 
 **Watch the complete overview video:**
 
-[![Subscription complete overview](https://img.youtube.com/vi/33bPg-g9pfE/0.jpg)](https://www.youtube.com/watch?v=33bPg-g9pfE)
+[![Offerings and recurring payments overview](https://img.youtube.com/vi/33bPg-g9pfE/0.jpg)](https://www.youtube.com/watch?v=33bPg-g9pfE)
 
 The Subscriptions app lets merchants sell products and services through
 recurring cryptocurrency payments. Unlike a card processor, BTCPay Server
 cannot charge a customer's wallet automatically. Instead, subscribers prepay a
 credit balance, and BTCPay Server deducts each period's cost from that balance
-to renew the subscription.
+to renew the subscriber's plan.
 
 Examples include access to a weekly report, recurring support for an open-source
 project, hosted BTCPay Server access, or a software-as-a-service product.
@@ -22,8 +22,9 @@ project, hosted BTCPay Server access, or a software-as-a-service product.
 - **Entitlements** are optional rights granted by a plan, such as usage limits
   or support levels. Your service interprets and enforces entitlements; BTCPay
   Server stores them but does not enforce their meaning.
-- A **subscriber** is a customer associated with a plan. The subscriber remains
-  active while the plan's payment requirements are met.
+- A **subscriber** is a customer's enrollment in an offering, associated with a
+  current plan and a credit balance. Changing plans preserves the enrollment.
+  The subscriber remains active while the plan's payment requirements are met.
 - A **plan checkout** lets a new customer join a plan or an existing subscriber
   add credit.
 - **Credits** are the subscriber's prepaid balance. A plan's cost is deducted
@@ -36,9 +37,11 @@ Define the entitlements available for the offering:
 
 Assign the relevant entitlements to each plan:
 
-<img src="https://github.com/user-attachments/assets/fbedfc14-72d8-46c5-b2aa-b523dc168cf7" alt="Assigning entitlements to a subscription plan">
+<img src="https://github.com/user-attachments/assets/fbedfc14-72d8-46c5-b2aa-b523dc168cf7" alt="Assigning entitlements to a plan">
 
-## Subscription Flow
+<a id="subscription-flow"></a>
+
+## Subscriber Lifecycle
 
 1. Create an offering for the product or service.
 2. Define one or more plans and, optionally, their entitlements.
@@ -47,23 +50,23 @@ Assign the relevant entitlements to each plan:
    trial.
 5. The payment adds credit, the plan cost is deducted, and the subscriber
    becomes active.
-6. At the next billing period, BTCPay Server renews the subscription if the
+6. At the next billing period, BTCPay Server renews the subscriber's plan if the
    subscriber has enough credit. Otherwise, the subscriber must add credit.
 
 You can also create a checkout for an existing subscriber to add credit for
 future renewals.
 
-<img src="https://github.com/user-attachments/assets/92731615-f1a9-4dc4-b1de-c5bd3ec55859" alt="Subscription plan checkout">
+<img src="https://github.com/user-attachments/assets/92731615-f1a9-4dc4-b1de-c5bd3ec55859" alt="Plan checkout">
 
 ## Subscriber Portal
 
-The subscriber portal lets customers review their subscription status,
+The subscriber portal lets customers review their subscriber status,
 entitlements, credit balance and history, invoices, and receipts. They can add
 credit, change plans, or disable automatic renewal.
 
 Your service grants access to the portal by creating a temporary portal link
 for the subscriber. This prevents someone who obtains a permanent public URL
-from accessing subscription details.
+from accessing subscriber details.
 
 <img src="https://github.com/user-attachments/assets/8202bded-e4fd-4d98-8579-57e983bb833d" alt="Subscriber portal">
 
@@ -92,4 +95,4 @@ Plans support these lifecycle options:
 Configure email rules to notify the subscriber or merchant about events such as
 an ending trial, payment due, payment reminders, or an ending grace period.
 
-<img src="https://github.com/user-attachments/assets/229c10d7-111b-4f2c-97d7-1852ed9f177e" alt="Subscription email rules">
+<img src="https://github.com/user-attachments/assets/229c10d7-111b-4f2c-97d7-1852ed9f177e" alt="Subscriber email rules">

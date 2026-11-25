@@ -972,65 +972,20 @@ public class LightningTests(ITestOutputHelper testOutputHelper) : UnitTestBase(t
 
     [Trait("Integration", "Integration")]
     [Fact]
-    public async Task CanMigratePaymentMethodConfigs()
+    public async Task CanMigrateOldDerivationSchemes()
     {
         using var tester = CreateServerTester(newDb: true);
-        tester.ActivateLightning(LightningTestImplementation.CoreLightning);
         await tester.StartAsync();
         var acc = tester.NewAccount();
         await acc.GrantAccessAsync(true);
         await acc.CreateStoreAsync();
 
         var handlers = tester.PayTester.GetService<PaymentMethodHandlerDictionary>();
-        await acc.RegisterLightningNodeAsync("BTC", LightningTestImplementation.CoreLightning);
         var store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
-
-        var pmi = PaymentTypes.LN.GetPaymentMethodId("BTC");
-        Assert.NotNull(store);
-        var lnMethod = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, handlers);
-        var originalConnectionString = lnMethod?.GetExternalLightningUrl();
-        Assert.NotNull(originalConnectionString);
-        var conf = store.GetPaymentMethodConfig(pmi);
-        Assert.NotNull(conf);
-        conf["LightningConnectionString"] = conf["connectionString"]!.Value<string>();
-        conf["DisableBOLT11PaymentOption"] = true;
-        ((JObject)conf).Remove("connectionString");
-        store.SetPaymentMethodConfig(pmi, conf);
-        await tester.PayTester.StoreRepository.UpdateStore(store);
-        await tester.RestartMigration();
-
-        store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
-        Assert.NotNull(store);
-        lnMethod = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, handlers);
-        Assert.Equal(originalConnectionString, lnMethod?.GetExternalLightningUrl());
-        Assert.False(lnMethod?.IsInternalNode);
-        conf = store.GetPaymentMethodConfig(pmi);
-        Assert.NotNull(conf);
-        Assert.Null(conf["CryptoCode"]); // Osolete
-        Assert.Equal(originalConnectionString, conf["connectionString"]?.Value<string>());
-        Assert.Null(conf["DisableBOLT11PaymentOption"]); // Old garbage cleaned
-
-        store.SetPaymentMethodConfig(PaymentMethodId.Parse("BTC-LNURL"),
-            new JObject()
-            {
-                ["CryptoCode"] = "BTC",
-                ["LUD12Enabled"] = true,
-                ["UseBech32Scheme"] = false,
-            });
-        await tester.PayTester.StoreRepository.UpdateStore(store);
-        await tester.RestartMigration();
-        store = await tester.PayTester.StoreRepository.FindStore(acc.StoreId);
-        Assert.NotNull(store);
-        conf = store.GetPaymentMethodConfig(PaymentMethodId.Parse("BTC-LNURL"));
-        Assert.NotNull(conf);
-        Assert.Null(conf["CryptoCode"]);
-        Assert.True(conf["lud12Enabled"]?.Value<bool>());
-        Assert.Null(conf["useBech32Scheme"]); // default stripped
-
-        // String-valued derivation schemes still need the newer store-config migration.
+        // This repair was added after 2.0.0 and is still needed by supported upgrades.
         var xpub = "tpubDDmH1briYfZcTDMEc7uMEA5hinzjUTzR9yMC1drxTMeiWyw1VyCqTuzBke6df2sqbfw9QG6wbgTLF5yLjcXsZNaXvJMZLwNEwyvmiFWcLav";
         var derivation = $"{xpub}-[legacy]";
-        pmi = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
+        var pmi = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
         store.DerivationStrategies = new JObject { [pmi.ToString()] = derivation }.ToString();
         await tester.PayTester.StoreRepository.UpdateStore(store);
         await tester.RestartMigration();

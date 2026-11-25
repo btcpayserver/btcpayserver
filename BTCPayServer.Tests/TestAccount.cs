@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.BIP78.Sender;
@@ -26,14 +24,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
-using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Npgsql;
 using Xunit;
 using Xunit.Sdk;
 
@@ -660,55 +656,5 @@ retry:
             return lnAddrUser;
         }
 
-        public async Task ImportOldInvoices(string storeId = null)
-        {
-            storeId ??= StoreId;
-            var oldInvoices = File.ReadAllLines(TestUtils.GetTestDataFullPath("OldInvoices.csv"));
-            var oldPayments = File.ReadAllLines(TestUtils.GetTestDataFullPath("OldPayments.csv"));
-            var dbContext = this.parent.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
-            var db = (NpgsqlConnection)dbContext.Database.GetDbConnection();
-            await db.OpenAsync();
-            bool isHeader = true;
-            using (var writer = db.BeginTextImport("COPY \"Invoices\" (\"Id\",\"Blob\",\"Created\",\"ExceptionStatus\",\"Status\",\"StoreDataId\",\"Archived\",\"Blob2\") FROM STDIN DELIMITER ',' CSV HEADER"))
-            {
-                foreach (var invoice in oldInvoices)
-                {
-                    if (isHeader)
-                    {
-                        isHeader = false;
-                        await writer.WriteLineAsync(invoice);
-                    }
-                    else
-                    {
-                        var localInvoice = invoice.Replace("3sgUCCtUBg6S8LJkrbdfAWbsJMqByFLfvSqjG6xKBWEd", storeId);
-                        var fields = localInvoice.Split(',');
-                        var blob1 = ZipUtils.Unzip(Encoders.Hex.DecodeData(fields[1].Substring(2)));
-                        var matched = Regex.Match(blob1, "xpub[^\\\"-]*");
-                        if (matched.Success)
-                        {
-                            var xpub = (BitcoinExtPubKey)Network.Main.Parse(matched.Value);
-                            var xpubTestnet = xpub.ExtPubKey.GetWif(Network.RegTest).ToString();
-                            blob1 = blob1.Replace(xpub.ToString(), xpubTestnet);
-                            fields[1] = $"\\x{Encoders.Hex.EncodeData(ZipUtils.Zip(blob1))}";
-                            localInvoice = string.Join(',', fields);
-                        }
-                        await writer.WriteLineAsync(localInvoice);
-                    }
-                }
-                await writer.FlushAsync();
-            }
-            isHeader = true;
-            using (var writer = db.BeginTextImport("COPY \"Payments\" (\"Id\",\"Blob\",\"InvoiceDataId\",\"Accounted\",\"Blob2\",\"PaymentMethodId\") FROM STDIN DELIMITER ',' CSV HEADER"))
-            {
-                foreach (var invoice in oldPayments)
-                {
-                    var localPayment = invoice.Replace("3sgUCCtUBg6S8LJkrbdfAWbsJMqByFLfvSqjG6xKBWEd", storeId);
-                    // Old data could have Type to null.
-                    localPayment += "UNKNOWN";
-                    await writer.WriteLineAsync(localPayment);
-                }
-                await writer.FlushAsync();
-            }
-        }
     }
 }

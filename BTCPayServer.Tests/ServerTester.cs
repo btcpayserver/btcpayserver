@@ -82,7 +82,9 @@ namespace BTCPayServer.Tests
                 // since in dev we already can have some users / stores registered, while on CI database is being initalized
                 // for the first time and first registered user gets admin status by default
                 Postgres = GetEnvironment("TESTS_POSTGRES", DefaultConnectionString),
-                ExplorerPostgres = !noDefaultNode ? GetEnvironment("TESTS_EXPLORER_POSTGRES", "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer") : null
+                ExplorerPostgres = !noDefaultNode ? GetEnvironment("TESTS_EXPLORER_POSTGRES", "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer") : null,
+                // Stores send their emails to Mailpit.
+                SSRFExceptions = $"{MailPitSettings.Hostname}:{MailPitSettings.SmtpPort}"
             };
             if (newDb)
             {

@@ -1,6 +1,8 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Configuration;
 using BTCPayServer.Validation;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -100,8 +102,13 @@ public class EmailSettings
         return mm;
     }
 
-    public async Task<SmtpClient> CreateSmtpClient()
+    [Obsolete("Use CreateSmtpClient(BTCPayServerOptions) to apply SSRF protection, or EmailSender.CreateSmtpClient for store email.")]
+    public Task<SmtpClient> CreateSmtpClient() => CreateSmtpClient(null);
+
+    public async Task<SmtpClient> CreateSmtpClient(BTCPayServerOptions ssrfProtection)
     {
+        // MailKit uses port 25 for port 0 with SecureSocketOptions.Auto.
+        var port = Port.Value == 0 ? 25 : Port.Value;
         SmtpClient client = new SmtpClient();
         using var connectCancel = new CancellationTokenSource(10000);
         try
@@ -113,7 +120,23 @@ public class EmailSettings
                 client.ServerCertificateValidationCallback = (s, c, h, e) => true;
 #pragma warning restore CA5359 // Do Not Disable Certificate Validation
             }
-            await client.ConnectAsync(Server, Port.Value, MailKit.Security.SecureSocketOptions.Auto, connectCancel.Token);
+            if (ssrfProtection is { DisableSSRFProtection: false })
+            {
+                var socket = await SSRFProtectionExtensions.ConnectSocket(Server, port, ssrfProtection.SSRFExceptions, connectCancel.Token);
+                try
+                {
+                    await client.ConnectAsync(socket, Server, port, MailKit.Security.SecureSocketOptions.Auto, connectCancel.Token);
+                }
+                catch
+                {
+                    socket.Dispose();
+                    throw;
+                }
+            }
+            else
+            {
+                await client.ConnectAsync(Server, port, MailKit.Security.SecureSocketOptions.Auto, connectCancel.Token);
+            }
             if (client.Capabilities.Contains(SmtpCapability.Authentication)
                 && !string.IsNullOrWhiteSpace(Login)
                 && !string.IsNullOrWhiteSpace(Password))

@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer;
 
@@ -24,20 +23,23 @@ public static class SSRFProtectionExtensions
         if (!opt.DisableSSRFProtection)
         {
             handler.UseProxy = false;
-            var logger = sp.GetService<ILoggerFactory>()?.CreateLogger(typeof(SSRFProtectionExtensions));
             handler.ConnectCallback = (context, cancellationToken) =>
-                Connect(context, opt.SSRFExceptions, logger, cancellationToken);
+                Connect(context, opt.SSRFExceptions, cancellationToken);
         }
     });
 
 
     static async ValueTask<Stream> Connect(SocketsHttpConnectionContext context,
         IReadOnlyList<SSRFAllowedDestination> exceptions,
-        ILogger? logger,
+        CancellationToken cancellationToken)
+        => new NetworkStream(await ConnectSocket(context.DnsEndPoint.Host, context.DnsEndPoint.Port,
+            exceptions, cancellationToken), ownsSocket: true);
+
+    internal static async Task<Socket> ConnectSocket(string host, int port,
+        IReadOnlyList<SSRFAllowedDestination> exceptions,
         CancellationToken cancellationToken)
     {
-        var addresses = await GetAllowedAddresses(context.DnsEndPoint.Host, context.DnsEndPoint.Port,
-            exceptions, logger, cancellationToken);
+        var addresses = await GetAllowedAddresses(host, port, exceptions, cancellationToken);
 
         Exception? lastException = null;
         foreach (var address in addresses)
@@ -45,8 +47,8 @@ public static class SSRFProtectionExtensions
             var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             try
             {
-                await socket.ConnectAsync(new IPEndPoint(address, context.DnsEndPoint.Port), cancellationToken);
-                return new NetworkStream(socket, ownsSocket: true);
+                await socket.ConnectAsync(new IPEndPoint(address, port), cancellationToken);
+                return socket;
             }
             catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
@@ -68,7 +70,6 @@ public static class SSRFProtectionExtensions
 
     internal static async Task<List<IPAddress>> GetAllowedAddresses(string host, int port,
         IReadOnlyList<SSRFAllowedDestination> exceptions,
-        ILogger? logger,
         CancellationToken cancellationToken)
     {
         var addresses = await Dns.GetHostAddressesAsync(host, AddressFamily.Unspecified, cancellationToken);
@@ -81,11 +82,6 @@ public static class SSRFProtectionExtensions
             var addressException = exceptions.FirstOrDefault(exception => exception.MatchesAddress(address, port));
             if (isLocal && hostnameException is null && addressException is null)
                 continue;
-            if (isLocal)
-            {
-                logger?.LogDebug("SSRF exception permitted connection to {Host}:{Port} at {Address}",
-                    host, port, address);
-            }
             allowed.Add(address);
         }
         return allowed;

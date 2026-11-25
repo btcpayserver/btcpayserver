@@ -1,5 +1,6 @@
 #nullable enable
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
@@ -12,6 +13,7 @@ public class EmailSenderFactory(
     EventAggregator eventAggregator,
     ISettingsAccessor<PoliciesSettings> policiesSettings,
     StoreRepository storeRepository,
+    BTCPayServerOptions options,
     Logs logs)
 {
     public Logs Logs { get; } = logs;
@@ -23,7 +25,7 @@ public class EmailSenderFactory(
             return Task.FromResult<IEmailSender>(serverSender);
         return Task.FromResult<IEmailSender>(new StoreEmailSender(storeRepository,
             !policiesSettings.Settings.DisableStoresToUseServerEmailSettings ? serverSender : null, jobClient,
-            eventAggregator, storeId, Logs));
+            eventAggregator, storeId, options, Logs));
     }
 
     public async Task<bool> IsComplete(string? storeId = null)

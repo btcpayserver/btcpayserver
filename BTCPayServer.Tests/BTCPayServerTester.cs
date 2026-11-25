@@ -121,6 +121,7 @@ namespace BTCPayServer.Tests
         public bool CheatMode { get; set; } = true;
         public bool DisableRegistration { get; set; } = false;
         public bool DisableSSRFProtection { get; set; }
+        public string SSRFExceptions { get; set; }
         public string PluginDir { get; set; }
         public async Task StartAsync()
         {
@@ -181,6 +182,8 @@ namespace BTCPayServer.Tests
             config.AppendLine($"debuglog=debug.log");
             config.AppendLine($"nocsp={NoCSP.ToString().ToLowerInvariant()}");
             config.AppendLine($"disablessrfprotection={DisableSSRFProtection.ToString().ToLowerInvariant()}");
+            if (!string.IsNullOrEmpty(SSRFExceptions))
+                config.AppendLine($"ssrfexceptions={SSRFExceptions}");
             if (!string.IsNullOrEmpty(PluginDir))
                 config.AppendLine($"plugindir={PluginDir}");
             if (btcpayHostExecutable is not null)

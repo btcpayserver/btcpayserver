@@ -60,7 +60,7 @@ namespace BTCPayServer.Services
             // Onion endpoints never connect directly, they go through the socks proxy
             if (NetworkExtensions.IsOnionHost(host))
                 return endPoint;
-            var addresses = await SSRFProtectionExtensions.GetAllowedAddresses(host, port, _options.SSRFExceptions, null, cancellationToken);
+            var addresses = await SSRFProtectionExtensions.GetAllowedAddresses(host, port, _options.SSRFExceptions, cancellationToken);
             if (addresses.Count is 0)
                 throw new SocketException((int)SocketError.AccessDenied, "The endpoint does not resolve to an allowed network address");
             // Connect to the address which got checked, so the name can't resolve to something else later

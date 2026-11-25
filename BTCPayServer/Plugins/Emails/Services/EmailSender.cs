@@ -5,6 +5,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using Microsoft.Extensions.Logging;
 using MailKit;
+using MailKit.Net.Smtp;
 using MimeKit;
 
 namespace BTCPayServer.Plugins.Emails.Services;
@@ -30,7 +31,7 @@ public abstract class EmailSender(IBackgroundJobClient jobClient, EventAggregato
                 return;
             }
 
-            using var smtp = await emailSettings.CreateSmtpClient();
+            using var smtp = await CreateSmtpClient(emailSettings);
             var mail = emailSettings.CreateMailMessage(email, cc, bcc, subject, message, true);
             var response = await smtp.SendAsync(mail, cancellationToken);
             await smtp.DisconnectAsync(true, cancellationToken);
@@ -39,4 +40,6 @@ public abstract class EmailSender(IBackgroundJobClient jobClient, EventAggregato
     }
 
     public abstract Task<EmailSettings?> GetEmailSettings();
+
+    public virtual Task<SmtpClient> CreateSmtpClient(EmailSettings settings) => settings.CreateSmtpClient(null);
 }

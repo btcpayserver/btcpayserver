@@ -80,9 +80,7 @@ must upgrade to a release containing that migration before upgrading to this cod
 Startup data migrations already present in 2.0.0 are also removed; first-run
 defaults remain part of initialization rather than migration flags.
 
-Invoice background conversions must finish on the intermediate release before
-upgrading; their migrator and read-time conversions are removed. The
-derivation-scheme repair introduced after 2.0.0 and later payment-request
+The derivation-scheme repair introduced after 2.0.0 and later payment-request
 migrations remain.
 
 `MigrationStartupTask` diagnoses unsupported upgrades only after PostgreSQL

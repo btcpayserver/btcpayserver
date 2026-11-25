@@ -279,6 +279,10 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
             {
                 errorReason ??= ex.Message;
             }
+            // A send error followed by a completed lookup should not normally happen, but a false-positive
+            // success is safer than a false negative, which could cause an already-paid payout to be retried.
+            if (payment?.Status == LightningPaymentStatus.Complete && success is false)
+                success = true;
             success ??= payment?.Status switch
             {
                 LightningPaymentStatus.Complete => true,

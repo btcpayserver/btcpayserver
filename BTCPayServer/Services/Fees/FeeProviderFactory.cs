@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.HostedServices;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 
 namespace BTCPayServer.Services.Fees;
@@ -26,10 +27,12 @@ public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
         ExplorerClientProvider ExplorerClients,
         IHttpClientFactory HttpClientFactory,
         NBXplorerDashboard Dashboard,
-        IMemoryCache MemoryCache)
+        IMemoryCache MemoryCache,
+        ILogger<FeeProviderFactory> logger)
     {
         _FeeProviders = new();
         _NBXplorerFeeProviders = new();
+        _logger = logger;
 
         // TODO: Pluginify this
         foreach ((var network, var client) in ExplorerClients.GetAll())
@@ -76,6 +79,7 @@ public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
 
     private readonly Dictionary<BTCPayNetworkBase, IFeeProvider> _FeeProviders;
     private readonly List<(BTCPayNetwork Network, NBXplorerFeeProvider Provider)> _NBXplorerFeeProviders;
+    private readonly ILogger<FeeProviderFactory> _logger;
     public IFeeProvider CreateFeeProvider(BTCPayNetworkBase network)
     {
         return _FeeProviders.TryGetValue(network, out var prov) ? prov : throw new NotSupportedException($"No fee provider for this network ({network.CryptoCode})");
@@ -83,8 +87,19 @@ public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
 
     public Task Do(CancellationToken cancellationToken) =>
         Task.WhenAll(_NBXplorerFeeProviders.Select(provider =>
-            provider.Provider.RefreshCache(
-                FeeTargets.Select(time =>
-                    (int)provider.Network.NBitcoinNetwork.Consensus.GetExpectedBlocksFor(time)),
-                cancellationToken)));
+            RefreshFeeCache(provider.Network, provider.Provider, cancellationToken)));
+
+    private async Task RefreshFeeCache(BTCPayNetwork network, NBXplorerFeeProvider provider, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await provider.RefreshCache(FeeTargets.Select(time =>
+                (int)network.NBitcoinNetwork.Consensus.GetExpectedBlocksFor(time)), cancellationToken);
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested &&
+                                   ex is HttpRequestException or OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Could not refresh NBXplorer fee estimates for {CryptoCode}. Will retry on the next scheduled run.", network.CryptoCode);
+        }
+    }
 }

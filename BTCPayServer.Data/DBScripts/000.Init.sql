@@ -816,6 +816,8 @@ WHERE (p."PaymentMethodId" IS NOT NULL AND p."PaymentMethodId" = arg_payment_met
         (include_non_activated IS TRUE OR (get_prompt(i."Blob2", arg_payment_method_id)->'inactive')::BOOLEAN IS NOT TRUE));
 $$;
 
+INSERT INTO lang_dictionaries (dict_id, source) VALUES ('English', 'Default');
+
 INSERT INTO "StoreRoles" ("Id", "StoreDataId", "Role", "Permissions") VALUES ('Manager', NULL, 'Manager', '{btcpay.store.canviewstoresettings,btcpay.store.canmodifyinvoices,btcpay.store.webhooks.canmodifywebhooks,btcpay.store.canmodifypaymentrequests,btcpay.store.canmanagepullpayments,btcpay.store.canmanagepayouts}');
 INSERT INTO "StoreRoles" ("Id", "StoreDataId", "Role", "Permissions") VALUES ('Employee', NULL, 'Employee', '{btcpay.store.canmodifyinvoices,btcpay.store.canmodifypaymentrequests,btcpay.store.cancreatenonapprovedpullpayments,btcpay.store.canviewpayouts,btcpay.store.canviewpullpayments}');
 INSERT INTO "StoreRoles" ("Id", "StoreDataId", "Role", "Permissions") VALUES ('Guest', NULL, 'Guest', '{btcpay.store.canmodifyinvoices,btcpay.store.canviewpaymentrequests,btcpay.store.canviewpullpayments,btcpay.store.canviewpayouts}');

@@ -43,6 +43,8 @@ public class ConsolidatedMigrationTests(ITestOutputHelper helper) : UnitTestBase
         // Initialization is safe to repeat, without duplicating schema or seed rows.
         await startup.ExecuteAsync();
         Assert.Equal(7, await ctx.StoreRoles.CountAsync());
+        Assert.Equal("Default", await ctx.Database.GetDbConnection().QuerySingleAsync<string>(
+            "SELECT source FROM lang_dictionaries WHERE dict_id = 'English'"));
     }
 
     [Fact]
@@ -52,6 +54,9 @@ public class ConsolidatedMigrationTests(ITestOutputHelper helper) : UnitTestBase
         await tester.MigrateUntil(NextMigration);
         await using var ctx = tester.CreateContext();
         var conn = ctx.Database.GetDbConnection();
+        // The baseline must include the English dictionary used by language fallbacks.
+        Assert.Equal("Default", await conn.QuerySingleAsync<string>(
+            "SELECT source FROM lang_dictionaries WHERE dict_id = 'English'"));
         // MigrateUntil marks later migrations as applied to stop at the cutoff.
         await conn.ExecuteAsync("""
             DELETE FROM "__EFMigrationsHistory" WHERE "MigrationId" > @baseline;

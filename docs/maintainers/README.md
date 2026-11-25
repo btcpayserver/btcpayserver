@@ -97,9 +97,9 @@ To regenerate the baseline, create a temporary database test that migrates to th
 desired cutoff. Run it with `PLAYWRIGHT_HEADLESS=true` and detailed test output to
 obtain the database name logged by `DatabaseTester`. Use `pg_dump` in the test
 PostgreSQL container with `--schema-only --no-owner --no-privileges`, excluding
-`__EFMigrationsHistory`. Also export the `StoreRoles` seed rows with
-`--data-only --column-inserts`. Remove dump comments, session settings, psql
-meta-commands, and `public.` qualifiers before updating `000.Init.sql`.
+`__EFMigrationsHistory`. Also export the `StoreRoles` and `lang_dictionaries`
+seed rows with `--data-only --column-inserts`. Remove dump comments, session
+settings, psql meta-commands, and `public.` qualifiers before updating `000.Init.sql`.
 Order SQL functions that query tables after those tables and their dependencies.
 Keep table creation first so unsupported databases fail with a duplicate-table
 error before encountering existing functions.
@@ -107,7 +107,7 @@ error before encountering existing functions.
 When moving the baseline forward, generate the dump before deleting the old
 migrations. `MigrateUntil` excludes the named migration, so select the first
 migration after the desired cutoff. Verify that both the baseline and final
-schemas match those produced by the original migration chain.
+schemas and all seed data match those produced by the original migration chain.
 Also update the baseline ID and intermediate-release guidance in
 `MigrationStartupTask`'s failure-path check. Verify fresh installations, upgrades
 with the baseline already applied, rejection of older databases, and retries for

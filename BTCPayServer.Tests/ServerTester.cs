@@ -19,6 +19,7 @@ using System.Threading;
 using BTCPayServer.Events;
 using BTCPayServer.Hosting;
 using BTCPayServer.Services;
+using Xunit;
 
 namespace BTCPayServer.Tests
 {
@@ -204,6 +205,28 @@ namespace BTCPayServer.Tests
             var bolt11 = invoice.CryptoInfo.Where(o => o.PaymentUrls?.BOLT11 != null).First().PaymentUrls.BOLT11;
             bolt11 = bolt11.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
             return await CustomerLightningD.Pay(bolt11);
+        }
+
+        public async Task AssertLightningPaymentFails(string bolt11)
+        {
+            bolt11 = bolt11.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
+            var res = await CustomerLightningD.Pay(bolt11);
+            if (res.Result == PayResult.Unknown)
+            {
+                // xpay can report the rejection before listpays records the final failure.
+                // Observe the existing payment rather than trying to pay the invoice again.
+                var paymentHash = BOLT11PaymentRequest.Parse(bolt11, ExplorerNode.Network).PaymentHash.ToString();
+                await TestUtils.EventuallyAsync(async () =>
+                {
+                    var payment = await CustomerLightningD.GetPayment(paymentHash);
+                    Assert.NotNull(payment);
+                    Assert.Equal(LightningPaymentStatus.Failed, payment.Status);
+                }, 5000);
+            }
+            else
+            {
+                Assert.Equal(PayResult.Error, res.Result);
+            }
         }
 
         public async Task<T> WaitForEvent<T>(Func<Task> action, Func<T, bool> correctEvent = null)

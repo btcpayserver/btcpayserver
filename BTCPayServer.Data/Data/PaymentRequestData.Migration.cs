@@ -1,6 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
+using System.IO;
+using System.IO.Compression;
+using System.Text;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
@@ -17,8 +20,8 @@ namespace BTCPayServer.Data
                 return false;
             if (Blob2 is null)
             {
-                Blob2 = Blob is not (null or { Length: 0 }) ? MigrationExtensions.Unzip(Blob) : "{}";
-                Blob2 = MigrationExtensions.SanitizeJSON(Blob2);
+                Blob2 = Blob is not (null or { Length: 0 }) ? Unzip(Blob) : "{}";
+                Blob2 = SanitizeJSON(Blob2);
             }
             Blob = null;
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -52,5 +55,16 @@ namespace BTCPayServer.Data
 			Blob2 = jobj.ToString(Newtonsoft.Json.Formatting.None);
             return true;
         }
+
+        private static string Unzip(byte[] bytes)
+        {
+            using var ms = new MemoryStream(bytes);
+            using var gzip = new GZipStream(ms, CompressionMode.Decompress);
+            using var reader = new StreamReader(gzip, Encoding.UTF8);
+            return reader.ReadToEnd();
+        }
+
+        // Make postgres happy
+        private static string SanitizeJSON(string json) => json.Replace("\\u0000", string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 }

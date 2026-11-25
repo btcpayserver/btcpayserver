@@ -656,6 +656,13 @@ namespace BTCPayServer
                 // The local-use NAT64 prefix can use different IPv4 embedding layouts.
                 if (bytes is [0x00, 0x64, 0xff, 0x9b, 0x00, 0x01, ..])
                     return false;
+                // Classify the IPv4 address embedded in deprecated IPv4-compatible addresses (::a.b.c.d).
+                // This also covers :: and ::1, which embed 0.0.0.0 and 0.0.0.1.
+                if (bytes is [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ..])
+                    return IsPublicAddress(new IPAddress(bytes.AsSpan(12)));
+                // Classify the IPv4 address embedded in 6to4 addresses (2002:aabb:ccdd::/48).
+                if (bytes is [0x20, 0x02, ..])
+                    return IsPublicAddress(new IPAddress(bytes.AsSpan(2, 4)));
                 return !IPAddress.IPv6Any.Equals(ip) &&
                        !IPAddress.IPv6Loopback.Equals(ip) &&
                        !ip.IsIPv6LinkLocal &&

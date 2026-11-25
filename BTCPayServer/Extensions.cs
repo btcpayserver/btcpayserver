@@ -648,6 +648,14 @@ namespace BTCPayServer
             if (ip.AddressFamily == AddressFamily.InterNetworkV6)
             {
                 var bytes = ip.GetAddressBytes();
+                // Scope IDs must not make loopback or unspecified addresses appear public.
+                ip = new IPAddress(bytes);
+                // Classify the embedded IPv4 address in the well-known NAT64 prefix.
+                if (bytes is [0x00, 0x64, 0xff, 0x9b, 0, 0, 0, 0, 0, 0, 0, 0, ..])
+                    return IsPublicAddress(new IPAddress(bytes.AsSpan(12)));
+                // The local-use NAT64 prefix can use different IPv4 embedding layouts.
+                if (bytes is [0x00, 0x64, 0xff, 0x9b, 0x00, 0x01, ..])
+                    return false;
                 return !IPAddress.IPv6Any.Equals(ip) &&
                        !IPAddress.IPv6Loopback.Equals(ip) &&
                        !ip.IsIPv6LinkLocal &&

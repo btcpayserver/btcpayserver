@@ -96,7 +96,7 @@ public class BitpayInvoiceController : ControllerBase
         int? offset = null)
     {
         if (User.Identity?.AuthenticationType == Security.BitpayAuthenticationTypes.Anonymous)
-            return Forbid(Security.BitpayAuthenticationTypes.Anonymous);
+            throw new BitpayHttpException(403, "Forbidden");
         if (dateEnd != null)
             dateEnd = dateEnd.Value + TimeSpan.FromDays(1); //Should include the end day
 

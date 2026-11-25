@@ -396,9 +396,9 @@ namespace BTCPayServer.Tests
             Assert.Empty(await client.GetFiles());
 
             // Upload
-            var filePath = TestUtils.GetTestDataFullPath("OldInvoices.csv");
+            var filePath = TestUtils.GetTestDataFullPath("Upload.csv");
             var upload = await client.UploadFile(filePath, "text/csv");
-            Assert.Equal("OldInvoices.csv", upload.OriginalName);
+            Assert.Equal("Upload.csv", upload.OriginalName);
             Assert.NotNull(upload.Uri);
             Assert.NotNull(upload.Url);
 
@@ -407,7 +407,7 @@ namespace BTCPayServer.Tests
 
             // Single file endpoint
             var singleFile = await client.GetFile(upload.Id);
-            Assert.Equal("OldInvoices.csv", singleFile.OriginalName);
+            Assert.Equal("Upload.csv", singleFile.OriginalName);
             Assert.NotNull(singleFile.Uri);
             Assert.NotNull(singleFile.Url);
 

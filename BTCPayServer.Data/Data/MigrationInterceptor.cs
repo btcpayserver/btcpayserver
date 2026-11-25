@@ -7,7 +7,7 @@ namespace BTCPayServer.Data
 {
     /// <summary>
     /// We have a migration running in the background that will migrate the data from the old blob to the new blob
-    /// Meanwhile, we need to make sure that invoices which haven't been migrated yet are migrated on the fly.
+    /// Meanwhile, payment requests awaiting conversion are migrated on the fly.
     /// </summary>
     public class MigrationInterceptor : IMaterializationInterceptor, ISaveChangesInterceptor
     {

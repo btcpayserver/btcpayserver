@@ -74,17 +74,20 @@ Test both a fresh database and an upgrade from the previous schema when the chan
 ### Consolidated Migrations
 
 `DBScripts/000.Init.sql` contains the schema and seed data through
-`20231020135844_AddBoltcardsTable` (BTCPay Server 1.12.0). The migration keeps its
+`20240924065254_monitoredinvoices` (BTCPay Server 2.0.0). The migration keeps its
 original ID so existing databases skip the initialization script. Older instances
 must upgrade to a release containing that migration before upgrading to this code.
-Startup data migrations already present in 1.12.0 are also removed; first-run
+Startup data migrations already present in 2.0.0 are also removed; first-run
 defaults remain part of initialization rather than migration flags.
+
+The derivation-scheme repair introduced after 2.0.0 and later payment-request
+migrations remain.
 
 `MigrationStartupTask` diagnoses unsupported upgrades only after PostgreSQL
 reports a duplicate-table error. It then checks the applied migration history: if
 an older migration exists but the consolidated baseline is missing, startup stops
-with a `ConfigException` explaining that an intermediate upgrade to 1.12.x or
-1.13.x is required. This avoids the normal migration retry loop for unsupported
+with a `ConfigException` explaining that an intermediate upgrade to 2.0.x is
+required. This avoids the normal migration retry loop for unsupported
 databases without adding a query to successful startup. Other migration failures
 retain the existing retry behavior.
 
@@ -92,14 +95,17 @@ To regenerate the baseline, create a temporary database test that migrates to th
 desired cutoff. Run it with `PLAYWRIGHT_HEADLESS=true` and detailed test output to
 obtain the database name logged by `DatabaseTester`. Use `pg_dump` in the test
 PostgreSQL container with `--schema-only --no-owner --no-privileges`, excluding
-`__EFMigrationsHistory`. Also export the `StoreRoles` seed rows with
-`--data-only --column-inserts`. Remove dump comments, session settings, psql
-meta-commands, and `public.` qualifiers before updating `000.Init.sql`.
+`__EFMigrationsHistory`. Also export the `StoreRoles` and `lang_dictionaries`
+seed rows with `--data-only --column-inserts`. Remove dump comments, session
+settings, psql meta-commands, and `public.` qualifiers before updating `000.Init.sql`.
+Order SQL functions that query tables after those tables and their dependencies.
+Keep table creation first so unsupported databases fail with a duplicate-table
+error before encountering existing functions.
 
 When moving the baseline forward, generate the dump before deleting the old
 migrations. `MigrateUntil` excludes the named migration, so select the first
 migration after the desired cutoff. Verify that both the baseline and final
-schemas match those produced by the original migration chain.
+schemas and all seed data match those produced by the original migration chain.
 Also update the baseline ID and intermediate-release guidance in
 `MigrationStartupTask`'s failure-path check. Verify fresh installations, upgrades
 with the baseline already applied, rejection of older databases, and retries for

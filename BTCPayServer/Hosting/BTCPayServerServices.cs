@@ -473,7 +473,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
             services.AddSingleton<INotificationHandler, ExternalPayoutTransactionNotification.Handler>();
-            services.AddSingleton<IHostedService, DbMigrationsHostedService>();
 
             services.TryAddSingleton<ExplorerClientProvider>();
             services.AddSingleton<IExplorerClientProvider, ExplorerClientProvider>(x =>
@@ -780,9 +779,6 @@ namespace BTCPayServer.Hosting
             services.AddRateProvider<LunoRateProvider>();
             services.AddRateProvider<DesiboardRateProvider>();
             services.AddRateProvider<CoinDCXRateProvider>();
-
-            services.AddSingleton<InvoiceBlobMigratorHostedService>();
-            services.AddSingleton<IHostedService, InvoiceBlobMigratorHostedService>(o => o.GetRequiredService<InvoiceBlobMigratorHostedService>());
 
             services.AddSingleton<PaymentRequestsMigratorHostedService>();
             services.AddSingleton<IHostedService, PaymentRequestsMigratorHostedService>(o => o.GetRequiredService<PaymentRequestsMigratorHostedService>());

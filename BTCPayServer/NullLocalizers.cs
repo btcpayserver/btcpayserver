@@ -13,7 +13,7 @@ public class NullStringLocalizer : IStringLocalizer
 
     public LocalizedString this[string name] => new(name, name);
 
-    public LocalizedString this[string name, params object[] arguments] => new(name, string.Format(name));
+    public LocalizedString this[string name, params object[] arguments] => new(name, string.Format(name, arguments));
 }
 
 public class NullViewLocalizer : IViewLocalizer
@@ -21,11 +21,11 @@ public class NullViewLocalizer : IViewLocalizer
     public static readonly NullViewLocalizer Instance = new();
     public LocalizedString GetString(string name) => new(name, name);
 
-    public LocalizedString GetString(string name, params object[] arguments) => new(name, string.Format(name));
+    public LocalizedString GetString(string name, params object[] arguments) => new(name, string.Format(name, arguments));
 
     public IEnumerable<LocalizedString> GetAllStrings(bool includeParentCultures) => Array.Empty<LocalizedString>();
 
     public LocalizedHtmlString this[string name]  => new(name, name);
 
-    public LocalizedHtmlString this[string name, params object[] arguments]  => new(name, string.Format(name));
+    public LocalizedHtmlString this[string name, params object[] arguments]  => new(name, name, false, arguments);
 }

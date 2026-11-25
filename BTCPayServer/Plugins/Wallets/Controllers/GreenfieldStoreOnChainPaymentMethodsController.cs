@@ -36,6 +36,7 @@ namespace BTCPayServer.Controllers.Greenfield
         EventAggregator eventAggregator)
         : ControllerBase
     {
+        private const int MaxPreviewAddresses = 1000;
         private StoreData Store => HttpContext.GetStoreData();
 
         public PoliciesSettings PoliciesSettings { get; } = policiesSettings;
@@ -53,6 +54,9 @@ namespace BTCPayServer.Controllers.Greenfield
             PaymentMethodId paymentMethodId,
             int offset = 0, int count = 10)
         {
+            ValidatePreviewRange(offset, count);
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
             AssertCryptoCodeWallet(paymentMethodId, out var network, out _);
             if (!IsConfigured(paymentMethodId, out var settings))
             {
@@ -71,6 +75,9 @@ namespace BTCPayServer.Controllers.Greenfield
             [FromBody] UpdatePaymentMethodRequest request = null,
             int offset = 0, int count = 10)
         {
+            ValidatePreviewRange(offset, count);
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
             if (request is null)
             {
                 ModelState.AddModelError(nameof(request), "Missing body");
@@ -96,6 +103,14 @@ namespace BTCPayServer.Controllers.Greenfield
             var settings = handler.ParsePaymentMethodConfig(ctx.Config);
             var result = GetPreviewResultData(offset, count, network, settings.AccountDerivation);
             return Ok(result);
+        }
+
+        private void ValidatePreviewRange(int offset, int count)
+        {
+            if (offset < 0)
+                ModelState.AddModelError(nameof(offset), "Offset must not be negative");
+            if (count < offset || (long)count - offset > MaxPreviewAddresses)
+                ModelState.AddModelError(nameof(count), $"The exclusive end index must be between offset and offset + {MaxPreviewAddresses}");
         }
 
         internal static OnChainPaymentMethodPreviewResultData GetPreviewResultData(int offset, int count, BTCPayNetwork network, DerivationStrategyBase strategy)

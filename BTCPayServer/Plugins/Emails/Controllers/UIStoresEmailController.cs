@@ -5,6 +5,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Plugins.Emails.Views;
 using BTCPayServer.Plugins.Emails.Services;
 using BTCPayServer.Services.Stores;
+using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
@@ -68,6 +69,12 @@ public class UIStoresEmailController(
     {
         var settings = await GetCustomSettings(ctx.StoreId);
         return (model.IsCustomSMTP ? model.Settings : settings.Fallback) ?? new();
+    }
+
+    protected override async Task<SmtpClient> CreateSmtpClient(Context ctx, EmailSettings settings)
+    {
+        var sender = (StoreEmailSender)await emailSenderFactory.GetEmailSender(ctx.StoreId);
+        return await sender.CreateSmtpClient(settings);
     }
 
     protected override async Task SaveEmailSettings(Context ctx, EmailSettings settings, EmailsViewModel viewModel = null)

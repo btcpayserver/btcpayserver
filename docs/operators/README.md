@@ -65,8 +65,8 @@ documentation.
 
 ### Allow Private Outbound Destinations
 
-BTCPay Server protects outbound HTTP requests against server-side request
-forgery (SSRF). Without this protection, a user who can configure an outbound
+BTCPay Server protects outbound HTTP requests and store SMTP connections against
+server-side request forgery (SSRF). Without this protection, a user who can configure an outbound
 destination, such as a webhook, could make BTCPay Server connect to services
 that are reachable from the server but not from the public internet. This can
 expose applications, node APIs, cloud metadata endpoints, or other systems on
@@ -105,14 +105,17 @@ matched exactly, not as wildcard domains. An excepted hostname trusts every IP
 address returned by DNS for that name, so only except hostnames whose DNS is
 under trusted control. CIDR ranges must use their network address: for example,
 `10.8.0.0/24` is valid while `10.8.0.5/24` is not. Exceptions apply globally to
-all features using SSRF-protected HTTP clients. Redirect targets are checked
-separately and require their own exception when they resolve to a private
+all features using SSRF protection, including store SMTP. Redirect targets are
+checked separately and require their own exception when they resolve to a private
 address.
 
-Exceptions do not disable HTTPS certificate validation or change Tor routing.
+Private store SMTP relays require an exception, such as
+`ssrfexceptions=mail.home.arpa:587`, unless they match the host and port of
+complete server email settings the store is allowed to use. Server SMTP remains
+unrestricted.
+
 Invalid entries prevent BTCPay Server from starting. After changing the
-setting, restart BTCPay Server and exercise the affected integration. Debug
-logs record private connections permitted by an exception.
+setting, restart BTCPay Server and exercise the affected integration.
 
 The existing `disablessrfprotection` setting disables all outbound SSRF
 protection. Set it to `true` only as a temporary troubleshooting measure;

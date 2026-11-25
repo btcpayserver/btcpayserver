@@ -10,6 +10,7 @@ using BTCPayServer.Plugins.Emails.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using MailKit;
+using MailKit.Net.Smtp;
 using MimeKit;
 
 namespace BTCPayServer.Plugins.Emails.Controllers;
@@ -28,6 +29,9 @@ public abstract class UIEmailControllerBase(IStringLocalizer stringLocalizer) : 
 
     protected virtual Task<EmailSettings> GetEmailSettingsForTest(Context ctx, EmailsViewModel viewModel)
         => Task.FromResult(viewModel.Settings);
+
+    protected virtual Task<SmtpClient> CreateSmtpClient(Context ctx, EmailSettings settings)
+        => settings.CreateSmtpClient(null);
 
     protected abstract Task SaveEmailSettings(Context ctx, EmailSettings settings, EmailsViewModel? viewModel = null);
     protected abstract IActionResult RedirectToEmailSettings(Context ctx);
@@ -63,7 +67,7 @@ public abstract class UIEmailControllerBase(IStringLocalizer stringLocalizer) : 
                     ModelState.AddModelError(nameof(model.TestEmail), "Email settings are not complete.");
                     return await EmailSettingsCore(ctx);
                 }
-                using (var client = await settingsForTest.CreateSmtpClient())
+                using (var client = await CreateSmtpClient(ctx, settingsForTest))
                 using (var message = settingsForTest.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), mess.Subject,
                            mess.Body, false))
                 {

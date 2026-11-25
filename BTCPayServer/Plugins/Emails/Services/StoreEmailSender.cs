@@ -1,10 +1,12 @@
 #nullable enable
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
+using MailKit.Net.Smtp;
 
 namespace BTCPayServer.Plugins.Emails.Services;
 
@@ -14,6 +16,7 @@ class StoreEmailSender(
     IBackgroundJobClient backgroundJobClient,
     EventAggregator eventAggregator,
     string storeId,
+    BTCPayServerOptions options,
     Logs logs)
     : EmailSender(backgroundJobClient, eventAggregator, logs)
 {
@@ -40,6 +43,17 @@ class StoreEmailSender(
             return null;
         return GetCustomSettings(store);
     }
+
+    // Stores may reuse the server relay only when server email settings are available to them.
+    public override async Task<SmtpClient> CreateSmtpClient(EmailSettings settings)
+    {
+        var serverSettings = FallbackSender is null ? null : await FallbackSender.GetEmailSettings();
+        var isServerSmtp = serverSettings?.IsComplete() is true &&
+                           string.Equals(serverSettings.Server, settings.Server, StringComparison.OrdinalIgnoreCase) &&
+                           serverSettings.Port == settings.Port;
+        return await settings.CreateSmtpClient(isServerSmtp ? null : options);
+    }
+
     EmailSettings? GetCustomSettings(StoreData store)
     {
         var emailSettings = store.GetStoreBlob().EmailSettings;

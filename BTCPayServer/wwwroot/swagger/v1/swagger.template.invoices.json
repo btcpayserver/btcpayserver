@@ -808,6 +808,17 @@
                                 "description": "The actual amount paid by the customer/buyer.",
                                 "example": "5.00"
                             },
+                            "rates": {
+                                "type": "object",
+                                "description": "Exchange rates recorded on the invoice, keyed by BASE_QUOTE currency pair. Each rate is the amount of quote currency per unit of base currency. Pairs that were not recorded are absent.",
+                                "additionalProperties": {
+                                    "type": "string",
+                                    "format": "decimal"
+                                },
+                                "example": {
+                                    "BTC_NOK": "1100000.00"
+                                }
+                            },
                             "currency": {
                                 "type": "string",
                                 "description": "The currency of the invoice",

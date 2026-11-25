@@ -2416,6 +2416,44 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanReadRecordedInvoiceRates()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            await user.RegisterDerivationSchemeAsync("BTC");
+            var client = await user.CreateClient(Policies.Unrestricted);
+            var viewOnly = await user.CreateClient(Policies.CanViewInvoices);
+
+            var store = await client.GetStore(user.StoreId);
+            store.DefaultCurrency = "NOK";
+            store.AdditionalTrackedRates = ["CAD"];
+            await client.UpdateStore(store.Id, store);
+            var configuration = new StoreRateConfiguration
+            {
+                IsCustomScript = true,
+                EffectiveScript = "BTC_NOK = 1100000.25; BTC_CAD = 95000.50;"
+            };
+            await client.UpdateStoreRateConfiguration(store.Id, configuration);
+
+            var invoice = await client.CreateInvoice(store.Id, new CreateInvoiceRequest { Currency = "BTC", Amount = 0.001m });
+            configuration.EffectiveScript = "BTC_NOK = 1200000; BTC_CAD = 100000;";
+            await client.UpdateStoreRateConfiguration(store.Id, configuration);
+
+            var single = await viewOnly.GetInvoice(invoice.Id);
+            var listed = Assert.Single(await viewOnly.GetInvoices(store.Id));
+            foreach (var result in new[] { single, listed })
+            {
+                Assert.Equal(1m, result.Rates["BTC_BTC"]);
+                Assert.Equal(1100000.25m, result.Rates["BTC_NOK"]);
+                Assert.Equal(95000.50m, result.Rates["BTC_CAD"]);
+                Assert.DoesNotContain("BTC_USD", result.Rates.Keys);
+            }
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task InvoiceTests()
         {
             using var tester = CreateServerTester();

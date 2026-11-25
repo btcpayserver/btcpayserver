@@ -335,7 +335,7 @@ namespace BTCPayServer.Services.Invoices
         public decimal GetRate(CurrencyPair pair) => GetInvoiceRates().GetRate(pair);
 
 #pragma warning disable CS0618 // Type or member is obsolete
-        private RateBook GetInvoiceRates() => new RateBook(Currency, Rates);
+        internal RateBook GetInvoiceRates() => new RateBook(Currency, Rates);
 #pragma warning restore CS0618 // Type or member is obsolete
 
         public void AddRate(CurrencyPair pair, decimal rate)

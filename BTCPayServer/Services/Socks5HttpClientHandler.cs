@@ -8,6 +8,7 @@ namespace BTCPayServer.Services
     {
         public Socks5HttpClientHandler(BTCPayServerOptions opts)
         {
+            AllowAutoRedirect = false;
             if (opts.SocksEndpoint is IPEndPoint endpoint)
             {
                 this.Proxy = new WebProxy($"socks5://{endpoint.Address}:{endpoint.Port}");

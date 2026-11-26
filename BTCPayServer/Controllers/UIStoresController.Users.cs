@@ -34,9 +34,7 @@ public partial class UIStoresController
     [RateLimitsFilter(ZoneLimits.Register, Scope = RateLimitsScope.RemoteAddress)]
     public async Task<IActionResult> StoreUsers(string storeId, StoreUsersViewModel vm)
     {
-        if (vm.Command != "Add" &&
-            (vm.Command is null || !vm.Command.StartsWith("Update:", StringComparison.Ordinal) ||
-             string.IsNullOrWhiteSpace(vm.Command["Update:".Length..]) || vm.Command["Update:".Length..].Contains(':')))
+        if (vm.Command is null)
             return BadRequest();
 
         await FillUsers(vm);
@@ -132,7 +130,7 @@ public partial class UIStoresController
         }
         else
         {
-            var user = await _userManager.FindByIdAsync(vm.Command["Update:".Length..]);
+            var user = await _userManager.FindByIdAsync(vm.Command.Split(':').LastOrDefault() ?? "");
             if (user is null)
                 return NotFound();
             await _storeRepo.UpdateStoreUserRole(CurrentStore.Id, user.Id, roleId);

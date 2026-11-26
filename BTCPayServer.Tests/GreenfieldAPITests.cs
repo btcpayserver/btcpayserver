@@ -1878,7 +1878,7 @@ namespace BTCPayServer.Tests
 
             var basicAuthDisabled = await AssertEx.AssertApiError(401, "unauthenticated",
                 () => clientBasic.GetCurrentUser());
-            Assert.Contains("not enabled", basicAuthDisabled.Message);
+            Assert.Equal("Basic authentication failed", basicAuthDisabled.Message);
 
             var updatedUser = await clientProfile.UpdateCurrentUser(new UpdateApplicationUserRequest
             {

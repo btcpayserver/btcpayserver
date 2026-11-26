@@ -872,7 +872,6 @@ namespace BTCPayServer
                     }
                     catch (Exception ex)
                     {
-                        Logs.PayServer.LogError(ex, "Could not generate a lightning invoice for invoice {InvoiceId}", invoiceId);
                         return BadRequest(new LNUrlStatusResponse
                         {
                             Status = "ERROR",

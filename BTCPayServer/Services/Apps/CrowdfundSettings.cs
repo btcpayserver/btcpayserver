@@ -12,7 +12,6 @@ namespace BTCPayServer.Services.Apps
 
         public string Title { get; set; }
         public string Description { get; set; }
-        public string HtmlLang { get; set; }
         public string HtmlMetaTags{ get; set; }
         public bool Enabled { get; set; } = true;
         public DateTime? StartDate { get; set; }

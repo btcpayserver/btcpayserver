@@ -2,7 +2,6 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Services
-@inject BTCPayServerEnvironment Env
 @inject DisplayFormatter DisplayFormatter
 @{
     Layout = null;
@@ -13,7 +12,7 @@
     var isSettled = Model.Status == InvoiceStatus.Settled;
 }
 <!DOCTYPE html>
-<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
+<html use-translations asp-devenv>
 <head>
     <partial name="LayoutHead"/>
     <meta name="robots" content="noindex,nofollow">

@@ -52,6 +52,7 @@ public class UITranslationController(
 
         foreach (var translation in translations)
         {
+            var metadata = LocalizerService.ResolveMetadata(translation.TranslationName, translations);
             var isSelected = policiesSettings.LangTranslation == translation.TranslationName ||
                              (policiesSettings.LangTranslation is null && translation.Source == "Default");
             var isDownloadedPack = translation.Source == "LanguagePack";
@@ -67,6 +68,7 @@ public class UITranslationController(
                 Editable = translation.Source == "Custom",
                 Source = translation.Source,
                 TranslationName = translation.TranslationName,
+                LanguageMetadata = metadata,
                 NativeName = manifestEntry?.Native ?? translation.TranslationName,
                 MaintainerHandle = manifestEntry?.MaintainerHandle,
                 MaintainerUrl = manifestEntry?.MaintainerUrl,
@@ -118,7 +120,7 @@ public class UITranslationController(
         {
             try
             {
-                await localizer.CreateTranslation(viewModel.Name, viewModel.Fallback, "Custom");
+                await localizer.CreateTranslation(viewModel.Name, viewModel.Fallback, "Custom", viewModel.GetMetadata());
             }
             catch (DbException)
             {
@@ -140,7 +142,12 @@ public class UITranslationController(
             return NotFound();
 
         var translations = await localizer.GetTranslations(translation);
-        return View(new EditTranslationViewModel().SetTranslations(translations.Translations));
+        return View(new EditTranslationViewModel
+        {
+            Code = d.LanguageMetadata.Code,
+            Rtl = d.LanguageMetadata.Rtl,
+            CanEditMetadata = d.Source == "Custom"
+        }.SetTranslations(translations.Translations));
     }
 
     [HttpPost("server/translations/{translation}")]
@@ -149,6 +156,9 @@ public class UITranslationController(
         var d = await localizer.GetTranslation(translation);
         if (d is null || d.Source == "LanguagePack")
             return NotFound();
+        viewModel.CanEditMetadata = d.Source == "Custom";
+        if (!ModelState.IsValid)
+            return View(viewModel);
         if (environment.CheatMode && viewModel.Command == "Fake")
         {
             var t = await localizer.GetTranslations(translation);
@@ -170,7 +180,7 @@ public class UITranslationController(
             return View(viewModel);
         }
 
-        await localizer.Save(d, translations);
+        await localizer.Save(d, translations, viewModel.CanEditMetadata ? viewModel.GetMetadata() : null);
         TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Translation updated"].Value;
         return RedirectToAction(nameof(ListTranslations));
     }
@@ -198,14 +208,11 @@ public class UITranslationController(
         }
 
         Translations translations;
-        string version;
-        bool rtl;
+        LanguagePackUpdateService.DownloadedLanguagePack pack;
         try
         {
-            var result = await languagePackUpdateService.FetchLanguagePackFromRepository(language);
-            version = result.Item2;
-            rtl = result.Item3;
-            if (!Translations.TryCreateFromJson(result.Item1, out translations))
+            pack = await languagePackUpdateService.FetchLanguagePackFromRepository(language);
+            if (!Translations.TryCreateFromJson(pack.TranslationsJson, out translations))
             {
                 TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Downloaded language pack is invalid"].Value;
                 return RedirectToAction(nameof(ListTranslations));
@@ -217,33 +224,21 @@ public class UITranslationController(
             return RedirectToAction(nameof(ListTranslations));
         }
 
-        var existingTranslation = await localizer.GetTranslation(language);
-        if (existingTranslation is null)
+        bool created;
+        try
         {
-            try
-            {
-                existingTranslation = await localizer.CreateTranslation(language, Translations.DefaultLanguage, "LanguagePack");
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' downloaded successfully", language].Value;
-            }
-            catch (DbException)
-            {
-                existingTranslation = await localizer.GetTranslation(language);
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", language].Value;
-            }
+            var manifest = pack.Manifest;
+            created = await localizer.SaveLanguagePack(language, translations, manifest.Sha, manifest.LanguageMetadata);
         }
-        else
+        catch (InvalidOperationException ex)
         {
-            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Language pack '{0}' updated successfully", language].Value;
-        }
-
-        if (existingTranslation is null)
-        {
-            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to download language pack: {0}", language].Value;
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Failed to download language pack: {0}", ex.Message].Value;
             return RedirectToAction(nameof(ListTranslations));
         }
 
-        await localizer.Save(existingTranslation, translations);
-        await localizer.UpdateMetadata(language, version, rtl);
+        TempData[WellKnownTempData.SuccessMessage] = created
+            ? StringLocalizer["Language pack '{0}' downloaded successfully", language].Value
+            : StringLocalizer["Language pack '{0}' updated successfully", language].Value;
         languagePackUpdateService.InvalidateCache(language);
         return RedirectToAction(nameof(ListTranslations));
     }

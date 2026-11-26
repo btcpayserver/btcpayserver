@@ -1,6 +1,5 @@
 @model BTCPayServer.Plugins.Crowdfund.Models.ViewCrowdfundViewModel
 @using BTCPayServer.Plugins.Crowdfund.Models
-@inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @{
     ViewData.SetTitle(Model.Title);
@@ -9,7 +8,7 @@
     Csp.UnsafeEval();
 }
 <!DOCTYPE html>
-<html lang="@Model.HtmlLang" class="h-100" @(Env.IsDeveloping ? " data-devenv" : "") id="Crowdfund-@Model.AppId">
+<html use-translations class="h-100" asp-devenv id="Crowdfund-@Model.AppId">
 <head>
     <partial name="LayoutHead" />
     <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet" />

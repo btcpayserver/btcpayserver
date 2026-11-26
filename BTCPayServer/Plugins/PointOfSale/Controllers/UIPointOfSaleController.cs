@@ -147,7 +147,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 TaxIncludedInPrice = settings.TaxIncludedInPrice,
                 AppId = appId,
                 StoreId = store.Id,
-                HtmlLang = settings.HtmlLang,
                 HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
                 NotAvailable = StringLocalizer["Not available in Keypad POS"].Value
@@ -655,7 +654,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
                 CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
                 CustomTipPercentages = settings.CustomTipPercentages != null ? string.Join(",", settings.CustomTipPercentages) : string.Join(",", PointOfSaleSettings.CUSTOM_TIP_PERCENTAGES_DEF),
-                HtmlLang = settings.HtmlLang,
                 HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
@@ -754,7 +752,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipPercentages = ListSplit(vm.CustomTipPercentages),
                 NotificationUrl = vm.NotificationUrl,
                 RedirectUrl = vm.RedirectUrl,
-                HtmlLang = vm.HtmlLang,
                 HtmlMetaTags = _safe.RawMeta(vm.HtmlMetaTags, out bool wasHtmlModified),
                 Description = vm.Description,
                 DisableZeroAmountInvoice = vm.DisableZeroAmountInvoice,

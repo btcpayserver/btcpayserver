@@ -3,7 +3,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Plugins.Translations.Views;
-public class CreateTranslationViewModel
+public class CreateTranslationViewModel : TranslationMetadataViewModel
 {
     [Required(AllowEmptyStrings = false)]
     public string Name { get; set; }

@@ -9,6 +9,7 @@ public class ListTranslationsViewModel
     {
         public bool Installed { get; set; }
         public string TranslationName { get; set; }
+        public LanguageMetadata LanguageMetadata { get; set; }
         public string NativeName { get; set; }
         public string MaintainerHandle { get; set; }
         public string MaintainerUrl { get; set; }

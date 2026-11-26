@@ -38,7 +38,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html use-translations>
 <head>
     <partial name="LayoutHead" />
     <link href="~/vendor/font-awesome/css/font-awesome.min.css" asp-append-version="true" rel="stylesheet" />
@@ -392,7 +392,7 @@
     <!-- Billing Information -->
     <div class="card">
         <div class="card-header">
-            <i class="fa fa-credit-card me-2"></i>Billing Information
+            <i class="fa fa-credit-card me-2"></i>@StringLocalizer["Billing Information"]
         </div>
         <div class="card-body">
             <div class="row">
@@ -406,7 +406,7 @@
 							aria-expanded="false"
 							aria-controls="credit-input">
 						<i class="fa fa-credit-card"></i>
-						Add credit
+						@StringLocalizer["Add credit"]
 					</button>
 				</div>
 				<div class="collapse" id="credit-input">

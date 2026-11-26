@@ -10,10 +10,10 @@
     var isProcessing = Model.Status == InvoiceStatus.Processing;
     var isFreeInvoice = (Model.Status == InvoiceStatus.New && Model.InvoiceAmount == 0);
     var isSettled = Model.Status == InvoiceStatus.Settled;
-    var isRtl = TranslationsAccessor.Current.Rtl;
+    var isRtl = TranslationsAccessor.Current.LanguageMetadata.Rtl is true;
 }
 <!DOCTYPE html>
-<html lang="en"@(isRtl ? " dir=\"rtl\"" : "")>
+<html use-translations>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

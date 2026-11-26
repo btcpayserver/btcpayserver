@@ -24,6 +24,7 @@
 				<span asp-validation-for="Fallback" class="text-danger"></span>
 				<div class="form-text" text-translate="true">If a translation isn’t available, it will be searched in the fallback.</div>
             </div>
+            <partial name="_TranslationMetadata" model="Model" />
 		</div>
 	</div>
 </form>

@@ -13,7 +13,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en"@(_translationsAccessor.Current.Rtl ? " dir=\"rtl\"" : "")@(_env.IsDeveloping ? " data-devenv" : "")>
+<html use-translations asp-devenv>
 <head>
     <partial name="LayoutHead" />
     @await RenderSectionAsync("PageHeadContent", false)

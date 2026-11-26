@@ -2,7 +2,6 @@
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Client
 @model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
-@inject BTCPayServer.Services.BTCPayServerEnvironment Env
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @{
 	ViewData.SetTitle(Model.Title);
@@ -32,7 +31,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "") id="PaymentRequest-@Model.Id">
+<html use-translations asp-devenv id="PaymentRequest-@Model.Id">
 <head>
     <partial name="LayoutHead"/>
     <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet"/>

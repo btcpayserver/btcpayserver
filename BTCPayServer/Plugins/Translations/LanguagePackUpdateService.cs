@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
@@ -23,8 +24,7 @@ namespace BTCPayServer.Plugins.Translations
             DateTimeOffset? Updated,
             string File,
             string Sha,
-            bool Rtl,
-            string? Code)
+            LanguageMetadata LanguageMetadata)
         {
             internal static LanguageManifestEntry FromDto(ManifestLanguageDto dto)
             {
@@ -41,8 +41,7 @@ namespace BTCPayServer.Plugins.Translations
                     updated,
                     dto.File ?? string.Empty,
                     dto.Sha ?? string.Empty,
-                    dto.Rtl ?? false,
-                    dto.Code);
+                    new LanguageMetadata(dto.Code, dto.Rtl ?? false));
             }
 
             private static (string? Handle, string? Url) SplitMaintainer(string? raw)
@@ -51,6 +50,12 @@ namespace BTCPayServer.Plugins.Translations
                 var split = raw.Split('|', 2);
                 return (split[0], split.Length > 1 ? split[1] : null);
             }
+        }
+
+        public sealed record DownloadedLanguagePack
+        {
+            public required string TranslationsJson { get; init; }
+            public required LanguageManifestEntry Manifest { get; init; }
         }
 
         internal record ManifestLanguageDto(
@@ -70,23 +75,22 @@ namespace BTCPayServer.Plugins.Translations
         public const string HttpClientName = "BTCPayServer.Plugins.Translations";
         private static readonly TimeSpan CacheLifetime = TimeSpan.FromHours(1);
 
-        private async Task<ManifestSnapshot> GetSnapshot()
+        private async Task<ManifestSnapshot> GetSnapshot(CancellationToken cancellationToken = default)
         {
             if (memoryCache.TryGetValue(ManifestCacheKey, out ManifestSnapshot? cached) && cached is not null)
                 return cached;
 
             var manifestUri = new Uri("https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json");
-            var root = ParseManifest(await GetTrusted(manifestUri));
+            var root = ParseManifest(await GetTrusted(manifestUri, cancellationToken));
             if (!string.IsNullOrEmpty(root.Redirect))
             {
                 if (!Uri.TryCreate(root.Redirect, UriKind.Absolute, out manifestUri))
                     throw new InvalidOperationException($"Manifest redirect '{root.Redirect}' is not an absolute URI.");
 
-                root = ParseManifest(await GetTrusted(manifestUri));
+                root = ParseManifest(await GetTrusted(manifestUri, cancellationToken));
             }
             var entries = root.Languages!.Select(LanguageManifestEntry.FromDto)
                 .Where(e => !string.IsNullOrEmpty(e.Name)).ToArray();
-
             var snapshot = new ManifestSnapshot(entries, manifestUri);
             memoryCache.Set(ManifestCacheKey, snapshot, CacheLifetime);
             return snapshot;
@@ -100,7 +104,7 @@ namespace BTCPayServer.Plugins.Translations
                 ? root : throw new InvalidOperationException("Manifest is missing the 'Languages' array.");
         }
 
-        private async Task<byte[]> GetTrusted(Uri uri)
+        private async Task<byte[]> GetTrusted(Uri uri, CancellationToken cancellationToken = default)
         {
             if (uri.Scheme != Uri.UriSchemeHttps
                 || !string.Equals(uri.Host, "raw.githubusercontent.com", StringComparison.OrdinalIgnoreCase)
@@ -109,14 +113,15 @@ namespace BTCPayServer.Plugins.Translations
 
             using var client = httpClientFactory.CreateClient(HttpClientName);
             client.Timeout = TimeSpan.FromSeconds(30);
-            using var response = await client.GetAsync(uri);
+            using var response = await client.GetAsync(uri, cancellationToken);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsByteArrayAsync();
+            return await response.Content.ReadAsByteArrayAsync(cancellationToken);
         }
 
-        public async Task<LanguageManifestEntry[]> GetManifestLanguages() => (await GetSnapshot()).Entries;
+        public async Task<LanguageManifestEntry[]> GetManifestLanguages(CancellationToken cancellationToken = default) =>
+            (await GetSnapshot(cancellationToken)).Entries;
 
-        public async Task<(string translationsJson, string version, bool rtl)> FetchLanguagePackFromRepository(string language)
+        public async Task<DownloadedLanguagePack> FetchLanguagePackFromRepository(string language)
         {
             var snapshot = await GetSnapshot();
             var entry = snapshot.Entries.FirstOrDefault(e =>
@@ -134,7 +139,11 @@ namespace BTCPayServer.Plugins.Translations
                 throw new InvalidOperationException(
                     $"Downloaded language pack '{language}' SHA-256 mismatch: expected {entry.Sha}, got {actualSha}. The download may be corrupt or tampered with.");
 
-            return (Encoding.UTF8.GetString(translationsBytes), entry.Sha, entry.Rtl);
+            return new DownloadedLanguagePack
+            {
+                TranslationsJson = Encoding.UTF8.GetString(translationsBytes),
+                Manifest = entry
+            };
         }
 
         private static string UpdateCacheKey(string language) => $"translations.update.{language}";

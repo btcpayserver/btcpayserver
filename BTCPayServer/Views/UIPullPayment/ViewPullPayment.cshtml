@@ -1,7 +1,6 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Services
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
-@inject BTCPayServerEnvironment Env
 @inject DisplayFormatter DisplayFormatter
 @model BTCPayServer.Models.ViewPullPaymentModel
 @{
@@ -25,7 +24,7 @@
 	ViewData.SetBlazorAllowed(false);
 }
 <!DOCTYPE html>
-<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "") id="PullPayment-@Model.Id">
+<html use-translations asp-devenv id="PullPayment-@Model.Id">
 <head>
     <partial name="LayoutHead"/>
     <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet"/>

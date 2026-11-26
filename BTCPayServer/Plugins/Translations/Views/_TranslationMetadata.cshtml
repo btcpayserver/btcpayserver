@@ -1,0 +1,18 @@
+@model TranslationMetadataViewModel
+<div class="translation-metadata">
+    <div class="form-group">
+        <label asp-for="Code" class="form-label"></label>
+        <input asp-for="Code" class="form-control translation-metadata__code" placeholder="en" />
+        <span asp-validation-for="Code" class="text-danger"></span>
+        <div class="form-text" text-translate="true">Leave blank to inherit the fallback translation's language code.</div>
+    </div>
+    <div class="form-group">
+        <label asp-for="Rtl" class="form-label"></label>
+        <select asp-for="Rtl" class="form-select translation-metadata__direction">
+            <option value="" text-translate="true">Inherit</option>
+            <option value="false" text-translate="true">Left-to-right (LTR)</option>
+            <option value="true" text-translate="true">Right-to-left (RTL)</option>
+        </select>
+        <span asp-validation-for="Rtl" class="text-danger"></span>
+    </div>
+</div>

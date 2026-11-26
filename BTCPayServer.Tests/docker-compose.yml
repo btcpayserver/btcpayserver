@@ -200,6 +200,7 @@ services:
 
   postgres:
     image: postgres:18.1
+    shm_size: 256mb
     environment:
         POSTGRES_HOST_AUTH_METHOD: trust
     ports:

@@ -32,6 +32,10 @@
 
 	<div class="row">
 		<div class="col-xl-8 col-xxl-constrain d-flex flex-column">
+            @if (Model.CanEditMetadata)
+            {
+                <partial name="_TranslationMetadata" model="Model" />
+            }
 			<div class="form-group">
 				<label asp-for="Translations" class="form-label"></label>
 				<textarea asp-for="Translations" class="form-control translation-editor" rows="@Model.Lines" cols="40"></textarea>

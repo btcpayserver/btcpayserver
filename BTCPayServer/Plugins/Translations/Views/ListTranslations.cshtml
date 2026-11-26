@@ -26,19 +26,23 @@
 }
 
 <h3 class="settings-section__heading settings-section__heading--described" text-translate="true">Installed languages</h3>
-<p class="text-muted settings-section__description" text-translate="true">Currently enabled on this server.</p>
+<p class="text-muted settings-section__description" text-translate="true">Currently enabled on this server. Language code and RTL include inherited settings.</p>
 <div class="settings-section">
 <div class="table-responsive settings-section__table">
-	<table class="table table-hover align-middle mb-0">
+	<table class="table table-hover align-middle mb-0 installed-languages">
 		<colgroup>
-			<col style="width: 40%;" />
-			<col style="width: 24%;" />
+			<col style="width: 28%;" />
+			<col style="width: 12%;" />
+			<col style="width: 8%;" />
 			<col style="width: 20%;" />
+			<col style="width: 16%;" />
 			<col style="width: 16%;" />
 		</colgroup>
 		<thead>
 			<tr>
 				<th text-translate="true">Language</th>
+				<th text-translate="true">Language code</th>
+				<th text-translate="true">RTL</th>
 				<th text-translate="true">Maintainer</th>
 				<th text-translate="true">Last updated</th>
 				<th class="actions-col" text-translate="true">Actions</th>
@@ -47,8 +51,8 @@
 		<tbody>
 			@foreach (var v in Model.InstalledLanguages)
 			{
-				<tr>
-					<td>
+				<tr class="installed-languages__row">
+					<td class="installed-languages__name">
 						<div class="d-flex flex-wrap align-items-center gap-2">
 							@if (v.Editable)
 							{
@@ -68,6 +72,8 @@
 							}
 						</div>
 					</td>
+					<td class="installed-languages__code">@v.LanguageMetadata.Code</td>
+					<td class="installed-languages__rtl">@(v.LanguageMetadata.Rtl is true ? StringLocalizer["Yes"] : StringLocalizer["No"])</td>
 					<td>
 						@if (!string.IsNullOrEmpty(v.MaintainerHandle))
 						{

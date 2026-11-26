@@ -35,7 +35,7 @@ using Xunit;
 namespace BTCPayServer.Tests
 {
     [Collection(nameof(NonParallelizableCollectionDefinition))]
-    public class LanguageServiceTests : UnitTestBase
+    public partial class LanguageServiceTests : UnitTestBase
     {
         private const string ManifestUrl = "https://raw.githubusercontent.com/btcpayserver/btcpayserver-translator/main/manifest.json";
 
@@ -93,7 +93,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(2, languages.Length);
 
             var french = languages.Single(l => l.Name == "French");
-            Assert.Equal("fr-FR", french.Code);
+            Assert.Equal("fr-FR", french.LanguageMetadata.Code);
             Assert.Equal("Francais", french.Native);
             Assert.Equal("alice", french.MaintainerHandle);
             Assert.Equal("https://github.com/alice", french.MaintainerUrl);
@@ -189,11 +189,11 @@ namespace BTCPayServer.Tests
             var service = CreateLanguageService(handler);
             var languages = await service.GetManifestLanguages();
             var french = Assert.Single(languages);
-            Assert.Equal("fr-FR", french.Code);
-            var (translationsJson, version, rtl) = await service.FetchLanguagePackFromRepository("French");
-            Assert.Equal(expectedSha, version, ignoreCase: true);
-            Assert.False(rtl);
-            Assert.Equal("Bonjour", JObject.Parse(translationsJson)["Hello"]?.ToString());
+            Assert.Equal("fr-FR", french.LanguageMetadata.Code);
+            var pack = await service.FetchLanguagePackFromRepository("French");
+            Assert.Equal(expectedSha, pack.Manifest.Sha, ignoreCase: true);
+            Assert.False(pack.Manifest.LanguageMetadata.Rtl);
+            Assert.Equal("Bonjour", JsonParser.ParseObject(pack.TranslationsJson)["Hello"]?.ToString());
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -314,11 +314,11 @@ namespace BTCPayServer.Tests
             handler.Register(translationUrl, () => TestHttpMessageHandler.JsonResponse(body));
 
             var service = CreateLanguageService(handler);
-            var (translationsJson, version, rtl) = await service.FetchLanguagePackFromRepository("French");
+            var pack = await service.FetchLanguagePackFromRepository("French");
 
-            Assert.Equal(expectedSha, version, ignoreCase: true);
-            Assert.Equal(expectedRtl, rtl);
-            Assert.Equal("Bonjour", JObject.Parse(translationsJson)["Hello"]?.ToString());
+            Assert.Equal(expectedSha, pack.Manifest.Sha, ignoreCase: true);
+            Assert.Equal(expectedRtl, pack.Manifest.LanguageMetadata.Rtl);
+            Assert.Equal("Bonjour", JsonParser.ParseObject(pack.TranslationsJson)["Hello"]?.ToString());
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -599,21 +599,21 @@ namespace BTCPayServer.Tests
 
             await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('Arabic', 'English', 'LanguagePack')");
 
-            await localizer.UpdateMetadata("Arabic", "sha-ar", true);
+            await localizer.UpdateMetadata("Arabic", "sha-ar", new(Rtl: true));
 
             var loaded = await localizer.GetTranslations("Arabic");
-            Assert.True(loaded.Rtl);
+            Assert.True(loaded.LanguageMetadata.Rtl);
 
             var translation = await localizer.GetTranslation("Arabic");
             Assert.NotNull(translation);
             Assert.Equal("sha-ar", translation.Metadata["version"]?.ToString());
             Assert.True(translation.Metadata["rtl"]?.Value<bool>());
 
-            await localizer.UpdateMetadata("Arabic", "sha-ar2", false);
-            Assert.False((await localizer.GetTranslations("Arabic")).Rtl);
+            await localizer.UpdateMetadata("Arabic", "sha-ar2", new(Rtl: false));
+            Assert.False((await localizer.GetTranslations("Arabic")).LanguageMetadata.Rtl);
             Assert.Equal("sha-ar2", (await localizer.GetTranslation("Arabic"))!.Metadata["version"]?.ToString());
 
-            Assert.False((await localizer.GetTranslations("English")).Rtl);
+            Assert.False((await localizer.GetTranslations("English")).LanguageMetadata.Rtl);
 
             await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id='Arabic'");
         }
@@ -697,12 +697,12 @@ namespace BTCPayServer.Tests
                     Assert.Equal("Salut", Hello(accessor.Current.Translations));
                     Assert.NotEqual("Salut", Hello(localizer.Translations));
 
-                    accessor.UseStoreLanguage(french with { Rtl = true });
-                    Assert.True(accessor.Current.Rtl);
+                    accessor.UseStoreLanguage(french with { LanguageMetadata = french.LanguageMetadata with { Rtl = true } });
+                    Assert.True(accessor.Current.LanguageMetadata.Rtl);
 
                     accessor.UseStoreLanguage((LocalizerService.LoadedTranslations)null);
                     Assert.Same(localizer.ServerTranslations, accessor.Current);
-                    Assert.Equal(localizer.ServerTranslations.Rtl, accessor.Current.Rtl);
+                    Assert.Equal(localizer.ServerTranslations.LanguageMetadata.Rtl, accessor.Current.LanguageMetadata.Rtl);
                 }
                 finally
                 {
@@ -907,6 +907,7 @@ namespace BTCPayServer.Tests
             await tester.GoToServer(Views.Server.ServerNavPages.Translations);
             await tester.ClickPagePrimary();
             await tester.Page.Locator("[name='Name']").FillAsync("English (Custom)");
+            await tester.Page.Locator(".translation-metadata__code").FillAsync("fr");
             await tester.ClickPagePrimary();
             var translations = tester.Page.Locator("[name='Translations']");
             await translations.ClearAsync();
@@ -922,6 +923,7 @@ namespace BTCPayServer.Tests
             await tester.ClickPagePrimary();
             await tester.FindAlertMessage();
             await Expect(tester.Page.Locator("body")).ToContainTextAsync("Tweak your profile");
+            await Expect(tester.Page.Locator("html")).ToHaveAttributeAsync("lang", "fr");
             await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English (Custom)");
 
             await tester.GoToServer(Views.Server.ServerNavPages.Translations);
@@ -938,6 +940,7 @@ namespace BTCPayServer.Tests
             await Expect(tester.Page.Locator("body")).ToContainTextAsync("Update your account");
             await Expect(tester.Page.Locator("body")).Not.ToContainTextAsync("Tweak your profile");
             await Expect(tester.Page.Locator("#LangTranslation")).ToHaveValueAsync("English");
+            await Expect(tester.Page.Locator("html")).ToHaveAttributeAsync("lang", "en");
 
             await tester.GoToProfile();
             await tester.Page.Locator("#LangTranslation").SelectOptionAsync("English");

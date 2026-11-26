@@ -66,7 +66,7 @@
     }
 }
 <!DOCTYPE html>
-<html lang="en" dir="@(TranslationsAccessor.Current.Rtl ? "rtl" : null)" class="@(Model.IsModal ? "checkout-modal" : "")"@(Env.IsDeveloping ? " data-devenv" : "")>
+<html use-translations class="@(Model.IsModal ? "checkout-modal" : "")" asp-devenv>
 <head>
     <partial name="LayoutHead"/>
     <meta name="robots" content="noindex,nofollow">
@@ -290,12 +290,8 @@
     </div>
     <noscript>
         <div class="p-5 text-center">
-            <h2>Javascript is currently disabled in your browser.</h2>
-            <h5>Please enable Javascript and refresh this page for the best experience.</h5>
-            <p>
-                Alternatively, click below to continue to our
-                <a asp-action="CheckoutNoScript" asp-route-invoiceId="@Model.InvoiceId">HTML-only invoice</a>.
-            </p>
+            <h2 text-translate="true">Javascript is currently disabled in your browser.</h2>
+            <h5 text-translate="true">Please enable Javascript and refresh this page for the best experience.</h5>
         </div>
     </noscript>
 <script type="text/x-template" id="payment-details">

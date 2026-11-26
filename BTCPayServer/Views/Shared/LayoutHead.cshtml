@@ -24,7 +24,7 @@
 <title>@ViewData["Title"]</title>
 @* CSS *@
 @{
-    var isRtl = TranslationsAccessor.Current.Rtl;
+    var isRtl = TranslationsAccessor.Current.LanguageMetadata.Rtl is true;
 }
 @if (isRtl)
 {

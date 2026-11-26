@@ -82,12 +82,6 @@ namespace BTCPayServer.Security.Greenfield
             if (isNewAccount && !canUseBasic && ip is not null && !await rateLimitService.Throttle(ZoneLimits.Login, ip))
                 return Fail(invalidCredentials);
 
-            var passwordVerified = canUseBasic
-                ? (await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true)).Succeeded
-                : await userManager.CheckPasswordAsync(user, password);
-            if (!passwordVerified)
-                return Fail(invalidCredentials);
-
             if (!canLogin)
             {
                 return Fail($"Basic authentication failed: {loggingContext.Failures[0].Text.Value}");
@@ -98,6 +92,10 @@ namespace BTCPayServer.Security.Greenfield
             {
                 return Fail("Cannot use Basic authentication when multi-factor is enabled.");
             }
+
+            if (!(await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true)).Succeeded)
+                return Fail(invalidCredentials);
+
             var claims = new List<Claim>()
             {
                 new Claim(identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, user.Id),

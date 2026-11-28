@@ -203,7 +203,7 @@ namespace BTCPayServer.Plugins
             });
             logger.LogInformation($"Loading plugins from {pluginsFolder}");
             Directory.CreateDirectory(pluginsFolder);
-            ExecuteCommands(pluginsFolder);
+            ExecuteCommands(pluginsFolder, logger);
 
             var disabledPluginIdentifiers = GetDisabledPluginIdentifiers(pluginsFolder);
             var systemAssembly = typeof(Program).Assembly;
@@ -257,6 +257,12 @@ namespace BTCPayServer.Plugins
                 var pluginFilePath = Path.Join(directory, pluginIdentifier + ".dll");
                 if (!File.Exists(pluginFilePath))
                     continue;
+                // A plugin that can't be named in a command could never be disabled after a crash
+                if (!IsSafeName(pluginsFolder, pluginIdentifier))
+                {
+                    logger.LogWarning($"Skipping the plugin folder {pluginIdentifier}, its name is not a valid plugin identifier");
+                    continue;
+                }
                 if (disabledPluginIdentifiers.Contains(pluginIdentifier))
                 {
                     logger.LogInformation($"Skipping disabled plugin {pluginIdentifier}");
@@ -469,7 +475,7 @@ namespace BTCPayServer.Plugins
             };
         }
 
-        private static bool ExecuteCommands(string pluginsFolder)
+        internal static bool ExecuteCommands(string pluginsFolder, ILogger logger)
         {
             var pendingCommands = GetPendingCommands(pluginsFolder);
             if (!pendingCommands.Any())
@@ -477,7 +483,24 @@ namespace BTCPayServer.Plugins
                 return false;
             }
 
-            var remainingCommands = (from command in pendingCommands where !ExecuteCommand(command, pluginsFolder) select $"{command.command}:{command.plugin}").ToList();
+            var remainingCommands = new List<string>();
+            // After a command fails, the later commands for the same plugin wait too, so they still run in order
+            var failedPlugins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var command in pendingCommands)
+            {
+                try
+                {
+                    if (failedPlugins.Contains(command.plugin) || !ExecuteCommand(command, pluginsFolder))
+                        remainingCommands.Add($"{command.command}:{command.plugin}");
+                }
+                catch (Exception e)
+                {
+                    // Kept, so it shows as pending and runs again at the next start. An install that failed before its enable has lost its package by then, so it does nothing.
+                    logger.LogError(e, $"Error when executing the {command.command} command for plugin {command.plugin}, the command stays pending.");
+                    remainingCommands.Add($"{command.command}:{command.plugin}");
+                    failedPlugins.Add(command.plugin);
+                }
+            }
             if (remainingCommands.Any())
             {
                 File.WriteAllLines(Path.Join(pluginsFolder, "commands"), remainingCommands);
@@ -534,31 +557,50 @@ namespace BTCPayServer.Plugins
             switch (command.command)
             {
                 case "delete":
-                    ExecuteCommand(("enable", command.extension), pluginsFolder);
                     if (File.Exists(dirName))
                         File.Delete(dirName);
                     if (Directory.Exists(dirName))
                         Directory.Delete(dirName, true);
+                    // After the delete, so a failed delete doesn't enable what's left of the plugin
+                    ExecuteCommand(("enable", command.extension), pluginsFolder);
                     ClearPluginFailure(pluginsFolder, command.extension);
                     break;
 
                 case "install":
                     var fileName = dirName + BTCPayPluginSuffix;
                     var manifestFileName = dirName + ".json";
-                    ExecuteCommand(("enable", command.extension), pluginsFolder);
                     if (File.Exists(fileName))
                     {
-                        if (File.Exists(dirName))
-                            File.Delete(dirName);
-                        if (Directory.Exists(dirName))
-                            Directory.Delete(dirName, true);
-
-                        ZipFile.ExtractToDirectory(fileName, dirName, true);
-                        File.Delete(fileName);
-                        if (File.Exists(manifestFileName))
+                        // Unique, so it can't be another plugin's folder
+                        var stagingDirName = Path.Join(pluginsFolder, $"install-{Guid.NewGuid():N}");
+                        var oldDirName = Path.Join(stagingDirName, "old");
+                        try
                         {
-                            File.Move(manifestFileName, Path.Join(dirName, Path.GetFileName(manifestFileName)), true);
+                            var extractedDirName = Path.Join(stagingDirName, "new");
+                            ZipFile.ExtractToDirectory(fileName, extractedDirName, true);
+                            // Copied, so a retry still has it
+                            if (File.Exists(manifestFileName))
+                                File.Copy(manifestFileName, Path.Join(extractedDirName, Path.GetFileName(manifestFileName)), true);
+                            if (File.Exists(dirName))
+                                File.Delete(dirName);
+                            ReplaceDirectory(dirName, extractedDirName, oldDirName);
                         }
+                        catch
+                        {
+                            // So the pending install does nothing at the next start, and the next upload doesn't pick up this manifest
+                            RemovePackage(fileName, manifestFileName);
+                            throw;
+                        }
+                        finally
+                        {
+                            // Unless it holds the only copy of the installed version, because moving it back failed
+                            if (Directory.Exists(dirName) || !Directory.Exists(oldDirName))
+                                TryCleanUp(() => Directory.Delete(stagingDirName, true));
+                        }
+                        // Only after a successful install, so a failed one doesn't enable the old version
+                        ExecuteCommand(("enable", command.extension), pluginsFolder);
+                        // Only once it's enabled, so after a failed enable the install runs again at the next start
+                        RemovePackage(fileName, manifestFileName);
                     }
                     break;
 
@@ -597,6 +639,40 @@ namespace BTCPayServer.Plugins
             return true;
         }
 
+        private static void RemovePackage(string fileName, string manifestFileName)
+        {
+            TryCleanUp(() => File.Delete(manifestFileName));
+            TryCleanUp(() => File.Delete(fileName));
+        }
+
+        // Best effort, so a cleanup failure doesn't hide the result of the install
+        private static void TryCleanUp(Action cleanUp)
+        {
+            try
+            {
+                cleanUp();
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+            }
+        }
+
+        // Renames rather than deletes, so the installed version is either fully replaced or left as it was
+        private static void ReplaceDirectory(string dirName, string newDirName, string oldDirName)
+        {
+            if (Directory.Exists(dirName))
+                Directory.Move(dirName, oldDirName);
+            try
+            {
+                Directory.Move(newDirName, dirName);
+            }
+            catch when (Directory.Exists(oldDirName))
+            {
+                Directory.Move(oldDirName, dirName);
+                throw;
+            }
+        }
+
         public static (string command, string plugin)[] GetPendingCommands(string pluginsFolder)
         {
             if (!File.Exists(Path.Join(pluginsFolder, "commands")))
@@ -605,7 +681,7 @@ namespace BTCPayServer.Plugins
             return commands.Select(s =>
             {
                 var split = s.Split(':');
-                if (split.Length != 2)
+                if (split.Length != 2 || !IsSafeName(pluginsFolder, split[1]))
                     return (string.Empty, string.Empty);
                 return (split[0].ToLower(CultureInfo.InvariantCulture), split[1]);
             })
@@ -615,6 +691,8 @@ namespace BTCPayServer.Plugins
 
         public static void QueueCommands(string pluginsFolder, params (string action, string plugin)[] commands)
         {
+            foreach (var command in commands)
+                AssertSafeName(pluginsFolder, command.plugin);
             File.AppendAllLines(Path.Join(pluginsFolder, "commands"),
                 commands.Select((tuple) => $"{tuple.action}:{tuple.plugin}"));
         }
@@ -636,15 +714,33 @@ namespace BTCPayServer.Plugins
             QueueCommands(pluginDir, cmds);
         }
 
-        private static void AssertSafeName(string pluginDir, string plugin)
+        // Longest file name on common file systems, longer ones could make GetFullPath throw on Windows
+        private const int MaxPluginNameLength = 255;
+        // Files kept next to the plugin folders, compared the way Windows and macOS match names:
+        // without case, and on Windows without trailing dots or spaces
+        private static readonly string[] ControlFileNames = ["commands", "disabled"];
+
+        public static bool IsSafeName(string pluginDir, string plugin)
         {
+            // Commands are stored as "action:plugin", one per line, a plugin is a single folder name,
+            // and GetFullPath throws on NUL
+            if (string.IsNullOrEmpty(plugin) || plugin.Length > MaxPluginNameLength ||
+                plugin.IndexOfAny(['\r', '\n', ':', '/', '\\', '\0']) >= 0 ||
+                ControlFileNames.Contains(plugin.TrimEnd('.', ' '), StringComparer.OrdinalIgnoreCase))
+                return false;
             // platform separator: WithTrailingSlash's '/' mismatches GetFullPath on Windows
             var fullPluginDir = Path.GetFullPath(pluginDir);
             if (!fullPluginDir.EndsWith(Path.DirectorySeparatorChar))
                 fullPluginDir += Path.DirectorySeparatorChar;
             var fullPath = Path.GetFullPath(Path.Combine(fullPluginDir, plugin));
-            if (!fullPath.StartsWith(fullPluginDir, StringComparison.Ordinal))
-                throw new InvalidOperationException("File traversal detected");
+            // Strictly inside, the plugins folder itself is never a plugin
+            return fullPath.Length > fullPluginDir.Length && fullPath.StartsWith(fullPluginDir, StringComparison.Ordinal);
+        }
+
+        private static void AssertSafeName(string pluginDir, string plugin)
+        {
+            if (!IsSafeName(pluginDir, plugin))
+                throw new InvalidOperationException("Invalid plugin identifier");
         }
 
         public static void DisablePlugins(string pluginDir)

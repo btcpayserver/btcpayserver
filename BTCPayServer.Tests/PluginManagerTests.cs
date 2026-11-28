@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Plugins;
@@ -14,7 +16,11 @@ using BTCPayServer.Plugins.PluginManagement;
 using BTCPayServer.Plugins.PluginManagement.Controllers;
 using BTCPayServer.Plugins.PluginManagement.Models;
 using BTCPayServer.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -505,6 +511,229 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
+        public async Task PluginManager_RejectsUnsafeIdentifiersInCommands()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-commands-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                foreach (var identifier in new[] { "Plugin\ndelete:BTCPayServer.Plugins.Test", "Plugin\nTest", "Plugin\rTest", "Plugin:Test", "Plugin\0Test", "Plugin/Test", "Plugin\\Test", "./", "../Plugin", "..", ".", "", "commands", "Disabled", "disabled. " })
+                {
+                    Assert.Throws<InvalidOperationException>(() => PluginManager.QueueCommands(pluginDir, ("enable", identifier)));
+                }
+                Assert.Empty(PluginManager.GetPendingCommands(pluginDir));
+                Assert.Throws<InvalidOperationException>(() => PluginManager.QueueCommands(pluginDir, ("enable", new string('a', 256))));
+                // A name never resolves to the plugins folder itself, even at the file system root
+                Assert.False(PluginManager.IsSafeName(Path.GetPathRoot(pluginDir)!, "."));
+
+                // Any plugin folder name that loads can be disabled after a crash
+                foreach (var identifier in new[] { "My Plugin", "Plugín" })
+                {
+                    Directory.CreateDirectory(Path.Combine(pluginDir, identifier));
+                    PluginManager.DisablePlugin(pluginDir, identifier);
+                }
+                PluginManager.QueueCommands(pluginDir, ("install", "BTCPayServer.Plugins.Test"));
+                var expected = new[] { ("disable", "My Plugin"), ("disable", "Plugín"), ("install", "BTCPayServer.Plugins.Test") };
+                Assert.Equal(expected, PluginManager.GetPendingCommands(pluginDir));
+
+                // Unsafe entries already in the commands file are ignored
+                File.AppendAllLines(Path.Combine(pluginDir, "commands"), ["delete:..", "delete:./", "delete:disabled", "enable:", "install:Plugin:Test"]);
+                Assert.Equal(expected, PluginManager.GetPendingCommands(pluginDir));
+
+                // Catalog identifiers are checked before anything is downloaded or written
+                var requested = false;
+                using var httpClient = new HttpClient(new TestHttpMessageHandler(_ =>
+                {
+                    requested = true;
+                    return new HttpResponseMessage(HttpStatusCode.NotFound);
+                })) { BaseAddress = new Uri("https://plugins.example/") };
+                var pluginService = CreatePluginService(pluginDir, [], httpClient);
+                await Assert.ThrowsAsync<InvalidOperationException>(() => pluginService.DownloadRemotePlugin("../Plugin", null));
+                Assert.False(requested);
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
+        [Fact]
+        public async Task UploadPlugin_NamesRejectedFile()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-upload-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                using var httpClient = new HttpClient { BaseAddress = new Uri("https://plugins.example/") };
+                var controller = new UIPluginManagerController(
+                    CreatePluginService(pluginDir, [], httpClient), new PoliciesSettings(), new FormatStringLocalizer())
+                {
+                    TempData = new TempDataDictionary(new DefaultHttpContext(), new MemoryTempDataProvider())
+                };
+                static IFormFile Upload(string name, int length = 1) => new FormFile(new MemoryStream(new byte[length]), 0, length, "file", name);
+                const string uploaded = "File uploaded, restart server to load plugin";
+                const string rejected = "Not uploaded due to an invalid plugin file: ";
+
+                // A missing file does not schedule an install
+                Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestResult>(await controller.UploadPlugin(null));
+
+                // Reject invalid plugin names, file names and empty files without scheduling an install
+                foreach (var file in new[] { Upload("commands.btcpay"), Upload("Disabled.btcpay"), Upload("Plugin:Test.btcpay"), Upload("Empty.btcpay", 0), Upload(".btcpay") })
+                {
+                    await controller.UploadPlugin(file);
+                    var warning = controller.TempData.GetStatusMessageModel();
+                    Assert.Equal(StatusMessageModel.StatusSeverity.Warning, warning.Severity);
+                    Assert.Equal(rejected + file.FileName, warning.Message);
+                    Assert.Empty(Directory.EnumerateFileSystemEntries(pluginDir));
+                    Assert.Empty(PluginManager.GetPendingCommands(pluginDir));
+                }
+
+                // Long names are cut, so the message stays small
+                await controller.UploadPlugin(Upload(new string('a', 2000) + ".btcpay"));
+                Assert.Equal(rejected + new string('a', 300) + "...", controller.TempData.GetStatusMessageModel().Message);
+
+                // A valid file is uploaded and scheduled for installation
+                await controller.UploadPlugin(Upload("BTCPayServer.Plugins.Test.btcpay"));
+                var status = controller.TempData.GetStatusMessageModel();
+                Assert.Equal(StatusMessageModel.StatusSeverity.Success, status.Severity);
+                Assert.Equal(uploaded, status.Message);
+                Assert.True(File.Exists(Path.Combine(pluginDir, "BTCPayServer.Plugins.Test.btcpay")));
+                Assert.Equal(new[] { ("install", "BTCPayServer.Plugins.Test") }, PluginManager.GetPendingCommands(pluginDir));
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void ExecuteCommands_KeepsInstalledPluginWhenPackageIsBroken(bool extractsPartly)
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-install-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                static void WritePackage(string path, params string[] entries)
+                {
+                    using var package = ZipFile.Open(path, ZipArchiveMode.Create);
+                    foreach (var entry in entries)
+                        package.CreateEntry(entry);
+                }
+
+                // Two disabled plugins with an update each, the one for PluginA can't be extracted
+                foreach (var plugin in new[] { "PluginA", "PluginB" })
+                {
+                    Directory.CreateDirectory(Path.Combine(pluginDir, plugin));
+                    File.WriteAllText(Path.Combine(pluginDir, plugin, plugin + ".dll"), "installed");
+                    File.WriteAllText(Path.Combine(pluginDir, plugin + ".json"), "{}");
+                }
+                File.WriteAllText(Path.Combine(pluginDir, "PluginB", "Removed.dll"), "installed");
+                File.WriteAllLines(Path.Combine(pluginDir, "disabled"), ["PluginA", "PluginB"]);
+                var package = Path.Combine(pluginDir, "PluginA.btcpay");
+                // Either not a zip, or a zip whose second entry points outside the folder, so extraction stops halfway
+                if (extractsPartly)
+                    WritePackage(package, "PluginA.dll", "../PluginA.dll");
+                else
+                    File.WriteAllText(package, "not a zip");
+                WritePackage(Path.Combine(pluginDir, "PluginB.btcpay"), "PluginB.dll");
+                PluginManager.QueueCommands(pluginDir, ("install", "PluginA"), ("install", "PluginB"));
+                var logger = LoggerFactory.CreateLogger(typeof(PluginManager));
+
+                PluginManager.ExecuteCommands(pluginDir, logger);
+
+                // The installed version stays as it was, and stays disabled
+                Assert.Equal("installed", File.ReadAllText(Path.Combine(pluginDir, "PluginA", "PluginA.dll")));
+                Assert.Equal(new[] { "PluginA" }, File.ReadAllLines(Path.Combine(pluginDir, "disabled")));
+                // The next command still runs, and replaces the installed version as a whole
+                Assert.Equal(new[] { "PluginB.dll", "PluginB.json" }, Directory.GetFiles(Path.Combine(pluginDir, "PluginB")).Select(file => Path.GetFileName(file)).Order(StringComparer.Ordinal));
+                Assert.Equal("", File.ReadAllText(Path.Combine(pluginDir, "PluginB", "PluginB.dll")));
+                // The broken package is removed, and its command stays pending
+                Assert.Equal(new[] { "PluginA", "PluginB", "commands", "disabled" }, Directory.GetFileSystemEntries(pluginDir).Select(entry => Path.GetFileName(entry)).Order(StringComparer.Ordinal));
+                Assert.Equal(new[] { ("install", "PluginA") }, PluginManager.GetPendingCommands(pluginDir));
+                // At the next start it finds no package, so it does nothing and doesn't enable the old version
+                Assert.True(PluginManager.ExecuteCommands(pluginDir, logger));
+                Assert.Equal(new[] { "PluginA" }, File.ReadAllLines(Path.Combine(pluginDir, "disabled")));
+                Assert.Equal(new[] { "PluginA", "PluginB", "disabled" }, Directory.GetFileSystemEntries(pluginDir).Select(entry => Path.GetFileName(entry)).Order(StringComparer.Ordinal));
+                Assert.False(PluginManager.ExecuteCommands(pluginDir, logger));
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
+        [Fact]
+        public void ExecuteCommands_KeepsLaterCommandsOfAFailedPluginInOrder()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-order-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(pluginDir, "PluginA"));
+                File.WriteAllText(Path.Combine(pluginDir, "PluginA", "PluginA.dll"), "installed");
+                File.WriteAllText(Path.Combine(pluginDir, "PluginA.btcpay"), "not a zip");
+                PluginManager.QueueCommands(pluginDir, ("install", "PluginA"), ("delete", "PluginA"));
+                var logger = LoggerFactory.CreateLogger(typeof(PluginManager));
+
+                // The delete waits for the failed install, so it can't run before a later retry of it
+                PluginManager.ExecuteCommands(pluginDir, logger);
+                Assert.Equal(new[] { ("install", "PluginA"), ("delete", "PluginA") }, PluginManager.GetPendingCommands(pluginDir));
+                Assert.True(Directory.Exists(Path.Combine(pluginDir, "PluginA")));
+
+                // At the next start the install has no package, and the delete runs after it
+                PluginManager.ExecuteCommands(pluginDir, logger);
+                Assert.Empty(PluginManager.GetPendingCommands(pluginDir));
+                Assert.False(Directory.Exists(Path.Combine(pluginDir, "PluginA")));
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
+        [Fact]
+        public void ExecuteCommands_KeepsPackageUntilPluginIsEnabled()
+        {
+            var pluginDir = Path.Combine(Path.GetTempPath(), $"btcpay-plugin-enable-test-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(pluginDir);
+            try
+            {
+                // A disabled plugin with an update
+                Directory.CreateDirectory(Path.Combine(pluginDir, "PluginA"));
+                File.WriteAllText(Path.Combine(pluginDir, "PluginA", "PluginA.dll"), "installed");
+                File.WriteAllText(Path.Combine(pluginDir, "PluginA.json"), "{}");
+                using (var package = ZipFile.Open(Path.Combine(pluginDir, "PluginA.btcpay"), ZipArchiveMode.Create))
+                    package.CreateEntry("PluginA.dll");
+                var disabledFileName = Path.Combine(pluginDir, "disabled");
+                File.WriteAllLines(disabledFileName, ["PluginA"]);
+                PluginManager.QueueCommands(pluginDir, ("install", "PluginA"));
+                var logger = LoggerFactory.CreateLogger(typeof(PluginManager));
+
+                // Locked, so the enable fails. Unlike a read-only file, a lock also stops root
+                using (File.Open(disabledFileName, FileMode.Open, FileAccess.Read, FileShare.None))
+                    PluginManager.ExecuteCommands(pluginDir, logger);
+
+                // The update is in place but still disabled, and its package and manifest stay with the pending command
+                Assert.Equal("", File.ReadAllText(Path.Combine(pluginDir, "PluginA", "PluginA.dll")));
+                Assert.Equal(new[] { "PluginA" }, File.ReadAllLines(disabledFileName));
+                Assert.Equal(new[] { "PluginA", "PluginA.btcpay", "PluginA.json", "commands", "disabled" }, Directory.GetFileSystemEntries(pluginDir).Select(entry => Path.GetFileName(entry)).Order(StringComparer.Ordinal));
+                Assert.Equal(new[] { ("install", "PluginA") }, PluginManager.GetPendingCommands(pluginDir));
+
+                // At the next start it installs the package again and enables it
+                Assert.True(PluginManager.ExecuteCommands(pluginDir, logger));
+                Assert.Empty(File.ReadAllLines(disabledFileName));
+                Assert.Equal(new[] { "PluginA.dll", "PluginA.json" }, Directory.GetFiles(Path.Combine(pluginDir, "PluginA")).Select(file => Path.GetFileName(file)).Order(StringComparer.Ordinal));
+                Assert.Equal(new[] { "PluginA", "disabled" }, Directory.GetFileSystemEntries(pluginDir).Select(entry => Path.GetFileName(entry)).Order(StringComparer.Ordinal));
+            }
+            finally
+            {
+                Directory.Delete(pluginDir, true);
+            }
+        }
+
         [Theory]
         [InlineData("install")]
         [InlineData("enable")]
@@ -939,6 +1168,19 @@ namespace BTCPayServer.Tests
                 await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
                 throw new InvalidOperationException("The request should have been cancelled.");
             }
+        }
+
+        private sealed class FormatStringLocalizer : IStringLocalizer
+        {
+            public LocalizedString this[string name] => new(name, name);
+            public LocalizedString this[string name, params object[] arguments] => new(name, string.Format(name, arguments));
+            public IEnumerable<LocalizedString> GetAllStrings(bool includeParentCultures) => [];
+        }
+
+        private sealed class MemoryTempDataProvider : ITempDataProvider
+        {
+            public IDictionary<string, object> LoadTempData(HttpContext context) => new Dictionary<string, object>();
+            public void SaveTempData(HttpContext context, IDictionary<string, object> values) { }
         }
 
         private sealed class TestPlugin(

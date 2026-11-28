@@ -151,6 +151,9 @@ namespace BTCPayServer.Plugins
 
         internal async Task<AvailablePlugin> ResolveRemotePlugin(string pluginIdentifier, string version, VersionCondition condition)
         {
+            // Fail before any request. DownloadResolvedPlugin checks it again before it writes files.
+            if (!IsSafePluginName(pluginIdentifier))
+                throw new InvalidOperationException("Invalid plugin identifier");
             string btcpayVersion = GetShortBtcpayVersion();
             var versions = await _pluginBuilderClient.GetPluginVersionsForDownload(pluginIdentifier,
                 btcpayVersion, _policiesSettings.PluginPreReleases, includeAllVersions: true);
@@ -176,6 +179,9 @@ namespace BTCPayServer.Plugins
 
         internal async Task DownloadResolvedPlugin(string pluginIdentifier, AvailablePlugin manifest)
         {
+            // The identifier comes from the catalog and names the files written below
+            if (!IsSafePluginName(pluginIdentifier))
+                throw new InvalidOperationException("Invalid plugin identifier");
             var dest = _dataDirectories.Value.PluginDir;
             var filedest = Path.Join(dest, pluginIdentifier + ".btcpay");
             var filemanifestdest = Path.Join(dest, pluginIdentifier + ".json");
@@ -224,6 +230,11 @@ namespace BTCPayServer.Plugins
                 ? potentialVersions.OrderDescending().First()
                 : potentialVersions.OrderDescending().FirstOrDefault(condition.IsFulfilled);
             return selectedVersion ?? throw new InvalidOperationException($"No version of plugin {pluginIdentifier} can satisfy condition {condition}");
+        }
+
+        public bool IsSafePluginName(string plugin)
+        {
+            return PluginManager.IsSafeName(_dataDirectories.Value.PluginDir, plugin);
         }
 
         public void InstallPlugin(string plugin)

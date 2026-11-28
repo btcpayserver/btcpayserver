@@ -2,10 +2,15 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Data.Subscriptions;
 using BTCPayServer.Events;
 using BTCPayServer.Plugins.Monetization;
+using BTCPayServer.Plugins.Subscriptions;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Views.Server;
 using Microsoft.Playwright;
 using Xunit;
@@ -411,6 +416,76 @@ public class MonetizationTests(ITestOutputHelper helper) : UnitTestBase(helper)
             await s.LogIn("enrolled-invited@gmail.com");
             Assert.Contains("subscriber-portal", s.Page.Url);
         }
+    }
+
+    [Fact]
+    [Trait("Playwright", "Playwright-2")]
+    public async Task CanDemonetizeAndReuseOffering()
+    {
+        await using var s = CreatePlaywrightTester(newDb: true);
+        await s.StartAsync();
+        await s.RegisterNewUser(true);
+        var lapsed = s.Server.NewAccount();
+        lapsed.Password = s.Password;
+        await lapsed.GrantAccessAsync();
+        await lapsed.RegisterDerivationSchemeAsync("BTC");
+        var lapsedClient = await lapsed.CreateClient(Policies.CanCreateInvoice);
+        var disabled = s.Server.NewAccount();
+        await disabled.RegisterAsync();
+
+        await s.CreateNewStore();
+        await GoToMonetization(s);
+        await s.ClickPagePrimary();
+        await s.Page.SetCheckedAsync("#ActivateModal_MigrateExistingUsers", true);
+        await s.ConfirmModal();
+        await s.FindAlertMessage(partialText: "(2 migrated users)");
+
+        var settings = await s.Server.PayTester.GetService<SettingsRepository>().GetSettingAsync<MonetizationSettings>();
+        var dbContextFactory = s.Server.PayTester.GetService<ApplicationDbContextFactory>();
+        long subscriberId;
+        await using (var ctx = dbContextFactory.CreateContext())
+        {
+            var subscriber = await ctx.Subscribers.GetBySelector(settings!.OfferingId,
+                CustomerSelector.ByIdentity(SubscriberDataExtensions.IdentityType, lapsed.UserId));
+            Assert.NotNull(subscriber);
+            subscriberId = subscriber.Id;
+        }
+
+        // The trial ends without payment, so monetization restricts the user and blocks their store.
+        var subsService = s.Server.PayTester.GetService<SubscriptionHostedService>();
+        await s.Server.WaitForEvent<MonetizationHostedService.MonetizationAccessUpdated>(
+            () => subsService.MoveTime(subscriberId, SubscriberData.PhaseTypes.Normal),
+            update => update.Updated.Contains((lapsed.UserId, true)));
+        var storeRepository = s.Server.PayTester.GetService<StoreRepository>();
+        Assert.True((await storeRepository.FindStore(lapsed.StoreId))!.GetStoreBlob().NoActiveUser);
+
+        // Disabling a user suspends their subscription, so they have both restrictions.
+        var userService = s.Server.PayTester.GetService<UserService>();
+        await s.Server.WaitForEvent<MonetizationHostedService.MonetizationAccessUpdated>(
+            async () => Assert.IsType<UserService.SetDisabledResult.Success>(await userService.SetDisabled(disabled.UserId, true)),
+            update => update.Updated.Contains((disabled.UserId, true)));
+
+        await GoToMonetization(s);
+        await Demonetize(s);
+
+        await CanLog(s, lapsed.RegisterDetails.Email);
+        await lapsedClient.CreateInvoice(lapsed.StoreId, new CreateInvoiceRequest { Amount = 0.001m, Currency = "BTC" });
+
+        Assert.False(await userService.IsRestricted(disabled.UserId, UserAccessRestrictionConstants.Monetization));
+        Assert.True(await userService.IsRestricted(disabled.UserId, UserAccessRestrictionConstants.Administrative));
+
+        // Selecting the same offering again restores the restrictions of its subscribers.
+        await s.Page.ClickAsync("text=Select existing offering");
+        await s.Page.SelectOptionAsync("[name='SelectExistingOfferingModal.SelectedStoreId']", s.StoreId);
+        await s.Page.SelectOptionAsync("[name='SelectExistingOfferingModal.SelectedOfferingId']", settings.OfferingId);
+        await s.Page.SelectOptionAsync("[name='SelectExistingOfferingModal.SelectedPlanId']", settings.DefaultPlanId);
+        await s.ConfirmModal();
+        await s.FindAlertMessage(partialText: "Monetization order updated");
+
+        Assert.True(await userService.IsRestricted(lapsed.UserId, UserAccessRestrictionConstants.Monetization));
+        Assert.True((await storeRepository.FindStore(lapsed.StoreId))!.GetStoreBlob().NoActiveUser);
+        Assert.True(await userService.IsRestricted(disabled.UserId, UserAccessRestrictionConstants.Monetization));
+        Assert.True(await userService.IsRestricted(disabled.UserId, UserAccessRestrictionConstants.Administrative));
     }
 
     private async Task SetBypassMonetization(PlaywrightTester s, string email, bool bypass)

@@ -35,6 +35,7 @@ using Microsoft.Playwright;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NicolasDorier.RateLimits;
 using Xunit;
 using static BTCPayServer.Tests.UnitTest1;
 using static Microsoft.Playwright.Assertions;
@@ -1277,6 +1278,52 @@ inventoryitem:
             Assert.Equal(2, vm.RouteParameters.Count);
             Assert.Equal(app.Id, vm.RouteParameters["appId"]);
             Assert.Equal(nameof(PosViewType.Cart), vm.RouteParameters["viewType"]);
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task PoSRateLimitExemptsStoreStaff()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var owner = tester.NewAccount();
+            await owner.GrantAccessAsync();
+            owner.RegisterDerivationScheme("BTC");
+            var cashier = tester.NewAccount();
+            await cashier.RegisterAsync();
+            await owner.AddEmployee(cashier.UserId);
+            var otherOwner = tester.NewAccount();
+            await otherOwner.GrantAccessAsync();
+
+            var app = new AppData
+            {
+                StoreDataId = owner.StoreId,
+                Name = "test",
+                AppType = PointOfSaleAppType.AppType
+            };
+            app.SetSettings(new PointOfSaleSettings { Currency = "USD" });
+            await tester.PayTester.GetService<AppService>().UpdateOrCreateApp(app);
+
+            // Allow a single public invoice per IP address
+            tester.PayTester.GetService<IRateLimitService>().SetZone($"zone={ZoneLimits.PublicInvoices} rate=1r/h burst=1 nodelay");
+            Task<IActionResult> CreateInvoice(UIPointOfSaleController pos)
+            {
+                pos.HttpContext.Connection.RemoteIpAddress = IPAddress.Loopback;
+                return pos.ViewPointOfSale(app.Id, PosViewType.Light, amount: 1m);
+            }
+            void AssertCheckout(IActionResult result) =>
+                Assert.Equal(nameof(UIInvoiceController.Checkout), Assert.IsType<RedirectToActionResult>(result).ActionName);
+
+            var cashierPos = cashier.GetController<UIPointOfSaleController>();
+            for (var i = 0; i < 3; i++)
+                AssertCheckout(await CreateInvoice(cashierPos));
+
+            var anonymousPos = tester.PayTester.GetController<UIPointOfSaleController>();
+            AssertCheckout(await CreateInvoice(anonymousPos));
+            Assert.IsType<TooManyRequestsResult>(await CreateInvoice(anonymousPos));
+
+            var otherOwnerPos = otherOwner.GetController<UIPointOfSaleController>();
+            Assert.IsType<TooManyRequestsResult>(await CreateInvoice(otherOwnerPos));
         }
 
         private async Task<(string invoiceId, string error)> PosJsonRequest(ServerTester tester, string appId, string query)

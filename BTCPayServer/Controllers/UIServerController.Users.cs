@@ -113,9 +113,29 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/users/{userId}")]
         public new async Task<IActionResult> User(string userId, UsersViewModel.UserViewModel viewModel, [FromForm] bool RemoveImageFile = false)
         {
+            // Before loading the user, so the checks below see the state that other admin changes left
+            await using var adminLock = await _userService.LockAdminChanges();
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
+
+            // Refusals come before any change is saved, and show the user as stored
+            var roles = await _UserManager.GetRolesAsync(user);
+            var wasAdmin = Roles.HasServerAdmin(roles);
+            if (!viewModel.IsAdmin && wasAdmin && await _userService.IsLastAdmin(user))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This is the only admin, so their role can't be removed until another admin is added."].Value;
+                ModelState.Clear();
+                return await User(userId);
+            }
+            var revokesLogin = (user is { RequiresApproval: true, Approved: true } && viewModel.Approved is false) ||
+                               (user is { RequiresEmailConfirmation: true, EmailConfirmed: true } && viewModel.EmailConfirmed is false);
+            if (revokesLogin && await _userService.IsUserTheOnlyOneAdmin(CreateLoginContext(user)))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This is the only enabled admin, so their approval or email confirmation can't be revoked until another admin is added."].Value;
+                ModelState.Clear();
+                return await User(userId);
+            }
 
             var emailConfirmationRevoked = false;
             bool? propertiesChanged = null;
@@ -178,15 +198,6 @@ namespace BTCPayServer.Controllers
                 propertiesChanged = true;
             }
             user.SetBlob(blob);
-            var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-            var roles = await _UserManager.GetRolesAsync(user);
-            var wasAdmin = Roles.HasServerAdmin(roles);
-            if (!viewModel.IsAdmin && admins.Count == 1 && wasAdmin)
-            {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This is the only admin, so their role can't be removed until another admin is added."].Value;
-                return View(viewModel);
-            }
-
             if (viewModel.IsAdmin != wasAdmin)
             {
                 adminStatusChanged = await _userService.SetAdminUser(user.Id, viewModel.IsAdmin);
@@ -336,8 +347,7 @@ namespace BTCPayServer.Controllers
             var roles = await _UserManager.GetRolesAsync(user);
             if (Roles.HasServerAdmin(roles))
             {
-                var loginContext = CreateLoginContext(user);
-                if (await _userService.IsUserTheOnlyOneAdmin(loginContext))
+                if (await _userService.IsLastAdmin(user))
                 {
                     return View("Confirm", new ConfirmModel(StringLocalizer["Delete admin"],
                         StringLocalizer["Unable to proceed: As the user <strong>{0}</strong> is the last enabled admin, it cannot be removed.", Html.Encode(user.Email)]));
@@ -357,6 +367,13 @@ namespace BTCPayServer.Controllers
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
+
+            await using var adminLock = await _userService.LockAdminChanges();
+            if (await _userService.IsLastAdmin(user))
+            {
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["User was the last enabled admin and could not be deleted."].Value;
+                return RedirectToAction(nameof(ListUsers));
+            }
 
             await _userService.DeleteUserAndAssociatedData(user);
 
@@ -391,6 +408,7 @@ namespace BTCPayServer.Controllers
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
+            await using var adminLock = await _userService.LockAdminChanges();
             var loginContext = CreateLoginContext(user);
             if (!enable && await _userService.IsUserTheOnlyOneAdmin(loginContext))
             {
@@ -431,6 +449,13 @@ namespace BTCPayServer.Controllers
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
+
+            await using var adminLock = await _userService.LockAdminChanges();
+            if (!approved && user.RequiresApproval && await _userService.IsUserTheOnlyOneAdmin(CreateLoginContext(user)))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["User was the last enabled admin and could not be unapproved."].Value;
+                return RedirectToAction(nameof(ListUsers));
+            }
 
             var loginLink = _callbackGenerator.ForLogin(user);
             await _userService.SetUserApproval(userId, approved, loginLink);

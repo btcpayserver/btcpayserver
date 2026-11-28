@@ -82,7 +82,14 @@
         </div>
         <h3 class="mt-5 mb-4" text-translate="true">Delete Account</h3>
         <div id="danger-zone">
-            <a id="delete-user" asp-action="DeleteUserPost" class="btn btn-outline-danger mb-5" data-confirm-input="@StringLocalizer["Delete"]" data-bs-toggle="modal" data-bs-target="#ConfirmModal" text-translate="true">Delete Account</a>
+            @if (Model.IsLastAdmin)
+            {
+                <p class="text-muted mb-5" text-translate="true">You are the last enabled admin. Add another admin before you delete your account.</p>
+            }
+            else
+            {
+                <a id="delete-user" asp-action="DeleteUserPost" class="btn btn-outline-danger mb-5" data-confirm-input="@StringLocalizer["Delete"]" data-bs-toggle="modal" data-bs-target="#ConfirmModal" text-translate="true">Delete Account</a>
+            }
         </div>
     </div>
 </form>

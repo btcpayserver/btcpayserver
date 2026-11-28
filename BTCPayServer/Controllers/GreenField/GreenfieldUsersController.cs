@@ -101,6 +101,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return this.UserNotFound();
             }
+            await using var adminLock = await _userService.LockAdminChanges();
             if (request.Locked && await _userService.IsUserTheOnlyOneAdmin(new UserService.CanLoginContext(user)))
             {
                 return this.CreateAPIError(403, "cannot-lock-only-admin", "This is the only enabled administrator and cannot be locked.");
@@ -121,8 +122,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.UserNotFound();
             }
 
+            await using var adminLock = await _userService.LockAdminChanges();
             if (user.RequiresApproval)
             {
+                if (!request.Approved && await _userService.IsUserTheOnlyOneAdmin(new UserService.CanLoginContext(user)))
+                {
+                    return this.CreateAPIError(403, "cannot-unapprove-only-admin", "This is the only enabled administrator and cannot be unapproved.");
+                }
                 var loginLink = _callbackGenerator.ForLogin(user);
                 return await _userService.SetUserApproval(user.Id, request.Approved, loginLink)
                     ? Ok()
@@ -448,21 +454,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.UserNotFound();
             }
 
-            // We can safely delete the user if it's not an admin user
-            if (!(await _userService.IsAdminUser(user)))
-            {
-                await _userService.DeleteUserAndAssociatedData(user);
-
-                return Ok();
-            }
-
-            // User shouldn't be deleted if it's the only admin
-            if (await _userService.IsUserTheOnlyOneAdmin(new (user, baseUrl: Request.GetRequestBaseUrl())))
+            // User shouldn't be deleted if it's the last admin
+            await using var adminLock = await _userService.LockAdminChanges();
+            if (await _userService.IsLastAdmin(user))
             {
                 return Forbid(AuthenticationSchemes.GreenfieldBasic);
             }
 
-            // Ok, this user is an admin but there are other admins as well so safe to delete
             await _userService.DeleteUserAndAssociatedData(user);
 
             return Ok();

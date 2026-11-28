@@ -368,6 +368,13 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
+            await using var adminLock = await _userService.LockAdminChanges();
+            if (await _userService.IsLastAdmin(user))
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["You are the last enabled admin. Add another admin before you delete your account."].Value;
+                return RedirectToAction(nameof(Index));
+            }
+
             await _userService.DeleteUserAndAssociatedData(user);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Account successfully deleted."].Value;
             await _signInManager.SignOutAsync();
@@ -397,6 +404,7 @@ namespace BTCPayServer.Controllers
             model.ImageUrl = string.IsNullOrEmpty(blob.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl));
             model.EmailConfirmed = user.EmailConfirmed;
             model.RequiresEmailConfirmation = user.RequiresEmailConfirmation;
+            model.IsLastAdmin = await _userService.IsLastAdmin(user);
             return model;
         }
 

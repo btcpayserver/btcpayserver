@@ -17,6 +17,7 @@ namespace BTCPayServer.Models.ManageViewModels
         public string CurrentPassword { get; set; }
         public bool EmailConfirmed { get; set; }
         public bool RequiresEmailConfirmation { get; set; }
+        public bool IsLastAdmin { get; set; }
         [Display(Name = "Name")]
         public string Name { get; set; }
 

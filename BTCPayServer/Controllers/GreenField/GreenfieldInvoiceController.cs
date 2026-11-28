@@ -688,6 +688,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 CreatedTime = entity.InvoiceTime,
                 Amount = entity.Price,
                 PaidAmount = Math.Round(entity.PaidAmount.Net, currencyNameTable.GetNumberFormatInfo(entity.Currency)?.CurrencyDecimalDigits ?? 2),
+                Rates = entity.GetInvoiceRates().Rates.ToDictionary(rate => rate.Key.ToString(), rate => rate.Value),
                 Type = entity.Type,
                 Id = entity.Id,
                 CheckoutLink = request is null ? null : linkGenerator.InvoiceCheckoutLink(entity.Id, request.GetRequestBaseUrl()),

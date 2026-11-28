@@ -100,6 +100,8 @@ namespace BTCPayServer.Client.Models
         public decimal Amount { get; set; }
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal PaidAmount { get; set; }
+        [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
+        public Dictionary<string, decimal> Rates { get; set; } = new Dictionary<string, decimal>();
         public string CheckoutLink { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
         public InvoiceStatus Status { get; set; }

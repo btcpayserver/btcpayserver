@@ -259,7 +259,7 @@ namespace BTCPayServer.Payments
                 }
                 if (failedOptionalRates.Count > 0)
                 {
-                    paymentContext.Logs.Write($"Unable to get rate(s) {ToString(failedRequiredRates)}.", InvoiceEventData.EventSeverity.Warning);
+                    paymentContext.Logs.Write($"Unable to get rate(s) {ToString(failedOptionalRates)}.", InvoiceEventData.EventSeverity.Warning);
                 }
             }
         }
@@ -342,7 +342,7 @@ namespace BTCPayServer.Payments
             if (currency is not null)
             {
                 RequiredRates.Add(currency);
-                foreach (var r in StoreBlob.AdditionalTrackedRates ?? [])
+                foreach (var r in StoreBlob.GetTrackedRates())
                     OptionalRates.Add(new CurrencyPair(currency, r));
             }
             if (currency is not null

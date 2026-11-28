@@ -884,6 +884,18 @@ inventoryitem:
                 ]
             });
 
+            // With "tax included in price", the LNURL item link must charge the item price, not price + tax
+            await s.GoToUrl(appUrl);
+            await s.Page.SetCheckedAsync("#TaxIncludedInPrice", true);
+            await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "App updated");
+
+            await GoToLNUrlCheckout(s, appId, "black-tea");
+            await AssertInvoiceAmount(s, "1.00000000 BTC");
+            // The tax is carved out of the price (1 * 10 / 110), not dropped
+            var taxIncludedInvoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(s.InvoiceId);
+            Assert.Equal(0.09090909m, taxIncludedInvoice.Metadata.TaxIncluded);
+
             await GoToLNUrlCheckout(s, appId, "fruit-tea");
             await AssertInvoiceAmount(s, "Any amount");
 
